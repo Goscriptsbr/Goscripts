@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoScript</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            background-color: black;            
+        }
+        header {
+    background: url('https://goscript.neocities.org/Imagens.png/656b1f3b-0dba-408d-abd2-0f04a045d877.jpg') no-repeat center center;
+    background-size: cover;
+    color: #fff;
+    padding: 1.0em 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+        header img {
+            max-width: 250px; 
+            height: auto;
+            margin-bottom: 10px;
+        }
+        header p {
+            margin: 0;
+            font-size: 1.0em;
+            font-weight: bold;
+        }
+        main {
+            flex: 1;
+            width: 80%;
+            margin: auto;
+            padding-bottom: 2em;
+        }
+        section {
+            padding: 2em 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        section h2 {
+            font-size: 2em;
+            color: #007BFF;
+            margin-bottom: 0.5em;
+        }
+        .services, .contact {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1em;
+        }
+        .service, .contact-info {
+            position: relative;
+            flex: 1;
+            margin: 1em;
+            padding: 1.5em;
+            background: black;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 4px solid transparent; /* Ajuste a largura da borda conforme necessário */
+            border-image: linear-gradient(90deg, transparent, blue, transparent) 1; /* Ajuste a largura da borda conforme necessário */
+            overflow: hidden;
+            animation: moveBorder 3s linear infinite;
+        }
+
+        @keyframes moveBorder {
+            0% {
+                border-image-source: linear-gradient(90deg, transparent, blue, transparent);
+            }
+            50% {
+                border-image-source: linear-gradient(180deg, transparent, blue, transparent);
+            }
+            100% {
+                border-image-source: linear-gradient(270deg, transparent, blue, transparent);
+            }
+        }
+        .service:hover, .contact-info:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        button {
+            background: blue;
+            color: #fff;
+            border: 1px solid white;
+            padding: 0.75em 1.5em;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background 0.3s, transform 0.3s;
+        }
+        button:hover {
+            background: black;
+            transform: translateY(-2px);
+        }
+        footer {
+            background: url('https://goscript.neocities.org/Imagens.png/be128a33-a82b-46ac-b376-bcef40d271f7.jpg') no-repeat center center;
+            color: #fff;
+            text-align: center;
+            padding: 1.5em 0;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+        }
+        footer p {
+            margin: 0;
+        }
+        p {
+            color: white;
+            line-height: 1.6;
+        }
+        
+        @keyframes pulse {
+    0% {
+        box-shadow: 0 0 10px rgba(37, 211, 102, 0.8), 0 0 20px rgba(37, 211, 102, 0.6), 0 0 30px rgba(37, 211, 102, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(37, 211, 102, 1), 0 0 40px rgba(37, 211, 102, 0.8), 0 0 60px rgba(37, 211, 102, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 10px rgba(37, 211, 102, 0.8), 0 0 20px rgba(37, 211, 102, 0.6), 0 0 30px rgba(37, 211, 102, 0.4);
+    }
+}
+
+.whatsapp-float {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    bottom: 130px;
+    right: 25px;
+    background-color: #25d366;
+    color: #fff;
+    border-radius: 50px;
+    text-align: center;
+    font-size: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+    animation: pulse 1.5s infinite;
+}
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+        .whatsapp-icon {
+            margin-top: 15px;
+        }
+        .carousel {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .carousel-images {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        .carousel-images a {
+            flex: 1;
+            min-width: 100%;
+        }
+        .carousel-images img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border: none;
+            padding: 1em;
+            cursor: pointer;
+            font-size: 0.8em;
+            z-index: 10;
+        }
+        .prev {
+            left: 10px;
+        }
+        .next {
+            right: 10px;
+        }
+        @media (max-width: 768px) {
+            .services, .contact {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+.contact-form {
+    max-width: 500px; /* Define uma largura máxima menor */
+    padding: 1em; /* Reduz o padding */
+    background: black;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: auto; /* Centraliza o formulário */
+    margin-bottom: 20px;
+    border: 4px solid transparent; /* Ajuste a largura da borda conforme necessário */
+    border-image: linear-gradient(90deg, transparent, blue, transparent) 1; /* Ajuste a largura da borda conforme necessário */
+    animation: moveBorder 2s linear infinite; /* Aplica a animação */
+}
+
+.contact-form h2 {
+    color: #007BFF;
+    font-size: 1.5em; /* Ajusta o tamanho do título */
+}
+
+.contact-form form {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-form label {
+    margin-bottom: 0.5em;
+    color: white;
+}
+
+.contact-form input, 
+.contact-form textarea {
+    margin-bottom: 1em;
+    padding: 0.5em; /* Reduz o padding */
+    border: 1px solid white;
+    border-radius: 5px;
+    font-size: 0.9em; /* Ajusta o tamanho da fonte */
+    background-color: black;
+    color: white;
+}
+
+.contact-form button {
+    background: blue;
+    color: #fff;
+    border: 1px solid white;
+    padding: 0.5em 1em; /* Reduz o padding */
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em; /* Ajusta o tamanho da fonte */
+    transition: background 0.3s, transform 0.3s;
+}
+
+.contact-form button:hover {
+    background: black;
+    transform: translateY(-2px);
+}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <img src="https://gozgames.neocities.org/Imagens/project_20240902_1939510-01.png" alt="Logo da GoScript">
+            <p>Transformando suas ideias em sites incríveis</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="about">
+                <h2>Sobre Nós</h2>
+                <p>Na GoScript, somos especialistas em criar sites personalizados que atendem às suas necessidades e superam suas expectativas. Nossa equipe é dedicada a proporcionar uma experiência única e eficaz para o seu negócio, isso tudo sem mensalidade alguma.</p>
+                <p>Pague uma unica vez o site com preços muito abaixos do nossos concorrentes, nosso site não cobra nenhuma mensalidade, nem de domínio e nem de hospedagem.</p>
+            </section>
+
+            <section class="partners">
+                <h2>Sites criados por nós:</h2>
+                <p>Clique na imagem para ver o site!</p>
+                <div class="carousel">
+                    <div class="carousel-images" id="carousel-images">
+                        <a href="https://uniaogesso.neocities.org/" target="_blank">
+                            <img src="https://uniaogesso.neocities.org/Imagem/IMG-20240831-WA0033.jpg" alt="Parceiro 1" loading="lazy">
+                        </a>
+                        <a href="https://keskara.neocities.org/" target="_blank">
+                            <img src="https://gozgames.neocities.org/Imagens/PicsArt_01-10-11.55.43.png" alt="Parceiro 2" loading="lazy">
+                        </a>
+                        <a href="https://gozgames.neocities.org/Jogos" target="_blank">
+                            <img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="Parceiro 3" loading="lazy">
+                        </a>
+                        <a href="https://gozgames.neocities.org/Personalize" target="_blank">
+                            <img src="https://goscript.neocities.org/Imagens.png/3cf6affd-15bc-4d03-9a72-95ef680ad308.jpg" alt="Parceiro 4" loading="lazy">
+                        </a>
+                        <a href="https://goscript.neocities.org/Jartec" target="_blank">
+                            <img src="https://goscript.neocities.org/Imagens.png/8c55a815-116b-46fc-addc-3e08c4a166e2.jpg" alt="Parceiro 5" loading="lazy">
+                        </a>
+                    </div>
+                    <button class="carousel-button prev" onclick="prevSlide()">&#10094;</button>
+                    <button class="carousel-button next" onclick="nextSlide()">&#10095;</button>
+                </div>
+            </section>
+
+            <section class="services">
+                <div class="service">
+                    <h2>Criação de Sites Personalizados</h2>
+                    <p>Transformamos sua visão em realidade com um design que reflete a identidade da sua marca.</p>
+                </div>
+                <div class="service">
+                    <h2>Desenvolvimento Responsivo</h2>
+                    <p>Sites que funcionam perfeitamente em todos os dispositivos, de desktops a smartphones.</p>
+                </div>
+                <div class="service">
+                    <h2>Otimização para SEO</h2>
+                    <p>Melhore sua visibilidade online com técnicas de SEO que garantem um bom posicionamento nos motores de busca.</p>
+                </div>
+                <div class="service">
+                    <h2>Manutenção e Suporte</h2>
+                    <p>Oferecemos suporte contínuo para garantir que seu site esteja sempre atualizado e funcionando corretamente.</p>
+                </div>
+            </section>
+
+            <section class="contact">
+                <h2>Solicite um Orçamento</h2>
+                <p>Quer saber quanto custa criar um site sob medida para você? Clique no botão abaixo e entre em contato conosco pelo WhatsApp para um orçamento rápido e personalizado!</p>
+                <button onclick="contactUs()">Solicitar Orçamento</button>
+            </section>
+
+            <section class="contact-info">
+                <h2>Contato</h2>
+                <p>Telefone: (19) 99813-3764</p>
+                <p>E-mail: goscriptsbr@gmail.com</p>
+                <p>Endereço: Avenida dos trabalhadores - Centro, 115, Mogi Guaçu, SP</p>
+            </section>
+        </div>
+    </main>
+    
+    <section class="contact-form">
+    <h2>Contato via email:</h2>
+    <form id="contact-form" onsubmit="return sendEmail()">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required>
+        
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" name="email" required>
+        
+        <label for="mensagem">Mensagem:</label>
+        <textarea id="mensagem" name="mensagem" rows="4" required></textarea>
+        
+        <button type="submit">Enviar</button>
+    </form>
+</section>
+
+    <footer>
+        <p>&copy; 2024 GoScript - Transformando Visões em Realidade Online</p>
+    </footer>
+
+    <!-- Botão Flutuante do WhatsApp -->
+    <a href="https://wa.me/5519998133764" class="whatsapp-float" target="_blank">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="Ícone do WhatsApp" class="whatsapp-icon" width="30px" height="30px">
+    </a>
+
+    <script>
+        let currentIndex = 0;
+
+        function nextSlide() {
+            currentIndex++;
+            showSlide(currentIndex);
+        }
+
+        function prevSlide() {
+            currentIndex--;
+            showSlide(currentIndex);
+        }
+
+        // Initialize the carousel
+        showSlide(currentIndex);
+        
+const intervalTime = 5000; // Tempo em milissegundos (5 segundos)
+
+function showSlide(index) {
+    const slides = document.querySelectorAll('.carousel-images a');
+    const totalSlides = slides.length;
+    if (index >= totalSlides) currentIndex = 0;
+    if (index < 0) currentIndex = totalSlides - 1;
+    document.getElementById('carousel-images').style.transform = `translateX(-${currentIndex * 100}%)`;
+}
+
+function nextSlide() {
+    currentIndex++;
+    showSlide(currentIndex);
+}
+
+// Initialize the carousel
+showSlide(currentIndex);
+
+// Automatically advance the slide every 5 seconds
+setInterval(nextSlide, intervalTime);
+
+function sendEmail() {
+        const nome = encodeURIComponent(document.getElementById('nome').value);
+        const email = encodeURIComponent(document.getElementById('email').value);
+        const mensagem = encodeURIComponent(document.getElementById('mensagem').value);
+        
+        const subject = `Contato de ${nome}`;
+        const body = `Nome: ${nome}%0AE-mail: ${email}%0AMensagem:%0A${mensagem}`;
+        const mailtoURL = `mailto:goscriptsbr@gmail.com?subject=${subject}&body=${body}`;
+        
+        window.location.href = mailtoURL;
+        
+        // Prevent form from submitting in the traditional way
+        return false;
+    }
+    </script>
+    <script src="//code.tidio.co/k4sni1crgozpl9g3mx06xmpufeh0c2qw.js" async></script>
+</body>
+</html>
