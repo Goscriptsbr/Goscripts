@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Digital</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    background-color: grey; /* Cor de fundo do cabeçalho */
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 150px; /* Ajuste o tamanho da logo conforme necessário */
+    height: auto; /* Mantém a proporção da imagem */
+    margin-right: 15px; /* Espaçamento entre a logo e o título */
+}
+
+h1 {
+    font-size: 24px; /* Ajuste o tamanho da fonte do título */
+    color: #333; /* Cor do texto do título */
+}
+
+nav {
+    background-color: #444;
+    display: flex;
+    justify-content: center;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    padding: 0;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+#menu-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+}
+
+.menu-item {
+    background-color: white;
+    width: 300px;
+    margin: 10px;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s; /* animação ao passar o mouse */
+}
+
+.menu-item:hover {
+    transform: scale(1.05); /* leve aumento no tamanho */
+}
+
+.menu-item button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s; /* transição ao passar o mouse */
+}
+
+.menu-item button:hover {
+    background-color: darkgreen; /* tom mais escuro ao passar o mouse */
+}
+
+#cart-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #25D366;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s; /* transição suave */
+}
+
+#cart-icon:hover {
+    background-color: #1ebd5b; /* tom mais escuro ao passar o mouse */
+}
+
+#cart-notification {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: red;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 14px;
+    line-height: 20px;
+    display: none;
+}
+
+#cart {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    background-color: #f9f9f9; /* fundo mais suave */
+    padding: 20px; /* mais espaço interno */
+    border-radius: 12px; /* bordas mais arredondadas */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* sombra mais sutil */
+    display: none; /* inicialmente oculto */
+    max-height: 600px; /* altura máxima do carrinho */
+    width: 350px;
+    overflow-y: auto; /* rolagem vertical se necessário */
+    transition: all 0.3s ease; /* transição suave para aparecer/desaparecer */
+    border: 1px solid black;
+}
+
+#cart h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    font-size: 20px; /* tamanho da fonte do cabeçalho */
+    color: #333; /* cor do texto */
+    border-bottom: 2px solid #e0e0e0; /* linha divisória */
+}
+
+/* Estilo do botão de fechar */
+.close-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 2px 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background-color: darkred;
+}
+
+/* Estilo do botão de enviar pedido */
+.send-btn {
+    background-color: #25D366;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.send-btn:hover {
+    background-color: #218838;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
+    padding: 10px 0; /* padding para mais espaçamento */
+    border-bottom: 2px solid #e0e0e0; /* linha divisória */
+}
+
+.cart-item:last-child {
+    border-om: none; /* remove a linha divisória do último item */
+}
+
+.remove-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 2px 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-btn:hover {
+    background-color: darkred; /* tom mais escuro ao passar o mouse */
+}
+
+.hidden {
+    display: none;
+}
+
+.endereco-container {
+    max-width: 400px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.endereco-container h4 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.endereco-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.endereco-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.endereco-container input:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.pagamento-container {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pagamento-container h4 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.pagamento-container select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: border-color 0.3s;
+}
+
+.pagamento-container select:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.pagamento-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.pagamento-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.pix-info {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.pix-info img {
+    width: 40px;
+    margin-right: 10px;
+}
+
+.pix-info input {
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    flex: 1;
+    cursor: text;
+}
+
+.pix-info button {
+    padding: 10px;
+    background-color: #25D366;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pix-info button:hover {
+    background-color: #1c9c4b;
+}
+
+.montar-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.montar-button:hover {
+    background-color: #388E3C;
+}
+
+.acai-container {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.acai-container h3 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.acai-container label, 
+.acai-container select {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: border-color 0.3s;
+}
+
+select:focus {
+    border-color: #4CAF50;
+    outline: none;
+}
+
+fieldset {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+legend {
+    font-weight: bold;
+    color: #555;
+}
+
+.add-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-button:hover {
+    background-color: #388E3C;
+}
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <img src="https://keskara.neocities.org/Fonto/BackgroundEraser_20241015_210053864.png" alt="Logo Gardin Lanches" class="logo">
+        <h1>Gardin Lanches</h1>
+    </div>
+</header>
+
+<nav>
+    <ul>
+        <li><a href="#" onclick="filterItems('all')">Tudo</a></li>
+        <li><a href="#" onclick="filterItems('lanches')">Lanches</a></li>
+        <li><a href="#" onclick="filterItems('bebidas')">Bebidas</a></li>
+        <li><a href="#" onclick="filterItems('acai')">Açaí</a></li>
+    </ul>
+</nav>
+
+<section id="menu-items">
+    <div class="menu-item" data-category="lanches">
+        <h3>X-Burger</h3>
+        <span>R$ 15,00</span>
+        <button onclick="addToCart('X-Burger', 15)">Adicionar</button>
+    </div>
+    <div class="menu-item" data-category="bebidas">
+        <h3>Suco Natural</h3>
+        <span>R$ 8,00</span>
+        <button onclick="addToCart('Suco Natural', 8)">Adicionar</button>
+    </div>
+    <div class="menu-item" data-category="acai">
+    <h3>Açaí Personalizado</h3>
+    <button class="montar-button" onclick="openAcaiBuilder()">Montar Açaí</button>
+</div>
+
+<section id="acai-builder" class="acai-container hidden">
+    <h3>Monte seu Açaí</h3>
+
+    <label for="acai-size">Tamanho:</label>
+    <select id="acai-size">
+        <option value="12">300ml - R$ 12,00</option>
+        <option value="16">500ml - R$ 16,00</option>
+    </select>
+
+    <fieldset>
+        <legend>Adicionais:</legend>
+        <label><input type="checkbox" value="2" data-name="Granola"> Granola (+R$ 2,00)</label>
+        <label><input type="checkbox" value="3" data-name="Leite Condensado"> Leite Condensado (+R$ 3,00)</label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Frutas:</legend>
+        <label><input type="checkbox" value="4" data-name="Morango"> Morango (+R$ 4,00)</label>
+        <label><input type="checkbox" value="3" data-name="Banana"> Banana (+R$ 3,00)</label>
+    </fieldset>
+
+    <button class="add-button" onclick="addAcaiToCart()">Adicionar ao Carrinho</button>
+</section>
+
+<button id="cart-icon" onclick="toggleCart()">🛒
+    <div id="cart-notification"></div>
+</button>
+
+<div id="cart">
+    <h3>
+        Carrinho 
+        <button class="close-btn" onclick="toggleCart()">X</button>
+    </h3>
+    <ul id="cart-items"></ul>
+    <p><strong>Total: R$ <span id="cart-total">0,00</span></strong></p>
+
+    <div class="endereco-container">
+    <h4>Endereço de Entrega</h4>
+
+    <label for="cep">CEP:</label>
+    <input type="text" id="cep" maxlength="9" placeholder="Digite o CEP" onblur="buscarEndereco()">
+
+    <label for="rua">Rua:</label>
+    <input type="text" id="rua" placeholder="Rua">
+
+    <label for="numero">Número:</label>
+    <input type="text" id="numero" placeholder="Número da Casa">
+
+    <label for="bairro">Bairro:</label>
+    <input type="text" id="bairro" placeholder="Bairro">
+
+    <label for="cidade">Cidade:</label>
+    <input type="text" id="cidade" placeholder="Cidade">
+
+    <label for="estado">Estado:</label>
+    <input type="text" id="estado" placeholder="Estado">
+</div>
+    
+    <div class="pagamento-container">
+    <h4>Forma de Pagamento</h4>
+    <select id="payment-method" onchange="toggleTroco()">
+        <option value="" disabled selected>Selecione</option>
+        <option value="pix">Pix</option>
+        <option value="cartao">Cartão de Crédito</option>
+        <option value="dinheiro">Dinheiro</option>
+    </select>
+
+    <div id="troco-container" class="hidden">
+        <label for="troco">Troco para:</label>
+        <input type="number" id="troco" placeholder="Valor em reais">
+    </div>
+
+    <div id="pix-container" class="hidden">
+        <h4>Chave Pix</h4>
+        <div class="pix-info">
+            <img src="https://img.icons8.com/fluent/512/pix.png" alt="Logo Pix">
+            <input type="text" id="pix-key" value="46964164880" readonly>
+            <button onclick="copyPix()">Copiar Pix</button>
+        </div>
+    </div>
+</div>
+
+    <button class="send-btn" onclick="sendOrder()">Enviar Pedido</button>
+    
+    <div id="checkout-container" class="endereco-container hidden">
+    <h4>Finalizar Pedido</h4>
+    <label for="endereco">Endereço:</label>
+    <input type="text" id="endereco" required placeholder="Digite seu endereço">
+
+    <label for="pagamento">Forma de Pagamento:</label>
+    <select id="pagamento" required>
+        <option value="" disabled selected>Selecione uma opção</option>
+        <option value="cartao">Cartão de Crédito</option>
+        <option value="pix">Pix</option>
+        <option value="dinheiro">Dinheiro</option>
+    </select>
+
+    <button class="send-btn" onclick="sendOrder()">Enviar Pedido</button>
+</div> 
+</div>
+
+<script>
+    let cart = [];
+
+    function filterItems(category) {
+        const items = document.querySelectorAll('.menu-item');
+        items.forEach(item => {
+            item.style.display = category === 'all' || item.dataset.category === category ? 'block' : 'none';
+        });
+    }
+
+    function openAcaiBuilder() {
+        document.getElementById('acai-builder').classList.remove('hidden');
+    }
+
+    function addAcaiToCart() {
+        const size = document.getElementById('acai-size').value;
+        let total = parseFloat(size);
+
+        const adicionais = [...document.querySelectorAll('#acai-builder input[type="checkbox"]:checked')];
+        let acaiDescription = 'Açaí Personalizado: ';
+        adicionais.forEach(add => {
+            total += parseFloat(add.value);
+            acaiDescription += `${add.dataset.name}, `;
+        });
+
+        addToCart(acaiDescription.slice(0, -2), total);
+        document.getElementById('acai-builder').classList.add('hidden');
+    }
+
+    function addToCart(name, price, details = "") {
+    const itemIndex = cart.findIndex(item => item.name === name && item.details === details);
+
+    if (itemIndex > -1) {
+        // Se o item já estiver no carrinho, incrementa a quantidade
+        cart[itemIndex].quantity++;
+    } else {
+        // Adiciona um novo item ao carrinho
+        cart.push({ name, price, details, quantity: 1 });
+    }
+    updateCart();
+    showNotification();
+}
+
+    function updateCart() {
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+    cartItems.innerHTML = '';
+    let total = 0;
+
+    cart.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'cart-item';
+        li.innerHTML = `
+            <span>${item.name} ${item.details ? `(${item.details})` : ""} - 
+            R$ ${(item.price * item.quantity).toFixed(2)} 
+            (x${item.quantity})</span>
+            <button class="remove-btn" onclick="removeFromCart(${index})">X</button>`;
+        cartItems.appendChild(li);
+        total += item.price * item.quantity;
+    });
+
+    cartTotal.textContent = total.toFixed(2); // Esta linha está correta
+}
+
+    function sendOrder() {
+    // Verifica se o carrinho está vazio
+    if (cart.length === 0) {
+        alert("Seu carrinho está vazio!");
+        return;
+    }
+
+    // Coleta os dados do endereço
+    const rua = document.getElementById('rua').value;
+    const numero = document.getElementById('numero').value;
+    const bairro = document.getElementById('bairro').value;
+    const cidade = document.getElementById('cidade').value;
+    const estado = document.getElementById('estado').value;
+    
+    // Verifica se todos os campos do endereço estão preenchidos
+    if (!rua || !numero || !bairro || !cidade || !estado) {
+        alert("Por favor, preencha todos os campos do endereço!");
+        return;
+    }
+
+    // Coleta a forma de pagamento
+    const paymentMethod = document.getElementById('payment-method').value;
+    if (!paymentMethod) {
+        alert("Por favor, selecione uma forma de pagamento!");
+        return;
+    }
+
+    let message = `Pedido:\n`;
+    const groupedItems = {};
+
+    // Agrupa os itens do carrinho
+    cart.forEach(item => {
+        const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
+        if (!groupedItems[key]) {
+            groupedItems[key] = { price: item.price, quantity: 0 };
+        }
+        groupedItems[key].quantity += item.quantity;
+    });
+
+    // Adiciona os itens agrupados à mensagem
+    for (const [key, value] of Object.entries(groupedItems)) {
+        message += `• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n`;
+    }
+
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    message += `\nTotal: R$ ${total.toFixed(2)}\n\n`;
+
+    // Adiciona os dados do endereço à mensagem
+    message += `Endereço:\n${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}\n\n`;
+
+    // Adiciona a forma de pagamento à mensagem
+    message += `Forma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
+
+    // Adiciona informações de troco se o pagamento for em dinheiro
+    if (paymentMethod === 'dinheiro') {
+        const troco = document.getElementById('troco').value;
+        if (!troco) {
+            alert("Por favor, preencha o valor do troco!");
+            return;
+        }
+        message += `Troco para: R$ ${parseFloat(troco).toFixed(2)}\n`;
+    }
+
+    // Cria a URL para o WhatsApp
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappURL = `https://wa.me/5519998133764?text=${encodedMessage}`;
+    
+    // Abre o WhatsApp com a mensagem formatada
+    window.open(whatsappURL, '_blank');
+
+    // Limpa o carrinho após o envio do pedido
+    cart = [];
+    updateCartDisplay(); // Atualiza a exibição do carrinho
+}
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCart();
+        showNotification();
+    }
+
+    function toggleCart() {
+        const cartElement = document.getElementById('cart');
+        cartElement.style.display = cartElement.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function showNotification() {
+        const notification = document.getElementById('cart-notification');
+        notification.style.display = cart.length > 0 ? 'block' : 'none';
+        notification.textContent = cart.length;
+    }
+    
+    function buscarEndereco() {
+    const cep = document.getElementById('cep').value.replace(/\D/g, '');
+    if (cep.length === 8) {
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.erro) {
+                    document.getElementById('rua').value = data.logradouro;
+                    document.getElementById('bairro').value = data.bairro;
+                    document.getElementById('cidade').value = data.localidade;
+                    document.getElementById('estado').value = data.uf;
+                } else {
+                    alert('CEP não encontrado!');
+                }
+            })
+            .catch(() => alert('Erro ao buscar o CEP!'));
+    } else {
+        alert('CEP inválido!');
+    }
+}
+
+function toggleTroco() {
+    const paymentMethod = document.getElementById('payment-method').value;
+    const trocoContainer = document.getElementById('troco-container');
+    const pixContainer = document.getElementById('pix-container');
+    
+    // Exibe ou oculta o campo de troco e Pix com base no método de pagamento
+    trocoContainer.classList.toggle('hidden', paymentMethod !== 'dinheiro');
+    pixContainer.classList.toggle('hidden', paymentMethod !== 'pix');
+}
+
+function copyPix() {
+    const pixKey = document.getElementById('pix-key');
+    pixKey.select();
+    pixKey.setSelectionRange(0, 99999); // Para dispositivos móveis
+
+    // Copia para a área de transferência
+    navigator.clipboard.writeText(pixKey.value).then(() => {
+        alert('Chave Pix copiada para a área de transferência!');
+    }).catch(err => {
+        alert('Erro ao copiar a chave Pix!');
+    });
+}
+</script>
+
+</body>
+</html>
