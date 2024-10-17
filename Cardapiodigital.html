@@ -739,7 +739,13 @@ legend {
         return;
     }
 
-    let message = `Pedido de ${nome}:\n`;
+    // Obtém a data e hora atual
+    const now = new Date();
+    const hora = now.getHours().toString().padStart(2, '0');
+    const minutos = now.getMinutes().toString().padStart(2, '0');
+    const horarioPedido = `${hora}:${minutos}`;
+
+    let message = `Pedido de ${nome} às ${horarioPedido}:\n`;
     const groupedItems = {};
 
     // Agrupa os itens do carrinho
