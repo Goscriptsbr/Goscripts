@@ -127,6 +127,33 @@ nav ul li a {
     margin-bottom: 10px; /* Espaço abaixo da imagem */
 }
 
+/* Estilo para a seção de tamanhos e adicionais */
+.size-addons {
+    display: flex; /* Usar flexbox para alinhar os tamanhos e adicionais lado a lado */
+    flex-direction: column; /* Coloca em coluna */
+    align-items: flex-start; /* Alinhamento à esquerda */
+    width: 100%; /* Ocupa a largura total do item */
+    margin-bottom: 10px; /* Espaçamento abaixo da seção */
+}
+
+.size-selection,
+.addons-selection {
+    width: 100%; /* Ocupa a largura total */
+    margin: 5px 0; /* Margem vertical entre as seções */
+}
+
+.addons-selection {
+    width: 100%; /* Ocupa a largura total */
+    margin: 5px 0; /* Margem vertical entre as seções */
+}
+
+/* Adicionando estilo ao label */
+label {
+    margin-bottom: 5px; /* Espaçamento abaixo da label */
+    font-weight: bold; /* Deixa a label em negrito */
+    display: block; /* Garante que o label fique em uma linha separada */
+}
+
 .menu-item button {
     margin-top: 10px;
     padding: 10px;
@@ -537,27 +564,84 @@ legend {
     <!-- Os itens do menu aparecem aqui -->
 </section>
 
-<section id="menu-items">
+<div id="menu-items">
     <div class="menu-item" data-category="lanches">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSYRX07GQ-Vwoi8a8A_b4P4KKUF1i9KRO4uQ&usqp=CAU" alt="X-Burger" />
         <h3>X-Burger</h3>
-        <p> Pão de hamb, hamburguer, presunto, muçarela, batata palha, milho e maionese. </p>
-        <span>R$ 15,00</span>
-        <button onclick="addToCart('X-Burger', 15)">Adicionar</button>
+        <p>Pão de hamb, hamburguer, presunto, muçarela, batata palha, milho e maionese.</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-burger">Escolha o tamanho:</label>
+                <select id="size-burger">
+                    <option value="15">Pequeno - R$ 15,00</option>
+                    <option value="20">Grande - R$ 20,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-burger">Adicionais:</label>
+                <select id="addons-burger" multiple>
+                    <option value='{"name": "Bacon", "price": 5}'>Bacon - R$ 5,00</option>
+                    <option value='{"name": "Queijo Extra", "price": 3}'>Queijo Extra - R$ 3,00</option>
+                    <option value='{"name": "Ovo", "price": 2}'>Ovo - R$ 2,00</option>
+                </select>
+            </div>
+        </div>
+        
+        <button onclick="addBurgerToCart('X-Burger', 'size-burger', 'addons-burger')">Adicionar</button>
     </div>
+
+    <!-- Exemplo de outro lanche -->
     <div class="menu-item" data-category="gourmet">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsQk_cOUItVUyzEDyfZB-uYGEtUlbpRfP9sBfbmfxFZFmyadJ6Bu025tE&s=10" alt="Argentina Gourmet" />
         <h3>Argentina Gourmet</h3>
-        <p> Pão brioche, hamb, frango 150g, queijo, rúcula, bacon e molho grill. </p>
-        <span>R$ 45,00</span>
-        <button onclick="addToCart('Argentina Gourmet', 45)">Adicionar</button>
+        <p>Pão brioche, hamb, frango 150g, queijo, rúcula, bacon e molho grill.</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-argentina">Escolha o tamanho:</label>
+                <select id="size-argentina">
+                    <option value="45">Pequeno - R$ 45,00</option>
+                    <option value="50">Grande - R$ 50,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-argentina">Adicionais:</label>
+                <select id="addons-argentina" multiple>
+                    <option value='{"name": "Bacon", "price": 5}'>Bacon - R$ 5,00</option>
+                    <option value='{"name": "Queijo Extra", "price": 3}'>Queijo Extra - R$ 3,00</option>
+                    <option value='{"name": "Guacamole", "price": 4}'>Guacamole - R$ 4,00</option>
+                </select>
+            </div>
+        </div>
+        
+        <button onclick="addBurgerToCart('Argentina Gourmet', 'size-argentina', 'addons-argentina')">Adicionar</button>
     </div>
+    
     <div class="menu-item" data-category="gourmet">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0QUaySBnQ7aaWyJX0m4gvLxq1VYvuky31mA&usqp=CAU" alt="Alemanha" />
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsQk_cOUItVUyzEDyfZB-uYGEtUlbpRfP9sBfbmfxFZFmyadJ6Bu025tE&s=10" alt="Argentina Gourmet" />
         <h3>Alemanha Gourmet</h3>
-            <p> Pão brioche, 2 hamb, costela 150g, queijo, alface, tomate, bacon molho barbecue e molho grill. </p>
-        <span>R$ 55,00</span>
-        <button onclick="addToCart('Alemanha Gourmet', 55)">Adicionar</button>
+        <p>Pão brioche, hamb, costela 150g, queijo, rúcula, bacon e molho grill.</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-alemanha">Escolha o tamanho:</label>
+                <select id="size-alemanha">
+                    <option value="30">Pequeno - R$ 30,00</option>
+                    <option value="40">Grande - R$ 40,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-alemanha">Adicionais:</label>
+                <select id="addons-alemanha" multiple>
+                    <option value='{"name": "Bacon", "price": 5}'>Bacon - R$ 5,00</option>
+                    <option value='{"name": "Queijo Extra", "price": 3}'>Queijo Extra - R$ 3,00</option>
+                    <option value='{"name": "Guacamole", "price": 4}'>Guacamole - R$ 4,00</option>
+                </select>
+            </div>
+        </div>
+        
+        <button onclick="addBurgerToCart('Alemanha Gourmet', 'size-alemanha', 'addons-alemanha')">Adicionar</button>
     </div>
     
     <div class="menu-item" data-category="pastel">
@@ -783,7 +867,8 @@ legend {
     document.getElementById('acai-builder').classList.add('hidden');
 }
 
-    function addToCart(name, price, details = "") {
+    // Função para adicionar itens ao carrinho
+function addToCart(name, price, details = "") {
     const itemIndex = cart.findIndex(item => item.name === name && item.details === details);
 
     if (itemIndex > -1) {
@@ -797,23 +882,68 @@ legend {
     showNotification();
 }
 
-function addJuiceToCart(juiceName, sizeSelectId) {
+// Função para adicionar lanches ao carrinho
+function addBurgerToCart(burgerName, sizeSelectId, addonsSelectId) {
     const sizeSelect = document.getElementById(sizeSelectId);
-    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-    const size = selectedOption.text.split(' - ')[0]; // Ex: "500ml"
-    const price = parseFloat(selectedOption.value);
+    const selectedSizeOption = sizeSelect.options[sizeSelect.selectedIndex];
+    const size = selectedSizeOption.text.split(' - ')[0]; // Ex: "Padrão"
+    const price = parseFloat(selectedSizeOption.value);
 
-    // Passa o tamanho como parte dos detalhes apenas para bebidas
-    addToCart(juiceName, price, `Tamanho: ${size}`);
+    const addonsSelect = document.getElementById(addonsSelectId);
+    const selectedAddons = Array.from(addonsSelect.selectedOptions).map(option => JSON.parse(option.value));
+
+    const addonDetails = selectedAddons.map(addon => `${addon.name} (R$ ${addon.price})`).join(', ');
+    const totalAddonsPrice = selectedAddons.reduce((total, addon) => total + addon.price, 0);
+    
+    // Total final (preço do burger + preço dos adicionais)
+    const totalPrice = price + totalAddonsPrice;
+
+    // Cria a string de detalhes com "Adicionais" apenas se houver
+    let details = `Tamanho: ${size}`;
+    if (selectedAddons.length > 0) {
+        details += `, Adicionais: ${addonDetails}`;
+    }
+
+    // Passa o tamanho e os adicionais como parte dos detalhes
+    addToCart(burgerName, totalPrice, details);
 }
 
-function updatePrice(selectElement, priceDisplayId, priceSmall, priceLarge) {
-    const selectedValue = parseFloat(selectElement.value); // Valor do tamanho escolhido
-    const priceDisplay = document.getElementById(priceDisplayId); // Elemento que exibe o preço
-
-    // Atualiza o texto com o valor correspondente
-    priceDisplay.innerText = `R$ ${selectedValue.toFixed(2)}`;
+// Funço para  obter adicionais selecionados
+function getSelectedAddons(selectId) {
+    const select = document.getElementById(selectId);
+    
+    if (!select) {
+        console.error("Adicionais não encontrado");
+        return [];
+    }
+    
+    const selectedOptions = Array.from(select.selectedOptions);
+    return selectedOptions.map(option => JSON.parse(option.value)); // Retorna os adicionais como objetos
 }
+
+// Exemplo de como você pode exibir o conteúdo do carrinho (atualize conforme sua implementação)
+function updateCart() {
+    const cartContainer = document.getElementById("cart");
+    cartContainer.innerHTML = ""; // Limpa o carrinho atual
+
+    cart.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.textContent = `${item.name} - ${item.details} - R$ ${item.price} (${item.quantity}x)`;
+
+        // Adiciona adicionais, se existirem
+        if (item.addons.length > 0) {
+            const addonsList = item.addons.map(addon => `${addon.name} - R$ ${addon.price}`).join(", ");
+            itemDiv.textContent += ` - Adicionais: ${addonsList}`;
+        }
+
+        cartContainer.appendChild(itemDiv);
+    });
+}
+
+// Aguarda o carregamento do DOM
+document.addEventListener('DOMContentLoaded', () => {
+    // Aqui você pode adicionar event listeners ou outras funções que dependem do DOM estar carregado
+});
 
 function updatePastelPrice(selectElement, priceDisplayId) {
     const selectedValue = parseFloat(selectElement.value); // Valor do sabor escolhido
@@ -853,6 +983,26 @@ function addPastelToCart(selectId) {
 
     cartTotal.textContent = total.toFixed(2); // Esta linha está correta
 }
+
+    function updatePrice(selectElement, priceId, smallPrice, largePrice) {
+        const selectedValue = selectElement.value;
+        const priceDisplay = document.getElementById(priceId);
+        
+        if (selectedValue == smallPrice) {
+            priceDisplay.innerText = `R$ ${smallPrice},00`;
+        } else if (selectedValue == largePrice) {
+            priceDisplay.innerText = `R$ ${largePrice},00`;
+        }
+    }
+
+    function addJuiceToCart(juiceName, sizeSelectId) {
+        const sizeSelect = document.getElementById(sizeSelectId);
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+        const size = selectedOption.text.split(' - ')[0];
+        const price = parseFloat(selectedOption.value);
+
+        addToCart(`${juiceName} (${size})`, price);
+    }
 
     function sendOrder() {
     // Verifica se o carrinho está vazio
