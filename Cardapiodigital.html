@@ -136,6 +136,23 @@ nav ul li a {
     margin-bottom: 10px; /* Espaçamento abaixo da seção */
 }
 
+.size-addons {
+    margin-bottom: 10px; /* Espaço entre a seleção de tamanhos/adicionais e o campo de observações */
+}
+
+textarea {
+    width: 100%; /* Faz o campo de texto ocupar toda a largura disponível */
+    height: 50px; /* Altura do campo de texto */
+    padding: 5px; /* Espaçamento interno */
+    border: 1px solid #ccc; /* Borda do campo */
+    border-radius: 4px; /* Cantos arredondados */
+    box-sizing: border-box; /* Inclui padding e border na largura total */
+}
+
+button {
+    margin-top: 10px; /* Espaço acima do botão */
+}
+
 .size-selection,
 .addons-selection {
     width: 100%; /* Ocupa a largura total */
@@ -533,6 +550,23 @@ legend {
     margin: 0;
     padding: 0;
 }
+
+.radio-group {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espaço entre os elementos */
+}
+
+.radio-group input {
+    margin: 0;
+    accent-color: #4CAF50; /* Personaliza a cor dos radio buttons */
+}
+
+.radio-group label {
+    margin-right: 15px;
+    font-size: 16px;
+    cursor: pointer;
+}
     </style>
 </head>
 <body>
@@ -587,8 +621,11 @@ legend {
                 </select>
             </div>
         </div>
+
+        <label for="observacoes-burger">Observações:</label>
+        <textarea id="observacoes-burger" placeholder="(ex: sem alface) opcional"></textarea>
         
-        <button onclick="addBurgerToCart('X-Burger', 'size-burger', 'addons-burger')">Adicionar</button>
+        <button onclick="addBurgerToCart('X-Burger', 'size-burger', 'addons-burger', 'observacoes-burger')">Adicionar</button>
     </div>
 
     <!-- Exemplo de outro lanche -->
@@ -614,12 +651,15 @@ legend {
                 </select>
             </div>
         </div>
+
+        <label for="observacoes-argentina">Observações:</label>
+        <textarea id="observacoes-argentina" placeholder="(ex: sem alface) opcional"></textarea>
         
-        <button onclick="addBurgerToCart('Argentina Gourmet', 'size-argentina', 'addons-argentina')">Adicionar</button>
+        <button onclick="addBurgerToCart('Argentina Gourmet', 'size-argentina', 'addons-argentina', 'observacoes-argentina')">Adicionar</button>
     </div>
     
     <div class="menu-item" data-category="gourmet">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsQk_cOUItVUyzEDyfZB-uYGEtUlbpRfP9sBfbmfxFZFmyadJ6Bu025tE&s=10" alt="Argentina Gourmet" />
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsQk_cOUItVUyzEDyfZB-uYGEtUlbpRfP9sBfbmfxFZFmyadJ6Bu025tE&s=10" alt="Alemanha Gourmet" />
         <h3>Alemanha Gourmet</h3>
         <p>Pão brioche, hamb, costela 150g, queijo, rúcula, bacon e molho grill.</p>
         
@@ -640,9 +680,12 @@ legend {
                 </select>
             </div>
         </div>
+
+        <label for="observacoes-alemanha">Observações:</label>
+        <textarea id="observacoes-alemanha" placeholder="(ex: sem alface) opcional"></textarea>
         
-        <button onclick="addBurgerToCart('Alemanha Gourmet', 'size-alemanha', 'addons-alemanha')">Adicionar</button>
-    </div>
+        <button onclick="addBurgerToCart('Alemanha Gourmet', 'size-alemanha', 'addons-alemanha', 'observacoes-alemanha')">Adicionar</button>
+    </div> 
     
     <div class="menu-item" data-category="pastel">
     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTipyAFdNwI2W6I7oWOt1RNPSqczEPgX7tda8q5wPcfP8Zcm3LbTXCJntw&s=10" alt="Pastel" />
@@ -759,72 +802,65 @@ legend {
     <ul id="cart-items"></ul>
     <p1><strong>Total: R$ <span id="cart-total">0,00</span></strong></p1>
 
-    <div class="endereco-container">
-    <h4>Endereço de Entrega</h4>
-    
-    <label for="nome">Nome:</label>
-    <input type="text" id="nome" placeholder="Seu nome">
-
-    <label for="cep">CEP:</label>
-    <input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
-
-    <label for="rua">Rua:</label>
-    <input type="text" id="rua" placeholder="Rua">
-
-    <label for="numero">Número:</label>
-    <input type="text" id="numero" placeholder="Número da Casa">
-
-    <label for="bairro">Bairro:</label>
-    <input type="text" id="bairro" placeholder="Bairro">
-
-    <label for="cidade">Cidade:</label>
-    <input type="text" id="cidade" placeholder="Cidade">
-
-    <label for="estado">Estado:</label>
-    <input type="text" id="estado" placeholder="Estado">
-</div>
-    
-    <div class="pagamento-container">
-    <h4>Forma de Pagamento</h4>
-    <select id="payment-method" onchange="toggleTroco()">
-        <option value="" disabled selected>Selecione</option>
-        <option value="pix">Pix</option>
-        <option value="cartao">Cartão de Crédito</option>
-        <option value="dinheiro">Dinheiro</option>
-    </select>
-
-    <div id="troco-container" class="hidden">
-        <label for="troco">Troco para:</label>
-        <input type="number" id="troco" placeholder="Valor em reais">
+    <div>
+    <h4>Opção de Entrega:</h4>
+    <div class="radio-group">
+        <input type="radio" id="entrega" name="delivery" value="entrega" checked onclick="toggleAddressFields(true)">
+        <label for="entrega">Entrega</label>
+        <input type="radio" id="retirar" name="delivery" value="retirar" onclick="toggleAddressFields(false)">
+        <label for="retirar">Retirar no Local</label>
     </div>
 
-    <div id="pix-container" class="hidden">
-        <h4>Chave Pix</h4>
-        <div class="pix-info">
-            <img src="https://img.icons8.com/fluent/512/pix.png" alt="Logo Pix">
-            <input type="text" id="pix-key" value="46964164880" readonly>
-            <button onclick="copyPix()">Copiar Pix</button>
+    <div class="endereco-container">
+        <h4>Endereço de Entrega</h4>
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" placeholder="Seu nome">
+
+        <label for="cep">CEP:</label>
+        <input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
+
+        <label for="rua">Rua:</label>
+        <input type="text" id="rua" placeholder="Rua">
+
+        <label for="numero">Número:</label>
+        <input type="text" id="numero" placeholder="Número da Casa">
+
+        <label for="bairro">Bairro:</label>
+        <input type="text" id="bairro" placeholder="Bairro">
+
+        <label for="cidade">Cidade:</label>
+        <input type="text" id="cidade" placeholder="Cidade">
+
+        <label for="estado">Estado:</label>
+        <input type="text" id="estado" placeholder="Estado">
+    </div>
+
+    <div class="pagamento-container">
+        <h4>Forma de Pagamento</h4>
+        <select id="payment-method" onchange="toggleTroco()">
+            <option value="" disabled selected>Selecione</option>
+            <option value="pix">Pix</option>
+            <option value="cartao">Cartão de Crédito</option>
+            <option value="dinheiro">Dinheiro</option>
+        </select>
+
+        <div id="troco-container" class="hidden">
+            <label for="troco">Troco para:</label>
+            <input type="number" id="troco" placeholder="Valor em reais">
+        </div>
+
+        <div id="pix-container" class="hidden">
+            <h4>Chave Pix</h4>
+            <div class="pix-info">
+                <img src="https://img.icons8.com/fluent/512/pix.png" alt="Logo Pix">
+                <input type="text" id="pix-key" value="46964164880" readonly>
+                <button onclick="copyPix()">Copiar Pix</button>
+            </div>
         </div>
     </div>
+
+    <button class="send-btn" onclick="sendOrder()">Enviar Pedido</button>
 </div>
-
-    <button class="send-btn" onclick="sendOrder()">Enviar Pedido</button>
-    
-    <div id="checkout-container" class="endereco-container hidden">
-    <h4>Finalizar Pedido</h4>
-    <label for="endereco">Endereço:</label>
-    <input type="text" id="endereco" required placeholder="Digite seu endereço">
-
-    <label for="pagamento">Forma de Pagamento:</label>
-    <select id="pagamento" required>
-        <option value="" disabled selected>Selecione uma opção</option>
-        <option value="cartao">Cartão de Crédito</option>
-        <option value="pix">Pix</option>
-        <option value="dinheiro">Dinheiro</option>
-    </select>
-
-    <button class="send-btn" onclick="sendOrder()">Enviar Pedido</button>
-</div> 
 </div>
 
 <script>
@@ -883,29 +919,32 @@ function addToCart(name, price, details = "") {
 }
 
 // Função para adicionar lanches ao carrinho
-function addBurgerToCart(burgerName, sizeSelectId, addonsSelectId) {
-    const sizeSelect = document.getElementById(sizeSelectId);
-    const selectedSizeOption = sizeSelect.options[sizeSelect.selectedIndex];
-    const size = selectedSizeOption.text.split(' - ')[0]; // Ex: "Padrão"
-    const price = parseFloat(selectedSizeOption.value);
-
-    const addonsSelect = document.getElementById(addonsSelectId);
-    const selectedAddons = Array.from(addonsSelect.selectedOptions).map(option => JSON.parse(option.value));
-
-    const addonDetails = selectedAddons.map(addon => `${addon.name} (R$ ${addon.price})`).join(', ');
-    const totalAddonsPrice = selectedAddons.reduce((total, addon) => total + addon.price, 0);
+function addBurgerToCart(name, sizeId, addonsId, observacoesId) {
+    const sizeSelect = document.getElementById(sizeId);
+    const selectedSize = sizeSelect.options[sizeSelect.selectedIndex];
+    const price = parseFloat(selectedSize.value);
     
-    // Total final (preço do burger + preço dos adicionais)
-    const totalPrice = price + totalAddonsPrice;
+    let total = price;
+    let description = `${name} (${selectedSize.text})`;
 
-    // Cria a string de detalhes com "Adicionais" apenas se houver
-    let details = `Tamanho: ${size}`;
-    if (selectedAddons.length > 0) {
-        details += `, Adicionais: ${addonDetails}`;
+    const selectedAddons = [...document.querySelectorAll(`#${addonsId} option:checked`)];
+    const addonNames = selectedAddons.map(option => {
+        const addon = JSON.parse(option.value);
+        total += addon.price;
+        return addon.name;
+    });
+
+    if (addonNames.length > 0) {
+        description += ` + ${addonNames.join(', ')}`;
     }
 
-    // Passa o tamanho e os adicionais como parte dos detalhes
-    addToCart(burgerName, totalPrice, details);
+    // Captura o valor do campo de observações
+    const observacoes = document.getElementById(observacoesId).value.trim();
+    if (observacoes) {
+        description += ` (Observações: ${observacoes})`; // Adiciona as observações à descrição
+    }
+
+    addToCart(description, total);
 }
 
 // Funço para  obter adicionais selecionados
@@ -951,6 +990,14 @@ function updatePastelPrice(selectElement, priceDisplayId) {
 
     // Atualiza o texto com o valor correspondente
     priceDisplay.innerText = `${selectedValue.toFixed(2)}`;
+}
+
+function toggleAddressFields(enable) {
+    const fields = document.querySelectorAll('.endereco-container input:not(#nome)');
+    fields.forEach(field => {
+        field.disabled = !enable;
+        field.required = enable; // Define como obrigatório apenas se for entrega
+    });
 }
 
 function addPastelToCart(selectId) {
@@ -1011,6 +1058,9 @@ function addPastelToCart(selectId) {
         return;
     }
 
+    // Verifica se a opção "Retirar no Local" foi selecionada
+    const isDelivery = document.getElementById('entrega').checked;
+
     // Coleta os dados do cliente e endereço
     const nome = document.getElementById('nome').value;
     const rua = document.getElementById('rua').value;
@@ -1025,8 +1075,8 @@ function addPastelToCart(selectId) {
         return;
     }
 
-    // Verifica se todos os campos do endereço estão preenchidos
-    if (!rua || !numero || !bairro || !cidade || !estado) {
+    // Verifica os campos de endereço apenas se a entrega for selecionada
+    if (isDelivery && (!rua || !numero || !bairro || !cidade || !estado)) {
         alert("Por favor, preencha todos os campos do endereço!");
         return;
     }
@@ -1047,14 +1097,14 @@ function addPastelToCart(selectId) {
     let message = `Pedido de ${nome} às ${horarioPedido}:\n`;
     const groupedItems = {};
 
-   // Agrupa os itens do carrinho
-cart.forEach(item => {
-    const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
-    if (!groupedItems[key]) {
-        groupedItems[key] = { price: item.price, quantity: 0 };
-    }
-    groupedItems[key].quantity += item.quantity;
-});
+    // Agrupa os itens do carrinho
+    cart.forEach(item => {
+        const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
+        if (!groupedItems[key]) {
+            groupedItems[key] = { price: item.price, quantity: 0 };
+        }
+        groupedItems[key].quantity += item.quantity;
+    });
 
     // Adiciona os itens agrupados à mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
@@ -1064,8 +1114,12 @@ cart.forEach(item => {
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     message += `\nTotal: R$ ${total.toFixed(2)}\n\n`;
 
-    // Adiciona os dados do endereço à mensagem
-    message += `Endereço:\n${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}\n\n`;
+    // Adiciona o endereço à mensagem, se for entrega
+    if (isDelivery) {
+        message += `Endereço:\n${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}\n\n`;
+    } else {
+        message += "Retirada no Local\n\n";
+    }
 
     // Adiciona a forma de pagamento à mensagem
     message += `Forma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
