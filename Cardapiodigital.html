@@ -105,6 +105,15 @@ nav ul li a {
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s; /* Animação ao passar o mouse */
+    text-align: center;
+}
+
+.acai-img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    object-fit: cover;
 }
 
 .menu-item:hover {
@@ -175,7 +184,7 @@ nav ul li a {
     padding: 20px; /* mais espaço interno */
     border-radius: 12px; /* bordas mais arredondadas */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* sombra mais sutil */
-    display: none; /* inicialmente oculto */
+    display: none; /* oculto */
     max-height: 600px; /* altura máxima do carrinho */
     width: 350px;
     overflow-y: auto; /* rolagem vertical se necessário */
@@ -338,7 +347,7 @@ nav ul li a {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    color: #333;
+    color: ;
 }
 
 .pagamento-container input {
@@ -363,7 +372,7 @@ nav ul li a {
 
 .pix-info input {
     border: none;
-    background: transparent;
+    background: ;
     font-size: 16px;
     flex: 1;
     cursor: text;
@@ -383,26 +392,29 @@ nav ul li a {
     background-color: #1c9c4b;
 }
 
-.montar-button {
-    background-color: #4CAF50;
+.menu-item[data-category="acai"] .montar-button {
+    background-color: purple;
     color: white;
-    padding: 10px 15px;
     border: none;
-    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
     cursor: pointer;
+    border-radius: 5px;
     transition: background-color 0.3s;
+    margin-top: 10px;
 }
 
-.montar-button:hover {
-    background-color: #388E3C;
+.menu-item[data-category="acai"] .montar-button:hover {
+    background-color: #45a049;
 }
 
 .acai-container {
-    max-width: 400px;
+    max-width: 500px;
     margin: 20px auto;
     padding: 20px;
     background-color: #fff;
     border-radius: 8px;
+    border: 2px solid purple;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -532,8 +544,10 @@ legend {
         <span>R$ 8,00</span>
         <button onclick="addToCart('Suco Natural', 8)">Adicionar</button>
     </div>
+    
     <div class="menu-item" data-category="acai">
-    <h3>Monte seu açaí</h3>
+    <h3>Monte seu Açaí</h3>
+    <img src="https://gozgames.neocities.org/FormatConvert_20241017_063852_2391.webp" alt="Açaí delicioso" class="acai-img">
     <button class="montar-button" onclick="openAcaiBuilder()">Montar Açaí</button>
 </div>
 
