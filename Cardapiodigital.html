@@ -575,6 +575,9 @@ legend {
 
     <div class="endereco-container">
     <h4>Endereço de Entrega</h4>
+    
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" placeholder="Seu nome">
 
     <label for="cep">CEP:</label>
     <input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
@@ -709,13 +712,20 @@ legend {
         return;
     }
 
-    // Coleta os dados do endereço
+    // Coleta os dados do cliente e endereço
+    const nome = document.getElementById('nome').value;
     const rua = document.getElementById('rua').value;
     const numero = document.getElementById('numero').value;
     const bairro = document.getElementById('bairro').value;
     const cidade = document.getElementById('cidade').value;
     const estado = document.getElementById('estado').value;
-    
+
+    // Verifica se o nome está preenchido
+    if (!nome) {
+        alert("Por favor, preencha o campo nome!");
+        return;
+    }
+
     // Verifica se todos os campos do endereço estão preenchidos
     if (!rua || !numero || !bairro || !cidade || !estado) {
         alert("Por favor, preencha todos os campos do endereço!");
@@ -729,7 +739,7 @@ legend {
         return;
     }
 
-    let message = `Pedido:\n`;
+    let message = `Pedido de ${nome}:\n`;
     const groupedItems = {};
 
     // Agrupa os itens do carrinho
@@ -768,7 +778,7 @@ legend {
     // Cria a URL para o WhatsApp
     const encodedMessage = encodeURIComponent(message);
     const whatsappURL = `https://wa.me/5519998133764?text=${encodedMessage}`;
-    
+
     // Abre o WhatsApp com a mensagem formatada
     window.open(whatsappURL, '_blank');
 
@@ -811,7 +821,7 @@ legend {
             })
             .catch(() => alert('Erro ao buscar o CEP!'));
     } else {
-        alert('CEP inválido! Não é obrigatório por cep');
+        alert('CEP inválido! Não é obrigatório por CEP!');
     }
 }
 
