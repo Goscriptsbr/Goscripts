@@ -542,20 +542,36 @@ legend {
 
     <label for="acai-size">Tamanho:</label>
     <select id="acai-size">
-        <option value="12">300ml - R$ 12,00</option>
-        <option value="16">500ml - R$ 16,00</option>
+        <option value="7.50">300ml - R$ 7,50</option>
+        <option value="9.50">400ml - R$ 9,50</option>
+        <option value="11.50">500ml - R$ 11,50</option>
+        <option value="15.50">700ml - R$ 15,50</option>
     </select>
 
     <fieldset>
         <legend>Adicionais:</legend>
         <label><input type="checkbox" value="2" data-name="Granola"> Granola (+R$ 2,00)</label>
         <label><input type="checkbox" value="3" data-name="Leite Condensado"> Leite Condensado (+R$ 3,00)</label>
+        <label><input type="checkbox" value="2. 50" data-name="Bis"> Bis (+R$ 2,50)</label>
+    </fieldset>
+    
+    <fieldset>
+        <legend>Mousses:</legend>
+        <label><input type="checkbox" value="4.50" data-name="Mousse de Morango"> Morango (+R$ 4,50)</label>
+        <label><input type="checkbox" value="4.50" data-name="Mousse de Maracuja"> Maracujá (+R$ 4,50)</label>
+        <label><input type="checkbox" value="4. 50" data-name="Mousse de Limão"> Limão (+R$ 4,50)</label>
     </fieldset>
 
     <fieldset>
         <legend>Frutas:</legend>
-        <label><input type="checkbox" value="4" data-name="Morango"> Morango (+R$ 4,00)</label>
-        <label><input type="checkbox" value="3" data-name="Banana"> Banana (+R$ 3,00)</label>
+        <label><input type="checkbox" value="4" data-name="Fruta Morango"> Morango (+R$ 4,00)</label>
+        <label><input type="checkbox" value="3" data-name="Fruta Banana"> Banana (+R$ 3,00)</label>
+    </fieldset>
+    
+    <fieldset>
+        <legend>Coberturas:</legend>
+        <label><input type="checkbox" value="2" data-name="Cobertura Morango"> Morango (+R$ 2,00)</label>
+        <label><input type="checkbox" value="4.50" data-name="Cobertura Chocolate"> Chocolate (+R$ 2,00)</label>
     </fieldset>
 
     <button class="add-button" onclick="addAcaiToCart()">Adicionar ao Carrinho</button>
@@ -656,19 +672,30 @@ legend {
     }
 
     function addAcaiToCart() {
-        const size = document.getElementById('acai-size').value;
-        let total = parseFloat(size);
+    const sizeSelect = document.getElementById('acai-size');
+    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex]; // Obtém a opção selecionada
+    const size = selectedOption.text.split(' - ')[0]; // Extrai o tamanho (e.g., "300ml")
+    const price = parseFloat(selectedOption.value); // Obtém o preço do tamanho
 
-        const adicionais = [...document.querySelectorAll('#acai-builder input[type="checkbox"]:checked')];
-        let acaiDescription = 'Açaí Personalizado: ';
-        adicionais.forEach(add => {
-            total += parseFloat(add.value);
-            acaiDescription += `${add.dataset.name}, `;
-        });
+    let total = price; // Inicializa o total com o preço do tamanho
 
-        addToCart(acaiDescription.slice(0, -2), total);
-        document.getElementById('acai-builder').classList.add('hidden');
-    }
+    // Obtém os adicionais selecionados
+    const adicionais = [...document.querySelectorAll('#acai-builder input[type="checkbox"]:checked')];
+    let acaiDescription = `Açaí ${size}`; // Inclui apenas o tamanho na descrição
+
+    // Adiciona os nomes dos adicionais na descrição
+    adicionais.forEach(add => {
+        total += parseFloat(add.value); // Adiciona o preço dos adicionais ao total
+        acaiDescription += `, ${add.dataset.name}`; // Adiciona o nome do adicional
+    });
+
+    // Remove a última vírgula e espaço, se houver
+    acaiDescription = acaiDescription.trim().replace(/,$/, '');
+
+    // Adiciona o açaí ao carrinho com a descrição e o total calculado
+    addToCart(acaiDescription, total);
+    document.getElementById('acai-builder').classList.add('hidden');
+}
 
     function addToCart(name, price, details = "") {
     const itemIndex = cart.findIndex(item => item.name === name && item.details === details);
@@ -748,14 +775,14 @@ legend {
     let message = `Pedido de ${nome} às ${horarioPedido}:\n`;
     const groupedItems = {};
 
-    // Agrupa os itens do carrinho
-    cart.forEach(item => {
-        const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
-        if (!groupedItems[key]) {
-            groupedItems[key] = { price: item.price, quantity: 0 };
-        }
-        groupedItems[key].quantity += item.quantity;
-    });
+   // Agrupa os itens do carrinho
+cart.forEach(item => {
+    const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
+    if (!groupedItems[key]) {
+        groupedItems[key] = { price: item.price, quantity: 0 };
+    }
+    groupedItems[key].quantity += item.quantity;
+});
 
     // Adiciona os itens agrupados à mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
