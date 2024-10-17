@@ -492,6 +492,20 @@ legend {
   p{
       color: grey;
   }
+  
+  .price-container {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Espaço entre o "R$" e o valor */
+    font-size: 16px;
+    font-weight: bold;
+    margin-left: 40%;
+}
+
+.price-container span {
+    margin: 0;
+    padding: 0;
+}
     </style>
 </head>
 <body>
@@ -509,9 +523,9 @@ legend {
         <li><a href="#" onclick="filterItems('all')">Tudo</a></li>
         <li><a href="#" onclick="filterItems('lanches')">Lanches</a></li>
         <li><a href="#" onclick="filterItems('gourmet')">Gourmet</a></li>
+        <li><a href="#" onclick="filterItems('pastel')">Pastéis</a></li>
         <li><a href="#" onclick="filterItems('bebidas')">Bebidas</a></li>
         <li><a href="#" onclick="filterItems('acai')">Açai</a></li>
-        <li><a href="#" onclick="filterItems('sobremesas')">Sobremesas</a></li>
         <li><a href="#" onclick="filterItems('salgados')">Salgados</a></li>
     </ul>
     <button id="scroll-right" onclick="scrollRightItems()">»</button></button></button>
@@ -545,12 +559,56 @@ legend {
         <span>R$ 55,00</span>
         <button onclick="addToCart('Alemanha Gourmet', 55)">Adicionar</button>
     </div>
-    <div class="menu-item" data-category="bebidas">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10" alt="Suco Natural" />
-        <h3>Suco Natural</h3>
-        <span>R$ 8,00</span>
-        <button onclick="addToCart('Suco Natural', 8)">Adicionar</button>
+    
+    <div class="menu-item" data-category="pastel">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTipyAFdNwI2W6I7oWOt1RNPSqczEPgX7tda8q5wPcfP8Zcm3LbTXCJntw&s=10" alt="Pastel" />
+    <h3>Escolha seu Pastel</h3>
+
+    <label for="sabor-pastel">Escolha o sabor:</label>
+    <select id="sabor-pastel" onchange="updatePastelPrice(this, 'pastel-price')">
+        <option value="8">Carne - R$ 8,00</option>
+        <option value="9">Queijo - R$ 9,00</option>
+        <option value="10">Frango com Catupiry - R$ 10,00</option>
+        <option value="12">Calabresa - R$ 12,00</option>
+    </select>
+
+    <div class="price-container">
+        <span>R$</span>
+        <span id="pastel-price">8,00</span>
     </div>
+
+    <button onclick="addPastelToCart('sabor-pastel')">Adicionar</button>
+</div>
+    
+    <div class="menu-item" data-category="bebidas">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10" 
+         alt="Suco Natural" />
+    <h3>Suco natural Abacaxi</h3>
+
+    <label for="size-abacaxi">Escolha o tamanho:</label>
+    <select id="size-abacaxi" onchange="updatePrice(this, 'abacaxi-price', 10, 16)">
+        <option value="10">500ml - R$ 10,00</option>
+        <option value="16">1 litro - R$ 16,00</option>
+    </select>
+
+    <span id="abacaxi-price">R$ 10,00</span>
+    <button onclick="addJuiceToCart('Suco natural Abacaxi', 'size-abacaxi')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="bebidas">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10" 
+         alt="Suco Natural" />
+    <h3>Suco natural Maracujá</h3>
+
+    <label for="size-maracuja">Escolha o tamanho:</label>
+    <select id="size-maracuja" onchange="updatePrice(this, 'maracuja-price', 12, 18)">
+        <option value="12">500ml - R$ 12,00</option>
+        <option value="18">1 litro - R$ 18,00</option>
+    </select>
+
+    <span id="maracuja-price">R$ 12,00</span>
+    <button onclick="addJuiceToCart('Suco natural Maracujá', 'size-maracuja')">Adicionar</button>
+</div>
     
     <div class="menu-item" data-category="acai">
     <h3>Monte seu Açaí</h3>
@@ -737,6 +795,42 @@ legend {
     }
     updateCart();
     showNotification();
+}
+
+function addJuiceToCart(juiceName, sizeSelectId) {
+    const sizeSelect = document.getElementById(sizeSelectId);
+    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+    const size = selectedOption.text.split(' - ')[0]; // Ex: "500ml"
+    const price = parseFloat(selectedOption.value);
+
+    // Passa o tamanho como parte dos detalhes apenas para bebidas
+    addToCart(juiceName, price, `Tamanho: ${size}`);
+}
+
+function updatePrice(selectElement, priceDisplayId, priceSmall, priceLarge) {
+    const selectedValue = parseFloat(selectElement.value); // Valor do tamanho escolhido
+    const priceDisplay = document.getElementById(priceDisplayId); // Elemento que exibe o preço
+
+    // Atualiza o texto com o valor correspondente
+    priceDisplay.innerText = `R$ ${selectedValue.toFixed(2)}`;
+}
+
+function updatePastelPrice(selectElement, priceDisplayId) {
+    const selectedValue = parseFloat(selectElement.value); // Valor do sabor escolhido
+    const priceDisplay = document.getElementById(priceDisplayId); // Elemento que exibe o preço
+
+    // Atualiza o texto com o valor correspondente
+    priceDisplay.innerText = `${selectedValue.toFixed(2)}`;
+}
+
+function addPastelToCart(selectId) {
+    const selectElement = document.getElementById(selectId); // Select do sabor
+    const selectedOption = selectElement.options[selectElement.selectedIndex]; // Opção selecionada
+    const flavor = selectedOption.text.split(' - ')[0]; // Nome do sabor
+    const price = parseFloat(selectedOption.value); // Preço do sabor
+
+    // Adiciona ao carrinho com a função existente
+    addToCart(`Pastel de ${flavor}`, price);
 }
 
     function updateCart() {
