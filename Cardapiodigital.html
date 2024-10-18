@@ -1069,12 +1069,22 @@ function addPastelToCart(selectId) {
         addToCart(`${juiceName} (${size})`, price);
     }
 
-    function sendOrder() {
+    let originalCart = []; // Armazena uma cópia do carrinho original
+
+function clearCart() {
+    cart = []; // Limpa o carrinho
+    updateCart(); // Atualiza a exibição do carrinho
+}
+
+function sendOrder() {
     // Verifica se o carrinho está vazio
     if (cart.length === 0) {
         alert("Seu carrinho está vazio!");
         return;
     }
+
+    // Salva os itens atuais do carrinho antes de enviá-los
+    originalCart = [...cart];
 
     // Verifica se a opção "Retirar no Local" foi selecionada
     const isDelivery = document.getElementById('entrega').checked;
@@ -1160,8 +1170,7 @@ function addPastelToCart(selectId) {
     window.open(whatsappURL, '_blank');
 
     // Limpa o carrinho após o envio do pedido
-    cart = [];
-    updateCartDisplay(); // Atualiza a exibição do carrinho
+    clearCart();
 }
 
     function removeFromCart(index) {
