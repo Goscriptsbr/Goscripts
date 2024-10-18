@@ -559,12 +559,12 @@ legend {
 
 .radio-group input {
     margin: 0;
-    accent-color: #4CAF50; /* Personaliza a cor dos radio buttons */
+    accent-color: blue; /* Personaliza a cor dos radio buttons */
 }
 
 .radio-group label {
-    margin-right: 15px;
-    font-size: 16px;
+    margin-right: 50px;
+    font-size: 15px;
     cursor: pointer;
 }
 
@@ -582,6 +582,17 @@ legend {
     border-radius: 5px;
     border: 2px solid green;
     z-index: 1000; /* Para garantir que a notificação fique acima de outros elementos */
+}
+
+.milk-juice-select {
+    width: 100%; /* Ocupa toda a largura disponível no container */
+    max-width: 300px; /* Define um tamanho máximo para evitar overflow */
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    overflow: hidden; /* Esconde conteúdo extra que transborda */
 }
     </style>
 </head>
@@ -703,16 +714,35 @@ legend {
         <button onclick="addBurgerToCart('Alemanha Gourmet', 'size-alemanha', 'addons-alemanha', 'observacoes-alemanha')">Adicionar</button>
     </div> 
     
+    <!-- Item de Coxinha -->
+    <div class="menu-item" data-category="salgados">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPFqPcXMCIArwXBRxMSP5bg3KFSQ9cVPiDi7UdUIJY3_ii9wozjwuKfY4&s=10" alt="Coxinha" />
+        <h3>Coxinha de frango</h3>
+        <p>Obs: Massa de batata.</p>
+        
+        <button onclick="addCoxinhaToCart('Coxinha', 'observacoes-coxinha')">Adicionar</button>
+    </div> 
+        
     <div class="menu-item" data-category="pastel">
     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTipyAFdNwI2W6I7oWOt1RNPSqczEPgX7tda8q5wPcfP8Zcm3LbTXCJntw&s=10" alt="Pastel" />
     <h3>Escolha seu Pastel</h3>
 
     <label for="sabor-pastel">Escolha o sabor:</label>
     <select id="sabor-pastel" onchange="updatePastelPrice(this, 'pastel-price')">
-        <option value="8">Carne - R$ 8,00</option>
-        <option value="9">Queijo - R$ 9,00</option>
-        <option value="10">Frango com Catupiry - R$ 10,00</option>
+        <option value="12">Carne - R$ 12,00</option>
+        <option value="12">Queijo - R$ 12,00</option>
+        <option value="15">Frango com Catupiry - R$ 15,00</option>
         <option value="12">Calabresa - R$ 12,00</option>
+        <option value="12">Pizza - R$ 12,00</option>
+        <option value="15">Carne c/ queijo - R$ 15,00</option>
+        <option value="15">Calebresa c/ catupiry - R$ 15,00</option>
+        <option value="18">Misto - R$ 18,00</option>
+        <option value="14">Romeu e julieta - R$ 14,00</option>
+        <option value="15">Chocolate ao leite - R$ 15,00</option>
+        <option value="15">Chocolate branco - R$ 15,00</option>
+        <option value="15">Chocolate c/ avelã - R$ 15,00</option>
+        <option value="12">Doce de leite - R$ 12,00</option>
+        <option value="16">Chocolate c/ doce de leite - R$ 16,00</option>
     </select>
 
     <div class="price-container">
@@ -725,32 +755,114 @@ legend {
     
     <div class="menu-item" data-category="bebidas">
     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10" 
-         alt="Suco Natural" />
-    <h3>Suco natural Abacaxi</h3>
+         alt="Sucos" />
+    <h3>Seleção de Sucos Naturais</h3>
 
-    <label for="size-abacaxi">Escolha o tamanho:</label>
-    <select id="size-abacaxi" onchange="updatePrice(this, 'abacaxi-price', 10, 16)">
-        <option value="10">500ml - R$ 10,00</option>
-        <option value="16">1 litro - R$ 16,00</option>
+    <label for="juice-select">Escolha o sabor e tamanho:</label>
+    <select id="juice-select" class="milk-juice-select" 
+     onchange="updateJuicePrice(this, 'juice-price')">
+        <option value="10">Abacaxi 500ml - R$ 10,00</option>
+        <option value="15">Abacaxi 1L - R$ 15,00</option>
+        <option value="16">Maracujá 500ml - R$ 16,00</option>
+        <option value="20">Maracujá 1L - R$ 20,00</option>
+        <option value="10">Acerola 500ml - R$ 10,00</option>
+        <option value="15">Acerola 1L - R$ 15,00</option>
+        <option value="14">Amora 500ml - R$ 14,00</option>
+        <option value="19">Amora 1L - R$ 19,00</option>
+        <option value="11">Capuaçu 500ml - R$ 11,00</option>
+        <option value="16">Capuaçu 1L - R$ 16,00</option>
+        <option value="11">Coco 500ml - R$ 11,00</option>
+        <option value="16">Coco 1L - R$ 16,00</option>
+        <option value="12">Frutas vermelhas 500ml - R$ 12,00</option>
+        <option value="18">Frutas vermelhas 1L - R$ 18,00</option>
+        <option value="10">Goiaba 500ml - R$ 10,00</option>
+        <option value="15">Goiaba 1L - R$ 15,00</option>
+        <option value="11">Graviola 500ml - R$ 11,00</option>
+        <option value="16">Graviola 1L - R$ 16,00</option>
+        <option value="10">Limao 500ml - R$ 10,00</option>
+        <option value="15">Limao 1L - R$ 15,00</option>
+        <option value="11">Kiwi 500ml - R$ 11,00</option>
+        <option value="16">Kiwi 1L - R$ 16,00</option>
+        <option value="11">Mamão 500ml - R$ 11,00</option>
+        <option value="15">Mamão 1L - R$ 15,00</option>
+        <option value="11">Melão 500ml - R$ 11,00</option>
+        <option value="15">Melão 1L - R$ 15,00</option>
+        <option value="10">Pêssego 500ml - R$ 10,00</option>
+        <option value="15">Pêssego 1L - R$ 15,00</option>
+        <option value="11">Uva 500ml - R$ 11,00</option>
+        <option value="16">Uva 1L - R$ 16,00</option>
+        <option value="10">Manga 500ml - R$ 10,00</option>
+        <option value="15">Manga 1L - R$ 15,00</option>
     </select>
 
-    <span id="abacaxi-price">R$ 10,00</span>
-    <button onclick="addJuiceToCart('Suco natural Abacaxi', 'size-abacaxi')">Adicionar</button>
+    <span id="juice-price">R$ 10,00</span>
+    <button onclick="addJuiceToCart('juice-select')">Adicionar</button>
 </div>
 
 <div class="menu-item" data-category="bebidas">
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10" 
-         alt="Suco Natural" />
-    <h3>Suco natural Maracujá</h3>
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10"
+    alt="Suco ao Leite" />
+    <h3>Seleção de Sucos cremosos</h3>
 
-    <label for="size-maracuja">Escolha o tamanho:</label>
-    <select id="size-maracuja" onchange="updatePrice(this, 'maracuja-price', 12, 18)">
-        <option value="12">500ml - R$ 12,00</option>
-        <option value="18">1 litro - R$ 18,00</option>
+    <label for="milk-juice-select">Escolha o sabor e tamanho:</label>
+<select id="milk-juice-select" class="milk-juice-select" 
+        onchange="updateJuicePrice(this, 'milk-juice-price')">
+    <option value="15">Morango cremoso 500ml - R$ 15,00</option>
+    <option value="20">Morango cremoso 1L - R$ 20,00</option>
+    <option value="20">Maracujá cremoso 500ml - R$ 20,00</option>
+    <option value="27">Maracujá cremoso 1L - R$ 27,00</option>
+    <option value="14">Chocolate (ovomaltine) cremoso 500ml - R$ 14,00</option>
+    <option value="19">Chocolate (ovomaltine) cremoso 1L - R$ 19,00</option>
+    <option value="15">Cocô cremoso 500ml - R$ 15,00</option>
+    <option value="20">Coco cremoso 1L - R$ 20,00</option>
+    <option value="14">Laranja cremosa 500ml - R$ 14,00</option>
+    <option value="19">Laranja cremosa 1L - R$ 19,00</option>
+    <option value="15">Uva cremosa 500ml - R$ 15,00</option>
+    <option value="20">Uva cremosa 1L - R$ 20,00</option>
+    <option value="15">Pêssego cremoso 500ml - R$ 15,00</option>
+    <option value="19">Pêssego cremoso 1L - R$ 19,00</option>
+</select>
+
+    <span id="milk-juice-price">R$ 15,00</span>
+    <button onclick="addJuiceToCart('milk-juice-select')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="bebidas">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10"
+        alt="Suco com Ninho" />
+    <h3>Seleção de Sucos com Ninho</h3>
+
+    <label for="ninho-juice-select">Escolha o sabor e tamanho:</label>
+    <select id="ninho-juice-select" class="milk-juice-select" 
+            onchange="updateNinhoJuicePrice(this)">
+        <option value="20">Morango com ninho 1L - R$ 20,00</option>
+        <option value="27">Maracujá com ninho 1L - R$ 27,00</option>
+        <option value="20">Coco com ninho 1L - R$ 20,00</option>
+        <option value="20">Uva com ninho 1L - R$ 20,00</option>
+        <option value="19">Pêssego com ninho 1L - R$ 19,00</option>
     </select>
 
-    <span id="maracuja-price">R$ 12,00</span>
-    <button onclick="addJuiceToCart('Suco natural Maracujá', 'size-maracuja')">Adicionar</button>
+    <span id="ninho-juice-price">R$ 20,00</span>
+    <button onclick="addNinhoJuiceToCart()">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="bebidas">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10"
+        alt="Suco com Ninho" />
+    <h2>Vitaminas</h2>
+    
+    <select id="vitamin-select"class="milk-juice-select">
+        <option value="0">Selecione uma vitamina</option>
+        <option value="15.00">Vitamina laranja, mamão, banana e maçã 500ml - R$ 15,00</option>
+        <option value="19.00">Vitamina laranja, mamão, banana e maçã 1L - R$ 19,00</option>
+        <option value="16.00">Vitamina leite, mamão, banana e maçã 500ml - R$ 16,00</option>
+        <option value="20.00">Vitamina leite, mamão, banana e maçã 1L - R$ 20,00</option>
+        <option value="18.00">Vitamina açaí, mamão, banana e maçã 500ml - R$ 18,00</option>
+        <option value="22.00">Vitamina açaí, mamão, banana e maçã 1L - R$ 22,00</option>
+        <!-- Adicione mais opções conforme necessário -->
+    </select>
+
+    <button onclick="addVitaminToCart()">Adicionar</button>
 </div>
     
     <div class="menu-item" data-category="acai">
@@ -823,7 +935,7 @@ legend {
     <h4>Opção de Entrega:</h4>
     <div class="radio-group">
         <input type="radio" id="entrega" name="delivery" value="entrega" checked onclick="toggleAddressFields(true)">
-        <label for="entrega">Entrega</label>
+        <label for="entrega">Delivery</label>
         <input type="radio" id="retirar" name="delivery" value="retirar" onclick="toggleAddressFields(false)">
         <label for="retirar">Retirar no Local</label>
     </div>
@@ -920,6 +1032,16 @@ legend {
     document.getElementById('acai-builder').classList.add('hidden');
 }
 
+function addVitaminToCart() {
+    const selectElement = document.getElementById('vitamin-select'); // Substitua 'vitamin-select' pelo ID correto do select das vitaminas
+    const selectedOption = selectElement.options[selectElement.selectedIndex]; // Obtém a opção selecionada
+    const vitaminName = selectedOption.text; // Nome da vitamina
+    const vitaminPrice = parseFloat(selectedOption.value); // Preço da vitamina
+
+    // Adiciona a vitamina ao carrinho
+    addToCart(vitaminName, vitaminPrice);
+}
+
     // Função para adicionar itens ao carrinho
 function addToCart(name, price, details = "") {
     const itemIndex = cart.findIndex(item => item.name === name && item.details === details);
@@ -939,11 +1061,23 @@ function addToCart(name, price, details = "") {
 // Função para adicionar lanches ao carrinho
 function addBurgerToCart(name, sizeId, addonsId, observacoesId) {
     const sizeSelect = document.getElementById(sizeId);
-    const selectedSize = sizeSelect.options[sizeSelect.selectedIndex];
-    const price = parseFloat(selectedSize.value);
     
+    // Verifica se sizeSelect é nulo
+    if (!sizeSelect) {
+        console.error("Size select element not found");
+        return; // Retorna se o elemento não for encontrado
+    }
+
+    const price = parseFloat(sizeSelect.value); // Pega o valor diretamente do select
+    
+    // Verifica se price é um número válido
+    if (isNaN(price)) {
+        console.error("Invalid price value");
+        return; // Retorna se o preço não for um número válido
+    }
+
     let total = price;
-    let description = `${name} (${selectedSize.text})`;
+    let description = `${name} (${sizeSelect.options[sizeSelect.selectedIndex].text})`;
 
     const selectedAddons = [...document.querySelectorAll(`#${addonsId} option:checked`)];
     const addonNames = selectedAddons.map(option => {
@@ -963,6 +1097,24 @@ function addBurgerToCart(name, sizeId, addonsId, observacoesId) {
     }
 
     addToCart(description, total);
+}
+
+function addCoxinhaToCart(name, observacoesId) {
+    const price = 10; // Defina o preço da coxinha
+    let total = price;
+    let description = `${name}`; // Nome do produto
+
+    // Captura o valor do campo de observações
+    const observacoes = document.getElementById(observacoesId);
+    
+    if (observacoes) {
+        const observacoesValue = observacoes.value.trim();
+        if (observacoesValue) {
+            description += ` (Observações: ${observacoesValue})`; // Adiciona as observações à descrição
+        }
+    }
+
+    addToCart(description, total); // Adiciona ao carrinho
 }
 
 // Funço para  obter adicionais selecionados
@@ -1018,6 +1170,22 @@ function toggleAddressFields(enable) {
     });
 }
 
+function updateNinhoJuicePrice(selectElement) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const price = selectedOption.value;
+    document.getElementById('ninho-juice-price').textContent = `R$ ${price},00`;
+}
+
+function addNinhoJuiceToCart() {
+    const selectElement = document.getElementById('ninho-juice-select'); // Obtém o select do Ninho Juice
+    const selectedOption = selectElement.options[selectElement.selectedIndex]; // Obtém a opção selecionada
+    const juiceName = selectedOption.text; // Nome do suco
+    const juicePrice = parseFloat(selectedOption.value); // Preço do suco
+
+    // Adiciona o Ninho Juice ao carrinho
+    addToCart(juiceName, juicePrice);
+}
+
 function addPastelToCart(selectId) {
     const selectElement = document.getElementById(selectId); // Select do sabor
     const selectedOption = selectElement.options[selectElement.selectedIndex]; // Opção selecionada
@@ -1060,14 +1228,33 @@ function addPastelToCart(selectId) {
         }
     }
 
-    function addJuiceToCart(juiceName, sizeSelectId) {
-        const sizeSelect = document.getElementById(sizeSelectId);
-        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-        const size = selectedOption.text.split(' - ')[0];
-        const price = parseFloat(selectedOption.value);
+    function addJuiceToCart(selectElementId) {
+    const selectElement = document.getElementById(selectElementId);
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    
+    const name = selectedOption.text.split(' - ')[0]; // Nome do suco (sem preço)
+    const price = parseFloat(selectedOption.value); // Preço como número
 
-        addToCart(`${juiceName} (${size})`, price);
+    // Verifica se o suco já está no carrinho
+    const itemIndex = cart.findIndex(item => item.name === name);
+
+    if (itemIndex > -1) {
+        // Se já estiver no carrinho, incrementa a quantidade
+        cart[itemIndex].quantity++;
+    } else {
+        // Adiciona um novo suco ao carrinho
+        cart.push({ name, price, quantity: 1 });
     }
+
+    updateCart(); // Atualiza a exibição do carrinho
+    showNotification(); // Mostra a notificação de item adicionado
+}
+    
+    function updateJuicePrice(selectElement, priceElementId) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const price = selectedOption.value;
+    document.getElementById(priceElementId).textContent = `R$ ${price},00`;
+}
 
     let originalCart = []; // Armazena uma cópia do carrinho original
 
@@ -1252,7 +1439,10 @@ function searchItems() {
     const items = document.querySelectorAll('.menu-item');
 
     items.forEach(item => {
-        const itemName = item.querySelector('h3').textContent.toLowerCase();
+        const titleElement = item.querySelector('h3');
+        // Verifica se o elemento h3 existe antes de acessar textContent
+        const itemName = titleElement ? titleElement.textContent.toLowerCase() : '';
+
         item.style.display = itemName.includes(input) ? 'block' : 'none';
     });
 }
