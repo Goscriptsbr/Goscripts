@@ -567,6 +567,22 @@ legend {
     font-size: 16px;
     cursor: pointer;
 }
+
+.hidden {
+    display: none;
+}
+
+#item-added-notification {
+    position: fixed;
+    top: 25%;
+    right: 85px;
+    background-color: #4CAF50; /* Cor de fundo verde */
+    color: white; /* Cor do texto branco */
+    padding: 10px;
+    border-radius: 5px;
+    border: 2px solid green;
+    z-index: 1000; /* Para garantir que a notificação fique acima de outros elementos */
+}
     </style>
 </head>
 <body>
@@ -793,6 +809,7 @@ legend {
 <button id="cart-icon" onclick="toggleCart()">🛒
     <div id="cart-notification"></div>
 </button>
+<div id="item-added-notification" class="hidden"></div> 
 
 <div id="cart">
     <h3>
@@ -916,6 +933,7 @@ function addToCart(name, price, details = "") {
     }
     updateCart();
     showNotification();
+    showItemAddedNotification(); // Mostra a notificação de item adicionado
 }
 
 // Função para adicionar lanches ao carrinho
@@ -1162,6 +1180,18 @@ function addPastelToCart(selectId) {
         notification.style.display = cart.length > 0 ? 'block' : 'none';
         notification.textContent = cart.length;
     }
+    
+    // Função para exibir a notificação de item adicionado
+function showItemAddedNotification() {
+    const notification = document.getElementById('item-added-notification');
+    notification.textContent = "Item adicionado ao carrinho!"; // Mensagem que deseja exibir
+    notification.classList.remove('hidden'); // Remove a classe 'hidden' para mostrar a notificação
+
+    // Define um tempo para esconder a notificação
+    setTimeout(() => {
+        notification.classList.add('hidden'); // Adiciona a classe 'hidden' após 3 segundos
+    }, 3000);
+}
     
     function buscarEndereco() {
     const cep = document.getElementById('cep').value.replace(/\D/g, '');
