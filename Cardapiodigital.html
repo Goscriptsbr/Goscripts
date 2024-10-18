@@ -411,12 +411,12 @@ label {
 
 .pix-info img {
     width: 40px;
-    margin-right: 10px;
+    margin-top: -5%;
 }
 
 .pix-info input {
     border: none;
-    background: ;
+    background: #4CAF50;
     font-size: 16px;
     flex: 1;
     cursor: text;
@@ -426,14 +426,15 @@ label {
     padding: 10px;
     background-color: #25D366;
     color: white;
-    border: none;
+    border: 1px solid white;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    margin-top: -5%;
 }
 
 .pix-info button:hover {
-    background-color: #1c9c4b;
+    background-color: green;
 }
 
 .menu-item[data-category="acai"] .montar-button {
@@ -593,6 +594,18 @@ legend {
     border-radius: 4px;
     box-sizing: border-box;
     overflow: hidden; /* Esconde conteúdo extra que transborda */
+}
+
+.p2 {
+    background-color: #f9f9f9; /* Cor de fundo suave */
+    color: #333; /* Cor do texto */
+    border: 2px solid green; /* Borda sutil */
+    padding: 10px; /* Espaçamento interno */
+    border-radius: 5px; /* Bordas arredondadas */
+    font-size: 16px; /* Tamanho da fonte */
+    font-weight: bold; /* Texto em negrito */
+    margin-top: 10px; /* Espaço acima */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
 }
     </style>
 </head>
@@ -965,28 +978,32 @@ legend {
     </div>
 
     <div class="pagamento-container">
-        <h4>Forma de Pagamento</h4>
-        <select id="payment-method" onchange="toggleTroco()">
-            <option value="" disabled selected>Selecione</option>
-            <option value="pix">Pix</option>
-            <option value="cartao">Cartão de Crédito</option>
-            <option value="dinheiro">Dinheiro</option>
-        </select>
+    <h4>Forma de Pagamento</h4>
+    <select id="payment-method" onchange="handlePaymentMethodChange()">
+        <option value="" disabled selected>Selecione</option>
+        <option value="pix">Pix</option>
+        <option value="cartao">Cartão de Crédito</option>
+        <option value="dinheiro">Dinheiro</option>
+    </select>
+    
+    <div id="pix-message" class="hidden">
+    <p class="p2">Enviar comprovante no WhatsApp após enviar o pedido!</p>
+</div>
 
-        <div id="troco-container" class="hidden">
-            <label for="troco">Troco para:</label>
-            <input type="number" id="troco" placeholder="Valor em reais">
-        </div>
+    <div id="troco-container" class="hidden">
+        <label for="troco">Troco para:</label>
+        <input type="number" id="troco" placeholder="Valor em reais">
+    </div>
 
-        <div id="pix-container" class="hidden">
-            <h4>Chave Pix</h4>
-            <div class="pix-info">
-                <img src="https://img.icons8.com/fluent/512/pix.png" alt="Logo Pix">
-                <input type="text" id="pix-key" value="46964164880" readonly>
-                <button onclick="copyPix()">Copiar Pix</button>
-            </div>
+    <div id="pix-container" class="hidden">
+        <h4>Chave Pix</h4>
+        <div class="pix-info">
+            <img src="https://img.icons8.com/fluent/512/pix.png" alt="Logo Pix">
+            <input type="text" id="pix-key" value="46964164880" readonly>
+            <button onclick="copyPix()">Copiar Pix</button>
         </div>
     </div>
+</div>
 
     <button class="send-btn" onclick="sendOrder()">Enviar Pedido</button>
 </div>
@@ -1492,6 +1509,27 @@ categoryList.addEventListener('touchmove', (e) => {
     const walk = (x - startX) * 2; // Aumenta a velocidade de rolagem
     categoryList.scrollLeft = scrollLeft - walk; // Atualiza a posição da rolagem
 });
+
+function handlePaymentMethodChange() {
+        const paymentMethod = document.getElementById('payment-method').value;
+        const pixMessage = document.getElementById('pix-message');
+        const pixContainer = document.getElementById('pix-container');
+        const trocoContainer = document.getElementById('troco-container');
+
+        // Esconde todos os containers inicialmente
+        pixMessage.classList.add('hidden');
+        pixContainer.classList.add('hidden');
+        trocoContainer.classList.add('hidden');
+
+        // Mostra a mensagem e o container do Pix se "pix" for selecionado
+        if (paymentMethod === 'pix') {
+            pixMessage.classList.remove('hidden');
+            pixContainer.classList.remove('hidden');
+        } else if (paymentMethod === 'dinheiro') {
+            trocoContainer.classList.remove('hidden');
+        }
+        // Aqui você pode adicionar a lógica para outros métodos de pagamento, se necessário
+    }
 </script>
 
 </body>
