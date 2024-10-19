@@ -1,1 +1,1870 @@
-goscripts.online
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Digital</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to bottom right, orange, orange); /* Gradiente verde suave */
+    background-color: black;
+}
+
+header {
+    background-color: black; /* Verde */
+    color: white; /* Cor do texto */
+    padding: 20px; /* Espaçamento interno */
+    text-align: center; /* Centraliza o texto */
+    border-bottom: 5px solid #FFEB3B; /* Amarelo como borda inferior */
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 150px; /* Ajuste o tamanho da logo conforme necessário */
+    height: auto; /* Mantém a proporção da imagem */
+    margin-right: 15px; /* Espaçamento entre a logo e o título */
+}
+
+h1 {
+    font-size: 24px; /* Ajuste o tamanho da fonte do título */
+    color: orange; /* Cor do texto do título */
+}
+
+nav {
+    background-color: black; /* Verde */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Alinha os itens verticalmente */
+    padding: 10px; /* Espaçamento interno */
+    border-bottom: 5px solid #FFEB3B; /* Amarelo como borda inferior */
+}
+
+nav button {
+    background-color: orange; /* Verde claro */
+    color: black; /* Cor do texto do botão */
+    border: none; /* Remove a borda do botão */
+    padding: 10px 15px; /* Espaçamento interno (horizontal maior) */
+    cursor: pointer; /* Altera o cursor para indicar que é clicável */
+    display: flex; /* Usa flexbox para centralizar o conteúdo */
+    align-items: center; /* Alinha verticalmente o conteúdo */
+    justify-content: center; /* Alinha horizontalmente o conteúdo */
+    margin: 0 5px; /* Espaço entre os botões */
+    font-size: 20px; /* Tamanho da fonte */
+    border-radius: 50%; /* Borda arredondada */
+    transition: background-color 0.3s, box-shadow 0.3s; /* Transição suave para hover */
+}
+
+/* Efeito hover */
+nav button:hover {
+    background-color: yellow; /* Verde mais escuro ao passar o mouse */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra ao passar o mouse */
+}
+
+/* Efeito ativo (quando clicado) */
+nav button:active {
+    transform: scale(0.95); /* Leve redução no tamanho ao clicar */
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    padding: 0;
+    overflow: hidden; /* Impede a barra de rolagem */
+    max-width: 300px; /* Limita a largura da lista, ajuste conforme necessário */
+}
+
+nav ul li {
+    margin: 0 10px; /* Espaço entre os itens da lista */
+}
+
+nav ul li a {
+    color: orange; /* Cor do texto */
+    text-decoration: 2px; /* Remove o sublinhado do link */
+    font-size: 18px; /* Tamanho da fonte */
+    border: 1px solid yellow;
+    border-radius: 15%;
+}
+
+#menu-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+}
+
+.menu-item {
+    background-color: #F0E0C0;
+    max-width: 300px; /* Max largura para manter um tamanho adequado */
+    width: 100%; /* A largura se ajusta ao contêiner */
+    margin: 10px;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s; /* Animação ao passar o mouse */
+    text-align: center;
+    border: 2px solid #FF8C33;
+}
+
+.acai-img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    object-fit: cover;
+}
+
+.menu-item:hover {
+    transform: scale(1.05); /* Leve aumento no tamanho */
+}
+
+.menu-item img {
+    max-width: 100%; /* A imagem ocupa 100% da largura do contêiner */
+    height: auto; /* Mantém a proporção da imagem */
+    border-radius: 10px; /* Arredonda as bordas da imagem */
+    margin-bottom: 10px; /* Espaço abaixo da imagem */
+}
+
+/* Estilo para a seção de tamanhos e adicionais */
+.size-addons {
+    display: flex; /* Usar flexbox para alinhar os tamanhos e adicionais lado a lado */
+    flex-direction: column; /* Coloca em coluna */
+    align-items: flex-start; /* Alinhamento à esquerda */
+    width: 100%; /* Ocupa a largura total do item */
+    margin-bottom: 10px; /* Espaçamento abaixo da seção */
+}
+
+.size-addons {
+    margin-bottom: 10px; /* Espaço entre a seleção de tamanhos/adicionais e o campo de observações */
+}
+
+textarea {
+    width: 100%; /* Faz o campo de texto ocupar toda a largura disponível */
+    height: 50px; /* Altura do campo de texto */
+    padding: 5px; /* Espaçamento interno */
+    border: 1px solid orange; /* Borda do campo */
+    border-radius: 4px; /* Cantos arredondados */
+    box-sizing: border-box; /* Inclui padding e border na largura total */
+}
+
+button {
+    margin-top: 10px; /* Espaço acima do botão */
+}
+
+.size-selection,
+.addons-selection {
+    width: 100%; /* Ocupa a largura total */
+    margin: 5px 0; /* Margem vertical entre as seções */
+}
+
+.addons-selection {
+    width: 100%; /* Ocupa a largura total */
+    margin: 5px 0; /* Margem vertical entre as seções */
+}
+
+/* Adicionando estilo ao label */
+label {
+    margin-bottom: 5px; /* Espaçamento abaixo da label */
+    font-weight: bold; /* Deixa a label em negrito */
+    display: block; /* Garante que o label fique em uma linha separada */
+}
+
+.menu-item button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #2E8B57;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s; /* Transição ao passar o mouse */
+}
+
+.menu-item button:hover {
+    background-color: darkgreen; /* Tom mais escuro ao passar o mouse */
+}
+
+#cart-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #FF8C33;
+    color: white;
+    border: 1px solid yellow;
+    padding: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s; /* transição suave */
+}
+
+#cart-icon:hover {
+    background-color: orange; /* tom mais escuro ao passar o mouse */
+    border: 2px solid green;
+}
+
+#cart-notification {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: red;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 14px;
+    line-height: 20px;
+    display: none;
+}
+
+#cart {
+    position: fixed;
+    bottom: 80px;
+    right: 5px;
+    background-color: orange; /* fundo mais suave */
+    padding: 20px; /* mais espaço interno */
+    border-radius: 12px; /* bordas mais arredondadas */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* sombra mais sutil */
+    display: none; /* oculto */
+    max-height: 600px; /* altura máxima do carrinho */
+    width: 350px;
+    overflow-y: auto; /* rolagem vertical se necessário */
+    transition: all 0.3s ease; /* transição suave para aparecer/desaparecer */
+    border: 2px solid black;
+}
+
+#cart h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    font-size: 20px; /* tamanho da fonte do cabeçalho */
+    color: black; /* cor do texto */
+    border-bottom: 2px solid black; /* linha divisória */
+}
+
+/* Estilo do botão de fechar */
+.close-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 2px 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background-color: darkred;
+}
+
+/* Estilo do botão de enviar pedido */
+.send-btn {
+    background-color: #2E8B57;
+    color: white;
+    border: 2px solid black;
+    padding: 10px 20px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.send-btn:hover {
+    background-color: #218838;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
+    padding: 10px 0; /* padding para mais espaçamento */
+    border-bottom: 2px solid black; /* linha divisória */
+}
+
+.cart-item:last-child {
+    border-om: none; /* remove a linha divisória do último item */
+}
+
+.remove-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 2px 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 5px;
+    width: 15px;
+    height: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-btn:hover {
+    background-color: darkred; /* tom mais escuro ao passar o mouse */
+}
+
+.hidden {
+    display: none;
+}
+
+.endereco-container {
+    max-width: 400px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #FFB347;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid black;
+}
+
+.endereco-container h4 {
+    text-align: center;
+    color: black;
+    margin-bottom: 20px;
+}
+
+.endereco-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.endereco-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid black;
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.endereco-container input:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.pagamento-container {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #FFB347;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid black;
+}
+
+.pagamento-container h4 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.pagamento-container select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid black;
+    border-radius: 5px;
+    transition: border-color 0.3s;
+}
+
+.pagamento-container select:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.pagamento-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: ;
+}
+
+.pagamento-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.pix-info {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.pix-info img {
+    width: 40px;
+    margin-top: -5%;
+}
+
+.pix-info input {
+    border: none;
+    background: #FFB347;
+    font-size: 16px;
+    flex: 1;
+    cursor: text;
+}
+
+.pix-info button {
+    padding: 10px;
+    background-color: #2E8B57;
+    color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: -5%;
+}
+
+.pix-info button:hover {
+    background-color: green;
+}
+
+.menu-item[data-category="acai"] .montar-button {
+    background-color: purple;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+.menu-item[data-category="acai"] .montar-button:hover {
+    background-color: #45a049;
+}
+
+.acai-container {
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #F0E0C0;
+    border-radius: 8px;
+    border: 1px solid yellow;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.acai-container h3 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.acai-container label, 
+.acai-container select {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+select {
+    padding: 5px;
+    border: 1px solid orange;
+    border-radius: 5px;
+    transition: border-color 0.3s;
+    width: 100%;
+}
+
+select:focus {
+    border-color: orange;
+    outline: none;
+}
+
+fieldset {
+    border: 1px solid orange;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+legend {
+    font-weight: bold;
+    color: #555;
+}
+
+.add-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-button:hover {
+    background-color: #388E3C;
+}
+
+#search-input {
+    width: 90%;
+    margin: 10px auto;
+    display: block;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 1px solid #FF8C33;
+    border-radius: 25px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    outline: none;
+    background-color: #F0E0C0;
+  }
+
+  #search-input:focus {
+    border-color: yellow;
+    box-shadow: 2px 2px 10px rgba(76, 175, 80, 0.5);
+    background-color: #F0E0C0;
+  }
+  
+  p{
+      color: grey;
+  }
+  
+  .price-container {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Espaço entre o "R$" e o valor */
+    font-size: 16px;
+    font-weight: bold;
+    margin-left: 40%;
+}
+
+.price-container span {
+    margin: 0;
+    padding: 0;
+}
+
+.radio-group {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espaço entre os elementos */
+}
+
+.radio-group input {
+    margin: 0;
+    accent-color: blue; /* Personaliza a cor dos radio buttons */
+}
+
+.radio-group label {
+    margin-right: 50px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+#item-added-notification {
+    position: fixed;
+    top: 25%;
+    right: 85px;
+    background-color: #4CAF50; /* Cor de fundo verde */
+    color: white; /* Cor do texto branco */
+    padding: 10px;
+    border-radius: 5px;
+    border: 2px solid green;
+    z-index: 1000; /* Para garantir que a notificação fique acima de outros elementos */
+}
+
+.milk-juice-select {
+    width: 100%; /* Ocupa toda a largura disponível no container */
+    max-width: 300px; /* Define um tamanho máximo para evitar overflow */
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    overflow: hidden; /* Esconde conteúdo extra que transborda */
+}
+
+.p2 {
+    background-color: #f9f9f9; /* Cor de fundo suave */
+    color: #333; /* Cor do texto */
+    border: 1px solid black; /* Borda sutil */
+    padding: 10px; /* Espaçamento interno */
+    border-radius: 5px; /* Bordas arredondadas */
+    font-size: 16px; /* Tamanho da fonte */
+    font-weight: bold; /* Texto em negrito */
+    margin-top: 10px; /* Espaço acima */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+/* Estilos para o modal */
+.modal {
+    display: none; /* Escondido por padrão */
+    position: fixed; /* Fixo na tela */
+    z-index: 1; /* Fica acima de outros elementos */
+    left: 0;
+    top: 0;
+    width: 100%; /* Largura total */
+    height: 100%; /* Altura total */
+    overflow: auto; /* Habilita o scroll se necessário */
+    background-color: rgba(0, 0, 0, 0.4); /* Fundo transparente */
+    transition: opacity 0.3s ease-in-out; /* Transição suave */
+}
+
+/* Conteúdo do modal */
+.modal-content {
+    background-color: orange;
+    margin: 15% auto; /* Centralizado */
+    padding: 20px;
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* Sombra leve */
+    width: 80%; /* Largura do modal */
+    max-width: 400px; /* Máximo de 400px */
+    animation: fadeIn 0.4s ease-out; /* Animação suave de entrada */
+    border: 2px solid black;
+}
+
+/* Animação de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Botão de fechar */
+.close-button {
+    color: red;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #ff5e57;
+}
+
+/* Texto do modal */
+.modal-content p {
+    font-size: 18px;
+    color: black; /* Texto preto */
+    text-align: center;
+    margin-top: 10px;
+}
+
+.status-aberto {
+    color: #4CAF50; /* Verde */
+    font-weight: bold;
+    background-color: rgba(76, 175, 80, 0.1);
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+.status-fechado {
+    color: #F44336; /* Vermelho */
+    font-weight: bold;
+    background-color: rgba(244, 67, 54, 0.1);
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+.funcionamento {
+    font-size: 11px;
+    color: #fff;
+    margin-top: 20px; /* Aumente o valor para descer mais */
+    font-weight: 200;
+    text-align: center;
+    position: relative; /* Permite ajuste com top */
+    top: 10px; /* Ajuste conforme necessário */
+}
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <img src="https://keskara.neocities.org/Fonto/BackgroundEraser_20241015_210053864.png" 
+             alt="Logo Gardin Lanches" class="logo">
+        <h1>Gardin Lanches</h1>
+    </div>
+    <p class="funcionamento"></p>
+</header>
+
+<nav>
+    <button id="scroll-left" onclick="scrollLeftItems()">«</button>
+    <ul id="category-list" onmousedown="startDrag(event)" onmouseup="stopDrag()" onmouseleave="stopDrag()" ontouchstart="startDrag(event)" ontouchend="stopDrag()">
+        <li><a href="#" onclick="filterItems('all')">Tudo</a></li>
+        <li><a href="#" onclick="filterItems('lanches')">Lanches</a></li>
+        <li><a href="#" onclick="filterItems('gourmet')">Gourmet</a></li>
+        <li><a href="#" onclick="filterItems('pastel')">Pastéis</a></li>
+        <li><a href="#" onclick="filterItems('bebidas')">Bebidas</a></li>
+        <li><a href="#" onclick="filterItems('acai')">Açai</a></li>
+        <li><a href="#" onclick="filterItems('salgados')">Salgados</a></li>
+        <li><a href="#" onclick="filterItems('porções')">Porções</a></li>
+    </ul>
+    <button id="scroll-right" onclick="scrollRightItems()">»</button></button></button>
+</nav>
+
+<input type="text" id="search-input" placeholder="Pesquisar lanches, bebidas, Açaí..." oninput="searchItems()">
+
+<section id="menu-items">
+    <!-- Os itens do menu aparecem aqui -->
+</section>
+
+<div id="menu-items">
+    <div class="menu-item" data-category="lanches">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSYRX07GQ-Vwoi8a8A_b4P4KKUF1i9KRO4uQ&usqp=CAU" alt="X-Burger" />
+        <h3>X-Burger</h3>
+        <p>Pão de hamb, hamburguer, presunto, muçarela, batata palha, milho e maionese.</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-burger">Escolha o tamanho:</label>
+                <select id="size-burger">
+                    <option value="15">Pequeno - R$ 15,00</option>
+                    <option value="20">Grande - R$ 20,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-burger">Adicionais:</label>
+                <select id="addons-burger" multiple>
+                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                    <option value='{"name": "Bacon", "price": 6}'>Bacon - R$: 6,00</option>
+                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+                </select>
+            </div>
+        </div>
+
+        <label for="observacoes-burger">Observações:</label>
+        <textarea id="observacoes-burger" placeholder="(ex: sem alface) opcional"></textarea>
+        
+        <button onclick="addBurgerToCart('X-Burger', 'size-burger', 'addons-burger', 'observacoes-burger')">Adicionar</button>
+    </div>
+
+    <!-- Exemplo de outro lanche -->
+    <div class="menu-item" data-category="gourmet">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Argentina Gourmet" />
+        <h3>Argentina Gourmet</h3>
+        <p>Pão brioche, hamb, frango 150g, queijo, rúcula, bacon e molho grill.</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-argentina">Escolha o tamanho:</label>
+                <select id="size-argentina">
+                    <option value="45">Pequeno - R$ 45,00</option>
+                    <option value="50">Grande - R$ 50,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-argentina">Adicionais:</label>
+                <select id="addons-argentina" multiple>
+                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                    <option value='{"name":  "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+                </select>
+            </div>
+        </div>
+
+        <label for="observacoes-argentina">Observações:</label>
+        <textarea id="observacoes-argentina" placeholder="(ex: sem alface) opcional"></textarea>
+        
+        <button onclick="addBurgerToCart('Argentina Gourmet', 'size-argentina', 'addons-argentina', 'observacoes-argentina')">Adicionar</button>
+    </div>
+    
+    <div class="menu-item" data-category="gourmet">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Alemanha Gourmet" />
+        <h3>Alemanha Gourmet</h3>
+        <p>Pão brioche, hamb, costela 150g, queijo, rúcula, bacon e molho grill.</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-alemanha">Escolha o tamanho:</label>
+                <select id="size-alemanha">
+                    <option value="30">Pequeno - R$ 30,00</option>
+                    <option value="40">Grande - R$ 40,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-alemanha">Adicionais:</label>
+                <select id="addons-alemanha" multiple>
+                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                    <option value='{"name":  "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+                </select>
+            </div>
+        </div>
+
+        <label for="observacoes-alemanha">Observações:</label>
+        <textarea id="observacoes-alemanha" placeholder="(ex: sem alface) opcional"></textarea>
+        
+        <button onclick="addBurgerToCart('Alemanha Gourmet', 'size-alemanha', 'addons-alemanha', 'observacoes-alemanha')">Adicionar</button>
+    </div> 
+    
+    <div class="menu-item" data-category="porções">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-m_2LRAwboGVSBrVgNa95X3qzFE5m7gjvtd40E_0iiXGDcXKtxfU3ChrR&s=10" alt="batata Gourmet" />
+        <h3>Porção de batata média</h3>
+        <p>400g Média. Quantidade de batata!</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-batatamedia">Opções:</label>
+                <select id="size-batatamedia">
+                    <option value="19">Simples - R$ 19,00</option>
+                    <option value="27">Com Cheddar - R$ 27,00</option>
+                    <option value="26.50">Com Catupiry - R$ 26,50</option>
+                    <option value="23.50">Com Bacon - R$ 23,50</option>
+                    <option value="24.00">Com Mussarela - R$ 24,00</option>
+                    <option value="25.00">Com Mussarela e Oregâno - R$ 25,00</option>
+                    <option value="31.50">Com Mussarela e Catupiry - R$ 31,50</option>
+                    <option value="32">Com Mussarela e Cheddar - R$ 32,00</option>
+                    <option value="27">Com Mussarela e Cebola - R$ 27,00</option>
+                    <option value="28.50">Com Mussarela e Bacon - R$ 28,50</option>
+                    <option value="36">Com Bacon, Mussarela e Catupiry - R$ 36,00</option>
+                    <option value="39.50">Com Cheddar, Mussarela e Catupiry - R$ 39,50</option>
+                    <option value="36.50">Com Cheddar, Mussarela e Bacon - R$ 36,50</option>
+                    <option value="31.50">Com Cebola, Mussarela e Bacon - R$ 31,50</option>
+                    <option value="31.50">Com Cheddar e Bacon - R$ 31,50</option>
+                    <option value="31.00">Com Catupiry e Bacon - R$ 31,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-batatam">Adicionais:</label>
+                <select id="addons-batatam" multiple>
+                    <option value='{"name": "Bacon M", "price": 10}'>Bacon M - R$ 10,00</option>
+                    <option value='{"name": "Catupiry M", "price": 7.50}'>Catupiry M - R$ 7,50</option>
+                    <option value='{"name": "Cebola M", "price": 3}'>Cebola M - R$ 3,00</option>
+                    <option value='{"name": "Cheddar M", "price": 8}'>Cheddar M - R$ 8,00</option>
+                    <option value='{"name": "Mussarela M", "price": 9.50}'>Mussarela M - R$ 9,50</option>
+                    <option value='{"name": "Salada", "price": 12}'>Salada - R$ 12,00</option>
+                </select>
+            </div>
+        </div>
+        
+        <button onclick="addBurgerToCart('Porção de batata media', 'size-batatamedia', 'addons-batatam', 'observacoes-alemanha')">Adicionar</button>
+    </div>
+    
+    <div class="menu-item" data-category="porções">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-m_2LRAwboGVSBrVgNa95X3qzFE5m7gjvtd40E_0iiXGDcXKtxfU3ChrR&s=10" alt="Batata Gourmet" />
+        <h3>Porção de batata grande</h3>
+        <p>700g Grande. Quantidade de batata!</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-batatagrande">Opções:</label>
+                <select id="size-batatagrande">
+                    <option value="33">Simples - R$ 33,00</option>
+                    <option value="49">Com Cheddar - R$ 49,00</option>
+                    <option value="48">Com Catupiry - R$ 48,00</option>
+                    <option value="42">Com Bacon - R$ 42,00</option>
+                    <option value="43">Com Mussarela - R$ 43,00</option>
+                    <option value="44">Com Mussarela e Oregâno - R$ 44,00</option>
+                    <option value="58">Com Mussarela e Catupiry - R$ 58,00</option>
+                    <option value="59">Com Mussarela e Cheddar - R$ 59,00</option>
+                    <option value="48">Com Mussarela e Cebola - R$ 48,00</option>
+                    <option value="52">Com Mussarela e Bacon - R$ 52,00</option>
+                    <option value="67">Com Bacon, Mussarela e Catupiry - R$ 67,00</option>
+                    <option value="74">Com Cheddar, Mussarela e Catupiry - R$ 74,00</option>
+                    <option value="68">Com Cheddar, Mussarela e Bacon - R$ 68,00</option>
+                    <option value="57">Com Cebola, Mussarela e Bacon - R$ 57,00</option>
+                    <option value="58">Com Cheddar e Bacon - R$ 58,00</option>
+                    <option value="57">Com Catupiry e Bacon - R$ 57,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-batatag">Adicionais:</label>
+                <select id="addons-batatag" multiple>
+                    <option value='{"name": "Bacon G", "price": 15}'>Bacon G - R$ 15,00</option>
+                    <option value='{"name": "Catupiry G", "price": 15}'>Catupiry G - R$ 15,00</option>
+                    <option value='{"name": "Cebola G", "price": 5}'>Cebola G - R$ 5,00</option>
+                    <option value='{"name": "Cheddar G", "price": 16}'>Cheddar G - R$ 16,00</option>
+                    <option value='{"name": "Mussarela G", "price": 14.50}'>Mussarela G - R$ 14,50</option>
+                    <option value='{"name": "Salada", "price": 12}'>Salada - R$ 12,00</option>
+                </select>
+            </div>
+        </div>
+        
+        <button onclick="addBurgerToCart('Porção Batata Grande', 'size-batatagrande', 'addons-batatag', 'observacoes-alemanha')">Adicionar</button>
+    </div>
+    
+    <!-- Item de Coxinha -->
+    <div class="menu-item" data-category="salgados">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPFqPcXMCIArwXBRxMSP5bg3KFSQ9cVPiDi7UdUIJY3_ii9wozjwuKfY4&s=10" alt="Coxinha" />
+        <h3>Coxinha de frango</h3>
+        <p>Obs: Massa de batata.</p>
+        
+        <button onclick="addCoxinhaToCart('Coxinha', 'observacoes-coxinha')">Adicionar</button>
+    </div> 
+        
+    <div class="menu-item" data-category="pastel">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTipyAFdNwI2W6I7oWOt1RNPSqczEPgX7tda8q5wPcfP8Zcm3LbTXCJntw&s=10" alt="Pastel" />
+    <h3>Escolha seu Pastel</h3>
+
+    <label for="sabor-pastel">Escolha o sabor:</label>
+    <select id="sabor-pastel" onchange="updatePastelPrice(this, 'pastel-price')">
+        <option value="12">Carne - R$ 12,00</option>
+        <option value="12">Queijo - R$ 12,00</option>
+        <option value="15">Frango com Catupiry - R$ 15,00</option>
+        <option value="12">Calabresa - R$ 12,00</option>
+        <option value="12">Pizza - R$ 12,00</option>
+        <option value="15">Carne c/ queijo - R$ 15,00</option>
+        <option value="15">Calebresa c/ catupiry - R$ 15,00</option>
+        <option value="18">Misto - R$ 18,00</option>
+        <option value="14">Romeu e julieta - R$ 14,00</option>
+        <option value="15">Chocolate ao leite - R$ 15,00</option>
+        <option value="15">Chocolate branco - R$ 15,00</option>
+        <option value="15">Chocolate c/ avelã - R$ 15,00</option>
+        <option value="12">Doce de leite - R$ 12,00</option>
+        <option value="16">Chocolate c/ doce de leite - R$ 16,00</option>
+    </select>
+
+    <div class="price-container">
+        <span>R$</span>
+        <span id="pastel-price">8,00</span>
+    </div>
+
+    <button onclick="addPastelToCart('sabor-pastel')">Adicionar</button>
+</div>
+    
+    <div class="menu-item" data-category="bebidas">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10" 
+         alt="Sucos" />
+    <h3>Seleção de Sucos Naturais</h3>
+
+    <label for="juice-select">Escolha o sabor e tamanho:</label>
+    <select id="juice-select" class="milk-juice-select" 
+     onchange="updateJuicePrice(this, 'juice-price')">
+        <option value="10">Suco Natural Abacaxi 500ml - R$ 10,00</option>
+        <option value="15">Suco Natural Abacaxi 1L - R$ 15,00</option>
+        <option value="16">Suco Natural Maracujá 500ml - R$ 16,00</option>
+        <option value="20">Suco Natural Maracujá 1L - R$ 20,00</option>
+        <option value="10">Suco Natural Acerola 500ml - R$ 10,00</option>
+        <option value="15">Suco Natural Acerola 1L - R$ 15,00</option>
+        <option value="14">Suco Natural Amora 500ml - R$ 14,00</option>
+        <option value="19">Suco Natural Amora 1L - R$ 19,00</option>
+        <option value="11">Suco Natural Capuaçu 500ml - R$ 11,00</option>
+        <option value="16">Suco Natural Capuaçu 1L - R$ 16,00</option>
+        <option value="11">Suco Natural Coco 500ml - R$ 11,00</option>
+        <option value="16">Suco Natural Coco 1L - R$ 16,00</option>
+        <option value="12">Suco Natural Frutas vermelhas 500ml - R$ 12,00</option>
+        <option value="18">Suco Natural Frutas vermelhas 1L - R$ 18,00</option>
+        <option value="10">Suco Natural Goiaba 500ml - R$ 10,00</option>
+        <option value="15">Suco Natural Goiaba 1L - R$ 15,00</option>
+        <option value="11">Suco Natural Graviola 500ml - R$ 11,00</option>
+        <option value="16">Suco Natural Graviola 1L - R$ 16,00</option>
+        <option value="10">Suco Natural Limao 500ml - R$ 10,00</option>
+        <option value="15">Suco Natural Limao 1L - R$ 15,00</option>
+        <option value="11">Suco Natural Kiwi 500ml - R$ 11,00</option>
+        <option value="16">Suco Natural Kiwi 1L - R$ 16,00</option>
+        <option value="11">Suco Natural Mamão 500ml - R$ 11,00</option>
+        <option value="15">Suco Natural Mamão 1L - R$ 15,00</option>
+        <option value="11">Suco Natural Melão 500ml - R$ 11,00</option>
+        <option value="15">Suco Natural Melão 1L - R$ 15,00</option>
+        <option value="10">Suco Natural Pêssego 500ml - R$ 10,00</option>
+        <option value="15">Suco Natural Pêssego 1L - R$ 15,00</option>
+        <option value="11">Suco Natural Uva 500ml - R$ 11,00</option>
+        <option value="16">Suco Natural Uva 1L - R$ 16,00</option>
+        <option value="10">Suco Natural Manga 500ml - R$ 10,00</option>
+        <option value="15">Suco Natural Manga 1L - R$ 15,00</option>
+    </select>
+
+    <span id="juice-price">R$ 10,00</span>
+    <button onclick="addJuiceToCart('juice-select')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="bebidas">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10"
+    alt="Suco ao Leite" />
+    <h3>Seleção de Sucos cremosos</h3>
+
+    <label for="milk-juice-select">Escolha o sabor e tamanho:</label>
+<select id="milk-juice-select" class="milk-juice-select" 
+        onchange="updateJuicePrice(this, 'milk-juice-price')">
+    <option value="15">Suco Morango cremoso 500ml - R$ 15,00</option>
+    <option value="20">Suco Morango cremoso 1L - R$ 20,00</option>
+    <option value="20">Suco Maracujá cremoso 500ml - R$ 20,00</option>
+    <option value="27">Suco Maracujá cremoso 1L - R$ 27,00</option>
+    <option value="14">Suco Chocolate (ovomaltine) cremoso 500ml - R$ 14,00</option>
+    <option value="19">Suco Chocolate (ovomaltine) cremoso 1L - R$ 19,00</option>
+    <option value="15">Suco Cocô cremoso 500ml - R$ 15,00</option>
+    <option value="20">Suco Coco cremoso 1L - R$ 20,00</option>
+    <option value="14">Suco Laranja cremosa 500ml - R$ 14,00</option>
+    <option value="19">Suco Laranja cremosa 1L - R$ 19,00</option>
+    <option value="15">Suco Uva cremosa 500ml - R$ 15,00</option>
+    <option value="20">Suco Uva cremosa 1L - R$ 20,00</option>
+    <option value="15">Suco Pêssego cremoso 500ml - R$ 15,00</option>
+    <option value="19">Suco Pêssego cremoso 1L - R$ 19,00</option>
+</select>
+
+    <span id="milk-juice-price">R$ 15,00</span>
+    <button onclick="addJuiceToCart('milk-juice-select')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="bebidas">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10"
+        alt="Suco com Ninho" />
+    <h3>Seleção de Sucos com Ninho</h3>
+
+    <label for="ninho-juice-select">Escolha o sabor e tamanho:</label>
+    <select id="ninho-juice-select" class="milk-juice-select" 
+            onchange="updateNinhoJuicePrice(this)">
+        <option value="20">Suco Morango com ninho 1L - R$ 20,00</option>
+        <option value="27">Suco Maracujá com ninho 1L - R$ 27,00</option>
+        <option value="20">Suco Coco com ninho 1L - R$ 20,00</option>
+        <option value="20">Suco Uva com ninho 1L - R$ 20,00</option>
+        <option value="19">Suco Pêssego com ninho 1L - R$ 19,00</option>
+    </select>
+
+    <span id="ninho-juice-price">R$ 20,00</span>
+    <button onclick="addNinhoJuiceToCart()">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="bebidas">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10"
+        alt="Suco com Ninho" />
+    <h2>Vitaminas</h2>
+    
+    <select id="vitamin-select"class="milk-juice-select">
+        <option value="0">Selecione uma vitamina</option>
+        <option value="15.00">Vitamina laranja, mamão, banana e maçã 500ml - R$ 15,00</option>
+        <option value="19.00">Vitamina laranja, mamão, banana e maçã 1L - R$ 19,00</option>
+        <option value="16.00">Vitamina leite, mamão, banana e maçã 500ml - R$ 16,00</option>
+        <option value="20.00">Vitamina leite, mamão, banana e maçã 1L - R$ 20,00</option>
+        <option value="18.00">Vitamina açaí, mamão, banana e maçã 500ml - R$ 18,00</option>
+        <option value="22.00">Vitamina açaí, mamão, banana e maçã 1L - R$ 22,00</option>
+        <!-- Adicione mais opções conforme necessário -->
+    </select>
+
+    <button onclick="addVitaminToCart()">Adicionar</button>
+</div>
+    
+    <div class="menu-item" data-category="acai">
+    <h3>Monte seu Açai</h3>
+    <img src="https://gozgames.neocities.org/FormatConvert_20241017_063852_2391.webp" alt="Açaí delicioso" class="acai-img">
+    <button class="montar-button" onclick="openAcaiBuilder()">Montar Açaí</button>
+</div>
+
+<section id="acai-builder" class="acai-container hidden">
+    <h3>Monte seu Açaí</h3>
+
+    <label for="acai-size">Tamanho:</label>
+    <select id="acai-size">
+        <option value="7.50">300ml - R$ 7,50</option>
+        <option value="9.50">400ml - R$ 9,50</option>
+        <option value="11.50">500ml - R$ 11,50</option>
+        <option value="15.50">700ml - R$ 15,50</option>
+    </select>
+
+    <fieldset>
+        <legend>Adicionais:</legend>
+        <label><input type="checkbox" value="2" data-name="Granola"> Granola (+R$ 2,00)</label>
+        <label><input type="checkbox" value="3" data-name="Leite Condensado"> Leite Condensado (+R$ 3,00)</label>
+        <label><input type="checkbox" value="2. 50" data-name="Bis"> Bis (+R$ 2,50)</label>
+        <label><input type="checkbox" value="3. 50" data-name="Amendoim"> Amendoim (+R$ 3,50)</label>
+        <label><input type="checkbox" value="3" data-name="Paçoca"> Paçoca (+R$ 3,00)</label>
+        <label><input type="checkbox" value="3.50" data-name="Confete"> Confete (+R$ 3,50)</label>
+        <label><input type="checkbox" value="3.50" data-name="Brigadeiro"> Brigadeiro (+R$ 3,50)</label>
+        <label><input type="checkbox" value="3.50" data-name="Beijinho"> Beijinho (+R$ 3,50)</label>
+        <label><input type="checkbox" value="3.50" data-name="Chocobol"> Chocobol (+R$ 3,50)</label>
+    </fieldset>
+    
+    <fieldset>
+        <legend>Mousses:</legend>
+        <label><input type="checkbox" value="4.50" data-name="Mousse de Morango"> Morango (+R$ 4,50)</label>
+        <label><input type="checkbox" value="4.50" data-name="Mousse de Maracuja"> Maracujá (+R$ 4,50)</label>
+        <label><input type="checkbox" value="4. 50" data-name="Mousse de Limão"> Limão (+R$ 4,50)</label>
+        <label><input type="checkbox" value="6" data-name="Mousse de Cereja"> Cereja (+R$ 6,00)</label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Frutas:</legend>
+        <label><input type="checkbox" value="4" data-name="Fruta Morango"> Morango (+R$ 4,00)</label>
+        <label><input type="checkbox" value="3" data-name="Fruta Banana"> Banana (+R$ 3,00)</label>
+    </fieldset>
+    
+    <fieldset>
+        <legend>Coberturas:</legend>
+        <label><input type="checkbox" value="2" data-name="Cobertura Morango"> Morango (+R$ 2,00)</label>
+        <label><input type="checkbox" value="4.50" data-name="Cobertura Chocolate"> Chocolate (+R$ 2,00)</label>
+    </fieldset>
+
+    <button class="add-button" onclick="addAcaiToCart()">Adicionar ao Carrinho</button>
+</section>
+
+<!-- Modal -->
+<div id="taxaModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="fecharModal()">&times;</span>
+        <p id="taxaMensagem"></p>
+    </div>
+</div>
+
+<button id="cart-icon" onclick="toggleCart()">🛒
+    <div id="cart-notification"></div>
+</button>
+<div id="item-added-notification" class="hidden"></div> 
+
+<div id="cart">
+    <h3>
+        Carrinho 
+        <button class="close-btn" onclick="toggleCart()">X</button>
+    </h3>
+    <ul id="cart-items"></ul>
+    <p1><strong>Total: R$ <span id="cart-total">0,00</span></strong></p1>
+
+    <div>
+    <h4>Opção de Entrega:</h4>
+    <div class="radio-group">
+        <input type="radio" id="entrega" name="delivery" value="entrega" checked onclick="toggleAddressFields(true)">
+        <label for="entrega">Delivery</label>
+        <input type="radio" id="retirar" name="delivery" value="retirar" onclick="toggleAddressFields(false)">
+        <label for="retirar">Retirar no Local</label>
+    </div>
+
+    <div class="endereco-container">
+        <h4>Endereço de Entrega</h4>
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" placeholder="Seu nome">
+
+        <label for="cep">CEP:</label>
+<input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
+
+        <label for="rua">Rua:</label>
+        <input type="text" id="rua" placeholder="Rua">
+
+        <label for="numero">Número:</label>
+        <input type="text" id="numero" placeholder="Número da Casa">
+
+        <label for="bairro">Bairro:</label>
+        <input type="text" id="bairro" placeholder="Bairro">
+
+        <label for="cidade">Cidade:</label>
+<input type="text" id="cidade" placeholder="Cidade" onblur="buscarEndereco()">
+
+        <label for="estado">Estado:</label>
+        <input type="text" id="estado" placeholder="Estado">
+    </div>
+
+    <div class="pagamento-container">
+    <h4>Forma de Pagamento</h4>
+    <select id="payment-method" onchange="handlePaymentMethodChange()">
+        <option value="" disabled selected>Selecione</option>
+        <option value="pix">Pix</option>
+        <option value="cartao">Cartão de Crédito (Máquininha)</option>
+        <option value="dinheiro">Dinheiro</option>
+    </select>
+    
+    <div id="pix-message" class="hidden">
+    <p class="p2">Enviar comprovante no WhatsApp após enviar o pedido!</p>
+</div>
+
+    <div id="troco-container" class="hidden">
+        <label for="troco">Troco para:</label>
+        <input type="number" id="troco" placeholder="Valor em reais">
+    </div>
+
+    <div id="pix-container" class="hidden">
+        <h4>Chave Pix</h4>
+        <div class="pix-info">
+            <img src="https://img.icons8.com/fluent/512/pix.png" alt="Logo Pix">
+            <input type="text" id="pix-key" value="46964164880" readonly>
+            <button onclick="copyPix()">Copiar Pix</button>
+        </div>
+    </div>
+</div>
+
+    <button class="send-btn" onclick="sendOrder()">Enviar Pedido</button>
+</div>
+</div>
+
+<script>
+    let cart = [];
+
+    function filterItems(category) {
+        const items = document.querySelectorAll('.menu-item');
+        items.forEach(item => {
+            item.style.display = category === 'all' || item.dataset.category === category ? 'block' : 'none';
+        });
+    }
+    
+    function verificarHorario() {
+    const agora = new Date();
+    const horaAtual = agora.getHours();
+    const minutoAtual = agora.getMinutes();
+
+    let aberto = false;
+
+    // Verifica se a hora atual está entre 10h e 23h59
+    if (horaAtual > 10 && horaAtual < 23) {
+        aberto = true;
+    } else if (horaAtual === 10 && minutoAtual >= 0) {
+        aberto = true;
+    } else if (horaAtual === 23 && minutoAtual === 59) {
+        aberto = true; // Agora considera aberto até 23:59
+    }
+
+    const status = aberto ? 
+        `<span class="status-aberto">Aberto agora</span>` : 
+        `<span class="status-fechado">Fechado no momento</span>`;
+
+    document.querySelector('.funcionamento').innerHTML = 
+        `⏰ Funcionamento: Todos os dias | 10h - 00h (${status})`;
+}
+
+window.onload = verificarHorario;
+
+verificarHorario();
+
+    function openAcaiBuilder() {
+        document.getElementById('acai-builder').classList.remove('hidden');
+    }
+
+    function addAcaiToCart() {
+    const sizeSelect = document.getElementById('acai-size');
+    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex]; // Obtém a opção selecionada
+    const size = selectedOption.text.split(' - ')[0]; // Extrai o tamanho (e.g., "300ml")
+    const price = parseFloat(selectedOption.value); // Obtém o preço do tamanho
+
+    let total = price; // Inicializa o total com o preço do tamanho
+
+    // Obtém os adicionais selecionados
+    const adicionais = [...document.querySelectorAll('#acai-builder input[type="checkbox"]:checked')];
+    let acaiDescription = `Açaí ${size}`; // Inclui apenas o tamanho na descrição
+
+    // Adiciona os nomes dos adicionais na descrição
+    adicionais.forEach(add => {
+        total += parseFloat(add.value); // Adiciona o preço dos adicionais ao total
+        acaiDescription += `, ${add.dataset.name}`; // Adiciona o nome do adicional
+    });
+
+    // Remove a última vírgula e espaço, se houver
+    acaiDescription = acaiDescription.trim().replace(/,$/, '');
+
+    // Adiciona o açaí ao carrinho com a descrição e o total calculado
+    addToCart(acaiDescription, total);
+    document.getElementById('acai-builder').classList.add('hidden');
+}
+
+function addVitaminToCart() {
+    const selectElement = document.getElementById('vitamin-select'); // Substitua 'vitamin-select' pelo ID correto do select das vitaminas
+    const selectedOption = selectElement.options[selectElement.selectedIndex]; // Obtém a opção selecionada
+    const vitaminName = selectedOption.text; // Nome da vitamina
+    const vitaminPrice = parseFloat(selectedOption.value); // Preço da vitamina
+
+    // Adiciona a vitamina ao carrinho
+    addToCart(vitaminName, vitaminPrice);
+}
+
+    // Função para adicionar itens ao carrinho
+function addToCart(name, price, details = "") {
+    const itemIndex = cart.findIndex(item => item.name === name && item.details === details);
+
+    if (itemIndex > -1) {
+        // Se o item já estiver no carrinho, incrementa a quantidade
+        cart[itemIndex].quantity++;
+    } else {
+        // Adiciona um novo item ao carrinho
+        cart.push({ name, price, details, quantity: 1 });
+    }
+    updateCart();
+    showNotification();
+    showItemAddedNotification(); // Mostra a notificação de item adicionado
+}
+
+// Função para adicionar lanches ao carrinho
+function addBurgerToCart(name, sizeId, addonsId, observacoesId) {
+    const sizeSelect = document.getElementById(sizeId);
+    
+    // Verifica se sizeSelect é nulo
+    if (!sizeSelect) {
+        console.error("Size select element not found");
+        return; // Retorna se o elemento não for encontrado
+    }
+
+    const price = parseFloat(sizeSelect.value); // Pega o valor diretamente do select
+    
+    // Verifica se price é um número válido
+    if (isNaN(price)) {
+        console.error("Invalid price value");
+        return; // Retorna se o preço não for um número válido
+    }
+
+    let total = price;
+    let description = `${name} (${sizeSelect.options[sizeSelect.selectedIndex].text})`;
+
+    const selectedAddons = [...document.querySelectorAll(`#${addonsId} option:checked`)];
+    const addonNames = selectedAddons.map(option => {
+        const addon = JSON.parse(option.value);
+        total += addon.price;
+        return addon.name;
+    });
+
+    if (addonNames.length > 0) {
+        description += ` + ${addonNames.join(', ')}`;
+    }
+
+    // Captura o valor do campo de observações
+    const observacoes = document.getElementById(observacoesId).value.trim();
+    if (observacoes) {
+        description += ` (Observações: ${observacoes})`; // Adiciona as observações à descrição
+    }
+
+    addToCart(description, total);
+}
+
+function addCoxinhaToCart(name, observacoesId) {
+    const price = 10; // Defina o preço da coxinha
+    let total = price;
+    let description = `${name}`; // Nome do produto
+
+    // Captura o valor do campo de observações
+    const observacoes = document.getElementById(observacoesId);
+    
+    if (observacoes) {
+        const observacoesValue = observacoes.value.trim();
+        if (observacoesValue) {
+            description += ` (Observações: ${observacoesValue})`; // Adiciona as observações à descrição
+        }
+    }
+
+    addToCart(description, total); // Adiciona ao carrinho
+}
+
+// Funço para  obter adicionais selecionados
+function getSelectedAddons(selectId) {
+    const select = document.getElementById(selectId);
+    
+    if (!select) {
+        console.error("Adicionais não encontrado");
+        return [];
+    }
+    
+    const selectedOptions = Array.from(select.selectedOptions);
+    return selectedOptions.map(option => JSON.parse(option.value)); // Retorna os adicionais como objetos
+}
+
+// Exemplo de como você pode exibir o conteúdo do carrinho (atualize conforme sua implementação)
+function updateCart() {
+    const cartContainer = document.getElementById("cart");
+    cartContainer.innerHTML = ""; // Limpa o carrinho atual
+
+    cart.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.textContent = `${item.name} - ${item.details} - R$ ${item.price} (${item.quantity}x)`;
+
+        // Adiciona adicionais, se existirem
+        if (item.addons.length > 0) {
+            const addonsList = item.addons.map(addon => `${addon.name} - R$ ${addon.price}`).join(", ");
+            itemDiv.textContent += ` - Adicionais: ${addonsList}`;
+        }
+
+        cartContainer.appendChild(itemDiv);
+    });
+}
+
+// Aguarda o carregamento do DOM
+document.addEventListener('DOMContentLoaded', () => {
+    // Aqui você pode adicionar event listeners ou outras funções que dependem do DOM estar carregado
+});
+
+function updatePastelPrice(selectElement, priceDisplayId) {
+    const selectedValue = parseFloat(selectElement.value); // Valor do sabor escolhido
+    const priceDisplay = document.getElementById(priceDisplayId); // Elemento que exibe o preço
+
+    // Atualiza o texto com o valor correspondente
+    priceDisplay.innerText = `${selectedValue.toFixed(2)}`;
+}
+
+function toggleAddressFields(enable) {
+    const fields = document.querySelectorAll('.endereco-container input:not(#nome)');
+    fields.forEach(field => {
+        field.disabled = !enable;
+        field.required = enable; // Define como obrigatório apenas se for entrega
+    });
+}
+
+function updateNinhoJuicePrice(selectElement) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const price = selectedOption.value;
+    document.getElementById('ninho-juice-price').textContent = `R$ ${price},00`;
+}
+
+function addNinhoJuiceToCart() {
+    const selectElement = document.getElementById('ninho-juice-select'); // Obtém o select do Ninho Juice
+    const selectedOption = selectElement.options[selectElement.selectedIndex]; // Obtém a opção selecionada
+    const juiceName = selectedOption.text; // Nome do suco
+    const juicePrice = parseFloat(selectedOption.value); // Preço do suco
+
+    // Adiciona o Ninho Juice ao carrinho
+    addToCart(juiceName, juicePrice);
+}
+
+function addPastelToCart(selectId) {
+    const selectElement = document.getElementById(selectId); // Select do sabor
+    const selectedOption = selectElement.options[selectElement.selectedIndex]; // Opção selecionada
+    const flavor = selectedOption.text.split(' - ')[0]; // Nome do sabor
+    const price = parseFloat(selectedOption.value); // Preço do sabor
+
+    // Adiciona ao carrinho com a função existente
+    addToCart(`Pastel de ${flavor}`, price);
+}
+
+   let taxaEntrega = 0; // Inicializa taxaEntrega globalmente
+
+function calcularTaxaEntrega(localidade) {
+    let taxa = 0; // Inicializa a taxa como 0
+    const localidadeNormalizada = localidade.trim().toLowerCase(); // Normaliza a entrada para comparação
+
+    if (localidadeNormalizada === "mogi guaçu") {
+        taxa = 10.00; // Taxa de entrega para Mogi Guaçu
+    } else if (localidadeNormalizada === "estiva gerbi" || localidadeNormalizada === "estiva") {
+        taxa = 4.00; // Taxa de entrega para Estiva Gerbi
+    } else {
+        taxa = 12.00; // Taxa fixa para outras localidades (opcional)
+    }
+
+    return taxa; // Retorna a taxa calculada
+}
+
+function buscarEndereco() {
+    const cep = document.getElementById('cep').value.replace(/\D/g, '');
+    const localidadeInput = document.getElementById('cidade').value;
+
+    if (cep.length === 8) {
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar o CEP: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.erro) {
+                    document.getElementById('rua').value = data.logradouro;
+                    document.getElementById('bairro').value = data.bairro;
+                    document.getElementById('cidade').value = data.localidade;
+                    document.getElementById('estado').value = data.uf;
+
+                    taxaEntrega = calcularTaxaEntrega(data.localidade);
+                    updateCart(); // Atualiza o carrinho com a nova taxa
+                    mostrarMensagemTaxa(taxaEntrega); // Mostra a taxa no modal
+                } else {
+                    alert('CEP não encontrado!');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar o CEP:', error);
+                alert('Erro ao buscar o CEP!');
+            });
+    } else if (cep.length > 0) {
+        alert('CEP inválido! Deve conter 8 dígitos.');
+    } else {
+        if (localidadeInput.trim() === '') {
+            alert('Por favor, digite o CEP ou a cidade para calcular a taxa de entrega.');
+            return;
+        }
+
+        taxaEntrega = calcularTaxaEntrega(localidadeInput.trim());
+        updateCart(); // Atualiza o carrinho com a nova taxa
+        mostrarMensagemTaxa(taxaEntrega); // Mostra a taxa no modal
+    }
+}
+
+function mostrarMensagemTaxa(taxa) {
+    const taxaMensagem = document.getElementById('taxaMensagem');
+    taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} e já foi adicionada ao seu total!`;
+    document.getElementById('taxaModal').style.display = 'block'; // Mostra o modal
+}
+
+function fecharModal() {
+    document.getElementById('taxaModal').style.display = 'none'; // Fecha o modal
+}
+
+function updateCart() {
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+    cartItems.innerHTML = '';
+    let total = 0;
+
+    cart.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'cart-item';
+        li.innerHTML = `
+            <span>${item.name} ${item.details ? `(${item.details})` : ""} - 
+            Total: R$ ${(item.price * item.quantity).toFixed(2)} 
+            (x${item.quantity})</span>
+            <button class="remove-btn" onclick="removeFromCart(${index})">X</button>`;
+        cartItems.appendChild(li);
+        total += item.price * item.quantity;
+    });
+
+    // Adiciona a taxa de entrega ao total
+    total += taxaEntrega; 
+    cartTotal.textContent = `${total.toFixed(2).replace('.', ',')}`; // Atualiza o total do carrinho
+}
+
+function updatePrice(selectElement, priceId, smallPrice, largePrice) {
+    const selectedValue = selectElement.value;
+    const priceDisplay = document.getElementById(priceId);
+    let selectedPrice = 0;
+
+    if (selectedValue == smallPrice) {
+        selectedPrice = smallPrice;
+        priceDisplay.innerText = `R$ ${smallPrice},00`;
+    } else if (selectedValue == largePrice) {
+        selectedPrice = largePrice;
+        priceDisplay.innerText = `R$ ${largePrice},00`;
+    }
+
+    // Atualiza o total do carrinho com o preço selecionado
+    atualizarTotalCarrinho(selectedPrice);
+}
+
+// Atualiza o total do carrinho
+function atualizarTotalCarrinho(precoAdicionado = 0) {
+    const totalCarrinho = parseFloat(document.getElementById('cart-total').textContent.replace('R$', '').replace(',', '.'));
+    const novoTotal = totalCarrinho + precoAdicionado; // Apenas adiciona o preço dos itens
+    document.getElementById('cart-total').textContent = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`; // Atualiza o total
+}
+
+    function addJuiceToCart(selectElementId) {
+    const selectElement = document.getElementById(selectElementId);
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    
+    const name = selectedOption.text.split(' - ')[0]; // Nome do suco (sem preço)
+    const price = parseFloat(selectedOption.value); // Preço como número
+
+    // Verifica se o suco já está no carrinho
+    const itemIndex = cart.findIndex(item => item.name === name);
+
+    if (itemIndex > -1) {
+        // Se já estiver no carrinho, incrementa a quantidade
+        cart[itemIndex].quantity++;
+    } else {
+        // Adiciona um novo suco ao carrinho
+        cart.push({ name, price, quantity: 1 });
+    }
+
+    updateCart(); // Atualiza a exibição do carrinho
+    showNotification(); // Mostra a notificação de item adicionado
+}
+    
+    function updateJuicePrice(selectElement, priceElementId) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const price = selectedOption.value;
+    document.getElementById(priceElementId).textContent = `R$ ${price},00`;
+}
+
+    let originalCart = []; // Armazena uma cópia do carrinho original
+
+function clearCart() {
+    cart = []; // Limpa o carrinho
+    updateCart(); // Atualiza a exibição do carrinho
+    showNotification(); // Atualiza a notificação
+}
+
+function sendOrder() {
+    // Verifica se o carrinho está vazio
+    if (cart.length === 0) {
+        alert("Seu carrinho está vazio!");
+        return;
+    }
+
+    originalCart = [...cart]; // Salva o carrinho original
+
+    const isDelivery = document.getElementById('entrega').checked; // Verifica a entrega
+
+    // Coleta os dados do cliente e endereço
+    const nome = document.getElementById('nome').value;
+    const rua = document.getElementById('rua').value;
+    const numero = document.getElementById('numero').value;
+    const bairro = document.getElementById('bairro').value;
+    const cidade = document.getElementById('cidade').value;
+    const estado = document.getElementById('estado').value;
+
+    if (!nome) {
+        alert("Por favor, preencha o campo nome!");
+        return;
+    }
+
+    if (isDelivery && (!rua || !numero || !bairro || !cidade || !estado)) {
+        alert("Por favor, preencha todos os campos do endereço!");
+        return;
+    }
+
+    const paymentMethod = document.getElementById('payment-method').value;
+    if (!paymentMethod) {
+        alert("Por favor, selecione uma forma de pagamento!");
+        return;
+    }
+
+    const now = new Date();
+    const horarioPedido = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+    let message = `Pedido de ${nome} às ${horarioPedido}:\n`;
+    const groupedItems = {};
+
+    cart.forEach(item => {
+        const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
+        if (!groupedItems[key]) {
+            groupedItems[key] = { price: item.price, quantity: 0 };
+        }
+        groupedItems[key].quantity += item.quantity;
+    });
+
+    for (const [key, value] of Object.entries(groupedItems)) {
+        message += `• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n\n`; // Adiciona uma linha em branco após cada item
+    }
+
+    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Adiciona a taxa de entrega, se aplicável
+    let taxaEntrega = 0;
+    if (isDelivery) {
+        taxaEntrega = calcularTaxaEntrega(cidade); // Exemplo de função para calcular taxa
+        total += taxaEntrega;
+    }
+
+    message += `Total: R$ ${total.toFixed(2)}\n`;
+
+    if (isDelivery) {
+        message += `\nEndereço:\n${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}\n`;
+        message += `Taxa de Entrega: R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
+    } else {
+        message += "Retirada no Local\n";
+    }
+
+    message += `\nForma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
+
+    if (paymentMethod === 'dinheiro') {
+        const troco = document.getElementById('troco').value;
+        if (!troco) {
+            alert("Por favor, preencha o valor do troco!");
+            return;
+        }
+        message += `Troco para: R$ ${parseFloat(troco).toFixed(2)}\n`;
+    }
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappURL = `https://wa.me/5519998133764?text=${encodedMessage}`;
+
+    window.open(whatsappURL, '_blank');
+    clearCart(); // Limpa o carrinho após envio
+}
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCart();
+        showNotification();
+    }
+
+    function toggleCart() {
+        const cartElement = document.getElementById('cart');
+        cartElement.style.display = cartElement.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function showNotification() {
+        const notification = document.getElementById('cart-notification');
+        notification.style.display = cart.length > 0 ? 'block' : 'none';
+        notification.textContent = cart.length;
+    }
+    
+    // Função para exibir a notificação de item adicionado
+function showItemAddedNotification() {
+    const notification = document.getElementById('item-added-notification');
+    notification.textContent = "Item adicionado ao carrinho!"; // Mensagem que deseja exibir
+    notification.classList.remove('hidden'); // Remove a classe 'hidden' para mostrar a notificação
+
+    // Define um tempo para esconder a notificação
+    setTimeout(() => {
+        notification.classList.add('hidden'); // Adiciona a classe 'hidden' após 3 segundos
+    }, 3000);
+}
+
+function toggleTroco() {
+    const paymentMethod = document.getElementById('payment-method').value;
+    const trocoContainer = document.getElementById('troco-container');
+    const pixContainer = document.getElementById('pix-container');
+    
+    // Exibe ou oculta o campo de troco e Pix com base no método de pagamento
+    trocoContainer.classList.toggle('hidden', paymentMethod !== 'dinheiro');
+    pixContainer.classList.toggle('hidden', paymentMethod !== 'pix');
+}
+
+function copyPix() {
+    const pixKey = document.getElementById('pix-key');
+    pixKey.select();
+    pixKey.setSelectionRange(0, 99999); // Para dispositivos móveis
+
+    // Copia para a área de transferência
+    navigator.clipboard.writeText(pixKey.value).then(() => {
+        alert('Chave Pix copiada para a área de transferência!');
+    }).catch(err => {
+        alert('Erro ao copiar a chave Pix!');
+    });
+}
+
+function searchItems() {
+    const input = document.getElementById('search-input').value.toLowerCase();
+    const items = document.querySelectorAll('.menu-item');
+
+    items.forEach(item => {
+        const titleElement = item.querySelector('h3');
+        // Verifica se o elemento h3 existe antes de acessar textContent
+        const itemName = titleElement ? titleElement.textContent.toLowerCase() : '';
+
+        item.style.display = itemName.includes(input) ? 'block' : 'none';
+    });
+}
+
+let isDragging = false;
+let startX;
+let scrollLeft;
+
+const categoryList = document.getElementById('category-list');
+
+function startDrag(e) {
+    isDragging = true;
+    startX = e.pageX || e.touches[0].pageX; // Posição inicial do mouse ou toque
+    scrollLeft = categoryList.scrollLeft; // Posição atual da rolagem
+}
+
+function stopDrag() {
+    isDragging = false;
+}
+
+function scrollLeftItems() {
+    categoryList.scrollBy({
+        left: -100, // Ajuste este valor para aumentar ou diminuir a quantidade de rolagem
+        behavior: 'smooth'
+    });
+}
+
+function scrollRightItems() {
+    categoryList.scrollBy({
+        left: 100, // Ajuste este valor para aumentar ou diminuir a quantidade de rolagem
+        behavior: 'smooth'
+    });
+}
+
+categoryList.addEventListener('mousemove', (e) => {
+    if (!isDragging) return; // Se não estiver arrastando, não faz nada
+    e.preventDefault(); // Impede a seleção de texto
+    const x = e.pageX || e.touches[0].pageX; // Posição do mouse ou toque
+    const walk = (x - startX) * 2; // Aumenta a velocidade de rolagem
+    categoryList.scrollLeft = scrollLeft - walk; // Atualiza a posição da rolagem
+});
+
+// Para dispositivos móveis
+categoryList.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const x = e.touches[0].pageX; // Posição do toque
+    const walk = (x - startX) * 2; // Aumenta a velocidade de rolagem
+    categoryList.scrollLeft = scrollLeft - walk; // Atualiza a posição da rolagem
+});
+
+function handlePaymentMethodChange() {
+        const paymentMethod = document.getElementById('payment-method').value;
+        const pixMessage = document.getElementById('pix-message');
+        const pixContainer = document.getElementById('pix-container');
+        const trocoContainer = document.getElementById('troco-container');
+
+        // Esconde todos os containers inicialmente
+        pixMessage.classList.add('hidden');
+        pixContainer.classList.add('hidden');
+        trocoContainer.classList.add('hidden');
+
+        // Mostra a mensagem e o container do Pix se "pix" for selecionado
+        if (paymentMethod === 'pix') {
+            pixMessage.classList.remove('hidden');
+            pixContainer.classList.remove('hidden');
+        } else if (paymentMethod === 'dinheiro') {
+            trocoContainer.classList.remove('hidden');
+        }
+        // Aqui você pode adicionar a lógica para outros métodos de pagamento, se necessário
+    }
+</script>
+
+</body>
+</html>
