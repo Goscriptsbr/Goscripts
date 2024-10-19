@@ -1636,7 +1636,7 @@ function sendOrder() {
     });
 
     for (const [key, value] of Object.entries(groupedItems)) {
-        message += `• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n`;
+        message += `• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n\n`; // Adiciona uma linha em branco após cada item
     }
 
     let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -1648,7 +1648,7 @@ function sendOrder() {
         total += taxaEntrega;
     }
 
-    message += `\nTotal: R$ ${total.toFixed(2)}\n`;
+    message += `Total: R$ ${total.toFixed(2)}\n`;
 
     if (isDelivery) {
         message += `\nEndereço:\n${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}\n`;
