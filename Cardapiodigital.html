@@ -207,7 +207,7 @@ label {
 
 #cart-icon:hover {
     background-color: orange; /* tom mais escuro ao passar o mouse */
-border: 2px solid green;
+    border: 2px solid green;
 }
 
 #cart-notification {
@@ -676,15 +676,43 @@ legend {
     text-align: center;
     margin-top: 10px;
 }
+
+.status-aberto {
+    color: #4CAF50; /* Verde */
+    font-weight: bold;
+    background-color: rgba(76, 175, 80, 0.1);
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+.status-fechado {
+    color: #F44336; /* Vermelho */
+    font-weight: bold;
+    background-color: rgba(244, 67, 54, 0.1);
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+.funcionamento {
+    font-size: 11px;
+    color: #fff;
+    margin-top: 20px; /* Aumente o valor para descer mais */
+    font-weight: 200;
+    text-align: center;
+    position: relative; /* Permite ajuste com top */
+    top: 10px; /* Ajuste conforme necessário */
+}
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-content">
-        <img src="https://keskara.neocities.org/Fonto/BackgroundEraser_20241015_210053864.png" alt="Logo Gardin Lanches" class="logo">
+        <img src="https://keskara.neocities.org/Fonto/BackgroundEraser_20241015_210053864.png" 
+             alt="Logo Gardin Lanches" class="logo">
         <h1>Gardin Lanches</h1>
     </div>
+    <p class="funcionamento"></p>
 </header>
 
 <nav>
@@ -1180,7 +1208,7 @@ legend {
         <input type="text" id="nome" placeholder="Seu nome">
 
         <label for="cep">CEP:</label>
-<input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (obrigatório)" onblur="buscarEndereco()">
+<input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
 
         <label for="rua">Rua:</label>
         <input type="text" id="rua" placeholder="Rua">
@@ -1239,6 +1267,34 @@ legend {
             item.style.display = category === 'all' || item.dataset.category === category ? 'block' : 'none';
         });
     }
+    
+    function verificarHorario() {
+    const agora = new Date();
+    const horaAtual = agora.getHours();
+    const minutoAtual = agora.getMinutes();
+
+    let aberto = false;
+
+    // Verifica se a hora atual está entre 10h e 23h59
+    if (horaAtual > 10 && horaAtual < 23) {
+        aberto = true;
+    } else if (horaAtual === 10 && minutoAtual >= 0) {
+        aberto = true;
+    } else if (horaAtual === 23 && minutoAtual === 59) {
+        aberto = true; // Agora considera aberto até 23:59
+    }
+
+    const status = aberto ? 
+        `<span class="status-aberto">Aberto agora</span>` : 
+        `<span class="status-fechado">Fechado no momento</span>`;
+
+    document.querySelector('.funcionamento').innerHTML = 
+        `⏰ Funcionamento: Todos os dias | 10h - 00h (${status})`;
+}
+
+window.onload = verificarHorario;
+
+verificarHorario();
 
     function openAcaiBuilder() {
         document.getElementById('acai-builder').classList.remove('hidden');
