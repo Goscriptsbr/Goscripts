@@ -1593,11 +1593,9 @@ function sendOrder() {
         return;
     }
 
-    // Salva os itens atuais do carrinho antes de enviá-los
-    originalCart = [...cart];
+    originalCart = [...cart]; // Salva o carrinho original
 
-    // Verifica se a opção "Retirar no Local" foi selecionada
-    const isDelivery = document.getElementById('entrega').checked;
+    const isDelivery = document.getElementById('entrega').checked; // Verifica a entrega
 
     // Coleta os dados do cliente e endereço
     const nome = document.getElementById('nome').value;
@@ -1607,35 +1605,28 @@ function sendOrder() {
     const cidade = document.getElementById('cidade').value;
     const estado = document.getElementById('estado').value;
 
-    // Verifica se o nome está preenchido
     if (!nome) {
         alert("Por favor, preencha o campo nome!");
         return;
     }
 
-    // Verifica os campos de endereço apenas se a entrega for selecionada
     if (isDelivery && (!rua || !numero || !bairro || !cidade || !estado)) {
         alert("Por favor, preencha todos os campos do endereço!");
         return;
     }
 
-    // Coleta a forma de pagamento
     const paymentMethod = document.getElementById('payment-method').value;
     if (!paymentMethod) {
         alert("Por favor, selecione uma forma de pagamento!");
         return;
     }
 
-    // Obtém a data e hora atual
     const now = new Date();
-    const hora = now.getHours().toString().padStart(2, '0');
-    const minutos = now.getMinutes().toString().padStart(2, '0');
-    const horarioPedido = `${hora}:${minutos}`;
+    const horarioPedido = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
     let message = `Pedido de ${nome} às ${horarioPedido}:\n`;
     const groupedItems = {};
 
-    // Agrupa os itens do carrinho
     cart.forEach(item => {
         const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
         if (!groupedItems[key]) {
@@ -1644,25 +1635,30 @@ function sendOrder() {
         groupedItems[key].quantity += item.quantity;
     });
 
-    // Adiciona os itens agrupados à mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
         message += `• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n`;
     }
 
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    message += `\nTotal: R$ ${total.toFixed(2)}\n\n`;
+    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // Adiciona o endereço à mensagem, se for entrega
+    // Adiciona a taxa de entrega, se aplicável
+    let taxaEntrega = 0;
     if (isDelivery) {
-        message += `Endereço:\n${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}\n\n`;
-    } else {
-        message += "Retirada no Local\n\n";
+        taxaEntrega = calcularTaxaEntrega(cidade); // Exemplo de função para calcular taxa
+        total += taxaEntrega;
     }
 
-    // Adiciona a forma de pagamento à mensagem
-    message += `Forma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
+    message += `\nTotal: R$ ${total.toFixed(2)}\n`;
 
-    // Adiciona informações de troco se o pagamento for em dinheiro
+    if (isDelivery) {
+        message += `\nEndereço:\n${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}\n`;
+        message += `Taxa de Entrega: R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
+    } else {
+        message += "Retirada no Local\n";
+    }
+
+    message += `\nForma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
+
     if (paymentMethod === 'dinheiro') {
         const troco = document.getElementById('troco').value;
         if (!troco) {
@@ -1672,15 +1668,11 @@ function sendOrder() {
         message += `Troco para: R$ ${parseFloat(troco).toFixed(2)}\n`;
     }
 
-    // Cria a URL para o WhatsApp
     const encodedMessage = encodeURIComponent(message);
     const whatsappURL = `https://wa.me/5519998133764?text=${encodedMessage}`;
 
-    // Abre o WhatsApp com a mensagem formatada
     window.open(whatsappURL, '_blank');
-
-    // Limpa o carrinho após o envio do pedido
-    clearCart();
+    clearCart(); // Limpa o carrinho após envio
 }
 
     function removeFromCart(index) {
