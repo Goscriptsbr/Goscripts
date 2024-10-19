@@ -47,7 +47,7 @@ nav {
 
 nav button {
     background-color: orange; /* Verde claro */
-    color: white; /* Cor do texto do botão */
+    color: black; /* Cor do texto do botão */
     border: none; /* Remove a borda do botão */
     padding: 10px 15px; /* Espaçamento interno (horizontal maior) */
     cursor: pointer; /* Altera o cursor para indicar que é clicável */
@@ -62,7 +62,7 @@ nav button {
 
 /* Efeito hover */
 nav button:hover {
-    background-color: #388E3C; /* Verde mais escuro ao passar o mouse */
+    background-color: yellow; /* Verde mais escuro ao passar o mouse */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra ao passar o mouse */
 }
 
@@ -84,9 +84,11 @@ nav ul li {
 }
 
 nav ul li a {
-    color: white; /* Cor do texto */
-    text-decoration: none; /* Remove o sublinhado do link */
+    color: orange; /* Cor do texto */
+    text-decoration: 2px; /* Remove o sublinhado do link */
     font-size: 18px; /* Tamanho da fonte */
+    border: 1px solid yellow;
+    border-radius: 15%;
 }
 
 #menu-items {
@@ -145,7 +147,7 @@ textarea {
     width: 100%; /* Faz o campo de texto ocupar toda a largura disponível */
     height: 50px; /* Altura do campo de texto */
     padding: 5px; /* Espaçamento interno */
-    border: 1px solid #ccc; /* Borda do campo */
+    border: 1px solid orange; /* Borda do campo */
     border-radius: 4px; /* Cantos arredondados */
     box-sizing: border-box; /* Inclui padding e border na largura total */
 }
@@ -191,9 +193,9 @@ label {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #2E8B57;
+    background-color: #FF8C33;
     color: white;
-    border: 1px solid black;
+    border: 1px solid yellow;
     padding: 15px;
     border-radius: 50%;
     cursor: pointer;
@@ -288,7 +290,7 @@ label {
     align-items: center;
     margin: 5px 0;
     padding: 10px 0; /* padding para mais espaçamento */
-    border-bottom: 2px solid #e0e0e0; /* linha divisória */
+    border-bottom: 2px solid black; /* linha divisória */
 }
 
 .cart-item:last-child {
@@ -610,6 +612,68 @@ legend {
     margin-top: 10px; /* Espaço acima */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
 }
+
+/* Estilos para o modal */
+.modal {
+    display: none; /* Escondido por padrão */
+    position: fixed; /* Fixo na tela */
+    z-index: 1; /* Fica acima de outros elementos */
+    left: 0;
+    top: 0;
+    width: 100%; /* Largura total */
+    height: 100%; /* Altura total */
+    overflow: auto; /* Habilita o scroll se necessário */
+    background-color: rgba(0, 0, 0, 0.4); /* Fundo transparente */
+    transition: opacity 0.3s ease-in-out; /* Transição suave */
+}
+
+/* Conteúdo do modal */
+.modal-content {
+    background-color: orange;
+    margin: 15% auto; /* Centralizado */
+    padding: 20px;
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* Sombra leve */
+    width: 80%; /* Largura do modal */
+    max-width: 400px; /* Máximo de 400px */
+    animation: fadeIn 0.4s ease-out; /* Animação suave de entrada */
+    border: 2px solid black;
+}
+
+/* Animação de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Botão de fechar */
+.close-button {
+    color: red;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #ff5e57;
+}
+
+/* Texto do modal */
+.modal-content p {
+    font-size: 18px;
+    color: black; /* Texto preto */
+    text-align: center;
+    margin-top: 10px;
+}
     </style>
 </head>
 <body>
@@ -659,9 +723,28 @@ legend {
             <div class="addons-selection">
                 <label for="addons-burger">Adicionais:</label>
                 <select id="addons-burger" multiple>
-                    <option value='{"name": "Bacon", "price": 5}'>Bacon - R$ 5,00</option>
-                    <option value='{"name": "Queijo Extra", "price": 3}'>Queijo Extra - R$ 3,00</option>
-                    <option value='{"name": "Ovo", "price": 2}'>Ovo - R$ 2,00</option>
+                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                    <option value='{"name": "Bacon", "price": 6}'>Bacon - R$: 6,00</option>
+                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
                 </select>
             </div>
         </div>
@@ -674,7 +757,7 @@ legend {
 
     <!-- Exemplo de outro lanche -->
     <div class="menu-item" data-category="gourmet">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsQk_cOUItVUyzEDyfZB-uYGEtUlbpRfP9sBfbmfxFZFmyadJ6Bu025tE&s=10" alt="Argentina Gourmet" />
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Argentina Gourmet" />
         <h3>Argentina Gourmet</h3>
         <p>Pão brioche, hamb, frango 150g, queijo, rúcula, bacon e molho grill.</p>
         
@@ -689,9 +772,28 @@ legend {
             <div class="addons-selection">
                 <label for="addons-argentina">Adicionais:</label>
                 <select id="addons-argentina" multiple>
-                    <option value='{"name": "Bacon", "price": 5}'>Bacon - R$ 5,00</option>
-                    <option value='{"name": "Queijo Extra", "price": 3}'>Queijo Extra - R$ 3,00</option>
-                    <option value='{"name": "Guacamole", "price": 4}'>Guacamole - R$ 4,00</option>
+                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                    <option value='{"name":  "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
                 </select>
             </div>
         </div>
@@ -703,7 +805,7 @@ legend {
     </div>
     
     <div class="menu-item" data-category="gourmet">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsQk_cOUItVUyzEDyfZB-uYGEtUlbpRfP9sBfbmfxFZFmyadJ6Bu025tE&s=10" alt="Alemanha Gourmet" />
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Alemanha Gourmet" />
         <h3>Alemanha Gourmet</h3>
         <p>Pão brioche, hamb, costela 150g, queijo, rúcula, bacon e molho grill.</p>
         
@@ -718,9 +820,28 @@ legend {
             <div class="addons-selection">
                 <label for="addons-alemanha">Adicionais:</label>
                 <select id="addons-alemanha" multiple>
-                    <option value='{"name": "Bacon", "price": 5}'>Bacon - R$ 5,00</option>
-                    <option value='{"name": "Queijo Extra", "price": 3}'>Queijo Extra - R$ 3,00</option>
-                    <option value='{"name": "Guacamole", "price": 4}'>Guacamole - R$ 4,00</option>
+                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                    <option value='{"name":  "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
                 </select>
             </div>
         </div>
@@ -731,7 +852,7 @@ legend {
         <button onclick="addBurgerToCart('Alemanha Gourmet', 'size-alemanha', 'addons-alemanha', 'observacoes-alemanha')">Adicionar</button>
     </div> 
     
-    <div class="menu-item" data-category="gourmet">
+    <div class="menu-item" data-category="porções">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-m_2LRAwboGVSBrVgNa95X3qzFE5m7gjvtd40E_0iiXGDcXKtxfU3ChrR&s=10" alt="batata Gourmet" />
         <h3>Porção de batata média</h3>
         <p>400g Média. Quantidade de batata!</p>
@@ -740,7 +861,7 @@ legend {
             <div class="size-selection">
                 <label for="size-alemanha">Opções:</label>
                 <select id="size-batatamedia">
-                    <option value="19">Simples media - R$ 19,00</option>
+                    <option value="19">Simples - R$ 19,00</option>
                     <option value="27">Com Cheddar - R$ 27,00</option>
                     <option value="26.50">Com Catupiry - R$ 26,50</option>
                     <option value="23.50">Com Bacon - R$ 23,50</option>
@@ -765,7 +886,7 @@ legend {
                     <option value='{"name": "Catupiry M", "price": 7.50}'>Catupiry M - R$ 7,50</option>
                     <option value='{"name": "Cebola M", "price": 3}'>Cebola M - R$ 3,00</option>
                     <option value='{"name": "Cheddar M", "price": 8}'>Cheddar M - R$ 8,00</option>
-                    <option value='{"name": "Muçarela M", "price": 9.50}'>Muçarela M - R$ 9,50</option>
+                    <option value='{"name": "Mussarela M", "price": 9.50}'>Mussarela M - R$ 9,50</option>
                     <option value='{"name": "Salada", "price": 12}'>Salada - R$ 12,00</option>
                 </select>
             </div>
@@ -774,7 +895,7 @@ legend {
         <button onclick="addBurgerToCart('Porção de batata media', 'size-batatamedia', 'addons-alemanha', 'observacoes-alemanha')">Adicionar</button>
     </div>
     
-    <div class="menu-item" data-category="gourmet">
+    <div class="menu-item" data-category="porções">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-m_2LRAwboGVSBrVgNa95X3qzFE5m7gjvtd40E_0iiXGDcXKtxfU3ChrR&s=10" alt="Alemanha Gourmet" />
         <h3>Porção de batata grande</h3>
         <p>700g Grande. Quantidade de batata!</p>
@@ -783,7 +904,7 @@ legend {
             <div class="size-selection">
                 <label for="size-alemanha">Opções:</label>
                 <select id="size-batatagrande">
-                    <option value="33">Simples Grande - R$ 33,00</option>
+                    <option value="33">Simples - R$ 33,00</option>
                     <option value="49">Com Cheddar - R$ 49,00</option>
                     <option value="48">Com Catupiry - R$ 48,00</option>
                     <option value="42">Com Bacon - R$ 42,00</option>
@@ -808,13 +929,13 @@ legend {
                     <option value='{"name": "Catupiry G", "price": 15}'>Catupiry G - R$ 15,00</option>
                     <option value='{"name": "Cebola G", "price": 5}'>Cebola G - R$ 5,00</option>
                     <option value='{"name": "Cheddar G", "price": 16}'>Cheddar G - R$ 16,00</option>
-                    <option value='{"name": "Muçarela G", "price": 14.50}'>Muçarela G - R$ 14,50</option>
+                    <option value='{"name": "Mussarela G", "price": 14.50}'>Mussarela G - R$ 14,50</option>
                     <option value='{"name": "Salada", "price": 12}'>Salada - R$ 12,00</option>
                 </select>
             </div>
         </div>
         
-        <button onclick="addBurgerToCart('Batata simples', 'size-batatagrande', 'addons-alemanha', 'observacoes-alemanha')">Adicionar</button>
+        <button onclick="addBurgerToCart('Porção Batata Grande', 'size-batatagrande', 'addons-alemanha', 'observacoes-alemanha')">Adicionar</button>
     </div>
     
     <!-- Item de Coxinha -->
@@ -969,7 +1090,7 @@ legend {
 </div>
     
     <div class="menu-item" data-category="acai">
-    <h3>Monte seu Açaí</h3>
+    <h3>Monte seu Açai</h3>
     <img src="https://gozgames.neocities.org/FormatConvert_20241017_063852_2391.webp" alt="Açaí delicioso" class="acai-img">
     <button class="montar-button" onclick="openAcaiBuilder()">Montar Açaí</button>
 </div>
@@ -1021,6 +1142,14 @@ legend {
     <button class="add-button" onclick="addAcaiToCart()">Adicionar ao Carrinho</button>
 </section>
 
+<!-- Modal -->
+<div id="taxaModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="fecharModal()">&times;</span>
+        <p id="taxaMensagem"></p>
+    </div>
+</div>
+
 <button id="cart-icon" onclick="toggleCart()">🛒
     <div id="cart-notification"></div>
 </button>
@@ -1049,7 +1178,7 @@ legend {
         <input type="text" id="nome" placeholder="Seu nome">
 
         <label for="cep">CEP:</label>
-        <input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
+<input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (obrigatório)" onblur="buscarEndereco()">
 
         <label for="rua">Rua:</label>
         <input type="text" id="rua" placeholder="Rua">
@@ -1061,7 +1190,7 @@ legend {
         <input type="text" id="bairro" placeholder="Bairro">
 
         <label for="cidade">Cidade:</label>
-        <input type="text" id="cidade" placeholder="Cidade">
+<input type="text" id="cidade" placeholder="Cidade" onblur="buscarEndereco()">
 
         <label for="estado">Estado:</label>
         <input type="text" id="estado" placeholder="Estado">
@@ -1303,7 +1432,78 @@ function addPastelToCart(selectId) {
     addToCart(`Pastel de ${flavor}`, price);
 }
 
-    function updateCart() {
+   let taxaEntrega = 0; // Inicializa taxaEntrega globalmente
+
+function calcularTaxaEntrega(localidade) {
+    let taxa = 0; // Inicializa a taxa como 0
+    const localidadeNormalizada = localidade.trim().toLowerCase(); // Normaliza a entrada para comparação
+
+    if (localidadeNormalizada === "mogi guaçu") {
+        taxa = 10.00; // Taxa de entrega para Mogi Guaçu
+    } else if (localidadeNormalizada === "estiva gerbi" || localidadeNormalizada === "estiva") {
+        taxa = 4.00; // Taxa de entrega para Estiva Gerbi
+    } else {
+        taxa = 12.00; // Taxa fixa para outras localidades (opcional)
+    }
+
+    return taxa; // Retorna a taxa calculada
+}
+
+function buscarEndereco() {
+    const cep = document.getElementById('cep').value.replace(/\D/g, '');
+    const localidadeInput = document.getElementById('cidade').value;
+
+    if (cep.length === 8) {
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar o CEP: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.erro) {
+                    document.getElementById('rua').value = data.logradouro;
+                    document.getElementById('bairro').value = data.bairro;
+                    document.getElementById('cidade').value = data.localidade;
+                    document.getElementById('estado').value = data.uf;
+
+                    taxaEntrega = calcularTaxaEntrega(data.localidade);
+                    updateCart(); // Atualiza o carrinho com a nova taxa
+                    mostrarMensagemTaxa(taxaEntrega); // Mostra a taxa no modal
+                } else {
+                    alert('CEP não encontrado!');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar o CEP:', error);
+                alert('Erro ao buscar o CEP!');
+            });
+    } else if (cep.length > 0) {
+        alert('CEP inválido! Deve conter 8 dígitos.');
+    } else {
+        if (localidadeInput.trim() === '') {
+            alert('Por favor, digite o CEP ou a cidade para calcular a taxa de entrega.');
+            return;
+        }
+
+        taxaEntrega = calcularTaxaEntrega(localidadeInput.trim());
+        updateCart(); // Atualiza o carrinho com a nova taxa
+        mostrarMensagemTaxa(taxaEntrega); // Mostra a taxa no modal
+    }
+}
+
+function mostrarMensagemTaxa(taxa) {
+    const taxaMensagem = document.getElementById('taxaMensagem');
+    taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} e já foi adicionada ao seu total!`;
+    document.getElementById('taxaModal').style.display = 'block'; // Mostra o modal
+}
+
+function fecharModal() {
+    document.getElementById('taxaModal').style.display = 'none'; // Fecha o modal
+}
+
+function updateCart() {
     const cartItems = document.getElementById('cart-items');
     const cartTotal = document.getElementById('cart-total');
     cartItems.innerHTML = '';
@@ -1314,26 +1514,41 @@ function addPastelToCart(selectId) {
         li.className = 'cart-item';
         li.innerHTML = `
             <span>${item.name} ${item.details ? `(${item.details})` : ""} - 
-           Total: R$ ${(item.price * item.quantity).toFixed(2)} 
+            Total: R$ ${(item.price * item.quantity).toFixed(2)} 
             (x${item.quantity})</span>
             <button class="remove-btn" onclick="removeFromCart(${index})">X</button>`;
         cartItems.appendChild(li);
         total += item.price * item.quantity;
     });
 
-    cartTotal.textContent = total.toFixed(2); // Esta linha está correta
+    // Adiciona a taxa de entrega ao total
+    total += taxaEntrega; 
+    cartTotal.textContent = `${total.toFixed(2).replace('.', ',')}`; // Atualiza o total do carrinho
 }
 
-    function updatePrice(selectElement, priceId, smallPrice, largePrice) {
-        const selectedValue = selectElement.value;
-        const priceDisplay = document.getElementById(priceId);
-        
-        if (selectedValue == smallPrice) {
-            priceDisplay.innerText = `R$ ${smallPrice},00`;
-        } else if (selectedValue == largePrice) {
-            priceDisplay.innerText = `R$ ${largePrice},00`;
-        }
+function updatePrice(selectElement, priceId, smallPrice, largePrice) {
+    const selectedValue = selectElement.value;
+    const priceDisplay = document.getElementById(priceId);
+    let selectedPrice = 0;
+
+    if (selectedValue == smallPrice) {
+        selectedPrice = smallPrice;
+        priceDisplay.innerText = `R$ ${smallPrice},00`;
+    } else if (selectedValue == largePrice) {
+        selectedPrice = largePrice;
+        priceDisplay.innerText = `R$ ${largePrice},00`;
     }
+
+    // Atualiza o total do carrinho com o preço selecionado
+    atualizarTotalCarrinho(selectedPrice);
+}
+
+// Atualiza o total do carrinho
+function atualizarTotalCarrinho(precoAdicionado = 0) {
+    const totalCarrinho = parseFloat(document.getElementById('cart-total').textContent.replace('R$', '').replace(',', '.'));
+    const novoTotal = totalCarrinho + precoAdicionado; // Apenas adiciona o preço dos itens
+    document.getElementById('cart-total').textContent = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`; // Atualiza o total
+}
 
     function addJuiceToCart(selectElementId) {
     const selectElement = document.getElementById(selectElementId);
@@ -1495,27 +1710,6 @@ function showItemAddedNotification() {
     setTimeout(() => {
         notification.classList.add('hidden'); // Adiciona a classe 'hidden' após 3 segundos
     }, 3000);
-}
-    
-    function buscarEndereco() {
-    const cep = document.getElementById('cep').value.replace(/\D/g, '');
-    if (cep.length === 8) {
-        fetch(`https://viacep.com.br/ws/${cep}/json/`)
-            .then(response => response.json())
-            .then(data => {
-                if (!data.erro) {
-                    document.getElementById('rua').value = data.logradouro;
-                    document.getElementById('bairro').value = data.bairro;
-                    document.getElementById('cidade').value = data.localidade;
-                    document.getElementById('estado').value = data.uf;
-                } else {
-                    alert('CEP não encontrado!');
-                }
-            })
-            .catch(() => alert('Erro ao buscar o CEP!'));
-    } else {
-        alert('CEP inválido! Não é obrigatório por CEP!');
-    }
 }
 
 function toggleTroco() {
