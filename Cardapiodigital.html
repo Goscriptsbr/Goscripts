@@ -694,7 +694,7 @@ legend {
 }
 
 .funcionamento {
-    font-size: 11px;
+    font-size: 9px;
     color: #fff;
     margin-top: 20px; /* Aumente o valor para descer mais */
     font-weight: 200;
@@ -1272,16 +1272,29 @@ legend {
     const agora = new Date();
     const horaAtual = agora.getHours();
     const minutoAtual = agora.getMinutes();
+    const diaDaSemana = agora.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
 
     let aberto = false;
 
-    // Verifica se a hora atual está entre 10h e 23h59
-    if (horaAtual > 10 && horaAtual < 23) {
-        aberto = true;
-    } else if (horaAtual === 10 && minutoAtual >= 0) {
-        aberto = true;
-    } else if (horaAtual === 23 && minutoAtual === 59) {
-        aberto = true; // Agora considera aberto até 23:59
+    // Verifica se estamos de segunda a quinta (1 a 4)
+    if (diaDaSemana >= 1 && diaDaSemana <= 4) {
+        if (horaAtual > 10 && horaAtual < 23) {
+            aberto = true;
+        } else if (horaAtual === 10 && minutoAtual >= 0) {
+            aberto = true;
+        } else if (horaAtual === 23 && minutoAtual === 59) {
+            aberto = true; // Abre até 23h59
+        }
+    }
+    // Verifica se estamos de sexta a domingo (5 a 0)
+    else if (diaDaSemana >= 5) {
+        if (horaAtual > 10 && horaAtual < 24) {
+            aberto = true; // Abre até 23h59
+        } else if (horaAtual === 10 && minutoAtual >= 0) {
+            aberto = true;
+        } else if (horaAtual === 0 && minutoAtual <= 30) {
+            aberto = true; // Abre até 00h30 do dia seguinte
+        }
     }
 
     const status = aberto ? 
@@ -1289,8 +1302,8 @@ legend {
         `<span class="status-fechado">Fechado no momento</span>`;
 
     document.querySelector('.funcionamento').innerHTML = 
-        `⏰ Funcionamento: Todos os dias | 10h - 00h (${status})`;
-}
+        `⏰ Funcionamento: seg a qui | 10h - 00h00 | sex a dom | 10h - 00h30 (${status})`;
+       } 
 
 window.onload = verificarHorario;
 
