@@ -736,55 +736,6 @@ legend {
     <!-- Os itens do menu aparecem aqui -->
 </section>
 
-<div id="menu-items">
-    <div class="menu-item" data-category="lanches">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSYRX07GQ-Vwoi8a8A_b4P4KKUF1i9KRO4uQ&usqp=CAU" alt="X-Burger" />
-        <h3>X Burger</h3>
-        <p>Pão de hamb, hamburguer, presunto, muçarela, batata palha, milho e maionese.</p>
-        
-        <div class="size-addons">
-            <div class="size-selection">
-                <label for="size-burger">Escolha o tamanho:</label>
-                <select id="size-burger">
-                    <option value="15">Pequeno - R$ 15,00</option>
-                    <option value="20">Grande - R$ 20,00</option>
-                </select>
-            </div>
-            <div class="addons-selection">
-                <label for="addons-burger">Adicionais:</label>
-                <select id="addons-burger" multiple>
-                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
-                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
-                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
-                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
-                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
-                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
-                    <option value='{"name": "Bacon", "price": 6}'>Bacon - R$: 6,00</option>
-                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
-                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
-                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
-                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
-                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
-                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
-                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
-                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
-                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
-                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
-                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
-                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
-                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
-                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
-                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
-                </select>
-            </div>
-        </div>
-
-        <label for="observacoes-burger">Observações:</label>
-        <textarea id="observacoes-burger" placeholder="(ex: sem alface) opcional"></textarea>
-        
-        <button onclick="addBurgerToCart('X-Burger', 'size-burger', 'addons-burger', 'observacoes-burger')">Adicionar</button>
-    </div>
-    
     <div id="menu-items">
     <div class="menu-item" data-category="lanches">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSYRX07GQ-Vwoi8a8A_b4P4KKUF1i9KRO4uQ&usqp=CAU" alt="X-Burger Simples" />
@@ -2418,7 +2369,1161 @@ legend {
     <button onclick="addBurgerToCart('X - Bacon Catupiry caseiro', 'size-x-bacon-catupiry', 'addons-x-bacon-catupiry', 'observacoes-x-bacon-catupiry')">Adicionar</button>
 </div>
 
-    <!-- Exemplo de outro lanche -->
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-egg.jpg" alt="X - Egg Caseiro" />
+    <h3>X - Egg Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, ovo, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-egg">Escolha o tamanho:</label>
+            <select id="size-x-egg">
+                <option value="20.00">Pequeno - R$ 20,00</option>
+                <option value="24.00">Grande - R$ 24,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-egg">Adicionais:</label>
+            <select id="addons-x-egg" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-egg">Observações:</label>
+    <textarea id="observacoes-x-egg" placeholder="(ex: sem ovo) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Egg Caseiro', 'size-x-egg', 'addons-x-egg', 'observacoes-x-egg')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-egg-ervilha.jpg" alt="X - Egg com Ervilha Caseiro" />
+    <h3>X - Egg com Ervilha Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, ovo, muçarela, presunto, batata palha, ervilha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-egg-ervilha">Escolha o tamanho:</label>
+            <select id="size-x-egg-ervilha">
+                <option value="22.30">Pequeno - R$ 22,30</option>
+                <option value="26.30">Grande - R$ 26,30</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-egg-ervilha">Adicionais:</label>
+            <select id="addons-x-egg-ervilha" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-egg-ervilha">Observações:</label>
+    <textarea id="observacoes-x-egg-ervilha" placeholder="(ex: sem ervilha) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Egg com Ervilha Caseiro', 'size-x-egg-ervilha', 'addons-x-egg-ervilha', 'observacoes-x-egg-ervilha')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-egg-fritas.jpg" alt="X - Egg com Fritas Caseiro" />
+    <h3>X - Egg com Fritas Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, ovo, muçarela, presunto, batata palha, milho, tomate, alface, maionese, batata frita.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-egg-fritas">Escolha o tamanho:</label>
+            <select id="size-x-egg-fritas">
+                <option value="27.00">Pequeno - R$ 27,00</option>
+                <option value="31.00">Grande - R$ 31,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-egg-fritas">Adicionais:</label>
+            <select id="addons-x-egg-fritas" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-egg-fritas">Observações:</label>
+    <textarea id="observacoes-x-egg-fritas" placeholder="(ex: sem batata frita) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Egg com Fritas Caseiro', 'size-x-egg-fritas', 'addons-x-egg-fritas', 'observacoes-x-egg-fritas')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-egg-acebolado.jpg" alt="X - Egg Acebolado Caseiro" />
+    <h3>X - Egg Acebolado Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, ovo, muçarela, presunto, batata palha, milho, tomate, alface, maionese, cebola.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-egg-acebolado">Escolha o tamanho:</label>
+            <select id="size-x-egg-acebolado">
+                <option value="21.50">Pequeno - R$ 21,50</option>
+                <option value="25.50">Grande - R$ 25,50</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-egg-acebolado">Adicionais:</label>
+            <select id="addons-x-egg-acebolado" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-egg-acebolado">Observações:</label>
+    <textarea id="observacoes-x-egg-acebolado" placeholder="(ex: sem cebola) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Egg Acebolado Caseiro', 'size-x-egg-acebolado', 'addons-x-egg-acebolado', 'observacoes-x-egg-acebolado')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-egg-chefe.jpg" alt="X - Egg do Chefe Caseiro" />
+    <h3>X - Egg do Chefe Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, 2 hambúrgueres, ovo, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-egg-chefe">Escolha o tamanho:</label>
+            <select id="size-x-egg-chefe">
+                <option value="22.70">Pequeno - R$ 22,70</option>
+                <option value="28.50">Grande - R$ 28,50</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-egg-chefe">Adicionais:</label>
+            <select id="addons-x-egg-chefe" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-egg-chefe">Observações:</label>
+    <textarea id="observacoes-x-egg-chefe" placeholder="(ex: sem milho) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Egg do Chefe Caseiro', 'size-x-egg-chefe', 'addons-x-egg-chefe', 'observacoes-x-egg-chefe')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-egg-cheddar.jpg" alt="X - Egg Cheddar Caseiro" />
+    <h3>X - Egg Cheddar Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, ovo, cheddar, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-egg-cheddar">Escolha o tamanho:</label>
+            <select id="size-x-egg-cheddar">
+                <option value="28.00">Pequeno - R$ 28,00</option>
+                <option value="32.00">Grande - R$ 32,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-egg-cheddar">Adicionais:</label>
+            <select id="addons-x-egg-cheddar" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-egg-cheddar">Observações:</label>
+    <textarea id="observacoes-x-egg-cheddar" placeholder="(ex: sem cheddar) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Egg Cheddar Caseiro', 'size-x-egg-cheddar', 'addons-x-egg-cheddar', 'observacoes-x-egg-cheddar')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-egg-catupiry.jpg" alt="X - Egg Catupiry Caseiro" />
+    <h3>X - Egg Catupiry Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, ovo, catupiry, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-egg-catupiry">Escolha o tamanho:</label>
+            <select id="size-x-egg-catupiry">
+                <option value="27.50">Pequeno - R$ 27,50</option>
+                <option value="31.50">Grande - R$ 31,50</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-egg-catupiry">Adicionais:</label>
+            <select id="addons-x-egg-catupiry" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-egg-catupiry">Observações:</label>
+    <textarea id="observacoes-x-egg-catupiry" placeholder="(ex: sem catupiry) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Egg Catupiry Caseiro', 'size-x-egg-catupiry', 'addons-x-egg-catupiry', 'observacoes-x-egg-catupiry')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa.jpg" alt="X - Calabresa Caseiro" />
+    <h3>X - Calabresa Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa">Escolha o tamanho:</label>
+            <select id="size-x-calabresa">
+                <option value="21.80">Pequeno - R$ 21,80</option>
+                <option value="25.80">Grande - R$ 25,80</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa">Adicionais:</label>
+            <select id="addons-x-calabresa" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa">Observações:</label>
+    <textarea id="observacoes-x-calabresa" placeholder="(ex: sem calabresa) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Calabresa Caseiro', 'size-x-calabresa', 'addons-x-calabresa', 'observacoes-x-calabresa')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa-fritas.jpg" alt="X - Calabresa com Fritas Caseiro" />
+    <h3>X - Calabresa com Fritas Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, muçarela, presunto, batata palha, milho, tomate, alface, maionese, batata frita.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa-fritas">Escolha o tamanho:</label>
+            <select id="size-x-calabresa-fritas">
+                <option value="28.80">Pequeno - R$ 28,80</option>
+                <option value="32.80">Grande - R$ 32,80</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa-fritas">Adicionais:</label>
+            <select id="addons-x-calabresa-fritas" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa-fritas">Observações:</label>
+    <textarea id="observacoes-x-calabresa-fritas" placeholder="(ex: sem batata frita) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Calabresa com Fritas Caseiro', 'size-x-calabresa-fritas', 'addons-x-calabresa-fritas', 'observacoes-x-calabresa-fritas')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa-chefe.jpg" alt="X - Calabresa do Chefe Caseiro" />
+    <h3>X - Calabresa do Chefe Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, 2 hambúrgueres de calabresa, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa-chefe">Escolha o tamanho:</label>
+            <select id="size-x-calabresa-chefe">
+                <option value="24.50">Pequeno - R$ 24,50</option>
+                <option value="30.30">Grande - R$ 30,30</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa-chefe">Adicionais:</label>
+            <select id="addons-x-calabresa-chefe" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa-chefe">Observações:</label>
+    <textarea id="observacoes-x-calabresa-chefe" placeholder="(ex: sem milho) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Calabresa do Chefe Caseiro', 'size-x-calabresa-chefe', 'addons-x-calabresa-chefe', 'observacoes-x-calabresa-chefe')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa-ervilha.jpg" alt="X - Calabresa com Ervilha Caseiro" />
+    <h3>X - Calabresa com Ervilha Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer de calabresa, muçarela, presunto, batata palha, ervilha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa-ervilha">Escolha o tamanho:</label>
+            <select id="size-x-calabresa-ervilha">
+                <option value="24.00">Pequeno - R$ 24,00</option>
+                <option value="28.00">Grande - R$ 28,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa-ervilha">Adicionais:</label>
+            <select id="addons-x-calabresa-ervilha" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa-ervilha">Observações:</label>
+    <textarea id="observacoes-x-calabresa-ervilha" placeholder="(ex: sem ervilha) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Calabresa com Ervilha Caseiro', 'size-x-calabresa-ervilha', 'addons-x-calabresa-ervilha', 'observacoes-x-calabresa-ervilha')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa-acebolado.jpg" alt="X - Calabresa Acebolado Caseiro" />
+    <h3>X - Calabresa Acebolado Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer de calabresa, muçarela, presunto, batata palha, milho, tomate, alface, maionese, cebola.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa-acebolado">Escolha o tamanho:</label>
+            <select id="size-x-calabresa-acebolado">
+                <option value="23.30">Pequeno - R$ 23,30</option>
+                <option value="27.30">Grande - R$ 27,30</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa-acebolado">Adicionais:</label>
+            <select id="addons-x-calabresa-acebolado" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa-acebolado">Observações:</label>
+    <textarea id="observacoes-x-calabresa-acebolado" placeholder="(ex: sem cebola) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Calabresa Acebolado Caseiro', 'size-x-calabresa-acebolado', 'addons-x-calabresa-acebolado', 'observacoes-x-calabresa-acebolado')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa-cheddar.jpg" alt="X - Calabresa Cheddar Caseiro" />
+    <h3>X - Calabresa Cheddar Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer de calabresa, cheddar, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa-cheddar">Escolha o tamanho:</label>
+            <select id="size-x-calabresa-cheddar">
+                <option value="30.00">Pequeno - R$ 30,00</option>
+                <option value="34.00">Grande - R$ 34,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa-cheddar">Adicionais:</label>
+            <select id="addons-x-calabresa-cheddar" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa-cheddar">Observações:</label>
+    <textarea id="observacoes-x-calabresa-cheddar" placeholder="(ex: sem cheddar) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Calabresa Cheddar Caseiro', 'size-x-calabresa-cheddar', 'addons-x-calabresa-cheddar', 'observacoes-x-calabresa-cheddar')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa-catupiry.jpg" alt="X - Calabresa Catupiry Caseiro" />
+    <h3>X - Calabresa Catupiry Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer de calabresa, catupiry, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa-catupiry">Escolha o tamanho:</label>
+            <select id="size-x-calabresa-catupiry">
+                <option value="29.30">Pequeno - R$ 29,30</option>
+                <option value="33.30">Grande - R$ 33,30</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa-catupiry">Adicionais:</label>
+            <select id="addons-x-calabresa-catupiry" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa-catupiry">Observações:</label>
+    <textarea id="observacoes-x-calabresa-catupiry" placeholder="(ex: sem catupiry) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Calabresa Catupiry Caseiro', 'size-x-calabresa-catupiry', 'addons-x-calabresa-catupiry', 'observacoes-x-calabresa-catupiry')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa-egg.jpg" alt="X - Calabresa Egg Caseiro" />
+    <h3>X - Calabresa Egg Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer de calabresa, ovo, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa-egg">Escolha o tamanho:</label>
+            <select id="size-x-calabresa-egg">
+                <option value="23.80">Pequeno - R$ 23,80</option>
+                <option value="27.80">Grande - R$ 27,80</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa-egg">Adicionais:</label>
+            <select id="addons-x-calabresa-egg" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa-egg">Observações:</label>
+    <textarea id="observacoes-x-calabresa-egg" placeholder="(ex: sem ovo) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Calabresa Egg Caseiro', 'size-x-calabresa-egg', 'addons-x-calabresa-egg', 'observacoes-x-calabresa-egg')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-calabresa-acebolado.jpg" alt="X - Calabresa Acebolado Caseiro" />
+    <h3> Calabresa Acebolado Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer de calabresa, muçarela, presunto, batata palha, milho, tomate, alface, maionese, cebola.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-calabresa-acebolado">Escolha o tamanho:</label>
+            <select id="size-x-calabresa-acebolado">
+                <option value="23.50">Pequeno - R$ 23,50</option>
+                <option value="27.50">Grande - R$ 27,50</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-calabresa-acebolado">Adicionais:</label>
+            <select id="addons-x-calabresa-acebolado" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-calabresa-acebolado">Observações:</label>
+    <textarea id="observacoes-x-calabresa-acebolado" placeholder="(ex: sem cebola) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Calabresa Acebolado Caseiro', 'size-x-calabresa-acebolado', 'addons-x-calabresa-acebolado', 'observacoes-x-calabresa-acebolado')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-tudo.jpg" alt="X - Tudo Caseiro" />
+    <h3>X - Tudo Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, salsicha, frango, ovo, cheddar, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-tudo">Escolha o tamanho:</label>
+            <select id="size-x-tudo">
+                <option value="32.50">Pequeno - R$ 32,50</option>
+                <option value="36.50">Grande - R$ 36,50</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-tudo">Adicionais:</label>
+            <select id="addons-x-tudo" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-tudo">Observações:</label>
+    <textarea id="observacoes-x-tudo" placeholder="(ex: sem bacon) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Tudo Caseiro', 'size-x-tudo', 'addons-x-tudo', 'observacoes-x-tudo')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-tudo-fritas.jpg" alt="X - Tudo com Fritas Caseiro" />
+    <h3>X - Tudo com Fritas Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, salsicha, frango, ovo, cheddar, muçarela, presunto, batata palha, milho, tomate, alface, maionese, batata frita.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-tudo-fritas">Escolha o tamanho:</label>
+            <select id="size-x-tudo-fritas">
+                <option value="39.50">Pequeno - R$ 39,50</option>
+                <option value="43.50">Grande - R$ 43,50</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-tudo-fritas">Adicionais:</label>
+            <select id="addons-x-tudo-fritas" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-tudo-fritas">Observações:</label>
+    <textarea id="observacoes-x-tudo-fritas" placeholder="(ex: sem batata frita) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Tudo com Fritas Caseiro', 'size-x-tudo-fritas', 'addons-x-tudo-fritas', 'observacoes-x-tudo-fritas')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-tudo-acebolado.jpg" alt="X - Tudo Acebolado Caseiro" />
+    <h3>X - Tudo Acebolado Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, salsicha, frango, ovo, cheddar, muçarela, presunto, batata palha, milho, tomate, alface, maionese, cebola.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-tudo-acebolado">Escolha o tamanho:</label>
+            <select id="size-x-tudo-acebolado">
+                <option value="34.00">Pequeno - R$ 34,00</option>
+                <option value="38.00">Grande - R$ 38,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-tudo-acebolado">Adicionais:</label>
+            <select id="addons-x-tudo-acebolado" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-tudo-acebolado">Observações:</label>
+    <textarea id="observacoes-x-tudo-acebolado" placeholder="(ex: sem cebola) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Tudo Acebolado Caseiro', 'size-x-tudo-acebolado', 'addons-x-tudo-acebolado', 'observacoes-x-tudo-acebolado')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-tudo-cheddar.jpg" alt="X - Tudo Cheddar Caseiro" />
+    <h3>X - Tudo Cheddar Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, salsicha, frango, ovo, cheddar, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-tudo-cheddar">Escolha o tamanho:</label>
+            <select id="size-x-tudo-cheddar">
+                <option value="40.50">Pequeno - R$ 40,50</option>
+                <option value="44.50">Grande - R$ 44,50</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-tudo-cheddar">Adicionais:</label>
+            <select id="addons-x-tudo-cheddar" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-tudo-cheddar">Observações:</label>
+    <textarea id="observacoes-x-tudo-cheddar" placeholder="(ex: sem cheddar) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Tudo Cheddar Caseiro', 'size-x-tudo-cheddar', 'addons-x-tudo-cheddar', 'observacoes-x-tudo-cheddar')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-tudo-catupiry.jpg" alt="X - Tudo Catupiry Caseiro" />
+    <h3>X - Tudo Catupiry Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, salsicha, frango, ovo, catupiry, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-tudo-catupiry">Escolha o tamanho:</label>
+            <select id="size-x-tudo-catupiry">
+                <option value="40.00">Pequeno - R$ 40,00</option>
+                <option value="44.00">Grande - R$ 44,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-tudo-catupiry">Adicionais:</label>
+            <select id="addons-x-tudo-catupiry" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-tudo-catupiry">Observações:</label>
+    <textarea id="observacoes-x-tudo-catupiry" placeholder="(ex: sem catupiry) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X - Tudo Catupiry Caseiro', 'size-x-tudo-catupiry', 'addons-x-tudo-catupiry', 'observacoes-x-tudo-catupiry')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/monstro.jpg" alt="Monstro Caseiro" />
+    <h3>Monstro Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, contra filé, pernil, salsicha, frango, ovo, catupiry, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-monstro">Escolha o tamanho:</label>
+            <select id="size-monstro">
+                <option value="43.50">Pequeno - R$ 43,50</option>
+                <option value="47.50">Grande - R$ 47,50</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-monstro">Adicionais:</label>
+            <select id="addons-monstro" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-monstro">Observações:</label>
+    <textarea id="observacoes-monstro" placeholder="(ex: sem contra filé) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Monstro Caseiro', 'size-monstro', 'addons-monstro', 'observacoes-monstro')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/x-especial.jpg" alt="X Especial Caseiro" />
+    <h3>X Especial Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, 2 hambúrgueres, bacon, ovo, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-x-especial">Escolha o tamanho:</label>
+            <select id="size-x-especial">
+                <option value="27.50">Pequeno - R$ 27,50</option>
+                <option value="33.00">Grande - R$ 33,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-x-especial">Adicionais:</label>
+            <select id="addons-x-especial" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-x-especial">Observações:</label>
+    <textarea id="observacoes-x-especial" placeholder="(ex: sem bacon) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('X Especial Caseiro', 'size-x-especial', 'addons-x-especial', 'observacoes-x-especial')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="lanches">
+    <img src="https://example.com/golias.jpg" alt="Golias Caseiro" />
+    <h3>Golias Caseiro</h3>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, ovo, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-golias">Escolha o tamanho:</label>
+            <select id="size-golias">
+                <option value="28.30">Pequeno - R$ 28,30</option>
+                <option value="32.30">Grande - R$ 32,30</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-golias">Adicionais:</label>
+            <select id="addons-golias" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-golias">Observações:</label>
+    <textarea id="observacoes-golias" placeholder="(ex: sem bacon) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Golias Caseiro', 'size-golias', 'addons-golias', 'observacoes-golias')">Adicionar</button>
+</div>
+
+
+
+    <!-- Gourmet lanche -->
     <div class="menu-item" data-category="gourmet">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Argentina Gourmet" />
         <h3>Argentina Gourmet</h3>
