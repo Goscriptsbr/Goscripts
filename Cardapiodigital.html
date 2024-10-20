@@ -1506,18 +1506,13 @@ function addPastelToCart(selectId) {
    let taxaEntrega = 0; // Inicializa taxaEntrega globalmente
 
 function calcularTaxaEntrega(localidade) {
-    let taxa = 0; // Inicializa a taxa como 0
     const localidadeNormalizada = localidade.trim().toLowerCase(); // Normaliza a entrada para comparação
 
-    if (localidadeNormalizada === "mogi guaçu") {
-        taxa = 10.00; // Taxa de entrega para Mogi Guaçu
-    } else if (localidadeNormalizada === "estiva gerbi" || localidadeNormalizada === "estiva") {
-        taxa = 4.00; // Taxa de entrega para Estiva Gerbi
+    if (localidadeNormalizada === "estiva gerbi" || localidadeNormalizada === "estiva") {
+        return 4.00; // Taxa de entrega para Estiva Gerbi
     } else {
-        taxa = 12.00; // Taxa fixa para outras localidades (opcional)
+        return 0.00; // Nenhuma taxa para outras localidades
     }
-
-    return taxa; // Retorna a taxa calculada
 }
 
 function buscarEndereco() {
@@ -1566,7 +1561,14 @@ function buscarEndereco() {
 
 function mostrarMensagemTaxa(taxa) {
     const taxaMensagem = document.getElementById('taxaMensagem');
-    taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} e já foi adicionada ao seu total!`;
+    
+    // Mostra a mensagem de taxa dependendo da localidade
+    if (taxa === 4.00) {
+        taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} e já foi adicionada ao seu total!`;
+    } else {
+        taxaMensagem.textContent = `Envie seu pedido primeiro para saber com estabelecimento o valor da taxa de entrega. Só envie o pagamento após saber o valor!!`;
+    }
+    
     document.getElementById('taxaModal').style.display = 'block'; // Mostra o modal
 }
 
@@ -1592,8 +1594,11 @@ function updateCart() {
         total += item.price * item.quantity;
     });
 
-    // Adiciona a taxa de entrega ao total
-    total += taxaEntrega; 
+    // Adiciona a taxa de entrega ao total apenas se for Estiva Gerbi
+    if (taxaEntrega === 4.00) {
+        total += taxaEntrega; 
+    }
+    
     cartTotal.textContent = `${total.toFixed(2).replace('.', ',')}`; // Atualiza o total do carrinho
 }
 
@@ -1666,7 +1671,7 @@ function sendOrder() {
 
     originalCart = [...cart]; // Salva o carrinho original
 
-    const isDelivery = document.getElementById('entrega').checked; // Verifica a entrega
+    const isDelivery = document.getElementById('entrega').checked; // Verifica se a entrega é selecionada
 
     // Coleta os dados do cliente e endereço
     const nome = document.getElementById('nome').value;
@@ -1711,21 +1716,24 @@ function sendOrder() {
     }
 
     let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let taxaEntrega = 0;
 
     // Adiciona a taxa de entrega, se aplicável
-    let taxaEntrega = 0;
     if (isDelivery) {
-        taxaEntrega = calcularTaxaEntrega(cidade); // Exemplo de função para calcular taxa
-        total += taxaEntrega;
-    }
+        taxaEntrega = calcularTaxaEntrega(cidade); // Chama a função para calcular a taxa
 
-    message += `Total: R$ ${total.toFixed(2)}\n`;
-
-    if (isDelivery) {
-        message += `\nEndereço:\n${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}\n`;
-        message += `Taxa de Entrega: R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
+        // Verifica se a entrega é para Estiva Gerbi
+        if (taxaEntrega === 4.00) {
+            total += taxaEntrega; // Adiciona a taxa ao total
+            message += `Total: R$ ${total.toFixed(2)}\n`; // Exibe o total antes da taxa
+            message += `Taxa de Entrega: R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
+        } else {
+            message += `Total: R$ ${total.toFixed(2)}\n`; // Exibe o total antes da taxa
+            message += `Taxa de Entrega: Combine o valor da taxa de entrega via WhatsApp antes de enviar o pagamento!\n`;
+        }
     } else {
         message += "Retirada no Local\n";
+        message += `Total: R$ ${total.toFixed(2)}\n`; // Exibe o total antes de "Retirada no Local"
     }
 
     message += `\nForma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
