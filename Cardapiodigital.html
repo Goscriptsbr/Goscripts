@@ -1508,7 +1508,10 @@ function addPastelToCart(selectId) {
 function calcularTaxaEntrega(localidade) {
     const localidadeNormalizada = localidade.trim().toLowerCase(); // Normaliza a entrada para comparação
 
-    if (localidadeNormalizada === "estiva gerbi" || localidadeNormalizada === "estiva") {
+    // Verifica se a localidade contém "estiva", "gerbi" ou variações
+    const estivaGerbiRegex = /(estiva|gerbi|estiv.*gerbi|gerb.*estiva|estiva.*gerbi|gerbi.*estiva)/;
+
+    if (estivaGerbiRegex.test(localidadeNormalizada)) {
         return 4.00; // Taxa de entrega para Estiva Gerbi
     } else {
         return 0.00; // Nenhuma taxa para outras localidades
