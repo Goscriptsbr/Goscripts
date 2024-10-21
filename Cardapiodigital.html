@@ -6432,6 +6432,7 @@ function sendOrder() {
     const horarioPedido = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
     let message = `Pedido de ${nome} às ${horarioPedido}:\n`;
+
     const groupedItems = {};
 
     cart.forEach(item => {
@@ -6463,8 +6464,12 @@ function sendOrder() {
             message += `Taxa de Entrega: Combinar o valor da taxa de entrega via WhatsApp!\n`;
         }
     } else {
-        message += "Retirada no Local\n";
         message += `Total: R$ ${total.toFixed(2)}\n`; // Exibe o total antes de "Retirada no Local"
+    }
+
+    // Inclui os dados de entrega na mensagem após o total
+    if (isDelivery) {
+        message += `\nEndereço de Entrega:\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade} - ${estado}\n`;
     }
 
     message += `\nForma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
