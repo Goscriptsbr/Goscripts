@@ -9360,6 +9360,38 @@ legend {
 </div>
     
     <!-- BEBIDAS -->
+
+    <div class="menu-item" data-category="bebidas">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10"
+        alt="Suco ao Leite" />
+        <h3>Bebidas</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="bebida-juice-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'bebida-juice-price')">
+        <option value="3.50">Agua sem gás - R$ 3,50</option>
+        <option value="4">Agua com gás - R$ 4,00</option>
+        <option value="4">Suco Bioleve - R$ 4,00</option>
+        <option value="7">Refrigerante lata - R$ 7,00</option>
+        <option value="9">Refrigerante 600ml - R$ 9,00</option>
+        <option value="13">Refrigerante 2L Fanta - R$ 13,00</option>
+        <option value="13">Refrigerante 2L Sprite - R$ 13,00</option>
+        <option value="9">Refrigerante guarana antartica 1L - R$ 9,00</option>
+        <option value="13">Refrigerante guarana antartica 2L - R$ 13,00</option>
+        <option value="9">Refrigerante mogi 2L - R$ 9,00</option>
+        <option value="12">Coca cola 1L descartavel - R$ 12,00</option>
+        <option value="13">Coca cola 1,5L descartavel - R$ 13,00</option>
+        <option value="17">Coca cola 2L descartavel - R$ 17,00</option>
+        <option value="5">Cerveja lata brahma - R$ 5,00</option>
+        <option value="5">Cerveja lata skol - R$ 5,00</option>
+        <option value="5">Cerveja lata itaipava - R$ 5,00</option>
+        <option value="5">Cerveja lata amistel - R$ 5,00</option>
+    </select>
+    
+        <span id="bebida-juice-price">R$ 3,50</span>
+        <button onclick="addJuiceToCart('bebida-juice-select')">Adicionar</button>
+    </div>
+    
     
     <div class="menu-item" data-category="bebidas">
     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsU1EL7QYjLiN5GxMBO8D5QaPhkmQ8taUKArdSCccy36rko8wb0nTiMyk&s=10" 
