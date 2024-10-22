@@ -726,6 +726,7 @@ legend {
         <li><a href="#" onclick="filterItems('acai')">Açai</a></li>
         <li><a href="#" onclick="filterItems('salgados')">Salgados</a></li>
         <li><a href="#" onclick="filterItems('porções')">Porções</a></li>
+        <li><a href="#" onclick="filterItems('Hotdog')">Hotdog</a></li>
     </ul>
     <button id="scroll-right" onclick="scrollRightItems()">»</button></button></button>
 </nav>
@@ -7284,7 +7285,510 @@ legend {
         
         <button onclick="addCoxinhaToCart('Calabresa', 'observacoes-coxinha')">Adicionar</button>
     </div> 
+
+        <!-- Hotdog -->
+
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Simples" />
+            <h3>Hot Dog Simples</h3>
+            <p>Pão de Hot Dog, salsicha, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogsimples">Valor:</label>
+                    <select id="size-hotdogsimples">
+                        <option value="17">Padrão - R$ 17,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogsimples">Adicionais:</label>
+                    <select id="addons-hotdogsimples" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
         
+            <label for="observacoes-hotdogsimples">Observações:</label>
+            <textarea id="observacoes-hotdogsimples" placeholder="(ex: sem batata palha) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Simples', 'size-hotdogsimples', 'addons-hotdogsimples', 'observacoes-hotdogsimples')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Simples Duplo" />
+            <h3>Hot Dog Simples Duplo</h3>
+            <p>Pão de Hot Dog, 2 salsichas, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogsimplesduplo">Valor:</label>
+                    <select id="size-hotdogsimplesduplo">
+                        <option value="18">Padrão - R$ 18,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogsimplesduplo">Adicionais:</label>
+                    <select id="addons-hotdogsimplesduplo" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogsimplesduplo">Observações:</label>
+            <textarea id="observacoes-hotdogsimplesduplo" placeholder="(ex: sem milho) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Simples Duplo', 'size-hotdogsimplesduplo', 'addons-hotdogsimplesduplo', 'observacoes-hotdogsimplesduplo')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Bacon" />
+            <h3>Hot Dog Bacon</h3>
+            <p>Pão de Hot Dog, salsicha, bacon, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogbacon">Valor:</label>
+                    <select id="size-hotdogbacon">
+                        <option value="21.50">Padrão - R$ 21,50</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogbacon">Adicionais:</label>
+                    <select id="addons-hotdogbacon" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogbacon">Observações:</label>
+            <textarea id="observacoes-hotdogbacon" placeholder="(ex: sem bacon) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Bacon', 'size-hotdogbacon', 'addons-hotdogbacon', 'observacoes-hotdogbacon')">Adicionar</button>
+        </div>
+
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Bacon com Catupiry" />
+            <h3>Hot Dog Bacon com Catupiry</h3>
+            <p>Pão de Hot Dog, salsicha, bacon, catupiry, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogbaconcatupiry">Valor:</label>
+                    <select id="size-hotdogbaconcatupiry">
+                        <option value="29">Padrão - R$ 29,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogbaconcatupiry">Adicionais:</label>
+                    <select id="addons-hotdogbaconcatupiry" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogbaconcatupiry">Observações:</label>
+            <textarea id="observacoes-hotdogbaconcatupiry" placeholder="(ex: sem catupiry) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Bacon com Catupiry', 'size-hotdogbaconcatupiry', 'addons-hotdogbaconcatupiry', 'observacoes-hotdogbaconcatupiry')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Bacon Cheddar" />
+            <h3>Hot Dog Bacon Cheddar</h3>
+            <p>Pão de Hot Dog, salsicha, bacon, cheddar, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogbaconcheddar">Valor:</label>
+                    <select id="size-hotdogbaconcheddar">
+                        <option value="29">Padrão - R$ 29,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogbaconcheddar">Adicionais:</label>
+                    <select id="addons-hotdogbaconcheddar" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogbaconcheddar">Observações:</label>
+            <textarea id="observacoes-hotdogbaconcheddar" placeholder="(ex: sem cheddar) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Bacon Cheddar', 'size-hotdogbaconcheddar', 'addons-hotdogbaconcheddar', 'observacoes-hotdogbaconcheddar')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Calabresa" />
+            <h3>Hot Dog Calabresa</h3>
+            <p>Pão de Hot Dog, salsicha, calabresa, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogcalabresa">Valor:</label>
+                    <select id="size-hotdogcalabresa">
+                        <option value="21">Padrão - R$ 21,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogcalabresa">Adicionais:</label>
+                    <select id="addons-hotdogcalabresa" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogcalabresa">Observações:</label>
+            <textarea id="observacoes-hotdogcalabresa" placeholder="(ex: sem calabresa) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Calabresa', 'size-hotdogcalabresa', 'addons-hotdogcalabresa', 'observacoes-hotdogcalabresa')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Calabresa com Catupiry" />
+            <h3>Hot Dog Calabresa com Catupiry</h3>
+            <p>Pão de Hot Dog, salsicha, calabresa, catupiry, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogcalabresacatupiry">Valor:</label>
+                    <select id="size-hotdogcalabresacatupiry">
+                        <option value="28.50">Padrão - R$ 28,50</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogcalabresacatupiry">Adicionais:</label>
+                    <select id="addons-hotdogcalabresacatupiry" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogcalabresacatupiry">Observações:</label>
+            <textarea id="observacoes-hotdogcalabresacatupiry" placeholder="(ex: sem catupiry) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Calabresa com Catupiry', 'size-hotdogcalabresacatupiry', 'addons-hotdogcalabresacatupiry', 'observacoes-hotdogcalabresacatupiry')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Calabresa Cheddar" />
+            <h3>Hot Dog Calabresa Cheddar</h3>
+            <p>Pão de Hot Dog, salsicha, calabresa, cheddar, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogcalabresacheddar">Valor:</label>
+                    <select id="size-hotdogcalabresacheddar">
+                        <option value="29">Padrão - R$ 29,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogcalabresacheddar">Adicionais:</label>
+                    <select id="addons-hotdogcalabresacheddar" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogcalabresacheddar">Observações:</label>
+            <textarea id="observacoes-hotdogcalabresacheddar" placeholder="(ex: sem cheddar) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Calabresa Cheddar', 'size-hotdogcalabresacheddar', 'addons-hotdogcalabresacheddar', 'observacoes-hotdogcalabresacheddar')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Catupiry" />
+            <h3>Hot Dog Catupiry</h3>
+            <p>Pão de Hot Dog, salsicha, catupiry, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogcatupiry">Valor:</label>
+                    <select id="size-hotdogcatupiry">
+                        <option value="24.50">Padrão - R$ 24,50</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogcatupiry">Adicionais:</label>
+                    <select id="addons-hotdogcatupiry" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogcatupiry">Observações:</label>
+            <textarea id="observacoes-hotdogcatupiry" placeholder="(ex: sem catupiry) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Catupiry', 'size-hotdogcatupiry', 'addons-hotdogcatupiry', 'observacoes-hotdogcatupiry')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Cheddar" />
+            <h3>Hot Dog Cheddar</h3>
+            <p>Pão de Hot Dog, salsicha, cheddar, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogcheddar">Valor:</label>
+                    <select id="size-hotdogcheddar">
+                        <option value="25">Padrão - R$ 25,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogcheddar">Adicionais:</label>
+                    <select id="addons-hotdogcheddar" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogcheddar">Observações:</label>
+            <textarea id="observacoes-hotdogcheddar" placeholder="(ex: sem cheddar) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Cheddar', 'size-hotdogcheddar', 'addons-hotdogcheddar', 'observacoes-hotdogcheddar')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Frango" />
+            <h3>Hot Dog Frango</h3>
+            <p>Pão de Hot Dog, salsicha, frango, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogfrango">Valor:</label>
+                    <select id="size-hotdogfrango">
+                        <option value="21">Padrão - R$ 21,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogfrango">Adicionais:</label>
+                    <select id="addons-hotdogfrango" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogfrango">Observações:</label>
+            <textarea id="observacoes-hotdogfrango" placeholder="(ex: sem frango) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Frango', 'size-hotdogfrango', 'addons-hotdogfrango', 'observacoes-hotdogfrango')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Frango com Catupiry" />
+            <h3>Hot Dog Frango com Catupiry</h3>
+            <p>Pão de Hot Dog, salsicha, frango, catupiry, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogfrangocatupiry">Valor:</label>
+                    <select id="size-hotdogfrangocatupiry">
+                        <option value="28.50">Padrão - R$ 28,50</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogfrangocatupiry">Adicionais:</label>
+                    <select id="addons-hotdogfrangocatupiry" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogfrangocatupiry">Observações:</label>
+            <textarea id="observacoes-hotdogfrangocatupiry" placeholder="(ex: sem catupiry) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Frango com Catupiry', 'size-hotdogfrangocatupiry', 'addons-hotdogfrangocatupiry', 'observacoes-hotdogfrangocatupiry')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Frango com Cheddar" />
+            <h3>Hot Dog Frango com Cheddar</h3>
+            <p>Pão de Hot Dog, salsicha, frango, cheddar, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogfrangocheddar">Valor:</label>
+                    <select id="size-hotdogfrangocheddar">
+                        <option value="29">Padrão - R$ 29,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogfrangocheddar">Adicionais:</label>
+                    <select id="addons-hotdogfrangocheddar" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogfrangocheddar">Observações:</label>
+            <textarea id="observacoes-hotdogfrangocheddar" placeholder="(ex: sem cheddar) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Frango com Cheddar', 'size-hotdogfrangocheddar', 'addons-hotdogfrangocheddar', 'observacoes-hotdogfrangocheddar')">Adicionar</button>
+        </div>
+
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog na Bandeja" />
+            <h3>Hot Dog na Bandeja</h3>
+            <p>2 salsichas, purê, milho, vinagrete, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdognabandeja">Valor:</label>
+                    <select id="size-hotdognabandeja">
+                        <option value="27">Padrão - R$ 27,00</option>               
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdognabandeja">Adicionais:</label>
+                    <select id="addons-hotdognabandeja" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdognabandeja">Observações:</label>
+            <textarea id="observacoes-hotdognabandeja" placeholder="(ex: sem batata palha) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog na Bandeja', 'size-hotdognabandeja', 'addons-hotdognabandeja', 'observacoes-hotdognabandeja')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Prensado Simples" />
+            <h3>Hot Dog Prensado Simples</h3>
+            <p>Pão de Hambúrguer, salsicha, milho, ervilha, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogprensadosimples">Valor:</label>
+                    <select id="size-hotdogprensadosimples">
+                        <option value="13.60">Pequeno - R$ 13,60</option>               
+                        <option value="17.50">Grande - R$ 17,50</option>
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogprensadosimples">Adicionais:</label>
+                    <select id="addons-hotdogprensadosimples" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogprensadosimples">Observações:</label>
+            <textarea id="observacoes-hotdogprensadosimples" placeholder="(ex: sem batata palha) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Prensado Simples', 'size-hotdogprensadosimples', 'addons-hotdogprensadosimples', 'observacoes-hotdogprensadosimples')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Prensado" />
+            <h3>Hot Dog Prensado</h3>
+            <p>Pão de Hambúrguer, salsicha, milho, bacon, tomate, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogprensado">Valor:</label>
+                    <select id="size-hotdogprensado">
+                        <option value="15.90">Pequeno - R$ 15,90</option>               
+                        <option value="19.80">Grande - R$ 19,80</option>
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogprensado">Adicionais:</label>
+                    <select id="addons-hotdogprensado" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogprensado">Observações:</label>
+            <textarea id="observacoes-hotdogprensado" placeholder="(ex: sem bacon) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Prensado', 'size-hotdogprensado', 'addons-hotdogprensado', 'observacoes-hotdogprensado')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Especial Prensado" />
+            <h3>Hot Dog Especial Prensado</h3>
+            <p>Pão de Hambúrguer, salsicha, milho, bacon, presunto, muçarela, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogespecialprensado">Valor:</label>
+                    <select id="size-hotdogespecialprensado">
+                        <option value="21">Pequeno - R$ 21,00</option>               
+                        <option value="25">Grande - R$ 25,00</option>
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogespecialprensado">Adicionais:</label>
+                    <select id="addons-hotdogespecialprensado" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogespecialprensado">Observações:</label>
+            <textarea id="observacoes-hotdogespecialprensado" placeholder="(ex: sem presunto) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Especial Prensado', 'size-hotdogespecialprensado', 'addons-hotdogespecialprensado', 'observacoes-hotdogespecialprensado')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Prensado Especial de Calabresa" />
+            <h3>Hot Dog Prensado Especial de Calabresa</h3>
+            <p>Pão de Hambúrguer, salsicha, calabresa, milho, bacon, presunto, muçarela, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogespecialprensadocalabresa">Valor:</label>
+                    <select id="size-hotdogespecialprensadocalabresa">
+                        <option value="20.50">Pequeno - R$ 20,50</option>               
+                        <option value="24.50">Grande - R$ 24,50</option>
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogespecialprensadocalabresa">Adicionais:</label>
+                    <select id="addons-hotdogespecialprensadocalabresa" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogespecialprensadocalabresa">Observações:</label>
+            <textarea id="observacoes-hotdogespecialprensadocalabresa" placeholder="(ex: sem calabresa) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Prensado Especial de Calabresa', 'size-hotdogespecialprensadocalabresa', 'addons-hotdogespecialprensadocalabresa', 'observacoes-hotdogespecialprensadocalabresa')">Adicionar</button>
+        </div>
+
+        <div class="menu-item" data-category="Hotdog"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Hotdog.png" alt="Hot Dog Prensado de Calabresa" />
+            <h3>Hot Dog Prensado de Calabresa</h3>
+            <p>Pão de Hambúrguer, salsicha, calabresa, milho, batata palha, ketchup, mostarda, maionese.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-hotdogprensadocalabresa">Valor:</label>
+                    <select id="size-hotdogprensadocalabresa">
+                        <option value="15.40">Pequeno - R$ 15,40</option>               
+                        <option value="19.30">Grande - R$ 19,30</option>
+                    </select>
+                </div>
+                <div class="addons-selection">
+                    <label for="addons-hotdogprensadocalabresa">Adicionais:</label>
+                    <select id="addons-hotdogprensadocalabresa" multiple>
+                        <option value='{"name": "Duplo", "price": 2}'>Duplo - R$ 2,00</option>
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-hotdogprensadocalabresa">Observações:</label>
+            <textarea id="observacoes-hotdogprensadocalabresa" placeholder="(ex: sem calabresa) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Hot Dog Prensado de Calabresa', 'size-hotdogprensadocalabresa', 'addons-hotdogprensadocalabresa', 'observacoes-hotdogprensadocalabresa')">Adicionar</button>
+        </div>
+        
+        
+
         <!-- PASTÉIS -->
         
     <div class="menu-item" data-category="pastel">
