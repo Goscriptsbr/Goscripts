@@ -727,6 +727,7 @@ legend {
         <li><a href="#" onclick="filterItems('salgados')">Salgados</a></li>
         <li><a href="#" onclick="filterItems('porções')">Porções</a></li>
         <li><a href="#" onclick="filterItems('Hotdog')">Hotdog</a></li>
+        <li><a href="#" onclick="filterItems('Macarrão')">Macarrão</a></li>
     </ul>
     <button id="scroll-right" onclick="scrollRightItems()">»</button></button></button>
 </nav>
@@ -7211,7 +7212,148 @@ legend {
         
         <button onclick="addBurgerToCart('Porção Batata Grande', 'size-batatagrande', 'addons-batatag', 'observacoes-alemanha')">Adicionar</button>
     </div>
+
+    <div class="menu-item" data-category="porções"> 
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Fried_fish_nuggets.jpg/640px-Fried_fish_nuggets.jpg" alt="Isca de Peixe" />
+        <h3>Isca de Peixe</h3>
+        <p>500g de tilápia frita.</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-iscadepeixe">Valor:</label>
+                <select id="size-iscadepeixe">
+                    <option value="48">Padrão - R$ 48,00</option>               
+                </select>
+            </div>
+        </div>
     
+        <label for="observacoes-iscadepeixe">Observações:</label>
+        <textarea id="observacoes-iscadepeixe" placeholder="(ex: sem sal) opcional"></textarea>
+        
+        <button onclick="addBurgerToCart('Isca de Peixe', 'size-iscadepeixe', 'addons-iscadepeixe', 'observacoes-iscadepeixe')">Adicionar</button>
+    </div>
+
+    <div class="menu-item" data-category="porções"> 
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Fried_fish_nuggets.jpg/640px-Fried_fish_nuggets.jpg" alt="Isca de Peixe com Fritas" />
+    <h3>Isca de Peixe com Fritas</h3>
+    <p>500g de tilápia com 450g de batata frita.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-iscadepeixecomfritas">Valor:</label>
+            <select id="size-iscadepeixecomfritas">
+                <option value="67">Padrão - R$ 67,00</option>               
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-iscadepeixecomfritas">Observações:</label>
+    <textarea id="observacoes-iscadepeixecomfritas" placeholder="(ex: sem batata) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Isca de Peixe com Fritas', 'size-iscadepeixecomfritas', 'addons-iscadepeixecomfritas', 'observacoes-iscadepeixecomfritas')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="porções"> 
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Fish_balls_served_at_a_snack_bar.jpg" alt="Tilápia com Queijo" />
+    <h3>Tilápia com Queijo (400g)</h3>
+    <p>Bolinhos de tilápia com queijo (400 gramas).</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-tilapiacomqueijo">Valor:</label>
+            <select id="size-tilapiacomqueijo">
+                <option value="37">Padrão - R$ 37,00</option>               
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-tilapiacomqueijo">Observações:</label>
+    <textarea id="observacoes-tilapiacomqueijo" placeholder="(ex: sem queijo) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Tilápia com Queijo', 'size-tilapiacomqueijo', 'addons-tilapiacomqueijo', 'observacoes-tilapiacomqueijo')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="porções"> 
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Fish_balls_served_at_a_snack_bar.jpg" alt="Bacalhau" />
+    <h3>Bacalhau (400g)</h3>
+    <p>Bolinhos de bacalhau (400 gramas).</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-bacalhau">Valor:</label>
+            <select id="size-bacalhau">
+                <option value="42">Padrão - R$ 42,00</option>               
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-bacalhau">Observações:</label>
+    <textarea id="observacoes-bacalhau" placeholder="(ex: sem bacalhau) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Bacalhau', 'size-bacalhau', 'addons-bacalhau', 'observacoes-bacalhau')">Adicionar</button>
+</div>
+         
+<div class="menu-item" data-category="porções"> 
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Fish_balls_served_at_a_snack_bar.jpg" alt="Carne Seca com Mandioca" />
+    <h3>Carne Seca com Mandioca (400g)</h3>
+    <p>Bolinhos de carne seca com mandioca (400 gramas).</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-carnesecamandioca">Valor:</label>
+            <select id="size-carnesecamandioca">
+                <option value="45">Padrão - R$ 45,00</option>               
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-carnesecamandioca">Observações:</label>
+    <textarea id="observacoes-carnesecamandioca" placeholder="(ex: sem mandioca) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Carne Seca com Mandioca', 'size-carnesecamandioca', 'addons-carnesecamandioca', 'observacoes-carnesecamandioca')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="porções"> 
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Fish_balls_served_at_a_snack_bar.jpg" alt="Provolone" />
+    <h3>Provolone (400g)</h3>
+    <p>Bolinhos de provolone (400 gramas).</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-provolone">Valor:</label>
+            <select id="size-provolone">
+                <option value="51">Padrão - R$ 51,00</option>               
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-provolone">Observações:</label>
+    <textarea id="observacoes-provolone" placeholder="(ex: sem provolone) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Provolone', 'size-provolone', 'addons-provolone', 'observacoes-provolone')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="porções"> 
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Fish_balls_served_at_a_snack_bar.jpg" alt="Camarão" />
+    <h3>Camarão (400g)</h3>
+    <p>Bolinhos de camarão (400 gramas).</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-camarao">Valor:</label>
+            <select id="size-camarao">
+                <option value="54">Padrão - R$ 54,00</option>               
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-camarao">Observações:</label>
+    <textarea id="observacoes-camarao" placeholder="(ex: sem camarão) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Camarão', 'size-camarao', 'addons-camarao', 'observacoes-camarao')">Adicionar</button>
+</div>
+
+
     <!-- Item de Coxinha -->
     
     <div class="menu-item" data-category="salgados">
@@ -7787,7 +7929,88 @@ legend {
             <button onclick="addBurgerToCart('Hot Dog Prensado de Calabresa', 'size-hotdogprensadocalabresa', 'addons-hotdogprensadocalabresa', 'observacoes-hotdogprensadocalabresa')">Adicionar</button>
         </div>
         
+        <!-- MACARRÃO -->
+
+        <div class="menu-item" data-category="Macarrão"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Vermelho" />
+            <h3>Macarrão Molho Vermelho</h3>
+            <p>Molho vermelho, macarrão, bacon, carne, calabresa, milho, orégano, presunto e queijo mussarela.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-macarraovermelho">Valor:</label>
+                    <select id="size-macarraovermelho">
+                        <option value="26">Padrão - R$ 26,00</option>               
+                    </select>
+                </div>
+            </div>
         
+            <label for="observacoes-macarraovermelho">Observações:</label>
+            <textarea id="observacoes-macarraovermelho" placeholder="(ex: sem bacon) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Macarrão Molho Vermelho', 'size-macarraovermelho', 'addons-macarraovermelho', 'observacoes-macarraovermelho')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Macarrão"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Vermelho com Frango" />
+            <h3>Macarrão Molho Vermelho com Frango</h3>
+            <p>Molho vermelho, macarrão, bacon, frango, calabresa, milho, orégano, presunto e queijo mussarela.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-macarraovermelhofrango">Valor:</label>
+                    <select id="size-macarraovermelhofrango">
+                        <option value="27">Padrão - R$ 27,00</option>               
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-macarraovermelhofrango">Observações:</label>
+            <textarea id="observacoes-macarraovermelhofrango" placeholder="(ex: sem frango) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Macarrão Molho Vermelho com Frango', 'size-macarraovermelhofrango', 'addons-macarraovermelhofrango', 'observacoes-macarraovermelhofrango')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Macarrão"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Branco" />
+            <h3>Macarrão Molho Branco</h3>
+            <p>Molho branco, macarrão, bacon, calabresa, frango, milho, orégano, presunto e queijo mussarela.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-macarraobranco">Valor:</label>
+                    <select id="size-macarraobranco">
+                        <option value="28">Padrão - R$ 28,00</option>               
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-macarraobranco">Observações:</label>
+            <textarea id="observacoes-macarraobranco" placeholder="(ex: sem presunto) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Macarrão Molho Branco', 'size-macarraobranco', 'addons-macarraobranco', 'observacoes-macarraobranco')">Adicionar</button>
+        </div>
+        
+
+        <div class="menu-item" data-category="Macarrão"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Branco com Carne" />
+            <h3>Macarrão Molho Branco com Carne</h3>
+            <p>Molho branco, macarrão, bacon, calabresa, carne, milho, orégano, presunto e queijo mussarela.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-macarraobrancocarne">Valor:</label>
+                    <select id="size-macarraobrancocarne">
+                        <option value="29">Padrão - R$ 29,00</option>               
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-macarraobrancocarne">Observações:</label>
+            <textarea id="observacoes-macarraobrancocarne" placeholder="(ex: sem carne) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Macarrão Molho Branco com Carne', 'size-macarraobrancocarne', 'addons-macarraobrancocarne', 'observacoes-macarraobrancocarne')">Adicionar</button>
+        </div>
 
         <!-- PASTÉIS -->
         
