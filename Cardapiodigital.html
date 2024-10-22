@@ -6462,56 +6462,8 @@ legend {
 </div>
 
 
-
     <!-- Gourmet lanche -->
     
-    <div class="menu-item" data-category="gourmet">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Argentina Gourmet" />
-        <h3>Argentina Gourmet</h3>
-        <p>Pão brioche, hamb, frango 150g, queijo, rúcula, bacon e molho grill.</p>
-        
-        <div class="size-addons">
-            <div class="size-selection">
-                <label for="size-argentina">Escolha o tamanho:</label>
-                <select id="size-argentina">
-                    <option value="45">Pequeno - R$ 45,00</option>
-                    <option value="50">Grande - R$ 50,00</option>
-                </select>
-            </div>
-            <div class="addons-selection">
-                <label for="addons-argentina">Adicionais:</label>
-                <select id="addons-argentina" multiple>
-                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
-                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
-                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
-                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
-                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
-                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
-                    <option value='{"name":  "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
-                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
-                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
-                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
-                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
-                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
-                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
-                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
-                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
-                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
-                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
-                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
-                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
-                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
-                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
-                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
-                </select>
-            </div>
-        </div>
-
-        <label for="observacoes-argentina">Observações:</label>
-        <textarea id="observacoes-argentina" placeholder="(ex: sem alface) opcional"></textarea>
-        
-        <button onclick="addBurgerToCart('Argentina Gourmet', 'size-argentina', 'addons-argentina', 'observacoes-argentina')">Adicionar</button>
-    </div>
     
     <div class="menu-item" data-category="gourmet">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Alemanha Gourmet" />
@@ -6520,10 +6472,9 @@ legend {
         
         <div class="size-addons">
             <div class="size-selection">
-                <label for="size-alemanha">Escolha o tamanho:</label>
+                <label for="size-alemanha">Valor:</label>
                 <select id="size-alemanha">
-                    <option value="30">Pequeno - R$ 30,00</option>
-                    <option value="40">Grande - R$ 40,00</option>
+                    <option value="46">Padrão - R$ 46,00</option>              
                 </select>
             </div>
             <div class="addons-selection">
@@ -6561,6 +6512,619 @@ legend {
         <button onclick="addBurgerToCart('Alemanha Gourmet', 'size-alemanha', 'addons-alemanha', 'observacoes-alemanha')">Adicionar</button>
     </div> 
     
+    <div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Argentina Gourmet" />
+    <h3>Argentina Gourmet</h3>
+    <p>Pão brioche, hambúrguer de frango 150g, bacon, queijo, rúcula e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-argentina">Valor:</label>
+            <select id="size-argentina">
+                <option value="32">Padrão - R$ 32,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-argentina">Adicionais:</label>
+            <select id="addons-argentina" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-argentina">Observações:</label>
+    <textarea id="observacoes-argentina" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Argentina Gourmet', 'size-argentina', 'addons-argentina', 'observacoes-argentina')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Estados Unidos Gourmet" />
+    <h3>Estados Unidos Gourmet</h3>
+    <p>Pão brioche, hambúrguer de costela 150g, cebola caramelizada, queijo e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-eua">Valor:</label>
+            <select id="size-eua">
+                <option value="34">Padrão - R$ 34,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-eua">Adicionais:</label>
+            <select id="addons-eua" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-eua">Observações:</label>
+    <textarea id="observacoes-eua" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Estados Unidos Gourmet', 'size-eua', 'addons-eua', 'observacoes-eua')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Jamaica Gourmet" />
+    <h3>Jamaica Gourmet</h3>
+    <p>Pão brioche, hambúrguer de maminha 150g, bacon, queijo, alface, tomate e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-jamaica">Valor:</label>
+            <select id="size-jamaica">
+                <option value="34">Padrão - R$ 34,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-jamaica">Adicionais:</label>
+            <select id="addons-jamaica" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-jamaica">Observações:</label>
+    <textarea id="observacoes-jamaica" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Jamaica Gourmet', 'size-jamaica', 'addons-jamaica', 'observacoes-jamaica')">Adicionar</button>
+</div>
+    
+    <div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="França Gourmet" />
+    <h3>França Gourmet</h3>
+    <p>Pão brioche, hambúrguer de maminha 150g, queijo, cebola, alface, tomate e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-franca">Valor:</label>
+            <select id="size-franca">
+                <option value="32.50">Padrão - R$ 32,50</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-franca">Adicionais:</label>
+            <select id="addons-franca" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-franca">Observações:</label>
+    <textarea id="observacoes-franca" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('França Gourmet', 'size-franca', 'addons-franca', 'observacoes-franca')">Adicionar</button>
+</div>
+
+                <div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="México Gourmet" />
+    <h3>México Gourmet</h3>
+    <p>Pão brioche, hambúrguer de frango 150g, picles, ovo, rúcula, cebola e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-mexico">Valor:</label>
+            <select id="size-mexico">
+                <option value="35">Padrão - R$ 35,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-mexico">Adicionais:</label>
+            <select id="addons-mexico" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-mexico">Observações:</label>
+    <textarea id="observacoes-mexico" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('México Gourmet', 'size-mexico', 'addons-mexico', 'observacoes-mexico')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Japão Gourmet" />
+    <h3>Japão Gourmet</h3>
+    <p>Pão brioche, hambúrguer de grão de bico 150g, cebola, picles, alface e tomate.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-japao">Valor:</label>
+            <select id="size-japao">
+                <option value="25">Padrão - R$ 25,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-japao">Adicionais:</label>
+            <select id="addons-japao" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+               <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-japao">Observações:</label>
+    <textarea id="observacoes-japao" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Japão Gourmet', 'size-japao', 'addons-japao', 'observacoes-japao')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="China Gourmet" />
+    <h3>China Gourmet</h3>
+    <p>Pão brioche, hambúrguer de peixe 150g, queijo, cebola, picles, rúcula e molho barbecue.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-china">Valor:</label>
+            <select id="size-china">
+                <option value="42">Padrão - R$ 42,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-china">Adicionais:</label>
+            <select id="addons-china" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-china">Observações:</label>
+    <textarea id="observacoes-china" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('China Gourmet', 'size-china', 'addons-china', 'observacoes-china')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Chile Gourmet" />
+    <h3>Chile Gourmet</h3>
+    <p>Pão brioche, hambúrguer de linguiça 150g, queijo, rúcula, tomate e molho barbecue.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-chile">Valor:</label>
+            <select id="size-chile">
+                <option value="32.50">Padrão - R$ 32,50</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-chile">Adicionais:</label>
+            <select id="addons-chile" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-chile">Observações:</label>
+    <textarea id="observacoes-chile" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Chile Gourmet', 'size-chile', 'addons-chile', 'observacoes-chile')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Costa Rica Gourmet" />
+    <h3>Costa Rica Gourmet</h3>
+    <p>Pão brioche, hambúrguer de linguiça 150g, queijo, catupiry, alface, tomate e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-costarica">Valor:</label>
+            <select id="size-costarica">
+                <option value="30">Padrão - R$ 30,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-costarica">Adicionais:</label>
+            <select id="addons-costarica" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+    
+    <label for="observacoes-costarica">Observações:</label>
+    <textarea id="observacoes-costarica" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Costa Rica Gourmet', 'size-costarica', 'addons-costarica', 'observacoes-costarica')">Adicionar</button>
+</div>
+
+<div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Bolívia Gourmet" />
+    <h3>Bolívia Gourmet</h3>
+    <p>Pão brioche, hambúrguer de patinho 150g, queijo, cebola, alface, tomate e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-bolivia">Valor:</label>
+            <select id="size-bolivia">
+                <option value="31">Padrão - R$ 31,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-bolivia">Adicionais:</label>
+            <select id="addons-bolivia" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-bolivia">Observações:</label>
+    <textarea id="observacoes-bolivia" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Bolívia Gourmet', 'size-bolivia', 'addons-bolivia', 'observacoes-bolivia')">Adicionar</button>
+</div>
+    
+    <div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Canadá Gourmet" />
+    <h3>Canadá Gourmet</h3>
+    <p>Pão brioche, hambúrguer de patinho 150g, queijo, catupiry, alface, tomate e molho barbecue.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-canada">Valor:</label>
+            <select id="size-canada">
+                <option value="29">Padrão - R$ 29,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-canada">Adicionais:</label>
+            <select id="addons-canada" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-canada">Observações:</label>
+    <textarea id="observacoes-canada" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Canadá Gourmet', 'size-canada', 'addons-canada', 'observacoes-canada')">Adicionar</button>
+</div>
+    
+    <div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Brasil Gourmet" />
+    <h3>Brasil Gourmet</h3>
+    <p>Pão brioche, 3 hambúrgueres de patinho 150g, calabresa 150g, costela 150g, 2 ovos, queijo, alface, tomate e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-brasil">Valor:</label>
+            <select id="size-brasil">
+                <option value="54">Padrão - R$ 54,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-brasil">Adicionais:</label>
+            <select id="addons-brasil" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>    
+                         <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-brasil">Observações:</label>
+    <textarea id="observacoes-brasil" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Brasil Gourmet', 'size-brasil', 'addons-brasil', 'observacoes-brasil')">Adicionar</button>
+</div>  
+
+<div class="menu-item" data-category="gourmet">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5bZWsy1QeHL8HvUJnth8jIHNgIn5QAm6pDTSlop9fJIh3dQEt0Iqxex0&s=10" alt="Itália Gourmet" />
+    <h3>Itália Gourmet</h3>
+    <p>Pão Brioche, hambúrguer de calabresa, ovo, queijo, alface, tomate e molho grill.</p>
+    
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-italia">Valor:</label>
+            <select id="size-italia">
+                <option value="30">Padrão - R$ 30,00</option>              
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-italia">Adicionais:</label>
+            <select id="addons-italia" multiple>
+                <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                <option value='{"name": "Bacon", "price": 6}'>Bacon - R$ 6,00</option>
+                <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+            </select>
+        </div>
+    </div>
+
+    <label for="observacoes-italia">Observações:</label>
+    <textarea id="observacoes-italia" placeholder="(ex: sem alface) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Itália Gourmet', 'size-italia', 'addons-italia', 'observacoes-italia')">Adicionar</button>
+</div>
+
+           <!-- Porcao lanche -->
+                    
     <div class="menu-item" data-category="porções">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-m_2LRAwboGVSBrVgNa95X3qzFE5m7gjvtd40E_0iiXGDcXKtxfU3ChrR&s=10" alt="batata Gourmet" />
         <h3>Porção de batata média</h3>
