@@ -809,6 +809,18 @@ document.getElementById('submit-order').addEventListener('click', () => {
 
     const whatsappUrl = `https://wa.me/5519998133764?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+
+    // Limpar o carrinho após o envio
+    cart = [];
+    totalItems = 0;
+    total = 0;
+
+    // Atualizar a exibição do carrinho
+    renderCart();
+    updateCartNotification();
+    
+    // Fechar o checkout após o envio do pedido
+    document.getElementById('checkout').classList.remove('open');
 });
 
 // Função para buscar o endereço pelo CEP via API
