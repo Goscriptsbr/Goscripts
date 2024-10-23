@@ -9592,11 +9592,29 @@ legend {
     let cart = [];
 
     function filterItems(category) {
-        const items = document.querySelectorAll('.menu-item');
-        items.forEach(item => {
-            item.style.display = category === 'all' || item.dataset.category === category ? 'block' : 'none';
-        });
-    }
+    const items = document.querySelectorAll('.menu-item');
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
+
+    items.forEach(item => {
+        // Exibe o item se a categoria for 'all' ou corresponder à categoria específica
+        if (category === 'all' || item.dataset.category === category) {
+            // Verifica se o item é a Costela Desfiada e só exibe nas terças-feiras
+            if (item.id === 'costeladesfiada' && dayOfWeek !== 2) {
+                item.style.display = 'none'; // Mantém oculta se não for terça-feira
+            }
+            // Verifica se o item é o futuro item de quinta-feira
+            else if (item.id === 'futuroitemquinta' && dayOfWeek !== 4) {
+                item.style.display = 'none'; // Mantém oculta se não for quinta-feira
+            }
+            else {
+                item.style.display = 'block'; // Exibe o item
+            }
+        } else {
+            item.style.display = 'none'; // Oculta o item se a categoria não corresponder
+        }
+    });
+}
     
     function verificarHorario() {
     const agora = new Date();
