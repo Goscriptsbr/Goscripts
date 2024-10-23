@@ -9637,14 +9637,17 @@ legend {
 
 window.onload = verificarHorario;
 
-document.addEventListener("DOMContentLoaded", function() {
-        const today = new Date();
-        const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
-        
-        if (dayOfWeek !== 2) { // 2 representa terça-feira
-            document.getElementById('costeladesfiada').style.display = 'none'; // Oculta o item
-        }
-    });
+window.onload = function() {
+    verificarHorario();
+
+    // Verifica se é terça-feira e oculta a costela desfiada se não for
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
+
+    if (dayOfWeek !== 2) { // 2 representa terça-feira
+        document.getElementById('costeladesfiada').style.display = 'none'; // Oculta o item
+    }
+};
 
     function openAcaiBuilder() {
         document.getElementById('acai-builder').classList.remove('hidden');
