@@ -1,7 +1,7 @@
 {
   "name": "GoScripts",
   "short_name": "GoScripts",
-  "start_url": "/index.html",
+  "start_url": "/teste.html", 
   "display": "standalone",
   "background_color": "#f0f0f0",
   "theme_color": "#FFA500",
