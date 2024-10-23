@@ -9624,7 +9624,7 @@ legend {
 
     let aberto = false;
 
-    // Verifica se estamos de terça a quinta (2 a 4)
+    // Verifica se estamos de terça a quinta (1 a 4)
     if (diaDaSemana >= 2 && diaDaSemana <= 4) {
         if (horaAtual > 10 && horaAtual < 24) { // De 10h até 23h59
             aberto = true;
@@ -9647,20 +9647,26 @@ legend {
         }
     }
 
+    // Exibição do status
+    const status = aberto ? 
+        `<span class="status-aberto">Aberto agora</span>` : 
+        `<span class="status-fechado">Fechado no momento</span>`;
+
+    document.querySelector('.funcionamento').innerHTML = 
+        `⏰ Funcionamento: seg a qui | 10h - 00h | sex a dom | 10h - 00h30 (${status})`;
+
     return aberto; // Retorna o status de aberto ou fechado
 }
 
 window.onload = function() {
-    const aberto = verificarHorario(); // Verifica se o estabelecimento está aberto
+    const aberto = verificarHorario();
 
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
 
-    const costelaItem = document.getElementById('costeladesfiada');
-
-    // Verifica se é terça-feira e se o estabelecimento está aberto
-    if (dayOfWeek !== 2 || !aberto) { // Se não for terça-feira ou se não estiver aberto
-        costelaItem.style.display = 'none'; // Oculta o item
+    // Verifica se é terça-feira e se está aberto
+    if (dayOfWeek !== 2 || !aberto) { // Se não for terça-feira ou não estiver aberto
+        document.getElementById('costeladesfiada').style.display = 'none'; // Oculta o item
     }
 };
 
