@@ -18,6 +18,17 @@ header {
     color: white;
     text-align: center;
     padding: 30px;
+    position: relative;
+}
+
+.logo {
+    width: 150px; /* Define a largura fixa */
+    height: 150px; /* Define a altura fixa para garantir que seja quadrada */
+    border-radius: 50%; /* Torna a imagem redonda */
+    object-fit: cover; /* Garante que a imagem preencha o círculo sem distorção */
+    display: block; /* Alinha a imagem como bloco */
+    margin: 20px auto 0; /* Espaçamento de 20px na parte superior */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Adiciona uma leve sombra para destaque */
 }
 
 .category-menu {
@@ -75,7 +86,12 @@ header {
 }
 
 .product-list {
-    padding: 20px;
+    margin-bottom: 20px; /* Espaçamento padrão entre os itens */
+    padding: 20px; /* Espaçamento interno */
+}
+
+.product-list:last-child {
+    margin-bottom: 100px; /* Maior espaçamento para o último item */
 }
 
 .product {
@@ -445,14 +461,14 @@ header {
         <div class="operating-hours">
     <span id="status" class="status">Fechado</span>
 </div>
-        <h1>Anuncie aqui!</h1>
+    <img src="https://goscript.neocities.org/imagens.png/compressed_logo.png" alt="Logo" class="logo">
     </header>
 
     <!-- Barra de categorias -->
     <div class="category-menu">
         <a onclick="scrollToCategory('pizzas')">Pizzas</a>
         <a onclick="scrollToCategory('esfihas')">Esfihas</a>
-        <a onclick="scrollToCategory('sucos')">Sucos</a>
+        <a onclick="scrollToCategory('bebidas')">Bebidas</a>
         <a onclick="scrollToCategory('refrigerantes')">Refrigerantes</a>
         <a onclick="scrollToCategory('combos')">Combos</a>
     </div>
@@ -477,7 +493,7 @@ header {
 </div>
 
 <div class="product-list" id="bebidas" onclick="openCategory('bebidas')">
-    <h2>Sucos</h2>
+    <h2>Bebidas</h2>
     <div class="product">
         <span class="product-title">Bebidas ></span></span>
         <span class="price">A partir de R$ 3,00</span>
