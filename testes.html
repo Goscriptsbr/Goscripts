@@ -383,11 +383,12 @@ header {
     width: 98.2%;
     text-align: center;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     z-index: 999;
     margin-left: -7%;
+    text-align: center;
 }
 
 .operating-hours span {
@@ -397,10 +398,10 @@ header {
 .status {
     font-weight: bold;
     color: white;
-    padding: 4px 15px;
+    padding: 5px 10px;
     border-radius: 20px;
-    margin-right: 10px;
-    font-size: 14px;
+    left: 50%;
+    font-size: 13px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     text-transform: uppercase;
 }
@@ -412,13 +413,36 @@ header {
 .status.closed {
     background-color: #dc3545; /* Vermelho suave para fechado */
 }
+
+#open-maps {
+    width: 100%;
+    padding: 15px;
+    background-color: #FFA500; /* Cor laranja vibrante */
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#open-maps:hover {
+    background-color: #ff8c00;
+}
+
+#open-maps:active {
+    background-color: #e67600;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+    transform: translateY(2px);
+}
     </style>
 </head>
 <body>
 
     <header>
         <div class="operating-hours">
-    Funcionamento: Seg a Sáb das 18h às 00h
     <span id="status" class="status">Fechado</span>
 </div>
         <h1>Anuncie aqui!</h1>
@@ -497,29 +521,41 @@ header {
         <h2>Dados do Cliente</h2>
     </div>
     <div class="form-field">
+    <label for="service-type">Tipo de serviço:</label>
+    <select id="service-type" onchange="toggleDeliveryFields()">
+        <option value="delivery">Delivery</option>
+        <option value="retirar">Retirar no local</option>
+    </select>
+</div>
+
+<!-- Botão de Localização -->
+<div id="location-button" class="form-field" style="display: none;">
+    <button id="open-maps" onclick="openMaps()">Ver Localização no Google Maps</button>
+</div>
+    <div class="form-field">
         <label for="name">Nome:</label>
         <input type="text" id="name" placeholder="Seu nome">
     </div>
     <div class="form-field">
-        <label for="cep">CEP (Opcional):</label>
-        <input type="text" id="cep" placeholder="CEP" onblur="buscarCEP()">
-    </div>
-    <div class="form-field">
-        <label for="rua">Rua:</label>
-        <input type="text" id="rua" placeholder="Sua rua">
-    </div>
-    <div class="form-field">
-        <label for="bairro">Bairro:</label>
-        <input type="text" id="bairro" placeholder="Seu bairro">
-    </div>
-    <div class="form-field">
-        <label for="cidade">Cidade:</label>
-        <input type="text" id="cidade" placeholder="Sua cidade">
-    </div>
-    <div class="form-field">
-        <label for="ponto_referencia">Ponto de Referência:</label>
-        <input type="text" id="ponto_referencia" placeholder="Ponto de referência">
-    </div>
+    <label for="cep">CEP (Opcional):</label>
+    <input type="text" id="cep" class="delivery-field" placeholder="CEP" onblur="buscarCEP()">
+</div>
+<div class="form-field">
+    <label for="rua">Rua:</label>
+    <input type="text" id="rua" class="delivery-field" placeholder="Sua rua">
+</div>
+<div class="form-field">
+    <label for="bairro">Bairro:</label>
+    <input type="text" id="bairro" class="delivery-field" placeholder="Seu bairro">
+</div>
+<div class="form-field">
+    <label for="cidade">Cidade:</label>
+    <input type="text" id="cidade" class="delivery-field" placeholder="Sua cidade">
+</div>
+<div class="form-field">
+    <label for="ponto_referencia">Ponto de Referência:</label>
+    <input type="text" id="ponto_referencia" class="delivery-field" placeholder="Ponto de referência">
+</div>
 
     <!-- Formas de pagamento -->
     <div class="form-field">
@@ -679,9 +715,38 @@ function toggleChangeField() {
     }
 }
 
+// Função para exibir/ocultar os campos de entrega
+function toggleDeliveryFields() {
+    const serviceType = document.getElementById('service-type').value;
+    const deliveryFields = document.querySelectorAll('.delivery-field');
+    const locationButton = document.getElementById('location-button');
+
+    if (serviceType === 'retirar') {
+        deliveryFields.forEach(field => {
+            field.disabled = true; // Desativa os campos de entrega
+            field.style.backgroundColor = '#e9e9e9'; // Ajusta a cor para parecer desativado
+        });
+        locationButton.style.display = 'block'; // Mostra o botão de localização
+    } else {
+        deliveryFields.forEach(field => {
+            field.disabled = false; // Reativa os campos de entrega
+            field.style.backgroundColor = ''; // Remove a cor de desativado
+        });
+        locationButton.style.display = 'none'; // Oculta o botão de localização
+    }
+}
+
+// Função para abrir o Google Maps com a localização do estabelecimento
+// Função para abrir o Google Maps com a URL fornecida
+function openMaps() {
+    const url = `https://maps.app.goo.gl/3216hTmpqQ7a2Qgh6`; // URL do lugar específico no Google Maps
+    window.open(url, '_blank');
+}
+
 // Enviar o pedido via WhatsApp
 document.getElementById('submit-order').addEventListener('click', () => {
     const name = document.getElementById('name').value;
+    const serviceType = document.getElementById('service-type').value;
     const cep = document.getElementById('cep').value;
     const rua = document.getElementById('rua').value;
     const bairro = document.getElementById('bairro').value;
@@ -690,17 +755,32 @@ document.getElementById('submit-order').addEventListener('click', () => {
     const paymentMethod = document.getElementById('payment-method').value;
     const changeFor = document.getElementById('change-for').value; // Valor do troco
 
-    if (name === '' || rua === '' || bairro === '' || cidade === '') {
-        alert('Por favor, preencha todos os campos obrigatórios!');
+    // Verificação de campos obrigatórios
+    if (name === '') {
+        alert('Por favor, preencha o nome!');
         return;
     }
 
+    if (serviceType === 'delivery') {
+        if (rua === '' || bairro === '' || cidade === '') {
+            alert('Por favor, preencha todos os campos obrigatórios de entrega!');
+            return;
+        }
+    }
+
+    // Construção da mensagem
     let message = `Pedido:\n`;
     cart.forEach(item => {
         message += `${item.name} - R$ ${item.price.toFixed(2).replace('.', ',')} (Qtd: ${item.quantity})\n`;
     });
     message += `\nTotal: R$ ${total.toFixed(2).replace('.', ',')}\n`;
-    message += `\nNome: ${name}\nCEP: ${cep}\nRua: ${rua}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
+    message += `\nNome: ${name}\n`;
+
+    if (serviceType === 'delivery') {
+        message += `CEP: ${cep}\nRua: ${rua}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
+    } else {
+        message += `Retirar no local.\n`;
+    }
 
     // Adiciona a forma de pagamento
     message += `\nForma de Pagamento: ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}`;
@@ -812,16 +892,37 @@ function checkIfOpen() {
     const now = new Date();
     const dayOfWeek = now.getDay(); // 0 = Domingo, 6 = Sábado
     const hour = now.getHours();
+    const minute = now.getMinutes();
 
-    const isOpen = (dayOfWeek >= 1 && dayOfWeek <= 6) && (hour >= 18 && hour < 24); // Aberto de Seg-Sáb das 18h às 00h
+    const openingHour = 18; // Horário de abertura
+    const closingHour = 0; // Horário de fechamento (meia-noite)
+
+    let isOpen = false;
+
+    // Verifica se está entre segunda e sábado
+    if (dayOfWeek >= 1 && dayOfWeek <= 6) {
+        // Verifica se a loja está aberta hoje
+        if (hour >= openingHour || (hour === closingHour && minute === 0)) {
+            isOpen = true;
+        }
+    }
 
     const statusElement = document.getElementById('status');
-    if (isOpen) {
-        statusElement.innerText = "Aberto";
+
+    if (isOpen && !(hour === closingHour && minute > 0)) {
+        // Loja está aberta e ainda não passou da meia-noite
+        statusElement.innerText = `Loja aberta, fecha às 00h`;
         statusElement.classList.add('open');
         statusElement.classList.remove('closed');
     } else {
-        statusElement.innerText = "Fechado";
+        // Loja está fechada
+        if (hour < openingHour && dayOfWeek >= 1 && dayOfWeek <= 6) {
+            // Se a loja ainda não abriu hoje
+            statusElement.innerText = `Loja fechada, abre às ${openingHour}:00h`;
+        } else {
+            // Se a loja já fechou ou está fechada no dia atual
+            statusElement.innerText = `Loja fechada, abre amanhã às ${openingHour}:00h`;
+        }
         statusElement.classList.add('closed');
         statusElement.classList.remove('open');
     }
