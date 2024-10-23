@@ -9627,24 +9627,25 @@ legend {
         }
     }
 
+    // Exibição do status
     const status = aberto ? 
         `<span class="status-aberto">Aberto agora</span>` : 
         `<span class="status-fechado">Fechado no momento</span>`;
 
     document.querySelector('.funcionamento').innerHTML = 
         `⏰ Funcionamento: seg a qui | 10h - 00h | sex a dom | 10h - 00h30 (${status})`;
+
+    return aberto; // Retorna o status de aberto ou fechado
 }
 
-window.onload = verificarHorario;
-
 window.onload = function() {
-    verificarHorario();
+    const aberto = verificarHorario();
 
-    // Verifica se é terça-feira e oculta a costela desfiada se não for
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
 
-    if (dayOfWeek !== 2) { // 2 representa terça-feira
+    // Verifica se é terça-feira e se está aberto
+    if (dayOfWeek !== 2 || !aberto) { // Se não for terça-feira ou não estiver aberto
         document.getElementById('costeladesfiada').style.display = 'none'; // Oculta o item
     }
 };
