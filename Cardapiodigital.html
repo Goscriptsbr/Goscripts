@@ -9402,34 +9402,36 @@ legend {
     <button onclick="addVitaminToCart()">Adicionar</button>
 </div>
 
-<div class="menu-item" id="costeladesfiada" data-category="especial">
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6J13LAz8zG_AEDXFCLPheGDie15d9G3bv-BrgSTqgLoPRLNx8QC-vzaXV&s=10" alt="Costela Desfiada" />
-    <h3>Costela Desfiada</h3>
-    <p>Costela desfiada, queijo e vinagre</p>
+<div id="menu-items">
+    <div class="menu-item" id="costeladesfiada" data-category="especial">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6J13LAz8zG_AEDXFCLPheGDie15d9G3bv-BrgSTqgLoPRLNx8QC-vzaXV&s=10" alt="Costela Desfiada" />
+        <h3>Costela Desfiada</h3>
+        <p>Costela desfiada, queijo e vinagre</p>
 
-    <div class="size-addons">
-        <div class="size-selection">
-            <label for="size-costeladesfiada">Valor:</label>
-            <select id="size-costeladesfiada">
-                <option value="30">Padrão - R$ 30,00</option>
-            </select>
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-costeladesfiada">Valor:</label>
+                <select id="size-costeladesfiada">
+                    <option value="30">Padrão - R$ 30,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-costeladesfiada">Adicionais:</label>
+                <select id="addons-costeladesfiada" multiple>
+                    <option value='{"name": "Bacon M", "price": 10}'>Bacon M - R$ 10,00</option>
+                    <option value='{"name": "Catupiry M", "price": 7.50}'>Catupiry M - R$ 7,50</option>
+                    <option value='{"name": "Cebola M", "price": 3}'>Cebola M - R$ 3,00</option>
+                    <option value='{"name": "Cheddar M", "price": 8}'>Cheddar M - R$ 8,00</option>
+                    <option value='{"name": "Mussarela M", "price": 9.50}'>Mussarela M - R$ 9,50</option>
+                </select>
+            </div>
         </div>
-        <div class="addons-selection">
-            <label for="addons-costeladesfiada">Adicionais:</label>
-            <select id="addons-costeladesfiada" multiple>
-                <option value='{"name": "Bacon M", "price": 10}'>Bacon M - R$ 10,00</option>
-                <option value='{"name": "Catupiry M", "price": 7.50}'>Catupiry M - R$ 7,50</option>
-                <option value='{"name": "Cebola M", "price": 3}'>Cebola M - R$ 3,00</option>
-                <option value='{"name": "Cheddar M", "price": 8}'>Cheddar M - R$ 8,00</option>
-                <option value='{"name": "Mussarela M", "price": 9.50}'>Mussarela M - R$ 9,50</option>
-            </select>
-        </div>
+        
+        <label for="observacoes-costeladesfiada">Observações:</label>
+        <textarea id="observacoes-costeladesfiada" placeholder="(ex: sem fritas) opcional"></textarea>
+        
+        <button onclick="addBurgerToCart('Costela Desfiada', 'size-costeladesfiada', 'addons-costeladesfiada', 'observacoes-costeladesfiada')">Adicionar</button>
     </div>
-    
-    <label for="observacoes-costeladesfiada">Observações:</label>
-    <textarea id="observacoes-costeladesfiada" placeholder="(ex: sem fritas) opcional"></textarea>
-    
-    <button onclick="addBurgerToCart('Costela Desfiada', 'size-costeladesfiada', 'addons-costeladesfiada', 'observacoes-costeladesfiada')">Adicionar</button>
 </div>
 
     <!-- Item de Açai -->
@@ -9604,7 +9606,7 @@ legend {
 
     let aberto = false;
 
-    // Verifica se estamos de terça a quinta (1 a 4)
+    // Verifica se estamos de terça a quinta (2 a 4)
     if (diaDaSemana >= 2 && diaDaSemana <= 4) {
         if (horaAtual > 10 && horaAtual < 24) { // De 10h até 23h59
             aberto = true;
@@ -9627,26 +9629,20 @@ legend {
         }
     }
 
-    // Exibição do status
-    const status = aberto ? 
-        `<span class="status-aberto">Aberto agora</span>` : 
-        `<span class="status-fechado">Fechado no momento</span>`;
-
-    document.querySelector('.funcionamento').innerHTML = 
-        `⏰ Funcionamento: seg a qui | 10h - 00h | sex a dom | 10h - 00h30 (${status})`;
-
     return aberto; // Retorna o status de aberto ou fechado
 }
 
 window.onload = function() {
-    const aberto = verificarHorario();
+    const aberto = verificarHorario(); // Verifica se o estabelecimento está aberto
 
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
 
-    // Verifica se é terça-feira e se está aberto
-    if (dayOfWeek !== 2 || !aberto) { // Se não for terça-feira ou não estiver aberto
-        document.getElementById('costeladesfiada').style.display = 'none'; // Oculta o item
+    const costelaItem = document.getElementById('costeladesfiada');
+
+    // Verifica se é terça-feira e se o estabelecimento está aberto
+    if (dayOfWeek !== 2 || !aberto) { // Se não for terça-feira ou se não estiver aberto
+        costelaItem.style.display = 'none'; // Oculta o item
     }
 };
 
