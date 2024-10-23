@@ -719,6 +719,7 @@ legend {
     <button id="scroll-left" onclick="scrollLeftItems()">«</button>
     <ul id="category-list" onmousedown="startDrag(event)" onmouseup="stopDrag()" onmouseleave="stopDrag()" ontouchstart="startDrag(event)" ontouchend="stopDrag()">
         <li><a href="#" onclick="filterItems('all')">Tudo</a></li>
+<li><a href="#" onclick="filterItems('especial')">Do dia</a></li>
         <li><a href="#" onclick="filterItems('lanches')">Lanches</a></li>
         <li><a href="#" onclick="filterItems('gourmet')">Gourmet</a></li>
         <li><a href="#" onclick="filterItems('pastel')">Pastéis</a></li>
@@ -9401,6 +9402,36 @@ legend {
     <button onclick="addVitaminToCart()">Adicionar</button>
 </div>
 
+<div class="menu-item" id="costeladesfiada" data-category="especial">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6J13LAz8zG_AEDXFCLPheGDie15d9G3bv-BrgSTqgLoPRLNx8QC-vzaXV&s=10" alt="Costela Desfiada" />
+    <h3>Costela Desfiada</h3>
+    <p>500g de costela desfiada com 400g de batatas fritas.</p>
+
+    <div class="size-addons">
+        <div class="size-selection">
+            <label for="size-costeladesfiada">Valor:</label>
+            <select id="size-costeladesfiada">
+                <option value="30">Padrão - R$ 30,00</option>
+            </select>
+        </div>
+        <div class="addons-selection">
+            <label for="addons-costeladesfiada">Adicionais:</label>
+            <select id="addons-costdaeladesfia" multiple>
+                <option value='{"name": "Bacon M", "price": 10}'>Bacon M - R$ 10,00</option>
+                <option value='{"name": "Catupiry M", "price": 7.50}'>Catupiry M - R$ 7,50</option>
+                <option value='{"name": "Cebola M", "price": 3}'>Cebola M - R$ 3,00</option>
+                <option value='{"name": "Cheddar M", "price": 8}'>Cheddar M - R$ 8,00</option>
+                <option value='{"name": "Mussarela M", "price": 9.50}'>Mussarela M - R$ 9,50</option>
+            </select>
+        </div>
+    </div>
+    
+    <label for="observacoes-costeladesfiada">Observações:</label>
+    <textarea id="observacoes-costeladesfiada" placeholder="(ex: sem fritas) opcional"></textarea>
+    
+    <button onclick="addBurgerToCart('Costela Desfiada', 'size-costeladesfiada', 'addons-costeladesfiada', 'observacoes-costeladesfiada')">Adicionar</button>
+</div>
+
     <!-- Item de Açai -->
     <div class="menu-item" data-category="acai">
     <h3>Monte seu Açai</h3>
@@ -9605,6 +9636,15 @@ legend {
 }
 
 window.onload = verificarHorario;
+
+document.addEventListener("DOMContentLoaded", function() {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
+        
+        if (dayOfWeek !== 2) { // 2 representa terça-feira
+            document.getElementById('costeladesfiada').style.display = 'none'; // Oculta o item
+        }
+    });
 
     function openAcaiBuilder() {
         document.getElementById('acai-builder').classList.remove('hidden');
