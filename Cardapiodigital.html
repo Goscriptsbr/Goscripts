@@ -296,7 +296,7 @@ label {
 }
 
 .cart-item:last-child {
-    border-om: none; /* remove a linha divisória do último item */
+    border-bottom: none; /* remove a linha divisória do último item */
 }
 
 .remove-btn {
@@ -9536,25 +9536,26 @@ legend {
         <h4>Endereço de Entrega</h4>
         <label for="nome">Nome:</label>
         <input type="text" id="nome" placeholder="Seu nome">
-
+    
         <label for="cep">CEP:</label>
-<input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
-
+        <input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
+    
         <label for="rua">Rua:</label>
         <input type="text" id="rua" placeholder="Rua">
-
+    
         <label for="numero">Número:</label>
         <input type="text" id="numero" placeholder="Número da Casa">
-
+    
         <label for="bairro">Bairro:</label>
         <input type="text" id="bairro" placeholder="Bairro">
-
+    
         <label for="cidade">Cidade:</label>
-<input type="text" id="cidade" placeholder="Cidade" onblur="buscarEndereco()">
-
-        <label for="estado">Estado:</label>
-        <input type="text" id="estado" placeholder="Estado">
-    </div>
+        <input type="text" id="cidade" placeholder="Cidade" onblur="buscarEndereco()">
+    
+        <!-- Alterado o campo para Ponto de Referência -->
+        <label for="pontoReferencia">Ponto de Referência:</label>
+        <input type="text" id="pontoReferencia" placeholder="Ponto de Referência">
+    </div>  
 
     <div class="pagamento-container">
     <h4>Forma de Pagamento</h4>
@@ -9616,7 +9617,7 @@ legend {
     });
 }
     
-    function verificarHorario() {
+function verificarHorario() {
     const agora = new Date();
     const horaAtual = agora.getHours();
     const minutoAtual = agora.getMinutes();
@@ -9624,26 +9625,20 @@ legend {
 
     let aberto = false;
 
-    // Verifica se estamos de terça a quinta (1 a 4)
     if (diaDaSemana >= 2 && diaDaSemana <= 4) {
-        if (horaAtual > 10 && horaAtual < 24) { // De 10h até 23h59
+        // Terça a quinta: 10h até 23h59
+        if (horaAtual >= 10 && (horaAtual < 23 || (horaAtual === 23 && minutoAtual <= 59))) {
             aberto = true;
-        } else if (horaAtual === 10 && minutoAtual >= 0) {
-            aberto = true;
-        } else if (horaAtual === 23 && minutoAtual <= 59) {
-            aberto = true; // Abre até 23h59
         }
-    }
-    // Verifica se estamos de sábado a segunda (6 = Sábado, 0 = Domingo, 1 = Segunda)
-    else if (diaDaSemana === 6 || diaDaSemana === 0 || diaDaSemana === 1) {
-        if (horaAtual > 10 && horaAtual < 24) { // De 10h até 23h59
+    } else if (diaDaSemana === 5) {
+        // Sexta-feira: 10h até 00h30 do sábado
+        if ((horaAtual >= 10 && horaAtual < 24) || (horaAtual === 0 && minutoAtual <= 30)) {
             aberto = true;
-        } else if (horaAtual === 10 && minutoAtual >= 0) {
+        }
+    } else if (diaDaSemana === 6 || diaDaSemana === 0 || diaDaSemana === 1) {
+        // Sábado a segunda: 10h até 00h30 do dia seguinte
+        if ((horaAtual >= 10 && horaAtual < 24) || (horaAtual === 0 && minutoAtual <= 30)) {
             aberto = true;
-        } else if (horaAtual === 23 && minutoAtual <= 59) {
-            aberto = true; // Abre até 23h59
-        } else if (horaAtual === 0 && minutoAtual <= 30) {
-            aberto = true; // De 00h00 até 00h30 do dia seguinte
         }
     }
 
@@ -9653,20 +9648,20 @@ legend {
         `<span class="status-fechado">Fechado no momento</span>`;
 
     document.querySelector('.funcionamento').innerHTML = 
-        `⏰ Funcionamento: seg a qui | 10h - 00h | sex a dom | 10h - 00h30 (${status})`;
+        `⏰ Funcionamento: seg a qui | 10h - 23h59 | sex a dom | 10h - 00h30 (${status})`;
 
     return aberto; // Retorna o status de aberto ou fechado
 }
 
 window.onload = function() {
     const aberto = verificarHorario();
-
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
 
-    // Verifica se é terça-feira e se está aberto
-    if (dayOfWeek !== 2 || !aberto) { // Se não for terça-feira ou não estiver aberto
-        document.getElementById('costeladesfiada').style.display = 'none'; // Oculta o item
+    // Oculta o item "costeladesfiada" se não for terça-feira ou se o estabelecimento estiver fechado
+    if (dayOfWeek !== 2 || !aberto) {
+        const item = document.getElementById('costeladesfiada');
+        if (item) item.style.display = 'none'; // Oculta o item
     }
 };
 
@@ -9898,7 +9893,6 @@ function buscarEndereco() {
                     document.getElementById('rua').value = data.logradouro;
                     document.getElementById('bairro').value = data.bairro;
                     document.getElementById('cidade').value = data.localidade;
-                    document.getElementById('estado').value = data.uf;
 
                     taxaEntrega = calcularTaxaEntrega(data.localidade);
                     updateCart(); // Atualiza o carrinho com a nova taxa
@@ -10050,10 +10044,11 @@ function sendOrder() {
         return;
     }
 
-    if (isDelivery && (!rua || !numero || !bairro || !cidade || !estado)) {
-        alert("Por favor, preencha todos os campos do endereço!");
-        return;
-    }
+    if (isDelivery && (!rua || !numero || !bairro || !cidade || !pontoReferencia)) {
+    alert("Por favor, preencha todos os campos do endereço!");
+    return;
+}
+
 
     const paymentMethod = document.getElementById('payment-method').value;
     if (!paymentMethod) {
@@ -10101,9 +10096,10 @@ function sendOrder() {
     }
 
     // Inclui os dados de entrega na mensagem após o total
-    if (isDelivery) {
-        message += `\nEndereço de Entrega:\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade} - ${estado}\n`;
-    }
+if (isDelivery) {
+    message += `\nEndereço de Entrega:\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
+}
+
 
     message += `\nForma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
 
