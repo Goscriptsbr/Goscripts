@@ -9664,17 +9664,13 @@ function verificarHorario() {
         if (horaAtual >= 10 && (horaAtual < 23 || (horaAtual === 23 && minutoAtual <= 59))) {
             aberto = true;
         }
-    } else if (diaDaSemana === 5) {
-        // Sexta-feira: 10h até 00h30 do sábado
-        if ((horaAtual >= 10 && horaAtual < 24) || (horaAtual === 0 && minutoAtual <= 30)) {
-            aberto = true;
-        }
-    } else if (diaDaSemana === 6 || diaDaSemana === 0 || diaDaSemana === 1) {
-        // Sábado a segunda: 10h até 00h30 do dia seguinte
+    } else if (diaDaSemana >= 5 || diaDaSemana <= 1) {
+        // Sexta a segunda: 10h até 00h30 do dia seguinte
         if ((horaAtual >= 10 && horaAtual < 24) || (horaAtual === 0 && minutoAtual <= 30)) {
             aberto = true;
         }
     }
+
 
     // Exibição do status
     const status = aberto ? 
@@ -9682,7 +9678,7 @@ function verificarHorario() {
         `<span class="status-fechado">Fechado no momento</span>`;
 
     document.querySelector('.funcionamento').innerHTML = 
-        `⏰ Funcionamento: seg a qui | 10h - 23h59 | sex a dom | 10h - 00h30 (${status})`;
+        `⏰ Funcionamento: seg a qui | 10h - 00h | sex a dom | 10h - 00h30 (${status})`;
 
     return aberto; // Retorna o status de aberto ou fechado
 }
