@@ -9405,6 +9405,7 @@ legend {
 <!-- Item de especiais do dia -->
 
 <div id="menu-items">
+    <!-- Costela Desfiada (exibida somente às terças) -->
     <div class="menu-item" id="costeladesfiada" data-category="especial">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6J13LAz8zG_AEDXFCLPheGDie15d9G3bv-BrgSTqgLoPRLNx8QC-vzaXV&s=10" alt="Costela Desfiada" />
         <h3>Costela Desfiada</h3>
@@ -9434,11 +9435,10 @@ legend {
         
         <button onclick="addBurgerToCart('Costela Desfiada', 'size-costeladesfiada', 'addons-costeladesfiada', 'observacoes-costeladesfiada')">Adicionar</button>
     </div>
-</div>
 
-<div id="menu-items">
+    <!-- Pernil Desfiado (exibido somente às quintas) -->
     <div class="menu-item" id="pernildesfiado" data-category="especial">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6J13LAz8zG_AEDXFCLPheGDie15d9G3bv-BrgSTqgLoPRLNx8QC-vzaXV&s=10" alt="Pernil Desfiado" />
+        <img src="https://via.placeholder.com/150" alt="Pernil Desfiado" />
         <h3>Pernil Desfiado</h3>
         <p>Pernil desfiado, queijo e vinagre</p>
 
@@ -9466,7 +9466,6 @@ legend {
         
         <button onclick="addBurgerToCart('Pernil Desfiado', 'size-pernildesfiado', 'addons-pernildesfiado', 'observacoes-pernildesfiado')">Adicionar</button>
     </div>
-</div>
 
 
     <!-- Item de Açai -->
@@ -9637,11 +9636,11 @@ legend {
         if (category === 'all' || item.dataset.category === category) {
             // Verifica se o item é a Costela Desfiada e só exibe nas terças-feiras
             if (item.id === 'costeladesfiada' && dayOfWeek !== 2) {
-                item.style.display = 'none'; // Mantém oculta se não for terça-feira
+                item.style.display = 'none'; // Oculta se não for terça-feira
             }
-            // Verifica se o item é o futuro item de quinta-feira
-            else if (item.id === 'futuroitemquinta' && dayOfWeek !== 4) {
-                item.style.display = 'none'; // Mantém oculta se não for quinta-feira
+            // Verifica se o item é o Pernil Desfiado e só exibe nas quintas-feiras
+            else if (item.id === 'pernildesfiado' && dayOfWeek !== 4) {
+                item.style.display = 'none'; // Oculta se não for quinta-feira
             }
             else {
                 item.style.display = 'block'; // Exibe o item
