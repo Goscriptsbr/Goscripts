@@ -10077,18 +10077,18 @@ function sendOrder() {
     const numero = document.getElementById('numero').value;
     const bairro = document.getElementById('bairro').value;
     const cidade = document.getElementById('cidade').value;
-    const estado = document.getElementById('estado').value;
+    const pontoReferencia = document.getElementById('pontoReferencia').value;
 
+    // Validação de campos obrigatórios
     if (!nome) {
         alert("Por favor, preencha o campo nome!");
         return;
     }
 
     if (isDelivery && (!rua || !numero || !bairro || !cidade || !pontoReferencia)) {
-    alert("Por favor, preencha todos os campos do endereço!");
-    return;
-}
-
+        alert("Por favor, preencha todos os campos do endereço!");
+        return;
+    }
 
     const paymentMethod = document.getElementById('payment-method').value;
     if (!paymentMethod) {
@@ -10103,6 +10103,7 @@ function sendOrder() {
 
     const groupedItems = {};
 
+    // Agrupa os itens por nome e detalhes
     cart.forEach(item => {
         const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
         if (!groupedItems[key]) {
@@ -10111,8 +10112,9 @@ function sendOrder() {
         groupedItems[key].quantity += item.quantity;
     });
 
+    // Adiciona os itens na mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
-        message += `• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n\n`; // Adiciona uma linha em branco após cada item
+        message += `• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n\n`;
     }
 
     let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -10124,22 +10126,21 @@ function sendOrder() {
 
         // Verifica se a entrega é para Estiva Gerbi
         if (taxaEntrega === 4.00) {
-            total += taxaEntrega; // Adiciona a taxa ao total
-            message += `Total: R$ ${total.toFixed(2)}\n`; // Exibe o total antes da taxa
+            total += taxaEntrega;
+            message += `Total: R$ ${total.toFixed(2)}\n`;
             message += `Taxa de Entrega: R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
         } else {
-            message += `Total: R$ ${total.toFixed(2)}\n`; // Exibe o total antes da taxa
+            message += `Total: R$ ${total.toFixed(2)}\n`;
             message += `Taxa de Entrega: Combinar o valor da taxa de entrega via WhatsApp!\n`;
         }
     } else {
-        message += `Total: R$ ${total.toFixed(2)}\n`; // Exibe o total antes de "Retirada no Local"
+        message += `Total: R$ ${total.toFixed(2)}\n`;
     }
 
     // Inclui os dados de entrega na mensagem após o total
-if (isDelivery) {
-    message += `\nEndereço de Entrega:\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
-}
-
+    if (isDelivery) {
+        message += `\nEndereço de Entrega:\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
+    }
 
     message += `\nForma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
 
