@@ -4,16 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardápio Digital</title>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js').then((registration) => {
-      console.log('Service Worker registrado com sucesso:', registration);
-    }).catch((error) => {
-      console.log('Falha ao registrar o Service Worker:', error);
-    });
-  }
-</script>
-<link rel="manifest" href="/manifest.json">
     <style>
         body {
     font-family: Arial, sans-serif;
@@ -464,6 +454,18 @@ header {
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
     transform: translateY(2px);
 }
+
+
+.inline-options {
+    display: flex;
+    align-items: center;
+    gap: 100px; /* Reduza este valor se necessário */
+    margin-right: 20%;
+}
+
+.inline-options label {
+    margin-left: -45%; /* Ajusta para aproximar mais o texto ao botão */
+}
     </style>
 </head>
 <body>
@@ -550,9 +552,20 @@ header {
     <div class="form-field">
     <label for="service-type">Tipo de serviço:</label>
     <select id="service-type" onchange="toggleDeliveryFields()">
+        <option value="selecionar">Selecione</option> <!-- Opção padrão -->
         <option value="delivery">Delivery</option>
         <option value="retirar">Retirar no local</option>
     </select>
+</div>
+
+<div class="form-field" id="location-option" style="display: none;">
+    <label>Você está no local de entrega agora?</label>
+    <div class="inline-options">
+        <input type="radio" id="location-now" name="location" value="sim">
+        <label for="location-now">Sim</label>
+        <input type="radio" id="location-no" name="location" value="nao">
+        <label for="location-no">Não</label>
+    </div>
 </div>
 
 <!-- Botão de Localização -->
@@ -607,6 +620,125 @@ header {
         let cart = [];
 let total = 0;
 let totalItems = 0; // Contador de itens no carrinho
+
+// Coordenadas do estabelecimento
+const estabelecimentoLat = -22.331317; // Exemplo de latitude (Mogi Guaçu)
+const estabelecimentoLng = -46.923289; // Exemplo de longitude (São Paulo)
+
+// Função para calcular distância usando o método Haversine
+function calcularDistancia(lat1, lng1, lat2, lng2) {
+    const R = 6371; // Raio da Terra em km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLng = (lng2 - lng1) * (Math.PI / 180);
+    const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distância em km
+}
+
+// Função para calcular a distância e exibir a taxa de entrega
+function calcularFrete() {
+    const serviceType = document.getElementById('service-type').value;
+
+    // Verifica se o tipo de serviço é 'delivery' antes de calcular a taxa
+    if (serviceType !== 'delivery') {
+        return; // Sai da função se não for 'delivery'
+    }
+
+    navigator.geolocation.getCurrentPosition((position) => {
+        const clienteLat = position.coords.latitude;
+        const clienteLng = position.coords.longitude;
+        const distancia = calcularDistancia(estabelecimentoLat, estabelecimentoLng, clienteLat, clienteLng);
+        const valorEntrega = distancia * 1; // R$ 1,00 por km
+
+        // Exibir o valor da entrega em uma janela
+        alert(`A taxa de entrega é de R$ ${valorEntrega.toFixed(2).replace('.', ',')}`);
+        
+        // Atualizar o total no carrinho
+        document.getElementById('total-value').innerText = `R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}`;
+        document.getElementById('total-value-top').innerText = `R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}`;
+
+        // Chamar a função para enviar o pedido via WhatsApp com o valor do frete
+        enviarPedidoWhatsApp(valorEntrega);
+    }, (error) => {
+        alert("Não foi possível obter a localização.");
+    });
+}
+
+// Modifique o evento do botão de envio do pedido para chamar apenas `enviarPedidoWhatsApp` diretamente
+document.getElementById('submit-order').addEventListener('click', () => {
+    calcularFrete();
+});
+
+// Função para enviar o pedido pelo WhatsApp com o valor da entrega incluído
+function enviarPedidoWhatsApp(valorEntrega) {
+    const name = document.getElementById('name').value;
+    const serviceType = document.getElementById('service-type').value;
+    const cep = document.getElementById('cep').value;
+    const rua = document.getElementById('rua').value;
+    const bairro = document.getElementById('bairro').value;
+    const cidade = document.getElementById('cidade').value;
+    const pontoReferencia = document.getElementById('ponto_referencia').value;
+    const paymentMethod = document.getElementById('payment-method').value;
+    const changeFor = document.getElementById('change-for').value; // Valor do troco
+
+    // Verificação de campos obrigatórios
+    if (name === '') {
+        alert('Por favor, preencha o nome!');
+        return;
+    }
+
+    if (serviceType === 'delivery') {
+        if (rua === '' || bairro === '' || cidade === '') {
+            alert('Por favor, preencha todos os campos obrigatórios de entrega!');
+            return;
+        }
+    }
+
+    // Construção da mensagem com o valor de entrega incluído
+    let message = `Pedido:\n`;
+    cart.forEach(item => {
+        message += `${item.name} - R$ ${item.price.toFixed(2).replace('.', ',')} (Qtd: ${item.quantity})\n`;
+    });
+    message += `\nTotal (incluindo entrega): R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}\n`;
+    message += `\nNome: ${name}\n`;
+
+    if (serviceType === 'delivery') {
+        message += `CEP: ${cep}\nRua: ${rua}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
+    } else {
+        message += `Retirar no local.\n`;
+    }
+
+    // Adiciona a forma de pagamento
+    message += `\nForma de Pagamento: ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}`;
+
+    // Se a forma de pagamento for "Dinheiro", adiciona o valor do troco
+    if (paymentMethod === 'dinheiro' && changeFor !== '') {
+        message += `\nTroco para: R$ ${parseFloat(changeFor).toFixed(2).replace('.', ',')}`;
+    }
+
+    const whatsappUrl = `https://wa.me/5519998133764?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+
+    // Limpar o carrinho após o envio
+    cart = [];
+    totalItems = 0;
+    total = 0;
+
+    // Atualizar a exibição do carrinho
+    renderCart();
+    updateCartNotification();
+    
+    // Fechar o checkout após o envio do pedido
+    document.getElementById('checkout').classList.remove('open');
+}
+
+// Modifique o evento do botão para incluir o cálculo do frete
+document.getElementById('submit-order').addEventListener('click', () => {
+    calcularFrete();
+});
 
 // Função para rolar até a categoria
 function scrollToCategory(categoryId) {
@@ -699,19 +831,34 @@ function updateCartNotification() {
 }
 
 // Função para abrir e fechar a tela de checkout
+// Adiciona um estado ao histórico ao abrir o checkout
 function toggleCheckout() {
     const cartElement = document.getElementById('cart');
     const checkoutElement = document.getElementById('checkout');
     
-    // Fecha o carrinho se estiver aberto e abre o checkout
     if (cartElement.classList.contains('open')) {
         cartElement.classList.remove('open'); // Fecha o carrinho
         checkoutElement.classList.add('open'); // Abre o checkout
+        history.pushState({ page: 'checkout' }, '', '#checkout'); // Adiciona estado no histórico
     } else {
         // Alterna entre o estado aberto e fechado do checkout
         checkoutElement.classList.toggle('open');
+        if (checkoutElement.classList.contains('open')) {
+            history.pushState({ page: 'checkout' }, '', '#checkout');
+        } else {
+            history.back(); // Volta para o estado anterior no histórico
+        }
     }
 }
+
+// Fecha o checkout ao pressionar o botão "voltar" do celular
+window.addEventListener('popstate', function(event) {
+    const checkoutElement = document.getElementById('checkout');
+    if (checkoutElement.classList.contains('open')) {
+        checkoutElement.classList.remove('open');
+        event.preventDefault(); // Previne o comportamento padrão
+    }
+});
 
 // Finalizar o pedido e abrir a tela de checkout
 document.getElementById('finalize-order').addEventListener('click', () => {
@@ -746,22 +893,31 @@ function toggleChangeField() {
 function toggleDeliveryFields() {
     const serviceType = document.getElementById('service-type').value;
     const deliveryFields = document.querySelectorAll('.delivery-field');
-    const locationButton = document.getElementById('location-button');
+    const locationOption = document.getElementById('location-option');
 
-    if (serviceType === 'retirar') {
+    if (serviceType === 'delivery') {
         deliveryFields.forEach(field => {
-            field.disabled = true; // Desativa os campos de entrega
-            field.style.backgroundColor = '#e9e9e9'; // Ajusta a cor para parecer desativado
-        });
-        locationButton.style.display = 'block'; // Mostra o botão de localização
-    } else {
-        deliveryFields.forEach(field => {
-            field.disabled = false; // Reativa os campos de entrega
+            field.disabled = false;
             field.style.backgroundColor = ''; // Remove a cor de desativado
         });
-        locationButton.style.display = 'none'; // Oculta o botão de localização
+        locationOption.style.display = 'block'; // Exibe as opções "Sim" e "Não"
+    } else {
+        deliveryFields.forEach(field => {
+            field.disabled = true;
+            field.style.backgroundColor = '#e9e9e9'; // Ajusta a cor para parecer desativado
+        });
+        locationOption.style.display = 'none'; // Oculta as opções "Sim" e "Não"
     }
 }
+
+document.getElementById('location-now').addEventListener('change', () => {
+    const serviceType = document.getElementById('service-type').value;
+    const locationNow = document.getElementById('location-now').checked;
+
+    if (serviceType === 'delivery' && locationNow) {
+        calcularFrete(); // Calcula o frete automaticamente ao selecionar "Sim"
+    }
+});
 
 // Função para abrir o Google Maps com a localização do estabelecimento
 // Função para abrir o Google Maps com a URL fornecida
@@ -770,8 +926,8 @@ function openMaps() {
     window.open(url, '_blank');
 }
 
-// Enviar o pedido via WhatsApp
-document.getElementById('submit-order').addEventListener('click', () => {
+// Função para enviar o pedido pelo WhatsApp com o valor da entrega incluído
+function enviarPedidoWhatsApp(valorEntrega) {
     const name = document.getElementById('name').value;
     const serviceType = document.getElementById('service-type').value;
     const cep = document.getElementById('cep').value;
@@ -795,12 +951,12 @@ document.getElementById('submit-order').addEventListener('click', () => {
         }
     }
 
-    // Construção da mensagem
+    // Construção da mensagem com o valor de entrega incluído
     let message = `Pedido:\n`;
     cart.forEach(item => {
         message += `${item.name} - R$ ${item.price.toFixed(2).replace('.', ',')} (Qtd: ${item.quantity})\n`;
     });
-    message += `\nTotal: R$ ${total.toFixed(2).replace('.', ',')}\n`;
+    message += `\nTotal (incluindo entrega): R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}\n`;
     message += `\nNome: ${name}\n`;
 
     if (serviceType === 'delivery') {
@@ -831,6 +987,11 @@ document.getElementById('submit-order').addEventListener('click', () => {
     
     // Fechar o checkout após o envio do pedido
     document.getElementById('checkout').classList.remove('open');
+}
+
+// Modifique o evento do botão para incluir o cálculo do frete
+document.getElementById('finalize-order').addEventListener('click', () => {
+    calcularFrete();
 });
 
 // Função para buscar o endereço pelo CEP via API
@@ -907,12 +1068,23 @@ function openCategory(category) {
 
     // Exibe o container de categoria
     document.getElementById('category-container').classList.add('active');
+
+    // Adiciona estado ao histórico para permitir o botão "voltar"
+    history.pushState({ page: 'category' }, '', '#category');
 }
 
 // Função para fechar o container de categoria
 function closeCategory() {
     document.getElementById('category-container').classList.remove('active');
 }
+
+// Evento para fechar o container de categoria ao pressionar "voltar"
+window.addEventListener('popstate', function(event) {
+    const categoryContainer = document.getElementById('category-container');
+    if (categoryContainer.classList.contains('active')) {
+        closeCategory();
+    }
+});
 
 // Função para remover itens do carrinho
 function removeItem(productName) {
