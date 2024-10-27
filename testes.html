@@ -651,7 +651,7 @@ function calcularFrete() {
         const clienteLat = position.coords.latitude;
         const clienteLng = position.coords.longitude;
         const distancia = calcularDistancia(estabelecimentoLat, estabelecimentoLng, clienteLat, clienteLng);
-        const valorEntrega = distancia * 1; // R$ 1,00 por km
+        const valorEntrega = distancia * 2; // R$ 1,00 por km
 
         // Exibir o valor da entrega em uma janela
         alert(`A taxa de entrega é de R$ ${valorEntrega.toFixed(2).replace('.', ',')}`);
