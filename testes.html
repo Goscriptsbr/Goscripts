@@ -642,25 +642,31 @@ function calcularDistancia(lat1, lng1, lat2, lng2) {
 function calcularFrete() {
     const serviceType = document.getElementById('service-type').value;
 
-    // Verifica se o tipo de serviço é 'delivery' antes de calcular a taxa
     if (serviceType !== 'delivery') {
-        return; // Sai da função se não for 'delivery'
+        return;
     }
 
     navigator.geolocation.getCurrentPosition((position) => {
         const clienteLat = position.coords.latitude;
         const clienteLng = position.coords.longitude;
         const distancia = calcularDistancia(estabelecimentoLat, estabelecimentoLng, clienteLat, clienteLng);
-        const valorEntrega = distancia * 2; // R$ 1,00 por km
+        let valorEntrega = distancia * 2; // Considerando R$ 2,00 por km
 
-        // Exibir o valor da entrega em uma janela
+        // Arredonda o valor da entrega conforme solicitado
+        if (valorEntrega % 1 >= 0.5) {
+            valorEntrega = Math.ceil(valorEntrega); // Arredonda para cima
+        } else {
+            valorEntrega = Math.floor(valorEntrega); // Arredonda para baixo
+        }
+
+        // Exibe o valor da entrega arredondado
         alert(`A taxa de entrega é de R$ ${valorEntrega.toFixed(2).replace('.', ',')}`);
         
-        // Atualizar o total no carrinho
+        // Atualiza o total no carrinho
         document.getElementById('total-value').innerText = `R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}`;
         document.getElementById('total-value-top').innerText = `R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}`;
 
-        // Chamar a função para enviar o pedido via WhatsApp com o valor do frete
+        // Chama a função para enviar o pedido via WhatsApp com o valor do frete
         enviarPedidoWhatsApp(valorEntrega);
     }, (error) => {
         alert("Não foi possível obter a localização.");
