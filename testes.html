@@ -99,6 +99,19 @@ header {
     margin-bottom: 100px; /* Maior espaçamento para o último item */
 }
 
+.category-menu div {
+    text-decoration: none;
+    color: #FFA500; /* Laranja suave para o texto */
+    font-weight: bold;
+    cursor: pointer;
+    padding: 10px;
+    outline: none; /* Remove o foco visual */
+}
+
+.category-menu div:hover {
+    color: #ffffff; /* Branco ao passar o mouse */
+}
+
 .product {
     background-color: white;
     padding: 10px;
@@ -537,15 +550,15 @@ header {
 </div>
     <img src="https://goscript.neocities.org/imagens.png/compressed_logo.png" alt="Logo" class="logo">
     </header>
-
-    <!-- Barra de categorias -->
-    <div class="category-menu">
-        <a onclick="scrollToCategory('pizzas')">Pizzas</a>
-        <a onclick="scrollToCategory('esfihas')">Esfihas</a>
-        <a onclick="scrollToCategory('bebidas')">Bebidas</a>
-        <a onclick="scrollToCategory('refrigerantes')">Refrigerantes</a>
-        <a onclick="scrollToCategory('combos')">Combos</a>
-    </div>
+    
+<!-- Barra de categorias -->
+<div class="category-menu">
+    <div tabindex="-1" onclick="scrollToCategory('pizzas')">Pizzas</div>
+    <div tabindex="-1" onclick="scrollToCategory('esfihas')">Esfihas</div>
+    <div tabindex="-1" onclick="scrollToCategory('bebidas')">Bebidas</div>
+    <div tabindex="-1" onclick="scrollToCategory('refrigerantes')">Refrigerantes</div>
+    <div tabindex="-1" onclick="scrollToCategory('combos')">Combos</div>
+</div>
     
     <!-- Balões de tutorial -->
 <div id="tutorial1" class="tutorial-balao" style="top: 230px; left: 150px;">
