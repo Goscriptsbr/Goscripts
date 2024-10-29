@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat P2P com WebRTC</title>
+    <title>Chat P2P Goscripts</title>
     <style>
         /* CSS embutido */
         * {
@@ -95,60 +95,61 @@
 </head>
 <body>
     <div class="chat-container">
-        <h1>Chat P2P</h1>
+        <h1>Chat GoScripts</h1>
         <div id="messages" class="messages"></div>
         <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
         <button id="sendButton">Enviar</button>
     </div>
 
     <script>
-        // JavaScript embutido
-        const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
+    const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
 
-        // Referências aos elementos HTML
-        const messagesDiv = document.getElementById('messages');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
 
-        // Quando a conexão WebSocket é aberta
-        socket.onopen = () => {
-            console.log('Conectado ao servidor WebSocket');
-        };
+    let lastSentMessage = ""; // Variável para armazenar a última mensagem enviada
 
-        // Recebendo mensagens
-        socket.onmessage = (event) => {
-            const message = event.data;
-            
-            // Evita exibir a mensagem duas vezes
-            if (message !== messageInput.value) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('friend');
-                messageDiv.textContent = `Amigo: ${message}`;
-                messagesDiv.appendChild(messageDiv);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
-        };
+    // Quando a conexão WebSocket é aberta
+    socket.onopen = () => {
+        console.log('Conectado ao servidor WebSocket');
+    };
 
-        // Enviar mensagem
-        sendButton.addEventListener('click', () => {
-            const message = messageInput.value;
-            if (message) {
-                socket.send(message); // Envia a mensagem para o servidor
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('user');
-                messageDiv.textContent = `Você: ${message}`;
-                messagesDiv.appendChild(messageDiv);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                messageInput.value = ''; // Limpa o campo de entrada
-            }
-        });
+    // Recebendo mensagens
+    socket.onmessage = (event) => {
+        const message = event.data;
 
-        // Para enviar ao pressionar Enter
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendButton.click();
-            }
-        });
-    </script>
+        // Verifica se a mensagem recebida não é a mesma que foi enviada por você
+        if (message !== lastSentMessage) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('friend');
+            messageDiv.textContent = `Amigo: ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    };
+
+    // Enviar mensagem
+    sendButton.addEventListener('click', () => {
+        const message = messageInput.value;
+        if (message) {
+            lastSentMessage = message; // Armazena a mensagem que acabou de ser enviada
+            socket.send(message); // Envia a mensagem para o servidor
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('user');
+            messageDiv.textContent = `Você: ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            messageInput.value = ''; // Limpa o campo de entrada
+        }
+    });
+
+    // Para enviar ao pressionar Enter
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendButton.click();
+        }
+    });
+</script>
 </body>
 </html>
