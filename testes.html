@@ -783,7 +783,13 @@ function calcularFrete() {
 
 // Modifique o evento do botão de envio do pedido para chamar apenas `enviarPedidoWhatsApp` diretamente
 document.getElementById('submit-order').addEventListener('click', () => {
-    calcularFrete();
+    const serviceType = document.getElementById('service-type').value;
+
+    if (serviceType === 'delivery') {
+        calcularFrete(); // Calcula o frete se o serviço for "delivery"
+    } else {
+        enviarPedidoWhatsApp(0); // Envia o pedido diretamente sem o valor do frete se for "retirar no local"
+    }
 });
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -1107,7 +1113,7 @@ function enviarPedidoWhatsApp(valorEntrega) {
     cart.forEach(item => {
         message += `${item.name} - R$ ${item.price.toFixed(2).replace('.', ',')} (Qtd: ${item.quantity})\n`;
     });
-    message += `\nTotal (incluindo entrega): R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}\n`;
+    message += `\nTotal: R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}\n`;
     message += `\nNome: ${name}\n`;
 
     if (serviceType === 'delivery') {
