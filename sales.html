@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Boutique</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            background-color: #ddd;
+        }
+        .logo-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.logo {
+    max-width: 250px; /* Ajuste o tamanho máximo da logo */
+    height: auto; /* Mantém a proporção da imagem */
+}
+        .container {
+    max-width: 100%;
+    text-align: center;
+    padding: 20px;
+    padding-bottom: 20px; /* Adiciona espaço extra abaixo do conteúdo para evitar sobreposição */
+}
+        .main-image-container {
+            position: relative;
+            max-width: 400px;
+            margin: auto;
+            border: 1px solid black;
+        }
+        .main-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .color-options, .size-options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .color-option, .size-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            text-align: center;
+            line-height: 30px;
+        }
+        .color-option.selected, .size-option.selected {
+            border-color: #333;
+        }
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            font-size: 18px;
+            z-index: 1;
+        }
+        .nav-button.left {
+            left: 0;
+        }
+        .nav-button.right {
+            right: 0;
+        }
+        .size-description {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e60000;
+            margin-top: 10px;
+        }
+        .ratings-section {
+            text-align: left;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+        .ratings-header {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .star {
+            color: gold;
+            font-size: 18px;
+        }
+        .comments-section {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 400px;
+            padding-bottom: 70px;
+        }
+        .comment {
+            border-top: 1px solid red;
+            padding: 10px 0;
+        }
+        .comment-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .comment-date {
+            font-size: 12px;
+            color: white;
+        }
+        .comment-text {
+            margin-top: 5px;
+        }
+        /* Ícone de carrinho fixo no canto superior direito */
+        .cart-icon {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 20px;
+    color: #fff;
+    background-color: #ddd; /* Fundo pink */
+    border-radius: 50%; /* Torna o fundo redondo */
+    border: 1px solid black;
+    padding: 6px; /* Ajusta o tamanho do círculo */
+    cursor: pointer;
+    z-index: 1000;
+}
+        /* Botão fixo de adicionar ao carrinho */
+        .add-to-cart-button {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            border-top: 2px solid black;
+        }
+
+        /* Responsividade */
+        @media (max-width: 600px) {
+            .main-image-container {
+                max-width: 100%;
+            }
+            .color-option, .size-option {
+                width: 25px;
+                height: 25px;
+                line-height: 25px;
+            }
+            .nav-button {
+                padding: 8px;
+                font-size: 16px;
+            }
+        }
+        h1 {
+            color: black;
+            font-size: 12px;
+            margin-top: -15%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo da loja -->
+    <div class="logo-container">
+        <img src="https://goscript.neocities.org/PSX_20241029_161150.png" alt="Logo da Sales Boutique" </class="logo">
+    </div>
+    <h1>Sales Boutique</h1>
+
+    <!-- Ícone do carrinho no canto superior direito -->
+    <div class="cart-icon">🛒</div>
+
+    <div class="container">
+        <div class="main-image-container">
+            <button class="nav-button left" onclick="previousImage()">&#10094;</button>
+            <img src="https://goscript.neocities.org/imagens.png/newest_optimized_image_4.webp" alt="Camiseta" id="mainImage" class="main-image">
+            <button class="nav-button right" onclick="nextImage()">&#10095;</button>
+        </div>
+        
+        <div class="color-options">
+            <div class="color-option" style="background-color: blue;" onclick="changeColor('azul')"></div>
+            <div class="color-option" style="background-color: green;" onclick="changeColor('verde')"></div>
+            <div class="color-option" style="background-color: #E91E63;" onclick="changeColor('rosa')"></div>
+        </div>
+
+        <div class="size-options">
+            <div class="size-option" onclick="selectSize('PP')">PP</div>
+            <div class="size-option" onclick="selectSize('P')">P</div>
+            <div class="size-option" onclick="selectSize('M')">M</div>
+            <div class="size-option" onclick="selectSize('G')">G</div>
+        </div>
+
+        <div id="sizeDescription" class="size-description">Selecione um tamanho para ver as medidas.</div>
+        
+        <!-- Preço do produto -->
+        <div class="price">R$ 30,39</div>
+    </div>
+
+    <!-- Seção de Avaliações -->
+    <div class="ratings-section">
+        <div class="ratings-header">
+            <span>4.90</span>
+            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+            <span>(1000+ avaliações)</span>
+        </div>
+        <div>Ajuste: 96% fiéis ao tamanho</div>
+    </div>
+
+    <!-- Seção de Comentários -->
+    <div class="comments-section">
+        <div class="comment">
+            <div class="comment-header">5***9 <span class="comment-date">03/09/2023</span></div>
+            <div class="comment-text">GENTEEE, chocada! Definitivamente o vestido mais lindo! <br><strong>Cor:</strong> Rosa <strong>Tamanho:</strong> M</div>
+        </div>
+        <div class="comment">
+            <div class="comment-header">b***t <span class="comment-date">01/14/2023</span></div>
+            <div class="comment-text">De todas as peças que escolhi, foi de longe a minha preferida! Não demorou para chegar. <br><strong>Cor:</strong> Verde <strong>Tamanho:</strong> P</div>
+        </div>
+        <div class="comment">
+            <div class="comment-header">g***t <span class="comment-date">04/24/2023</span></div>
+            <div class="comment-text">Qualidade do produto: amei, muito boa, já quero outras cores desse vestido! <br><strong>Cor:</strong> Rosa <strong>Tamanho:</strong> G</div>
+        </div>
+    </div>
+
+    <!-- Botão fixo de adicionar ao carrinho -->
+    <div class="add-to-cart-button">Adicionar ao Carrinho</div>
+
+    <script>
+        const images = {
+            azul: [
+                "https://goscript.neocities.org/imagens.png/newest_optimized_image_4.webp",
+                "https://goscript.neocities.org/imagens.png/newest_optimized_image_1.webp",
+                "https://goscript.neocities.org/imagens.png/latest_optimized_image_3.webp",
+                "https://goscript.neocities.org/imagens.png/latest_optimized_image_2.webp",
+                "https://goscript.neocities.org/imagens.png/latest_optimized_image_1.webp"
+            ],
+            verde: [
+                "https://goscript.neocities.org/imagens.png/new_optimized_image_2.webp",
+                "https://goscript.neocities.org/imagens.png/new_optimized_image_4.webp",
+                "https://goscript.neocities.org/imagens.png/new_optimized_image_3.webp",
+                "https://goscript.neocities.org/imagens.png/newest_optimized_image_3.webp",
+                "https://goscript.neocities.org/imagens.png/newest_optimized_image_2.webp"
+            ],
+            rosa: [
+                "https://goscript.neocities.org/imagens.png/optimized_image_4.webp",
+                "https://goscript.neocities.org/imagens.png/optimized_image_2.webp",
+                "https://goscript.neocities.org/imagens.png/optimized_image_1.webp",
+                "https://goscript.neocities.org/imagens.png/optimized_image_3.webp",
+                "https://goscript.neocities.org/imagens.png/new_optimized_image_1.webp"
+            ]
+        };
+
+        const sizeDescriptions = {
+            PP: "PP: Busto 78-82 cm, Cintura 60-64 cm, Quadril 84-88 cm",
+            P: "P: Busto 83-87 cm, Cintura 65-69 cm, Quadril 89-93 cm",
+            M: "M: Busto 88-92 cm, Cintura 70-74 cm, Quadril 94-98 cm",
+            G: "G: Busto 93-97 cm, Cintura 75-79 cm, Quadril 99-103 cm"
+        };
+
+        let currentColor = 'azul';
+        let currentIndex = 0;
+
+        function changeColor(color) {
+            currentColor = color;
+            currentIndex = 0;
+            document.getElementById('mainImage').src = images[color][currentIndex];
+            updateSelectedColor(color);
+        }
+
+        function updateSelectedColor(color) {
+            document.querySelectorAll('.color-option').forEach(option => option.classList.remove('selected'));
+            document.querySelector(`[onclick="changeColor('${color}')"]`).classList.add('selected');
+        }
+
+        function nextImage() {
+            currentIndex = (currentIndex + 1) % images[currentColor].length;
+            document.getElementById('mainImage').src = images[currentColor][currentIndex];
+        }
+
+        function previousImage() {
+            currentIndex = (currentIndex - 1 + images[currentColor].length) % images[currentColor].length;
+            document.getElementById('mainImage').src = images[currentColor][currentIndex];
+        }
+
+        function selectSize(size) {
+            document.getElementById('sizeDescription').innerText = sizeDescriptions[size];
+            document.querySelectorAll('.size-option').forEach(option => option.classList.remove('selected'));
+            document.querySelector(`[onclick="selectSize('${size}')"]`).classList.add('selected');
+        }
+
+        // Define a cor inicial
+        changeColor('azul');
+    </script>
+</body>
+</html>
