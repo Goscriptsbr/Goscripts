@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat P2P Goscripts</title>
+    <title>Chat GoScripts</title>
     <style>
         /* CSS embutido */
         * {
@@ -22,61 +22,90 @@
             color: #333;
         }
 
+        .chat-background {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    width: 400px;
+    height: 600px;
+}
+
         .chat-container {
-            width: 100%;
-            max-width: 400px;
-            background-color: #ffffff;
-            padding: 20px;
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-        }
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    padding: 20px;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    background-image: url('https://goscript.neocities.org/imagens.png/GoScripts_logo.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: 2px solid grey;
+}
 
         h1 {
             text-align: center;
             margin-bottom: 20px;
-            color: #333;
+            color: white;
             font-size: 24px;
             font-weight: bold;
         }
 
-        .messages {
+         .messages {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             height: 300px;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: #f9f9f9;
+            border: 2px solid white;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: none;
             border-radius: 5px;
+            height: 450px;
         }
 
-        .messages div {
-            margin-bottom: 10px;
-            padding: 8px;
+        .messages .user,
+        .messages .friend {
+            display: inline-block;
+            padding: 8px 12px;
             border-radius: 8px;
-            max-width: 80%;
+            max-width: 70%;
+            word-wrap: break-word;
         }
 
         .messages .user {
+            align-self: flex-end;
             background-color: #4c8bf5;
             color: white;
-            align-self: flex-end;
             text-align: right;
         }
 
         .messages .friend {
+            align-self: flex-start;
             background-color: #e0e0e0;
             color: #333;
-            align-self: flex-start;
             text-align: left;
         }
 
-        #messageInput {
-            width: calc(100% - 80px);
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
+       #messageInput {
+    width: calc(100% - 80px);
+    padding: 10px;
+    border: 2px solid grey;
+    border-radius: 5px;
+    margin-right: 10px;
+    transition: border-color 0.3s, box-shadow 0.3s; /* Transição suave */
+}
+
+#messageInput:focus {
+    border-color: blue; /* Muda a cor da borda para azul */
+    box-shadow: 0 0 10px rgba(0, 0, 255, 0.6); /* Efeito de brilho azul */
+    outline: none; /* Remove a borda padrão do navegador */
+}
 
         #sendButton {
             padding: 10px;
@@ -94,62 +123,60 @@
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <h1>Chat GoScripts</h1>
-        <div id="messages" class="messages"></div>
-        <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
-        <button id="sendButton">Enviar</button>
+    <div class="chat-background">
+        <div class="chat-container">
+            <h1>CHAT GOSCRIPTS</h1>
+            <div id="messages" class="messages"></div>
+            <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
+            <button id="sendButton">Enviar</button>
+        </div>
     </div>
 
     <script>
-    const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
+        // JavaScript embutido
+        const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
 
-    const messagesDiv = document.getElementById('messages');
-    const messageInput = document.getElementById('messageInput');
-    const sendButton = document.getElementById('sendButton');
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
 
-    let lastSentMessage = ""; // Variável para armazenar a última mensagem enviada
+        let lastSentMessage = ""; // Variável para armazenar a última mensagem enviada
 
-    // Quando a conexão WebSocket é aberta
-    socket.onopen = () => {
-        console.log('Conectado ao servidor WebSocket');
-    };
+        socket.onopen = () => {
+            console.log('Conectado ao servidor WebSocket');
+        };
 
-    // Recebendo mensagens
-    socket.onmessage = (event) => {
-        const message = event.data;
+        socket.onmessage = (event) => {
+            const message = event.data;
+            
+            if (message !== lastSentMessage) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('friend');
+                messageDiv.textContent = `Amigo: ${message}`;
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        };
 
-        // Verifica se a mensagem recebida não é a mesma que foi enviada por você
-        if (message !== lastSentMessage) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('friend');
-            messageDiv.textContent = `Amigo: ${message}`;
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-    };
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value;
+            if (message) {
+                lastSentMessage = message; 
+                socket.send(message);
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('user');
+                messageDiv.textContent = `Você: ${message}`;
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                messageInput.value = '';
+            }
+        });
 
-    // Enviar mensagem
-    sendButton.addEventListener('click', () => {
-        const message = messageInput.value;
-        if (message) {
-            lastSentMessage = message; // Armazena a mensagem que acabou de ser enviada
-            socket.send(message); // Envia a mensagem para o servidor
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('user');
-            messageDiv.textContent = `Você: ${message}`;
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            messageInput.value = ''; // Limpa o campo de entrada
-        }
-    });
-
-    // Para enviar ao pressionar Enter
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendButton.click();
-        }
-    });
-</script>
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+    </script>
 </body>
 </html>
