@@ -1109,21 +1109,32 @@ function enviarPedidoWhatsApp(valorEntrega) {
     }
 
     // Construção da mensagem com o valor de entrega incluído
-    let message = `Pedido:\n`;
+    let message = `*Pedido:* \n`;
     cart.forEach(item => {
         message += `${item.name} - R$ ${item.price.toFixed(2).replace('.', ',')} (Qtd: ${item.quantity})\n`;
     });
-    message += `\nTotal: R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}\n`;
+    message += `\n *Total:* R$ ${(total + valorEntrega).toFixed(2).replace('.', ',')}\n`;
+
+    // Adiciona a taxa de entrega quando for delivery
+    if (serviceType === 'delivery') {
+        message += `Taxa de entrega: R$ ${valorEntrega.toFixed(2).replace('.', ',')} (já adicionada ao total)\n`;
+    }
+
+message += `\n===========================`;
+
+message += `\n *Dados da entrega:*`;
     message += `\nNome: ${name}\n`;
 
     if (serviceType === 'delivery') {
         message += `CEP: ${cep}\nRua: ${rua}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
     } else {
-        message += `Retirar no local.\n`;
+        message += `_Retirar no local._\n`;
     }
+    
+    message += `\n===========================`;
 
     // Adiciona a forma de pagamento
-    message += `\nForma de Pagamento: ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}`;
+    message += `\n *Forma de Pagamento:* ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}`;
 
     // Se a forma de pagamento for "Dinheiro", adiciona o valor do troco
     if (paymentMethod === 'dinheiro' && changeFor !== '') {
