@@ -60,13 +60,18 @@ header {
     bottom: 0;
     background-color: #f5f5f5; /* Fundo cinza bem claro */
     z-index: 1000;
-    display: none;
     padding: 20px;
     overflow-y: auto;
+    opacity: 0; /* Começa invisível */
+    transform: translateY(20px); /* Começa um pouco deslocado para baixo */
+    transition: opacity 0.5s ease, transform 0.5s ease; /* Transições suaves */
+    pointer-events: none; /* Desabilita a interação enquanto invisível */
 }
 
 .category-content.active {
-    display: block;
+    opacity: 1; /* Torna visível */
+    transform: translateY(0); /* Volta para a posição original */
+    pointer-events: auto; /* Habilita a interação */
 }
 
 .category-content h2 {
@@ -191,7 +196,7 @@ header {
     border: none;
     font-size: 20px;
     cursor: pointer;
-    color: #FFA500; /* Laranja suave */
+    color: red; /* Laranja suave */
 }
 
 .cart-item {
@@ -227,7 +232,6 @@ header {
 }
 
 .checkout {
-    display: none;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -239,11 +243,16 @@ header {
     z-index: 2000;
     color: white;
     border-radius: 15px 15px 0 0; /* Bordas arredondadas */
-    transition: all 0.3s ease; /* Transição suave */
+    opacity: 0; /* Invisível inicialmente */
+    transform: translateY(100%); /* Deslocado para fora da tela inicialmente */
+    transition: opacity 0.5s ease, transform 0.5s ease; /* Transição suave */
+    pointer-events: none; /* Desabilita a interação enquanto invisível */
 }
 
 .checkout.open {
-    display: block;
+    opacity: 1; /* Visível */
+    transform: translateY(0); /* Posição original */
+    pointer-events: auto; /* Habilita interação */
 }
 
 .checkout-header {
@@ -466,6 +475,58 @@ header {
 .inline-options label {
     margin-left: -45%; /* Ajusta para aproximar mais o texto ao botão */
 }
+
+.tutorial-balao {
+  position: absolute;
+  background: linear-gradient(135deg, #444, #222); /* Gradiente para um visual suave */
+  color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  max-width: 220px;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
+  display: none;
+  z-index: 1000;
+  border: 1px solid #555; /* Borda suave */
+}
+
+.tutorial-balao::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #333;
+}
+
+.tutorial-balao .botao {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.fechar-tutorial {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: transparent;
+  border: none;
+  color: #ff5e5e; /* Vermelho suave */
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease; /* Efeito de transição */
+}
+
+.fechar-tutorial:hover {
+  color: #ff3838; /* Muda o tom ao passar o mouse */
+  transform: scale(1.2); /* Leve aumento ao passar o mouse */
+}
+
+.fechar-tutorial:focus {
+  outline: none; /* Remove a borda de foco padrão */
+}
     </style>
 </head>
 <body>
@@ -485,6 +546,31 @@ header {
         <a onclick="scrollToCategory('refrigerantes')">Refrigerantes</a>
         <a onclick="scrollToCategory('combos')">Combos</a>
     </div>
+    
+    <!-- Balões de tutorial -->
+<div id="tutorial1" class="tutorial-balao" style="top: 230px; left: 150px;">
+  Bem-vindo! Clique em alguma categoria para escolher um item.
+  <button class="fechar-tutorial" onclick="fecharTutorial()">X</button>
+  <div class="botao">
+    <button onclick="proximoTutorial(1)">Próximo</button>
+  </div>
+</div>
+<div id="tutorial2" class="tutorial-balao" style="top: 650px; left: 150px; z-index: 3000;">
+  Aqui você pode ver os itens que tem no seu carrinho.
+  <button class="fechar-tutorial" onclick="fecharTutorial()">X</button>
+  <div class="botao">
+    <button onclick="anteriorTutorial(2)">Voltar</button>
+    <button onclick="proximoTutorial(2)">Próximo</button>
+  </div>
+</div>
+<div id="tutorial3" class="tutorial-balao" style="top: 590px; left: 130px; z-index: 3000;">
+  Finalize o pedido clicando aqui após escolher.
+  <button class="fechar-tutorial" onclick="fecharTutorial()">X</button>
+  <div class="botao">
+    <button onclick="anteriorTutorial(3)">Voltar</button>
+    <button onclick="fecharTutorial()">Concluir</button>
+  </div>
+</div>
 
     <!-- Lista de produtos por categoria -->
     <div class="product-list" id="pizzas" onclick="openCategory('pizzas')">
@@ -677,6 +763,42 @@ function calcularFrete() {
 document.getElementById('submit-order').addEventListener('click', () => {
     calcularFrete();
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+  mostrarTutorial(1); // Mostra o primeiro balão ao carregar
+});
+
+function mostrarTutorial(id) {
+  document.getElementById(`tutorial${id}`).style.display = 'block';
+}
+
+function esconderTutorial(id) {
+  document.getElementById(`tutorial${id}`).style.display = 'none';
+}
+
+function proximoTutorial(id) {
+  esconderTutorial(id);
+
+  if (id === 2) {
+    // Abre o carrinho e mostra o tutorial 3 imediatamente
+    const cartElement = document.getElementById('cart');
+    cartElement.classList.add('open');
+    mostrarTutorial(3);
+  } else {
+    mostrarTutorial(id + 1);
+  }
+}
+
+function anteriorTutorial(id) {
+  esconderTutorial(id);
+  mostrarTutorial(id - 1);
+}
+
+function fecharTutorial() {
+  for (let i = 1; i <= 3; i++) {
+    esconderTutorial(i);
+  }
+}
 
 // Função para enviar o pedido pelo WhatsApp com o valor da entrega incluído
 function enviarPedidoWhatsApp(valorEntrega) {
@@ -873,15 +995,16 @@ document.getElementById('finalize-order').addEventListener('click', () => {
 
 // Função para abrir e fechar o carrinho
 function toggleCart() {
-    const cartElement = document.getElementById('cart');
-    const checkoutElement = document.getElementById('checkout');
-    
-    // Se o checkout estiver aberto, fecha-o antes de abrir o carrinho
-    if (checkoutElement.classList.contains('open')) {
-        checkoutElement.classList.remove('open');
-    }
-    
-    cartElement.classList.toggle('open');
+  const cartElement = document.getElementById('cart');
+  const checkoutElement = document.getElementById('checkout');
+  
+  // Se o checkout estiver aberto, fecha-o antes de abrir o carrinho
+  if (checkoutElement.classList.contains('open')) {
+      checkoutElement.classList.remove('open');
+  }
+
+  // Alterna a exibição do carrinho sem afetar o tutorial
+  cartElement.classList.toggle('open');
 }
 
 // Função para exibir o campo de troco se a forma de pagamento for "Dinheiro"
