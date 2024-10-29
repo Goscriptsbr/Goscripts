@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat GoScripts</title>
     <style>
-        /* CSS embutido */
+        /* Estilos gerais */
         * {
             margin: 0;
             padding: 0;
@@ -23,29 +23,30 @@
         }
 
         .chat-background {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0px;
-    border-radius: 15px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    width: 400px;
-    height: 600px;
-}
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            height: 650px;
+        }
 
         .chat-container {
-    width: 100%;
-    max-width: 800px;
-    height: 100%;
-    padding: 20px;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    background-image: url('https://goscript.neocities.org/imagens.png/GoScripts_logo.webp');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    border: 2px solid grey;
-}
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 100%;
+            padding: 20px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background-image: url('https://goscript.neocities.org/imagens.png/GoScripts_logo.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 2px solid grey;
+        }
 
         h1 {
             text-align: center;
@@ -55,21 +56,35 @@
             font-weight: bold;
         }
 
-         .messages {
+        .messages {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            height: 300px;
             overflow-y: auto;
             border: 2px solid white;
             padding: 20px;
             margin-bottom: 20px;
             background-color: none;
             border-radius: 5px;
-            height: 450px;
+            height: 430px;
         }
 
-        .messages .user,
+        #messageInput, #nameInput {
+               width: calc(100% - 80px);
+            padding: 10px;
+            border: 2px solid grey;
+            border-radius: 5px;
+            margin-right: 10px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+         #messageInput:focus {
+            border-color: blue;
+            box-shadow: 0 0 10px rgba(0, 0, 255, 0.6);
+            outline: none;
+        }
+        
+          .messages .user,
         .messages .friend {
             display: inline-block;
             padding: 8px 12px;
@@ -92,22 +107,7 @@
             text-align: left;
         }
 
-       #messageInput {
-    width: calc(100% - 80px);
-    padding: 10px;
-    border: 2px solid grey;
-    border-radius: 5px;
-    margin-right: 10px;
-    transition: border-color 0.3s, box-shadow 0.3s; /* Transição suave */
-}
-
-#messageInput:focus {
-    border-color: blue; /* Muda a cor da borda para azul */
-    box-shadow: 0 0 10px rgba(0, 0, 255, 0.6); /* Efeito de brilho azul */
-    outline: none; /* Remove a borda padrão do navegador */
-}
-
-        #sendButton {
+        #sendButton, #setNameButton {
             padding: 10px;
             background-color: #4c8bf5;
             color: #fff;
@@ -117,8 +117,72 @@
             transition: background-color 0.3s ease;
         }
 
-        #sendButton:hover {
+        #sendButton:hover, #setNameButton:hover {
             background-color: #3a6ed8;
+        }
+
+        .name-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Estilos dos balões do tutorial */
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-width: 150px;
+            text-align: center;
+            border: 1.5px solid red;
+        }
+
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            border-style: solid;
+        }
+
+        /* Posição do tooltip acima do nome */
+        .tooltip-name {
+            top: -20px;
+            left: 20px;
+        }
+
+        .tooltip-name::after {
+            top: 100%;
+            left: 20%;
+            border-width: 8px;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        /* Posição do tooltip acima da mensagem */
+        .tooltip-message {
+            bottom: 60px;
+            left: 20px;
+        }
+
+        .tooltip-message::after {
+            top: 100%;
+            left: 20%;
+            border-width: 8px;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        /* Posição do tooltip acima do botão de envio */
+        .tooltip-send {
+            bottom: 60px;
+            right: 10px;
+        }
+
+        .tooltip-send::after {
+            top: 100%;
+            right: 20%;
+            border-width: 8px;
+            border-color: #333 transparent transparent transparent;
         }
     </style>
 </head>
@@ -126,54 +190,75 @@
     <div class="chat-background">
         <div class="chat-container">
             <h1>CHAT GOSCRIPTS</h1>
+            
+            <!-- Tutorial de balões -->
+            <div class="tooltip tooltip-name">Comece digitando seu nome para liberar as conversas!</div>
+            <div class="name-container">
+                <input type="text" id="nameInput" placeholder="Crie uma gamertag para conversar!">
+                <button id="setNameButton">Definir</button>
+            </div>
+
             <div id="messages" class="messages"></div>
-            <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
-            <button id="sendButton">Enviar</button>
+            
+            <div class="tooltip tooltip-message">Digite aqui sua mensagem!</div>
+            <input type="text" id="messageInput" placeholder="Digite sua mensagem..." disabled>
+            
+            <button id="sendButton" disabled>Enviar</button>
+            <div class="tooltip tooltip-send">Clique para enviar!</div>
         </div>
     </div>
 
     <script>
-        // JavaScript embutido
         const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
 
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
+        const nameInput = document.getElementById('nameInput');
+        const setNameButton = document.getElementById('setNameButton');
 
-        let lastSentMessage = ""; // Variável para armazenar a última mensagem enviada
+        let userName = "";
+
+        // Define o nome do usuário e ativa o campo de mensagem
+        setNameButton.addEventListener('click', () => {
+            userName = nameInput.value.trim();
+            if (userName) {
+                nameInput.disabled = true;
+                setNameButton.disabled = true;
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+
+                // Remove os balões de tutorial após definir o nome
+                document.querySelector('.tooltip-name').style.display = 'none';
+                document.querySelector('.tooltip-message').style.display = 'none';
+                document.querySelector('.tooltip-send').style.display = 'none';
+            }
+        });
 
         socket.onopen = () => {
             console.log('Conectado ao servidor WebSocket');
         };
 
         socket.onmessage = (event) => {
-            const message = event.data;
-            
-            if (message !== lastSentMessage) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('friend');
-                messageDiv.textContent = `Amigo: ${message}`;
-                messagesDiv.appendChild(messageDiv);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
+            const data = JSON.parse(event.data);
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add(data.sender === userName ? 'user' : 'friend');
+            messageDiv.textContent = `${data.sender}: ${data.message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         };
 
         sendButton.addEventListener('click', () => {
             const message = messageInput.value;
-            if (message) {
-                lastSentMessage = message; 
-                socket.send(message);
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('user');
-                messageDiv.textContent = `Você: ${message}`;
-                messagesDiv.appendChild(messageDiv);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            if (message && userName) {
+                const data = { sender: userName, message: message };
+                socket.send(JSON.stringify(data));
                 messageInput.value = '';
             }
         });
 
         messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !sendButton.disabled) {
                 sendButton.click();
             }
         });
