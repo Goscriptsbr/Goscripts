@@ -81,17 +81,22 @@
     </div>
 
     <script>
-        // JavaScript embutido
+        // Conectar ao servidor WebSocket
         const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
 
-        // Referências aos elementos HTML
-        const messagesDiv = document.getElementById('messages');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-
-        // Quando a conexão WebSocket é aberta
+        // Tratamento de conexão
         socket.onopen = () => {
             console.log('Conectado ao servidor WebSocket');
+        };
+
+        // Tratamento de erro de conexão
+        socket.onerror = (error) => {
+            console.error('Erro na conexão WebSocket:', error);
+        };
+
+        // Evento de fechamento de conexão
+        socket.onclose = () => {
+            console.log('Conexão WebSocket foi fechada');
         };
 
         // Recebendo mensagens
@@ -102,20 +107,25 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         };
 
+        // Referências aos elementos HTML
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
         // Enviar mensagem
         sendButton.addEventListener('click', () => {
             const message = messageInput.value;
             if (message) {
-                socket.send(message); // Envia a mensagem para o servidor
+                socket.send(message);
                 const messageDiv = document.createElement('div');
                 messageDiv.textContent = `Você: ${message}`;
                 messagesDiv.appendChild(messageDiv);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                messageInput.value = ''; // Limpa o campo de entrada
+                messageInput.value = '';
             }
         });
 
-        // Para enviar ao pressionar Enter
+        // Enviar ao pressionar Enter
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 sendButton.click();
