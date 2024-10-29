@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat P2P com WebRTC</title>
+    <style>
+        /* CSS embutido */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .messages div {
+            margin-bottom: 10px;
+        }
+
+        #messageInput {
+            width: calc(100% - 70px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+
+        #sendButton {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #sendButton:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Chat P2P</h1>
+        <div id="messages" class="messages"></div>
+        <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
+        <button id="sendButton">Enviar</button>
+    </div>
+
+    <script>
+        // JavaScript embutido
+        const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me'); // URL do servidor WebSocket no Glitch
+
+        // Referências aos elementos HTML
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Quando a conexão WebSocket é aberta
+        socket.onopen = () => {
+            console.log('Conectado ao servidor WebSocket');
+        };
+
+        // Recebendo mensagens
+        socket.onmessage = (event) => {
+            const message = document.createElement('div');
+            message.textContent = `Amigo: ${event.data}`;
+            messagesDiv.appendChild(message);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        };
+
+        // Enviar mensagem
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value;
+            if (message) {
+                socket.send(message); // Envia a mensagem para o servidor
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = `Você: ${message}`;
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                messageInput.value = ''; // Limpa o campo de entrada
+            }
+        });
+
+        // Para enviar ao pressionar Enter
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+    </script>
+</body>
+</html>
