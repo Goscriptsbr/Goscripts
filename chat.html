@@ -209,59 +209,100 @@
     </div>
 
     <script>
-        const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
+    const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
 
-        const messagesDiv = document.getElementById('messages');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const nameInput = document.getElementById('nameInput');
-        const setNameButton = document.getElementById('setNameButton');
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const nameInput = document.getElementById('nameInput');
+    const setNameButton = document.getElementById('setNameButton');
 
-        let userName = "";
+    let userName = ""; // Inicializa userName como uma string vazia
+    let lastSentMessage = ""; // Armazena a última mensagem enviada
 
-        // Define o nome do usuário e ativa o campo de mensagem
-        setNameButton.addEventListener('click', () => {
-            userName = nameInput.value.trim();
-            if (userName) {
-                nameInput.disabled = true;
-                setNameButton.disabled = true;
-                messageInput.disabled = false;
-                sendButton.disabled = false;
+    // Função para salvar mensagens no localStorage
+    function saveMessages() {
+        const messages = Array.from(messagesDiv.children).map(div => div.textContent);
+        localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
 
-                // Remove os balões de tutorial após definir o nome
-                document.querySelector('.tooltip-name').style.display = 'none';
-                document.querySelector('.tooltip-message').style.display = 'none';
-                document.querySelector('.tooltip-send').style.display = 'none';
-            }
-        });
-
-        socket.onopen = () => {
-            console.log('Conectado ao servidor WebSocket');
-        };
-
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+    // Função para carregar mensagens do localStorage
+    function loadMessages() {
+        const savedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
+        savedMessages.forEach(text => {
             const messageDiv = document.createElement('div');
-            messageDiv.classList.add(data.sender === userName ? 'user' : 'friend');
-            messageDiv.textContent = `${data.sender}: ${data.message}`;
+            messageDiv.textContent = text;
+            messageDiv.classList.add(text.startsWith(userName) ? 'user' : 'friend');
+            messagesDiv.appendChild(messageDiv);
+        });
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Define o nome do usuário e ativa o campo de mensagem
+    setNameButton.addEventListener('click', () => {
+        userName = nameInput.value.trim();
+        if (userName) {
+            nameInput.disabled = true;
+            setNameButton.disabled = true;
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+
+            // Remove os balões de tutorial após definir o nome
+            document.querySelector('.tooltip-name').style.display = 'none';
+            document.querySelector('.tooltip-message').style.display = 'none';
+            document.querySelector('.tooltip-send').style.display = 'none';
+
+            loadMessages(); // Carrega as mensagens após definir o nome do usuário
+        }
+    });
+
+    socket.onopen = () => {
+        console.log('Conectado ao servidor WebSocket');
+    };
+
+    // Recebe mensagens e exibe no chat
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        // Verifica se a mensagem recebida não é a mesma que foi enviada por você
+        if (data.sender === userName && data.message === lastSentMessage) return;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add(data.sender === userName ? 'user' : 'friend');
+        messageDiv.textContent = `${data.sender}: ${data.message}`;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        saveMessages(); // Salva no localStorage
+    };
+
+    // Envia a mensagem e salva no localStorage
+    sendButton.addEventListener('click', () => {
+        const message = messageInput.value;
+        if (message && userName) {
+            const data = { sender: userName, message: message };
+            lastSentMessage = message; // Armazena a última mensagem enviada
+            socket.send(JSON.stringify(data));
+
+            // Adiciona a mensagem ao chat e salva
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('user');
+            messageDiv.textContent = `${userName}: ${message}`;
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        };
 
-        sendButton.addEventListener('click', () => {
-            const message = messageInput.value;
-            if (message && userName) {
-                const data = { sender: userName, message: message };
-                socket.send(JSON.stringify(data));
-                messageInput.value = '';
-            }
-        });
+            saveMessages(); // Salva no localStorage
 
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !sendButton.disabled) {
-                sendButton.click();
-            }
-        });
-    </script>
+            messageInput.value = '';
+        }
+    });
+
+    // Envio com tecla Enter
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !sendButton.disabled) {
+            sendButton.click();
+        }
+    });
+</script>
 </body>
 </html>
