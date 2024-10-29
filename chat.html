@@ -18,22 +18,25 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f9;
+            background: linear-gradient(135deg, #4c8bf5, #6dd5ed);
+            color: #333;
         }
 
         .chat-container {
             width: 100%;
             max-width: 400px;
-            background-color: #fff;
+            background-color: #ffffff;
             padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
         }
 
         h1 {
             text-align: center;
             margin-bottom: 20px;
             color: #333;
+            font-size: 24px;
+            font-weight: bold;
         }
 
         .messages {
@@ -43,32 +46,50 @@
             padding: 10px;
             margin-bottom: 10px;
             background-color: #f9f9f9;
-            border-radius: 4px;
+            border-radius: 5px;
         }
 
         .messages div {
             margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .messages .user {
+            background-color: #4c8bf5;
+            color: white;
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .messages .friend {
+            background-color: #e0e0e0;
+            color: #333;
+            align-self: flex-start;
+            text-align: left;
         }
 
         #messageInput {
-            width: calc(100% - 70px);
+            width: calc(100% - 80px);
             padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-right: 5px;
+            border-radius: 5px;
+            margin-right: 10px;
         }
 
         #sendButton {
             padding: 10px;
-            background-color: #4CAF50;
+            background-color: #4c8bf5;
             color: #fff;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
         #sendButton:hover {
-            background-color: #45a049;
+            background-color: #3a6ed8;
         }
     </style>
 </head>
@@ -81,7 +102,7 @@
     </div>
 
     <script>
-        // Conectar ao servidor WebSocket no Glitch
+        // JavaScript embutido
         const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
 
         // Referências aos elementos HTML
@@ -94,37 +115,31 @@
             console.log('Conectado ao servidor WebSocket');
         };
 
-        // Tratamento de erro de conexão
-        socket.onerror = (error) => {
-            console.error('Erro na conexão WebSocket:', error);
-            alert("Erro na conexão WebSocket. Verifique a URL do servidor e se ele está ativo.");
-        };
-
-        // Evento de fechamento de conexão
-        socket.onclose = () => {
-            console.log('Conexão WebSocket foi fechada');
-        };
-
         // Recebendo mensagens
         socket.onmessage = (event) => {
-            const message = document.createElement('div');
-            message.textContent = `Amigo: ${event.data}`;
-            messagesDiv.appendChild(message);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            const message = event.data;
+            
+            // Evita exibir a mensagem duas vezes
+            if (message !== messageInput.value) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('friend');
+                messageDiv.textContent = `Amigo: ${message}`;
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
         };
 
         // Enviar mensagem
         sendButton.addEventListener('click', () => {
             const message = messageInput.value;
-            if (message && socket.readyState === WebSocket.OPEN) {
+            if (message) {
                 socket.send(message); // Envia a mensagem para o servidor
                 const messageDiv = document.createElement('div');
+                messageDiv.classList.add('user');
                 messageDiv.textContent = `Você: ${message}`;
                 messagesDiv.appendChild(messageDiv);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
                 messageInput.value = ''; // Limpa o campo de entrada
-            } else if (socket.readyState !== WebSocket.OPEN) {
-                console.warn("Conexão WebSocket não está aberta.");
             }
         });
 
