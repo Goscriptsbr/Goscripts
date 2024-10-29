@@ -84,7 +84,12 @@
         // Conectar ao servidor WebSocket
         const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
 
-        // Tratamento de conexão
+        // Referências aos elementos HTML
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Quando a conexão WebSocket é aberta
         socket.onopen = () => {
             console.log('Conectado ao servidor WebSocket');
         };
@@ -107,25 +112,22 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         };
 
-        // Referências aos elementos HTML
-        const messagesDiv = document.getElementById('messages');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-
         // Enviar mensagem
         sendButton.addEventListener('click', () => {
             const message = messageInput.value;
-            if (message) {
-                socket.send(message);
+            if (message && socket.readyState === WebSocket.OPEN) {
+                socket.send(message); // Envia a mensagem para o servidor
                 const messageDiv = document.createElement('div');
                 messageDiv.textContent = `Você: ${message}`;
                 messagesDiv.appendChild(messageDiv);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                messageInput.value = '';
+                messageInput.value = ''; // Limpa o campo de entrada
+            } else if (socket.readyState !== WebSocket.OPEN) {
+                console.warn("Conexão WebSocket não está aberta.");
             }
         });
 
-        // Enviar ao pressionar Enter
+        // Para enviar ao pressionar Enter
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 sendButton.click();
