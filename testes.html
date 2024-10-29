@@ -33,12 +33,38 @@ header {
 
 .category-menu {
     display: flex;
-    justify-content: space-around;
-    background-color: #222; /* Preto profundo */
-    border-bottom: 2px solid #FFA500; /* Borda laranja suave */
-    padding: 10px;
+    overflow-x: auto; /* Permite rolagem horizontal */
+    white-space: nowrap; /* Evita quebras de linha entre os itens */
+    background-color: #222; /* Fundo preto profundo */
+    border-bottom: 2px solid #FFA500; /* Borda laranja */
+    padding: 15px 0; /* Espaçamento interno vertical */
     position: sticky;
     top: 0;
+}
+
+.category-menu::-webkit-scrollbar {
+    display: none; /* Oculta a barra de rolagem no Chrome, Safari e Edge */
+}
+
+.category-menu div {
+    text-decoration: none;
+    color: #FFA500; /* Laranja para o texto */
+    font-weight: bold;
+    cursor: pointer;
+    padding: 10px 20px;
+    flex-shrink: 0; /* Garante que os itens não encolham */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-left: 1px solid #FFA500; /* Borda entre itens */
+}
+
+.category-menu div:first-child {
+    border-left: none; /* Remove a borda do primeiro item */
+}
+
+.category-menu div:hover {
+    background-color: #FFA500;
+    color: #222;
+    border-radius: 5px;
 }
 
 .category-menu a {
@@ -46,10 +72,6 @@ header {
     color: #FFA500; /* Laranja suave para o texto */
     font-weight: bold;
     cursor: pointer;
-}
-
-.category-menu a:hover {
-    color: #ffffff; /* Branco ao passar o mouse */
 }
 
 .category-content {
@@ -97,19 +119,6 @@ header {
 
 .product-list:last-child {
     margin-bottom: 100px; /* Maior espaçamento para o último item */
-}
-
-.category-menu div {
-    text-decoration: none;
-    color: #FFA500; /* Laranja suave para o texto */
-    font-weight: bold;
-    cursor: pointer;
-    padding: 10px;
-    outline: none; /* Remove o foco visual */
-}
-
-.category-menu div:hover {
-    color: #ffffff; /* Branco ao passar o mouse */
 }
 
 .product {
@@ -561,14 +570,14 @@ header {
 </div>
     
     <!-- Balões de tutorial -->
-<div id="tutorial1" class="tutorial-balao" style="top: 230px; left: 150px;">
+<div id="tutorial1" class="tutorial-balao" style="top: 255px; left: 150px;">
   Bem-vindo! Clique em alguma categoria para escolher um item.
   <button class="fechar-tutorial" onclick="fecharTutorial()">X</button>
   <div class="botao">
     <button onclick="proximoTutorial(1)">Próximo</button>
   </div>
 </div>
-<div id="tutorial2" class="tutorial-balao" style="top: 650px; left: 150px; z-index: 3000;">
+<div id="tutorial2" class="tutorial-balao" style="top: 655px; left: 150px; z-index: 3000;">
   Aqui você pode ver os itens que tem no seu carrinho.
   <button class="fechar-tutorial" onclick="fecharTutorial()">X</button>
   <div class="botao">
@@ -576,7 +585,7 @@ header {
     <button onclick="proximoTutorial(2)">Próximo</button>
   </div>
 </div>
-<div id="tutorial3" class="tutorial-balao" style="top: 590px; left: 130px; z-index: 3000;">
+<div id="tutorial3" class="tutorial-balao" style="top: 595px; left: 130px; z-index: 3000;">
   Finalize o pedido clicando aqui após escolher.
   <button class="fechar-tutorial" onclick="fecharTutorial()">X</button>
   <div class="botao">
