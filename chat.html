@@ -97,6 +97,7 @@
         // Tratamento de erro de conexão
         socket.onerror = (error) => {
             console.error('Erro na conexão WebSocket:', error);
+            alert("Erro na conexão WebSocket. Verifique a URL do servidor e se ele está ativo.");
         };
 
         // Evento de fechamento de conexão
