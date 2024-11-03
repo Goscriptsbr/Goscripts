@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Puzzle</title>
+    <style>
+        /* Estilo geral do corpo e centralização */
+body, html {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #34495e;
+    font-family: 'Arial', sans-serif;
+    color: #ecf0f1;
+}
+
+/* Container principal do jogo */
+#game-container {
+    width: 100%;
+    max-width: 360px;
+    padding: 20px;
+    text-align: center;
+    background-color: #2c3e50;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Cabeçalho e informações do status */
+#header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+    font-size: 1em;
+    color: #ecf0f1;
+}
+#objective, #moves, #lives, #timer {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    background-color: #34495e;
+    border-radius: 6px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Tabuleiro de jogo */
+#board {
+    display: grid;
+    gap: 5px;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #34495e;
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilo das células */
+.cell {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8em;
+    background-color: #1abc9c;
+    color: #ffffff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.cell:active {
+    transform: scale(0.95);
+}
+
+/* Botão de jogar */
+.button {
+    padding: 12px 24px;
+    background-color: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease;
+    display: none;
+}
+.button:hover {
+    background-color: #d35400;
+}
+.button:disabled {
+    background-color: #7f8c8d;
+    cursor: not-allowed;
+}
+
+/* Efeito de queda */
+/* Efeito de queda mais realista */
+@keyframes fallBounce {
+    0% { transform: translateY(-120px); opacity: 0; }
+    60% { transform: translateY(0); opacity: 1; }
+    75% { transform: translateY(-15px); }
+    90% { transform: translateY(0); }
+    100% { transform: translateY(0); }
+}
+.fall {
+    animation: fallBounce 0.9s cubic-bezier(0.25, 0.75, 0.5, 1) forwards;
+}
+
+/* Efeito de explosão */
+@keyframes explosionEffect {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(0); opacity: 0; }
+}
+.explosion {
+    animation: explosionEffect 0.5s ease-out;
+}
+
+/* Efeito de desaparecimento */
+@keyframes vanishEffect {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.8); }
+}
+.vanish {
+    animation: vanishEffect 0.3s ease-out;
+}
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="header">
+            <div id="objective">Objetivo: Quebre 4 🎁</div>
+            <div id="moves">Movimentos Restantes: <span id="moves-left">20</span></div>
+            <div id="lives">Vidas: <span id="life-count">5</span></div>
+            <div id="timer">Próxima vida em: <span id="time-left">--:--</span></div>
+        </div>
+        <div id="board">
+            <!-- Peças serão geradas dinamicamente -->
+        </div>
+        <button id="play-button" class="button">Jogar Fase</button>        
+    </div>
+
+    <script>
+        let vidas = 5;
+        const maxVidas = 5;
+        let faseAtual = 1;
+        let movimentos = 10;
+        let presentesQuebrados = 0;
+        let objetivoPresentes = 4; // Número inicial de presentes a serem quebrados por fase
+        const frutas = ["🍏", "🍇", "🍓", "🍊"]; // Peças normais
+        const especiais = { bomba: "💣", setaVertical: "↕️", setaHorizontal: "↔️" }; // Peças especiais
+        const presente = "🎁"; // Presente
+        const boardSizes = [
+            { rows: 5, cols: 5 },
+            { rows: 6, cols: 6 },
+            { rows: 7, cols: 7 },
+            { rows: 8, cols: 8 },
+        ];
+        let startX, startY, draggedCell;
+
+        function atualizarStatus() {
+            document.getElementById("life-count").textContent = vidas;
+            document.getElementById("moves-left").textContent = movimentos;
+        }
+
+        function criarTabuleiro() {
+    const board = document.getElementById("board");
+    board.innerHTML = "";
+
+    // Reinicia a contagem de presentes quebrados para a nova fase
+    presentesQuebrados = 0;
+
+    // Define as dimensões do tabuleiro com base na fase atual
+    const { rows, cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+    board.style.gridTemplateRows = `repeat(${rows}, minmax(30px, 1fr))`;
+    board.style.gridTemplateColumns = `repeat(${cols}, minmax(30px, 1fr))`;
+
+    let totalCells = rows * cols;
+    let presenteCount = 0;
+    const cells = Array(totalCells).fill(null);
+
+    // Colocar presentes de acordo com o objetivo, garantindo que tenhamos o número exato
+    while (presenteCount < objetivoPresentes) {
+        const randomIndex = Math.floor(Math.random() * totalCells);
+        if (!cells[randomIndex]) {
+            cells[randomIndex] = presente;
+            presenteCount++;
+        }
+    }
+
+    // Atualiza o objetivo de presentes para refletir a quantidade realmente colocada no tabuleiro
+    objetivoPresentes = presenteCount;
+
+    // Preencher células restantes com frutas aleatórias
+    for (let i = 0; i < totalCells; i++) {
+        if (!cells[i]) {
+            cells[i] = gerarFrutaAleatoria();
+        }
+    }
+
+    // Garantir que não haja combinações iniciais
+    while (eliminarCombinacoesIniciais(cells, rows, cols)) {
+        for (let i = 0; i < totalCells; i++) {
+            if (cells[i] === null) {
+                cells[i] = gerarFrutaAleatoria();
+            }
+        }
+    }
+
+    // Renderizar o tabuleiro
+    for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.textContent = cells[i];
+
+        // Adiciona eventos para peças especiais
+        if (cell.textContent === especiais.setaHorizontal) {
+            cell.addEventListener("click", () => {
+                removerLinhaCompleta(cell);
+                cell.textContent = ""; // Limpa a peça após o uso
+            });
+        } else if (cell.textContent === especiais.setaVertical) {
+            cell.addEventListener("click", () => {
+                removerColunaCompleta(cell);
+                cell.textContent = ""; // Limpa a peça após o uso
+            });
+        } else if (cell.textContent === especiais.bomba) {
+            cell.addEventListener("click", () => {
+                explodirBomba(cell);
+                cell.textContent = ""; // Limpa a peça após o uso
+            });
+        }
+
+        // Adiciona eventos de toque para movimento das peças
+        cell.addEventListener("touchstart", (e) => iniciarMovimento(e, cell));
+        cell.addEventListener("touchend", (e) => finalizarMovimento(e, cell));
+
+        board.appendChild(cell);
+    }
+
+    // Atualiza a interface com o número correto de presentes restantes no objetivo
+    atualizarStatus();
+    verificarObjetivo(); // Assegura que o objetivo exiba a quantidade correta desde o início
+}
+
+// Função para eliminar combinações iniciais
+function eliminarCombinacoesIniciais(cells, rows, cols) {
+    let encontrouCombinacao = false;
+
+    // Verificar combinações horizontais de 3 peças
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols - 2; col++) {
+            const index = row * cols + col;
+            if (
+                cells[index] !== null &&
+                cells[index] === cells[index + 1] &&
+                cells[index] === cells[index + 2]
+            ) {
+                // Substituir uma das frutas na combinação
+                cells[index + 2] = gerarFrutaAleatoriaDiferente(cells[index]);
+                encontrouCombinacao = true;
+            }
+        }
+    }
+
+    // Verificar combinações verticais de 3 peças
+    for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows - 2; row++) {
+            const index = row * cols + col;
+            if (
+                cells[index] !== null &&
+                cells[index] === cells[index + cols] &&
+                cells[index] === cells[index + 2 * cols]
+            ) {
+                // Substituir uma das frutas na combinação
+                cells[index + 2 * cols] = gerarFrutaAleatoriaDiferente(cells[index]);
+                encontrouCombinacao = true;
+            }
+        }
+    }
+
+    return encontrouCombinacao;
+}
+
+// Função para gerar uma fruta aleatória diferente de uma fruta especificada
+function gerarFrutaAleatoriaDiferente(frutaAtual) {
+    let novaFruta;
+    do {
+        novaFruta = gerarFrutaAleatoria();
+    } while (novaFruta === frutaAtual);
+    return novaFruta;
+}
+
+// Função para eliminar combinações iniciais
+function eliminarCombinaçõesIniciais(cells, rows, cols) {
+    // Verifica combinações horizontais de 3 peças e substitui uma das frutas
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols - 2; col++) {
+            const index = row * cols + col;
+            if (
+                cells[index] !== null &&
+                cells[index] === cells[index + 1] &&
+                cells[index] === cells[index + 2]
+            ) {
+                cells[index + 2] = gerarFrutaAleatoriaDiferente(cells[index]); // Substitui a terceira fruta
+            }
+        }
+    }
+
+    // Verifica combinações verticais de 3 peças e substitui uma das frutas
+    for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows - 2; row++) {
+            const index = row * cols + col;
+            if (
+                cells[index] !== null &&
+                cells[index] === cells[index + cols] &&
+                cells[index] === cells[index + 2 * cols]
+            ) {
+                cells[index + 2 * cols] = gerarFrutaAleatoriaDiferente(cells[index]); // Substitui a terceira fruta
+            }
+        }
+    }
+}
+
+// Função para verificar se o tabuleiro inicial tem combinações prontas
+function verificarCombinacaoInicial(cells, rows, cols) {
+    // Verifica combinações horizontais de 3 peças
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols - 2; col++) {
+            const index = row * cols + col;
+            if (
+                cells[index] !== null &&
+                cells[index] === cells[index + 1] &&
+                cells[index] === cells[index + 2]
+            ) {
+                return true; // Encontrou uma combinação
+            }
+        }
+    }
+
+    // Verifica combinações verticais de 3 peças
+    for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows - 2; row++) {
+            const index = row * cols + col;
+            if (
+                cells[index] !== null &&
+                cells[index] === cells[index + cols] &&
+                cells[index] === cells[index + 2 * cols]
+            ) {
+                return true; // Encontrou uma combinação
+            }
+        }
+    }
+
+    return false; // Não há combinações
+}
+
+        function gerarFrutaAleatoria() {
+            return frutas[Math.floor(Math.random() * frutas.length)];
+        }
+
+        function iniciarMovimento(event, cell) {
+            const touch = event.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            draggedCell = cell;
+        }
+
+        function finalizarMovimento(event, targetCell) {
+    const touch = event.changedTouches[0];
+    const endX = touch.clientX;
+    const endY = touch.clientY;
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+
+    if (movimentos > 0 && draggedCell) {
+        // Verificar se a peça é especial e ativá-la imediatamente
+        if (draggedCell.textContent === especiais.setaHorizontal) {
+            removerLinhaCompleta(draggedCell);
+            draggedCell.textContent = ""; // Limpa a peça após uso
+            return; // Interrompe a função para não prosseguir com o movimento
+        } else if (draggedCell.textContent === especiais.setaVertical) {
+            removerColunaCompleta(draggedCell);
+            draggedCell.textContent = ""; // Limpa a peça após uso
+            return; // Interrompe a função para não prosseguir com o movimento
+        } else if (draggedCell.textContent === especiais.bomba) {
+            explodirBomba(draggedCell);
+            draggedCell.textContent = ""; // Limpa a bomba após uso
+            return; // Interrompe a função para não prosseguir com o movimento
+        }
+
+        movimentos--; // Decrementa os movimentos
+        atualizarStatus(); // Atualiza o contador de movimentos na tela
+
+        // Verificar se acabaram os movimentos
+        if (movimentos === 0) {
+            vidas--; // Reduz uma vida
+            atualizarStatus();
+
+            if (vidas > 0) {
+                alert("Movimentos esgotados! Você perdeu uma vida.");
+                reiniciarFase(); // Reinicia a fase se ainda houver vidas
+            } else {
+                alert("Game Over! Você não tem mais vidas.");
+                reiniciarJogo(); // Reinicia o jogo caso todas as vidas se esgotem
+            }
+            return;
+        }
+
+        let cellDestino;
+
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // Movimento horizontal
+            if (deltaX > 0) cellDestino = obterCelulaDireita(draggedCell);
+            else cellDestino = obterCelulaEsquerda(draggedCell);
+        } else {
+            // Movimento vertical
+            if (deltaY > 0) cellDestino = obterCelulaAbaixo(draggedCell);
+            else cellDestino = obterCelulaAcima(draggedCell);
+        }
+
+        // Verifica se a célula de destino está dentro dos limites do tabuleiro
+        if (cellDestino && cellDestino.classList.contains("cell")) {
+            trocarPecas(draggedCell, cellDestino);
+            verificarCombinacao();
+            verificarObjetivo();
+        } else {
+            // Reverte o movimento se estiver fora dos limites
+            movimentos++;
+            atualizarStatus(); // Atualiza o contador de movimentos na tela
+        }
+    }
+}
+
+function obterCelulaDireita(cell) {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const index = cells.indexOf(cell);
+    const { cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+
+    // Verifica se a célula está na borda direita
+    if ((index + 1) % cols === 0) {
+        return null; // Impede o movimento para fora da borda direita
+    }
+    return cells[index + 1];
+}
+
+function obterCelulaEsquerda(cell) {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const index = cells.indexOf(cell);
+    const { cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+
+    // Verifica se a célula está na borda esquerda
+    if (index % cols === 0) {
+        return null; // Impede o movimento para fora da borda esquerda
+    }
+    return cells[index - 1];
+}
+
+function obterCelulaAbaixo(cell) {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const index = cells.indexOf(cell);
+    const { rows, cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+
+    // Verifica se a célula está na borda inferior
+    if (index + cols >= rows * cols) {
+        return null; // Impede o movimento para fora da borda inferior
+    }
+    return cells[index + cols];
+}
+
+function obterCelulaAcima(cell) {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const index = cells.indexOf(cell);
+    const { cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+
+    // Verifica se a célula está na borda superior
+    if (index - cols < 0) {
+        return null; // Impede o movimento para fora da borda superior
+    }
+    return cells[index - cols];
+}
+
+function reiniciarJogo() {
+    vidas = maxVidas;
+    faseAtual = 1;
+    movimentos = 10;
+    presentesQuebrados = 0;
+    criarTabuleiro();
+    atualizarStatus();
+}
+
+        function obterCelulaDireita(cell) { return cell.nextElementSibling; }
+        function obterCelulaEsquerda(cell) { return cell.previousElementSibling; }
+        function obterCelulaAbaixo(cell) {
+            const cells = Array.from(document.querySelectorAll(".cell"));
+            const index = cells.indexOf(cell);
+            return cells[index + boardSizes[(faseAtual - 1) % boardSizes.length].cols];
+        }
+        
+        function obterCelulaAcima(cell) {
+            const cells = Array.from(document.querySelectorAll(".cell"));
+            const index = cells.indexOf(cell);
+            return cells[index - boardSizes[(faseAtual - 1) % boardSizes.length].cols];
+        }
+
+        function explodirBomba(cell) {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const index = cells.indexOf(cell);
+    const { rows, cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+    const centerRow = Math.floor(index / cols);
+    const centerCol = index % cols;
+
+    // Limpa a área 5x5 ao redor da bomba
+    for (let rowOffset = -2; rowOffset <= 2; rowOffset++) {
+        for (let colOffset = -2; colOffset <= 2; colOffset++) {
+            const targetRow = centerRow + rowOffset;
+            const targetCol = centerCol + colOffset;
+
+            if (targetRow >= 0 && targetRow < rows && targetCol >= 0 && targetCol < cols) {
+                const targetIndex = targetRow * cols + targetCol;
+                const targetCell = cells[targetIndex];
+
+                // Adiciona o efeito de explosão
+                targetCell.classList.add("explosion");
+                setTimeout(() => targetCell.classList.remove("explosion"), 500); // Remove a classe após a animação
+
+                if (targetCell.textContent === presente) {
+                    verificarEAtualizarPresente(targetIndex); // Atualiza o objetivo se o presente for destruído
+                }
+                targetCell.textContent = ""; // Limpa a célula
+            }
+        }
+    }
+
+    descerFrutas(); // Preenche os espaços vazios após a explosão
+    verificarCombinacao(); // Verifica combinações após a explosão
+}
+
+function removerLinhaCompleta(cell) {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const index = cells.indexOf(cell);
+    const { cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+    const rowStart = Math.floor(index / cols) * cols;
+
+    for (let i = rowStart; i < rowStart + cols; i++) {
+        if (cells[i].textContent === presente) {
+            verificarEAtualizarPresente(i); // Atualiza o objetivo se o presente for destruído
+        }
+        cells[i].textContent = ""; // Remove cada célula da linha
+    }
+    cell.textContent = ""; // Remove a seta horizontal após uso
+    descerFrutas(); // Preenche os espaços vazios
+    verificarCombinacao(); // Verifica combinações após a linha ser removida
+}
+
+function removerColunaCompleta(cell) {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const index = cells.indexOf(cell);
+    const { rows, cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+    const colStart = index % cols;
+
+    for (let i = colStart; i < rows * cols; i += cols) {
+        if (cells[i].textContent === presente) {
+            verificarEAtualizarPresente(i); // Atualiza o objetivo se o presente for destruído
+        }
+        cells[i].textContent = ""; // Remove cada célula da coluna
+    }
+    cell.textContent = ""; // Remove a seta vertical após uso
+    descerFrutas(); // Preenche os espaços vazios
+    verificarCombinacao(); // Verifica combinações após a coluna ser removida
+}
+
+async function ativarCombinacoesAutomaticas() {
+    let houveCombinacao;
+    do {
+        houveCombinacao = verificarCombinacao();
+        if (houveCombinacao) {
+            await descerFrutas();
+        }
+    } while (houveCombinacao);
+}
+
+function trocarPecas(cell1, cell2) {
+    if (cell1 && cell2) {
+        const temp = cell1.textContent;
+        cell1.textContent = cell2.textContent;
+        cell2.textContent = temp;
+
+        // Ativar combinações automaticamente após a troca
+        ativarCombinacoesAutomaticas();
+    }
+}
+
+        async function descerFrutas() {
+    const { rows, cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+    const board = Array.from(document.querySelectorAll(".cell"));
+    let houveMudanca = false;
+
+    for (let col = 0; col < cols; col++) {
+        for (let row = rows - 1; row >= 0; row--) {
+            const index = row * cols + col;
+
+            if (board[index].textContent === "") {
+                // Encontrou um espaço vazio, procura acima por uma fruta para "descer"
+                for (let r = row - 1; r >= 0; r--) {
+                    const aboveIndex = r * cols + col;
+
+                    if (board[aboveIndex].textContent !== "") {
+                        // Move a fruta para o espaço vazio com o efeito de queda
+                        board[index].textContent = board[aboveIndex].textContent;
+                        board[aboveIndex].textContent = "";
+
+                        // Adiciona a classe para efeito de queda e espera um pouco para a próxima "queda"
+                        board[index].classList.add("fall");
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        board[index].classList.remove("fall");
+                        houveMudanca = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Após mover todas as frutas, preenche os espaços vazios na parte superior da coluna com novas frutas
+        for (let row = 0; row < rows; row++) {
+            const index = row * cols + col;
+
+            if (board[index].textContent === "") {
+                board[index].textContent = gerarFrutaAleatoria();
+                board[index].classList.add("fall");
+                await new Promise(resolve => setTimeout(resolve, 100));
+                board[index].classList.remove("fall");
+                houveMudanca = true;
+            }
+        }
+    }
+
+    // Após descer todas as frutas, verifica combinações novamente se houve mudança
+    if (houveMudanca) {
+        verificarCombinacao();
+    }
+}
+
+        function verificarCombinacao() {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const { rows, cols } = boardSizes[(faseAtual - 1) % boardSizes.length];
+    let houveCombinacao = false;
+
+    function quebrarPresenteAdjacente(index) {
+        const adjacentes = [index - 1, index + 1, index - cols, index + cols];
+        adjacentes.forEach(adjIndex => {
+            if (
+                adjIndex >= 0 &&
+                adjIndex < cells.length &&
+                Math.abs((index % cols) - (adjIndex % cols)) <= 1 && // Garante que está na mesma linha ou coluna
+                cells[adjIndex].textContent === presente
+            ) {
+                cells[adjIndex].textContent = "";
+                presentesQuebrados++;
+                verificarObjetivo();
+            }
+        });
+    }
+
+    for (let row = 0; row < rows - 1; row++) {
+        for (let col = 0; col < cols - 1; col++) {
+            const index = row * cols + col;
+            const cell = cells[index];
+
+            if (
+                cell.textContent !== "" &&
+                cell.textContent === cells[index + 1].textContent &&
+                cell.textContent === cells[index + cols].textContent &&
+                cell.textContent === cells[index + cols + 1].textContent
+            ) {
+                houveCombinacao = true;
+                cell.textContent = especiais.bomba;
+
+                [cell, cells[index + 1], cells[index + cols], cells[index + cols + 1]].forEach(targetCell => {
+                    targetCell.classList.add("explosion");
+                    setTimeout(() => targetCell.classList.remove("explosion"), 500);
+                });
+
+                cells[index + 1].textContent = "";
+                cells[index + cols].textContent = "";
+                cells[index + cols + 1].textContent = "";
+                quebrarPresenteAdjacente(index);
+                quebrarPresenteAdjacente(index + 1);
+                quebrarPresenteAdjacente(index + cols);
+                quebrarPresenteAdjacente(index + cols + 1);
+            }
+        }
+    }
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols - 3; col++) {
+            const index = row * cols + col;
+            const cell = cells[index];
+            const isPresenteCombination = [index, index + 1, index + 2, index + 3].some(i => cells[i].textContent === presente);
+            if (isPresenteCombination) continue;
+
+            if (
+                cell.textContent !== "" &&
+                cell.textContent === cells[index + 1].textContent &&
+                cell.textContent === cells[index + 2].textContent &&
+                cell.textContent === cells[index + 3].textContent
+            ) {
+                houveCombinacao = true;
+                cell.textContent = especiais.setaHorizontal;
+
+                [cell, cells[index + 1], cells[index + 2], cells[index + 3]].forEach(targetCell => {
+                    targetCell.classList.add("vanish");
+                    setTimeout(() => targetCell.classList.remove("vanish"), 300);
+                });
+
+                cells[index + 1].textContent = "";
+                cells[index + 2].textContent = "";
+                cells[index + 3].textContent = "";
+                quebrarPresenteAdjacente(index);
+                quebrarPresenteAdjacente(index + 1);
+                quebrarPresenteAdjacente(index + 2);
+                quebrarPresenteAdjacente(index + 3);
+            }
+        }
+    }
+
+    for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows - 3; row++) {
+            const index = row * cols + col;
+            const cell = cells[index];
+            const isPresenteCombination = [index, index + cols, index + 2 * cols, index + 3 * cols].some(i => cells[i].textContent === presente);
+            if (isPresenteCombination) continue;
+
+            if (
+                cell.textContent !== "" &&
+                cell.textContent === cells[index + cols].textContent &&
+                cell.textContent === cells[index + 2 * cols].textContent &&
+                cell.textContent === cells[index + 3 * cols].textContent
+            ) {
+                houveCombinacao = true;
+                cell.textContent = especiais.setaVertical;
+
+                [cell, cells[index + cols], cells[index + 2 * cols], cells[index + 3 * cols]].forEach(targetCell => {
+                    targetCell.classList.add("vanish");
+                    setTimeout(() => targetCell.classList.remove("vanish"), 300);
+                });
+
+                cells[index + cols].textContent = "";
+                cells[index + 2 * cols].textContent = "";
+                cells[index + 3 * cols].textContent = "";
+                quebrarPresenteAdjacente(index);
+                quebrarPresenteAdjacente(index + cols);
+                quebrarPresenteAdjacente(index + 2 * cols);
+                quebrarPresenteAdjacente(index + 3 * cols);
+            }
+        }
+    }
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols - 2; col++) {
+            const index = row * cols + col;
+            const cell = cells[index];
+            const isPresenteCombination = [index, index + 1, index + 2].some(i => cells[i].textContent === presente);
+            if (isPresenteCombination) continue;
+
+            if (
+                cell.textContent !== "" &&
+                cell.textContent === cells[index + 1].textContent &&
+                cell.textContent === cells[index + 2].textContent
+            ) {
+                houveCombinacao = true;
+
+                [cell, cells[index + 1], cells[index + 2]].forEach(targetCell => {
+                    targetCell.classList.add("vanish");
+                    setTimeout(() => targetCell.classList.remove("vanish"), 300);
+                });
+
+                cell.textContent = "";
+                cells[index + 1].textContent = "";
+                cells[index + 2].textContent = "";
+                quebrarPresenteAdjacente(index);
+                quebrarPresenteAdjacente(index + 1);
+                quebrarPresenteAdjacente(index + 2);
+            }
+        }
+    }
+
+    for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows - 2; row++) {
+            const index = row * cols + col;
+            const cell = cells[index];
+            const isPresenteCombination = [index, index + cols, index + 2 * cols].some(i => cells[i].textContent === presente);
+            if (isPresenteCombination) continue;
+
+            if (
+                cell.textContent !== "" &&
+                cell.textContent === cells[index + cols].textContent &&
+                cell.textContent === cells[index + 2 * cols].textContent
+            ) {
+                houveCombinacao = true;
+
+                [cell, cells[index + cols], cells[index + 2 * cols]].forEach(targetCell => {
+                    targetCell.classList.add("vanish");
+                    setTimeout(() => targetCell.classList.remove("vanish"), 300);
+                });
+
+                cell.textContent = "";
+                cells[index + cols].textContent = "";
+                cells[index + 2 * cols].textContent = "";
+                quebrarPresenteAdjacente(index);
+                quebrarPresenteAdjacente(index + cols);
+                quebrarPresenteAdjacente(index + 2 * cols);
+            }
+        }
+    }
+
+    if (houveCombinacao) {
+        descerFrutas().then(() => verificarCombinacao());
+    }
+}
+
+function verificarObjetivo() {
+    const objetivoDiv = document.getElementById("objective");
+    objetivoDiv.textContent = `Objetivo: Quebre ${objetivoPresentes - presentesQuebrados} 🎁`;
+
+    console.log("Objetivo atual:", objetivoPresentes, "Presentes quebrados:", presentesQuebrados); // Log para depuração
+
+    if (presentesQuebrados >= objetivoPresentes) {
+        alert(`Parabéns! Você completou a fase ${faseAtual}!`);
+        avancarFase();
+    }
+}
+
+function verificarEAtualizarPresente(index) {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    if (cells[index].textContent === presente) {
+        cells[index].textContent = ""; // Remove o presente
+        atualizarObjetivo(); // Atualiza o objetivo
+        console.log("Presente quebrado no índice:", index); // Log para depuração
+    }
+}
+
+function atualizarObjetivo() {
+    presentesQuebrados++;
+    document.getElementById("objective").textContent = `Objetivo: Quebre ${objetivoPresentes - presentesQuebrados} 🎁`;
+    
+    if (presentesQuebrados >= objetivoPresentes) {
+        alert(`Parabéns! Você completou a fase ${faseAtual}!`);
+        avancarFase();
+    }
+}
+
+        function reiniciarFase() {
+    if (faseAtual >= 20) {
+        movimentos = 5; // 5 movimentos a partir da fase 20
+    } else if (faseAtual >= 12) {
+        movimentos = 6; // 6 movimentos a partir da fase 12
+    } else if (faseAtual >= 6) {
+        movimentos = 8; // 8 movimentos a partir da fase 6
+    } else {
+        movimentos = 10; // 10 movimentos para fases anteriores
+    }
+
+    presentesQuebrados = 0;
+    criarTabuleiro(); // Cria o tabuleiro novamente
+    verificarObjetivo(); // Atualiza o contador de objetivos
+    atualizarStatus(); // Atualiza o status
+    document.getElementById("play-button").disabled = false;
+}
+
+function avancarFase() {
+    faseAtual++;
+
+    // Definir o número de movimentos com base na fase atual
+    if (faseAtual >= 20) {
+        movimentos = 5; // 5 movimentos a partir da fase 20
+    } else if (faseAtual >= 12) {
+        movimentos = 6; // 6 movimentos a partir da fase 12
+    } else if (faseAtual >= 6) {
+        movimentos = 8; // 8 movimentos a partir da fase 6
+    } else {
+        movimentos = 10; // 10 movimentos para fases anteriores
+    }
+
+    // Aumentar gradualmente o número de presentes a serem quebrados conforme as fases avançam
+    if (faseAtual >= 20) {
+        objetivoPresentes = 10; // Aumenta para 10 a partir da fase 20
+    } else if (faseAtual >= 15) {
+        objetivoPresentes = 8; // Aumenta para 8 a partir da fase 15
+    } else if (faseAtual >= 10) {
+        objetivoPresentes = 6; // Aumenta para 6 a partir da fase 10
+    } else if (faseAtual >= 5) {
+        objetivoPresentes = 5; // Aumenta para 5 a partir da fase 5
+    } else {
+        objetivoPresentes = 4; // Objetivo inicial
+    }
+
+    presentesQuebrados = 0;
+    criarTabuleiro(); // Cria o tabuleiro para a nova fase
+    verificarObjetivo(); // Atualiza o contador de objetivos para exibir o valor correto no início
+    atualizarStatus(); // Atualiza o status de movimentos e vidas
+    document.getElementById("play-button").disabled = false;
+}
+
+        document.getElementById("play-button").addEventListener("click", () => {
+            criarTabuleiro();
+            document.getElementById("play-button").disabled = true;
+        });
+
+        atualizarStatus();
+        criarTabuleiro();
+    </script>
+</body>
+</html>
