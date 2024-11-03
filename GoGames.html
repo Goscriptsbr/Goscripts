@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Jogos</title>
+    <style>
+        /* Estilos gerais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+         body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: black;
+            color: #333;
+        }
+
+        header {
+            width: 100%;
+            position: relative;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        header img {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: cover;
+            filter: brightness(70%);
+        }
+
+        header h1 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .games-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            width: 250px;
+            height: 150px;
+            background-color: #fff;
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            color: white;
+            overflow: hidden;
+            border: 0.5px solid blue;
+            background: linear-gradient(60deg, blue, black, blue);
+            background-size: 200% 200%;
+            animation: glowing-border 5s ease-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes glowing-border {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .game-container h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            z-index: 1;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: 1px solid blue;
+            background: linear-gradient(90deg, black, blue, black);
+            background-size: 200% 200%;
+            animation: glowing-border 3s linear infinite;
+            z-index: 1;
+        }
+
+        button:hover {
+            background-color: #388e3c;
+        }
+
+        /* Estilo do ícone de chat */
+        .chat-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #4c8bf5;
+            color: #fff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            border: 2px solid blue;
+        }
+
+        /* Janela de chat */
+        .chat-window {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* Conteúdo do chat */
+        .chat-header {
+            background-color: #4c8bf5;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background-color: #f0f2f5;
+        }
+
+        .user-message,
+        .friend-message {
+            max-width: 75%;
+            padding: 10px;
+            border-radius: 10px;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #4c8bf5;
+            color: white;
+        }
+
+        .friend-message {
+            align-self: flex-start;
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .input-container {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        #sendButton {
+            padding: 10px 15px;
+            background-color: #4c8bf5;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="Imagem de capa">
+        <h1></h1>
+    </header>
+
+    <section class="games-section">
+        <div class="game-container">
+            <h2>Puzzle</h2>
+            <button onclick="jogar('https://goscripts.online/gopuzzle')">Jogar</button>
+        </div>
+        <div class="game-container">
+            <h2>Space Z</h2>
+            <button onclick="jogar('https://keskara.neocities.org/Jogo/Jogos')">Jogar</button>
+        </div>
+        <div class="game-container">
+            <h2>Truco</h2>
+            <button onclick="jogar('https://gozgames.neocities.org/Truco')">Jogar</button>
+        </div>
+        <div class="game-container">
+            <h2>Luck Machine</h2>
+            <button onclick="jogar('https://gozgames.neocities.org/LuckyMachine')">Jogar</button>
+        </div>
+        <div class="game-container">
+            <h2>Foguetinho</h2>
+            <button onclick="jogar('https://gozgames.neocities.org/Foguetinho')">Jogar</button>
+        </div>
+    </section>
+
+    <!-- Ícone flutuante de chat -->
+    <div class="chat-icon" onclick="toggleChat()">💬</div>
+
+    <!-- Janela de chat -->
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">CHAT GOSCRIPTS</div>
+        
+        <div id="messages" class="messages"></div>
+
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Digite sua mensagem..." />
+            <button id="sendButton">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        function jogar(link) {
+            window.location.href = link;
+        }
+
+        // Função para alternar a exibição da janela de chat
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        window.onload = function() {
+            // Lógica do chat WebSocket
+            const socket = new WebSocket('wss://crimson-onyx-statistic.glitch.me');
+            const messagesDiv = document.getElementById('messages');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            let userName = prompt("Por favor, insira seu nome para o chat:");
+            let lastSentMessage = ""; // Variável para armazenar a última mensagem enviada
+
+            socket.onopen = () => {
+                console.log('Conectado ao servidor WebSocket');
+            };
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                // Verifica se a mensagem recebida é diferente da última mensagem enviada
+                if (data.sender !== userName || data.message !== lastSentMessage) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add(data.sender === userName ? 'user-message' : 'friend-message');
+                    messageDiv.textContent = `${data.sender}: ${data.message}`;
+                    messagesDiv.appendChild(messageDiv);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            };
+
+            sendButton.addEventListener('click', () => {
+                const message = messageInput.value.trim();
+                if (message) {
+                    const data = { sender: userName, message: message };
+                    lastSentMessage = message; // Armazena a última mensagem enviada
+                    socket.send(JSON.stringify(data));
+
+                    // Adiciona a mensagem do usuário à tela e limpa o campo de entrada
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('user-message');
+                    messageDiv.textContent = `${userName}: ${message}`;
+                    messagesDiv.appendChild(messageDiv);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+                    // Limpa o campo de entrada após o envio
+                    messageInput.value = '';
+                }
+            });
+
+            // Permite envio de mensagem com a tecla Enter
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendButton.click();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
