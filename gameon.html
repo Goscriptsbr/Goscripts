@@ -26,9 +26,14 @@
     .player {
       width: 6%;
       height: 6%;
-      background-color: red;
       position: absolute;
       border-radius: 50%;
+    }
+    .player-current {
+      background-color: red;
+    }
+    .player-other {
+      background-color: blue;
     }
     .controls {
       display: flex;
@@ -54,7 +59,7 @@
 </head>
 <body>
   <div id="gameArea">
-    <div id="player1" class="player"></div>
+    <div id="player1" class="player player-current"></div>
   </div>
   
   <div class="controls">
@@ -113,7 +118,7 @@
       document.getElementById('left').addEventListener('click', moveLeft);
       document.getElementById('right').addEventListener('click', moveRight);
 
-      // Função para receber atualizações de posição em tempo real
+      // Código para receber atualizações em tempo real
       supabase
         .from('game_state')
         .on('UPDATE', (payload) => {
@@ -124,8 +129,7 @@
             if (!otherPlayer) {
               otherPlayer = document.createElement('div');
               otherPlayer.id = `player-${data.player_id}`;
-              otherPlayer.className = 'player';
-              otherPlayer.style.backgroundColor = 'blue';
+              otherPlayer.className = 'player player-other';
               document.getElementById('gameArea').appendChild(otherPlayer);
             }
             otherPlayer.style.left = `${data.position_x}%`;
