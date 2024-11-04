@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Sinuca</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #004400;
+        }
+        canvas {
+            background-color: #006600;
+            border: 5px solid #8B4513;
+            border-radius: 14px;
+        }
+        button {
+    display: none; /* O botão começa oculto */
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background-color: #006600;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+        #score {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 20px;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <button id="restartButton">Reiniciar</button>
+    <div id="score">Pontuação: 0</div>
+    
+    <!-- Biblioteca do Supabase -->
+<script src="https://unpkg.com/@supabase/supabase-js@latest"></script>
+    
+    <script>
+    // Variáveis globais
+const canvas = document.getElementById('gameCanvas');
+const context = canvas.getContext('2d');
+const tableHeight = Math.min(window.innerHeight, 600);
+const tableWidth = tableHeight / 2;
+canvas.width = tableWidth;
+canvas.height = tableHeight;
+
+const scoreDisplay = document.getElementById('score');
+let score = 0;
+let turn = false; // Define a variável 'turn' e inicializa como 'false'
+
+const restartButton = document.getElementById('restartButton');
+restartButton.addEventListener('click', restartGame);
+
+    const ballRadius = 9;
+    const balls = [
+        { x: tableWidth / 2, y: tableHeight / 4, dx: 0, dy: 0, color: 'white' },
+        { x: tableWidth / 4, y: tableHeight / 2, dx: 0, dy: 0, color: 'yellow' },
+        { x: tableWidth / 2, y: tableHeight / 2 + 20, dx: 0, dy: 0, color: 'blue' },
+        { x: tableWidth / 2 + 30, y: tableHeight / 2 - 20, dx: 0, dy: 0, color: 'red' },
+        { x: tableWidth / 2 - 30, y: tableHeight / 2 + 40, dx: 0, dy: 0, color: 'purple' },
+        { x: tableWidth / 2 + 60, y: tableHeight / 2 - 40, dx: 0, dy: 0, color: 'orange' },
+        { x: tableWidth / 2, y: tableHeight / 2 + 60, dx: 0, dy: 0, color: 'green' },
+        { x: tableWidth / 2 - 30, y: tableHeight / 2 - 60, dx: 0, dy: 0, color: 'black' }
+    ];
+    const pockets = [
+        { x: ballRadius * 0.7, y: ballRadius * 0.5 },
+        { x: ballRadius * 0.5, y: tableHeight / 2 },
+        { x: ballRadius * 0.7, y: tableHeight - ballRadius * 0.5 },
+        { x: tableWidth - ballRadius * 0.7, y: ballRadius * 0.5 },
+        { x: tableWidth - ballRadius * 0.5, y: tableHeight / 2 },
+        { x: tableWidth - ballRadius * 0.7, y: tableHeight - ballRadius * 0.5 }
+    ];
+    const originalPositions = balls.map(ball => ({ x: ball.x, y: ball.y }));
+
+    let cue = { x: balls[0].x, y: balls[0].y, angle: 0, power: 0 };
+    let aiming = false;
+
+    function drawBall(ball) {
+        context.beginPath();
+        context.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2);
+        context.fillStyle = ball.color;
+        context.fill();
+        context.closePath();
+    }
+
+    function updateBall(ball) {
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        if (ball.x + ball.dx > canvas.width - ballRadius || ball.x + ball.dx < ballRadius) {
+            ball.dx = -ball.dx;
+        }
+        if (ball.y + ball.dy > canvas.height - ballRadius || ball.y + ball.dy < ballRadius) {
+            ball.dy = -ball.dy;
+        }
+
+        ball.dx *= 0.99;
+        ball.dy *= 0.99;
+
+        if (Math.abs(ball.dx) < 0.01) ball.dx = 0;
+        if (Math.abs(ball.dy) < 0.01) ball.dy = 0;
+    }
+    
+    // Inicialize o Supabase
+const SUPABASE_URL = 'https://jkcdogakjwcpezuaqgki.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprY2RvZ2FrandjcGV6dWFxZ2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA2ODc2OTksImV4cCI6MjA0NjI2MzY5OX0.MxzcUE3s8Cyty6Y8IP4O-1Tzx57RVnZi1VDNSixswQE';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const playerName = prompt("Digite seu nome:");
+loadGameData(playerName).then(data => {
+    if (data) {
+        score = data.score;
+        // Carregar outras configurações do jogo com base nos dados
+    }
+});
+
+async function updatePlayerData(playerName, score, turn, ballPositions) {
+    const { data, error } = await supabase
+        .from('sinuca_game')
+        .upsert({ player_name: playerName, score: score, turn: turn, ball_positions: ballPositions });
+
+    if (error) {
+        console.error("Erro ao atualizar dados do jogador:", error);
+    } else {
+        console.log("Dados do jogador atualizados:", data);
+    }
+}
+
+async function loadGameData(playerName) {
+    const { data, error } = await supabase
+        .from('sinuca_game')
+        .select('*')
+        .eq('player_name', playerName);
+
+    if (error) {
+        console.error("Erro ao carregar dados do jogo:", error);
+        return null;
+    }
+
+    // Verifica se há um único registro
+    if (data.length === 1) {
+        console.log("Dados do jogo carregados:", data[0]);
+        return data[0];
+    } else if (data.length === 0) {
+        console.warn("Nenhum dado encontrado para o jogador:", playerName);
+        // Criar um novo registro para o jogador
+        const { data: newData, error: insertError } = await supabase
+            .from('sinuca_game')
+            .insert([{ player_name: playerName, score: 0, turn: false, ball_positions: [], last_updated: new Date() }])
+            .single();
+
+        if (insertError) {
+            console.error("Erro ao inserir novo jogador:", insertError);
+            return null;
+        }
+        console.log("Novo jogador criado:", newData);
+        return newData;
+    } else {
+        console.error("Múltiplos registros encontrados para o jogador:", playerName);
+        return null; // Ou escolha o primeiro, dependendo da lógica do jogo
+    }
+}
+
+async function updateTurn(playerName, isTurn) {
+    const { data, error } = await supabase
+        .from('sinuca_game')
+        .update({ turn: isTurn })
+        .eq('player_name', playerName);
+
+    if (error) {
+        console.error("Erro ao atualizar turno do jogador:", error);
+    } else {
+        console.log("Turno do jogador atualizado:", data);
+    }
+}
+
+async function syncBallPositions(ballPositions) {
+    const { data,  error} = await supabase
+        .from('sinuca_game')
+        .update({ ball_positions: ballPositions })
+        .eq('id', 1); // Supondo que você use o ID 1 para o jogo em andamento
+
+    if (error) {
+        console.error("Erro ao sincronizar posições das bolas:", error);
+    } else {
+        console.log("Posições das bolas sincronizadas:", data);
+    }
+}
+
+    function drawCue() {
+        context.beginPath();
+        context.moveTo(balls[0].x, balls[0].y);
+        const cueX = balls[0].x - (cue.power * 100) * Math.cos(cue.angle);
+        const cueY = balls[0].y - (cue.power * 100) * Math.sin(cue.angle);
+        context.lineTo(cueX, cueY);
+        context.strokeStyle = 'brown';
+        context.lineWidth = 2;
+        context.stroke();
+        context.closePath();
+    }
+
+    function drawAimLine() {
+        context.beginPath();
+        context.moveTo(balls[0].x, balls[0].y);
+        const aimX = balls[0].x + 480 * Math.cos(cue.angle);
+        const aimY = balls[0].y + 480 * Math.sin(cue.angle);
+        context.lineTo(aimX, aimY);
+        context.strokeStyle = 'gray';
+        context.lineWidth = 2;
+        context.stroke();
+        context.closePath();
+    }
+
+    function applyCue() {
+    if (areAllBallsStopped()) {
+        balls[0].dx = cue.power * 10 * Math.cos(cue.angle);
+        balls[0].dy = cue.power * 10 * Math.sin(cue.angle);
+        cue.power = 0;
+        
+        // Finalize o turno do jogador atual
+        updateTurn(playerName, false); 
+        
+        // Inicie o turno do próximo jogador
+        const nextPlayerName = "NomeDoProximoJogador"; // Substitua pelo nome do próximo jogador
+        updateTurn(nextPlayerName, true);
+    }
+}
+
+    function detectCollision(ball1, ball2) {
+        return Math.hypot(ball1.x - ball2.x, ball1.y - ball2.y) <= 2 * ballRadius;
+    }
+
+    function handleBallCollision(ball1, ball2) {
+        const dx = ball2.x - ball1.x;
+        const dy = ball2.y - ball1.y;
+        const distance = Math.hypot(dx, dy);
+
+        // Corrigir a sobreposição
+        const overlap = 2 * ballRadius - distance;
+        const correctionX = overlap * (dx / distance) / 2;
+        const correctionY = overlap * (dy / distance) / 2;
+
+        ball1.x -= correctionX;
+        ball1.y -= correctionY;
+        ball2.x += correctionX;
+        ball2.y += correctionY;
+
+        // Calcular a nova velocidade
+        const collisionAngle = Math.atan2(dy, dx);
+
+        const speed1 = Math.hypot(ball1.dx, ball1.dy);
+        const speed2 = Math.hypot(ball2.dx, ball2.dy);
+
+        const direction1 = Math.atan2(ball1.dy, ball1.dx);
+        const direction2 = Math.atan2(ball2.dy, ball2.dx);
+
+        const velocityX1 = speed1 * Math.cos(direction1 - collisionAngle);
+        const velocityY1 = speed1 * Math.sin(direction1 - collisionAngle);
+        const velocityX2 = speed2 * Math.cos(direction2 - collisionAngle);
+        const velocityY2 = speed2 * Math.sin(direction2 - collisionAngle);
+
+        const finalVelocityX1 = ((velocityX1 * (1 - 1) + 2 * 1 * velocityX2) / (1 + 1));
+        const finalVelocityX2 = ((velocityX2 * (1 - 1) + 2 * 1 * velocityX1) / (1 + 1));
+
+        ball1.dx = Math.cos(collisionAngle) * finalVelocityX1 + Math.cos(collisionAngle + Math.PI / 2) * velocityY1;
+        ball1.dy = Math.sin(collisionAngle) * finalVelocityX1 + Math.sin(collisionAngle + Math.PI / 2) * velocityY1;
+        ball2.dx = Math.cos(collisionAngle) * finalVelocityX2 + Math.cos(collisionAngle + Math.PI / 2) * velocityY2;
+        ball2.dy = Math.sin(collisionAngle) * finalVelocityX2 + Math.sin(collisionAngle + Math.PI / 2) * velocityY2;
+    }
+
+    function draw() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    drawPockets();
+    
+    balls.forEach(ball => {
+        drawBall(ball);
+        updateBall(ball);
+
+        // Verifica se a bola foi encaçapada
+        const pocketIndex = checkPocketCollision(ball);
+        if (pocketIndex !== -1) {
+            ball.x = -100; // Move a bola para fora do canvas (simulação de encaçapamento)
+            ball.y = -100;
+            ball.dx = 0;
+            ball.dy = 0;
+            handleScore(ball);
+
+            // Se for a bola branca, resetar ela para a posição inicial
+            if (ball.color === 'white') {
+                resetWhiteBall();
+            }
+        }
+    });
+
+    // Verificar se todas as bolas coloridas foram encaçapadas usando checkWin
+    if (checkWin()) {
+        console.log('Todas as bolas coloridas foram encaçapadas. Exibindo botão de reinício.');
+        restartButton.style.display = 'block'; // Exibe o botão de reinício
+        return; // Para interromper a animação quando todas as bolas forem encaçapadas
+    }
+
+    // Verificar colisões entre as bolas
+    checkBallCollision();
+
+    if (aiming) {
+        drawCue();
+        drawAimLine(); // Desenha a linha de mira
+    }
+
+    requestAnimationFrame(draw); // Continua a animação se o jogo ainda não foi vencido
+}
+
+    function drawPockets() {
+        pockets.forEach(pocket => {
+            context.beginPath();
+            context.arc(pocket.x, pocket.y, ballRadius * 1.5, 0, Math.PI * 2);
+            context.fillStyle = '#000';
+            context.fill();
+            context.closePath();
+        });
+    }
+
+    function checkPocketCollision(ball) {
+        for (let i = 0; i < pockets.length; i++) {
+            const pocket = pockets[i];
+            // Verifica se a distância entre a bola e a caçapa é menor que o novo raio da caçapa
+            if (Math.hypot(ball.x - pocket.x, ball.y - pocket.y) < ballRadius * 1.5) {
+                return i; // Retorna o índice da caçapa
+            }
+        }
+        return -1; // Retorna -1 se nenhuma caçapa for atingida
+    }
+
+    function checkBallCollision() {
+        for (let i = 0; i < balls.length; i++) {
+            for (let j = i + 1; j < balls.length; j++) {
+                if (detectCollision(balls[i], balls[j])) {
+                    handleBallCollision(balls[i], balls[j]);
+                }
+            }
+        }
+    }
+
+    function areAllBallsStopped() {
+        return balls.every(ball => Math.hypot(ball.dx, ball.dy) < 0.01);
+    }
+
+    function checkWin() {
+    // Array com as cores das 7 bolas coloridas
+    const coloredBalls = ['yellow', 'blue', 'red', 'purple', 'orange', 'green', 'black'];
+
+    // Filtra as bolas coloridas e verifica se todas foram encaçapadas (fora do canvas)
+    const colorBallsInPocket = balls.filter(ball => coloredBalls.includes(ball.color) && ball.x < -50 && ball.y < -50);
+    
+    // Verifica se todas as 7 bolas coloridas foram encaçapadas
+    return colorBallsInPocket.length === 7;
+}
+
+    function resetWhiteBall() {
+        balls[0].x = tableWidth / 2;
+        balls[0].y = tableHeight / 4;
+        balls[0].dx = 0;
+        balls[0].dy = 0;
+    }
+
+    function restartGame() {
+    score = 0; // Reseta a pontuação
+    scoreDisplay.textContent = `Pontuação: ${score}`;
+    
+    // Restaura as posições originais das bolas
+    balls.forEach((ball, index) => {
+        ball.x = originalPositions[index].x;
+        ball.y = originalPositions[index].y;
+        ball.dx = 0;
+        ball.dy = 0;
+    });
+
+    restartButton.style.display = 'none'; // Oculta o botão de reinício
+    draw(); // Reinicia a animação do jogo
+}
+
+    // Eventos do mouse e touch
+    function onTouchStart(e) {
+        aiming = true;
+        updateCue(e.touches[0]);
+    }
+
+    function onTouchMove(e) {
+        if (aiming) updateCue(e.touches[0]);
+    }
+
+    function onTouchEnd(e) {
+        if (aiming) {
+            applyCue();
+            aiming = false;
+        }
+    }
+
+    function onMouseMove(e) {
+        if (aiming) updateCue(e);
+    }
+
+    function onMouseDown(e) {
+        aiming = true;
+        updateCue(e);
+    }
+
+    function onMouseUp(e) {
+        if (aiming) {
+            applyCue();
+            aiming = false;
+        }
+    }
+    
+    function handleScore(ball) {
+    if (ball.color === 'white') {
+        resetWhiteBall();
+        score -= 5; // Penalidade para a bola branca
+    } else {
+        score += 10; // Pontuação para bolas coloridas encaçapadas
+    }
+
+    // Atualiza a exibição da pontuação
+    scoreDisplay.textContent = `Pontuação: ${score}`;
+    
+    // Atualize os dados do jogador no Supabase
+    updatePlayerData(playerName, score, turn, balls.map(ball => ({ x: ball.x, y: ball.y })));
+}
+
+    function updateCue(e) {
+        const rect = canvas.getBoundingClientRect();
+        const cueX = e.clientX - rect.left;
+        const cueY = e.clientY - rect.top;
+        const dx = balls[0].x - cueX;
+        const dy = balls[0].y - cueY;
+        cue.angle = Math.atan2(dy, dx);
+        cue.power = Math.min(Math.hypot(dx, dy) / 100, 1);
+    }
+
+    canvas.addEventListener('touchstart', onTouchStart);
+    canvas.addEventListener('touchmove', onTouchMove);
+    canvas.addEventListener('touchend', onTouchEnd);
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mouseup', onMouseUp);
+
+    draw(); // Inicia o jogo
+</script>
+</body>
+</html>
