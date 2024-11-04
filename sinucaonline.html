@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -262,7 +262,7 @@ async function checkTurnAndSync() {
 }
 
 // Configura um intervalo para verificar o turno e sincronizar
-setInterval(checkTurnAndSync, 2000); // Checa a cada 2 segundos
+setInterval(checkTurnAndSync, 1000); // Checa a cada 2 segundos
 
     function drawCue() {
         context.beginPath();
@@ -293,12 +293,16 @@ setInterval(checkTurnAndSync, 2000); // Checa a cada 2 segundos
         balls[0].dx = cue.power * 10 * Math.cos(cue.angle);
         balls[0].dy = cue.power * 10 * Math.sin(cue.angle);
         cue.power = 0;
-        
+
+        // Sincronizar posições das bolas no banco de dados após a jogada
+        syncBallPositions(balls.map(ball => ({ x: ball.x, y: ball.y })));
+
         // Finalize o turno do jogador atual
         updateTurn(playerName, false); 
         
         // Inicie o turno do próximo jogador
-        const nextPlayerName = "NomeDoProximoJogador"; // Substitua pelo nome do próximo jogador
+        const nextPlayerName = (playerName === "Jogador1") ? "Jogador2" : "Jogador1";
+updateTurn(nextPlayerName, true);
         updateTurn(nextPlayerName, true);
     }
 }
