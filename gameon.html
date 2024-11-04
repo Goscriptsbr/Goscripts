@@ -150,7 +150,7 @@
                 const lastUpdated = new Date(player.last_updated);
                 const timeDiff = (currentTime - lastUpdated) / 1000;
 
-                if (timeDiff < 10) { // Considera o jogador ativo se atualizado nos últimos 10 segundos
+                if (timeDiff < 30) { // Considera o jogador ativo se atualizado nos últimos 10 segundos
                   activePlayerCount++;
                   if (player.player_id !== playerId) {
                     let otherPlayer = activePlayers[player.player_id];
@@ -196,7 +196,7 @@
       }
 
       // Chama a função a cada 1 segundo para atualizar as posições dos jogadores
-      setInterval(fetchPlayersPositions, 1000);
+      setInterval(fetchPlayersPositions, 200);
     });
   </script>
 </body>
