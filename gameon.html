@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo Online com Supabase</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+    }
+    #gameArea {
+      width: 90vw;
+      height: 90vw;
+      max-width: 500px;
+      max-height: 500px;
+      border: 2px solid black;
+      position: relative;
+      background-color: #fff;
+    }
+    .player {
+      width: 6%;
+      height: 6%;
+      background-color: red;
+      position: absolute;
+      border-radius: 50%;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+      width: 90vw;
+      max-width: 500px;
+    }
+    .button {
+      width: 60px;
+      height: 60px;
+      background-color: #333;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      user-select: none;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameArea">
+    <div id="player1" class="player"></div>
+  </div>
+  
+  <div class="controls">
+    <div class="button" id="up">⬆️</div>
+    <div class="button" id="left">⬅️</div>
+    <div class="button" id="down">⬇️</div>
+    <div class="button" id="right">➡️</div>
+  </div>
+
+  <!-- Supabase JS library -->
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  
+  <script>
+    // Aguarda o carregamento do DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      // Configuração do Supabase
+      const SUPABASE_URL = 'https://jkcdogakjwcpezuaqgki.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprY2RvZ2FrandjcGV6dWFxZ2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA2ODc2OTksImV4cCI6MjA0NjI2MzY5OX0.MxzcUE3s8Cyty6Y8IP4O-1Tzx57RVnZi1VDNSixswQE';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // Referência ao elemento do jogador
+      const playerElement = document.getElementById('player1');
+      let playerId = Math.floor(Math.random() * 1000); // ID único para cada jogador
+
+      // Função para atualizar a posição do jogador no Supabase
+      async function updatePlayerPosition(x, y) {
+        const { error } = await supabase
+          .from('game_state')
+          .upsert({ player_id: playerId, position_x: x, position_y: y, last_updated: new Date() });
+
+        if (error) console.error("Erro ao atualizar posição:", error);
+      }
+
+      // Inicializa a posição do jogador no centro do gameArea
+      let posX = 45;
+      let posY = 45;
+      playerElement.style.left = `${posX}%`;
+      playerElement.style.top = `${posY}%`;
+      updatePlayerPosition(posX, posY);
+
+      // Funções de movimento
+      function moveUp() { posY = Math.max(0, posY - 5); updatePosition(); }
+      function moveDown() { posY = Math.min(94, posY + 5); updatePosition(); }
+      function moveLeft() { posX = Math.max(0, posX - 5); updatePosition(); }
+      function moveRight() { posX = Math.min(94, posX + 5); updatePosition(); }
+
+      function updatePosition() {
+        playerElement.style.left = `${posX}%`;
+        playerElement.style.top = `${posY}%`;
+        updatePlayerPosition(posX, posY);
+      }
+
+      // Controles de toque
+      document.getElementById('up').addEventListener('click', moveUp);
+      document.getElementById('down').addEventListener('click', moveDown);
+      document.getElementById('left').addEventListener('click', moveLeft);
+      document.getElementById('right').addEventListener('click', moveRight);
+
+      // Função para receber atualizações de posição em tempo real
+      supabase
+        .from('game_state')
+        .on('UPDATE', (payload) => {
+          const data = payload.new;
+          if (data.player_id !== playerId) {
+            // Atualiza a posição do outro jogador
+            let otherPlayer = document.getElementById(`player-${data.player_id}`);
+            if (!otherPlayer) {
+              otherPlayer = document.createElement('div');
+              otherPlayer.id = `player-${data.player_id}`;
+              otherPlayer.className = 'player';
+              otherPlayer.style.backgroundColor = 'blue';
+              document.getElementById('gameArea').appendChild(otherPlayer);
+            }
+            otherPlayer.style.left = `${data.position_x}%`;
+            otherPlayer.style.top = `${data.position_y}%`;
+          }
+        })
+        .subscribe();
+    });
+  </script>
+</body>
+</html>
