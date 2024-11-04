@@ -167,13 +167,11 @@ async function loadGameData(playerName) {
         return null;
     }
 
-    // Verifica se há um único registro
     if (data.length === 1) {
         console.log("Dados do jogo carregados:", data[0]);
         return data[0];
     } else if (data.length === 0) {
-        console.warn("Nenhum dado encontrado para o jogador:", playerName);
-        // Criar um novo registro para o jogador
+        // Nenhum dado encontrado, criar um novo registro
         const { data: newData, error: insertError } = await supabase
             .from('sinuca_game')
             .insert([{ player_name: playerName, score: 0, turn: false, ball_positions: [], last_updated: new Date() }])
@@ -186,8 +184,9 @@ async function loadGameData(playerName) {
         console.log("Novo jogador criado:", newData);
         return newData;
     } else {
+        // Múltiplos registros encontrados, lidar com o problema
         console.error("Múltiplos registros encontrados para o jogador:", playerName);
-        return null; // Ou escolha o primeiro, dependendo da lógica do jogo
+        return data[0]; // Retornar o primeiro registro encontrado
     }
 }
 
@@ -216,6 +215,54 @@ async function syncBallPositions(ballPositions) {
         console.log("Posições das bolas sincronizadas:", data);
     }
 }
+
+// Adiciona uma função para atualizar as posições das bolas
+async function loadBallPositions() {
+    const { data, error } = await supabase
+        .from('sinuca_game')
+        .select('ball_positions')
+        .eq('player_name', playerName)
+        .single();
+
+    if (error) {
+        console.error("Erro ao carregar posições das bolas:", error);
+        return;
+    }
+    
+    if (data && data.ball_positions) {
+        data.ball_positions.forEach((pos, index) => {
+            balls[index].x = pos.x;
+            balls[index].y = pos.y;
+        });
+        console.log("Posições das bolas atualizadas:", data.ball_positions);
+    }
+}
+
+// Função para verificar o turno e sincronizar as posições
+async function checkTurnAndSync() {
+    const { data, error } = await supabase
+        .from('sinuca_game')
+        .select('turn, ball_positions')
+        .eq('player_name', playerName)
+        .limit(1) // Seleciona apenas o primeiro registro encontrado
+        .single();
+
+    if (error) {
+        console.error("Erro ao verificar turno:", error.message || error);
+        return;
+    }
+
+    if (data) {
+        turn = data.turn;
+
+        if (!turn) {
+            loadBallPositions();
+        }
+    }
+}
+
+// Configura um intervalo para verificar o turno e sincronizar
+setInterval(checkTurnAndSync, 2000); // Checa a cada 2 segundos
 
     function drawCue() {
         context.beginPath();
