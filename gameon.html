@@ -121,7 +121,6 @@
       document.getElementById('left').addEventListener('click', moveLeft);
       document.getElementById('right').addEventListener('click', moveRight);
 
-      // Mapa para rastrear os jogadores já criados
       const activePlayers = {};
 
       // Função para buscar a posição de outros jogadores periodicamente
@@ -134,7 +133,6 @@
             if (error) {
               console.error("Erro ao buscar jogadores:", error);
             } else {
-              // Limpar bolinhas de jogadores inativos (1 minuto sem atualização)
               const currentPlayerIds = data.map(player => player.player_id);
               Object.keys(activePlayers).forEach(id => {
                 if (!currentPlayerIds.includes(Number(id))) {
@@ -146,13 +144,15 @@
                 }
               });
 
-              // Atualizar ou adicionar bolinhas dos jogadores ativos
-              data.forEach(player => {
-                if (player.player_id !== playerId) {
-                  const lastUpdated = new Date(player.last_updated);
-                  const timeDiff = (currentTime - lastUpdated) / 1000;
+              let activePlayerCount = 0;
 
-                  if (timeDiff < 60) { // Remove jogadores inativos (sem atualização por mais de 60 segundos)
+              data.forEach(player => {
+                const lastUpdated = new Date(player.last_updated);
+                const timeDiff = (currentTime - lastUpdated) / 1000;
+
+                if (timeDiff < 10) { // Considera o jogador ativo se atualizado nos últimos 10 segundos
+                  activePlayerCount++;
+                  if (player.player_id !== playerId) {
                     let otherPlayer = activePlayers[player.player_id];
                     if (!otherPlayer) {
                       otherPlayer = document.createElement('div');
@@ -163,18 +163,36 @@
                     }
                     otherPlayer.style.left = `${player.position_x}%`;
                     otherPlayer.style.top = `${player.position_y}%`;
-                  } else {
-                    // Remove a bolinha se o jogador estiver inativo
-                    const inactivePlayer = document.getElementById(`player-${player.player_id}`);
-                    if (inactivePlayer) {
-                      inactivePlayer.remove();
-                      delete activePlayers[player.player_id];
-                    }
+                  }
+                } else {
+                  const inactivePlayer = document.getElementById(`player-${player.player_id}`);
+                  if (inactivePlayer) {
+                    inactivePlayer.remove();
+                    delete activePlayers[player.player_id];
                   }
                 }
               });
+
+              // Limpa a tabela se não houver jogadores ativos além do jogador atual
+              if (activePlayerCount <= 1) {
+                clearInactivePlayers();
+              }
             }
           });
+      }
+
+      // Função para limpar a tabela de jogadores inativos
+      async function clearInactivePlayers() {
+        const { error } = await supabase
+          .from('game_state')
+          .delete()
+          .lt('last_updated', new Date(new Date() - 10 * 1000)); // Limpa entradas mais antigas que 10 segundos
+
+        if (error) {
+          console.error("Erro ao limpar jogadores inativos:", error);
+        } else {
+          console.log("Jogadores inativos limpos.");
+        }
       }
 
       // Chama a função a cada 1 segundo para atualizar as posições dos jogadores
