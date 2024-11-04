@@ -70,32 +70,35 @@
   </div>
 
   <!-- Supabase JS library -->
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.0.0"></script>
   
   <script>
-    // Aguarda o carregamento do DOM
     document.addEventListener("DOMContentLoaded", () => {
-      // Configuração do Supabase
       const SUPABASE_URL = 'https://jkcdogakjwcpezuaqgki.supabase.co';
       const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprY2RvZ2FrandjcGV6dWFxZ2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA2ODc2OTksImV4cCI6MjA0NjI2MzY5OX0.MxzcUE3s8Cyty6Y8IP4O-1Tzx57RVnZi1VDNSixswQE';
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // Referência ao elemento do jogador
       const playerElement = document.getElementById('player1');
-      let playerId = Math.floor(Math.random() * 1000); // ID único para cada jogador
+      const playerId = Math.floor(Math.random() * 1000); // ID único para cada jogador
+      let posX = 45;
+      let posY = 45;
+
+      console.log("Jogador ID:", playerId);
 
       // Função para atualizar a posição do jogador no Supabase
       async function updatePlayerPosition(x, y) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('game_state')
           .upsert({ player_id: playerId, position_x: x, position_y: y, last_updated: new Date() });
 
-        if (error) console.error("Erro ao atualizar posição:", error);
+        if (error) {
+          console.error("Erro ao atualizar posição:", error);
+        } else {
+          console.log("Posição atualizada:", data);
+        }
       }
 
       // Inicializa a posição do jogador no centro do gameArea
-      let posX = 45;
-      let posY = 45;
       playerElement.style.left = `${posX}%`;
       playerElement.style.top = `${posY}%`;
       updatePlayerPosition(posX, posY);
@@ -118,25 +121,34 @@
       document.getElementById('left').addEventListener('click', moveLeft);
       document.getElementById('right').addEventListener('click', moveRight);
 
-      // Código para receber atualizações em tempo real
-      supabase
-        .from('game_state')
-        .on('UPDATE', (payload) => {
-          const data = payload.new;
-          if (data.player_id !== playerId) {
-            // Atualiza a posição do outro jogador
-            let otherPlayer = document.getElementById(`player-${data.player_id}`);
-            if (!otherPlayer) {
-              otherPlayer = document.createElement('div');
-              otherPlayer.id = `player-${data.player_id}`;
-              otherPlayer.className = 'player player-other';
-              document.getElementById('gameArea').appendChild(otherPlayer);
+      // Função para buscar a posição de outros jogadores periodicamente
+      function fetchPlayersPositions() {
+        supabase
+          .from('game_state')
+          .select('*')
+          .then(({ data, error }) => {
+            if (error) {
+              console.error("Erro ao buscar jogadores:", error);
+            } else {
+              data.forEach(player => {
+                if (player.player_id !== playerId) {
+                  let otherPlayer = document.getElementById(`player-${player.player_id}`);
+                  if (!otherPlayer) {
+                    otherPlayer = document.createElement('div');
+                    otherPlayer.id = `player-${player.player_id}`;
+                    otherPlayer.className = 'player player-other';
+                    document.getElementById('gameArea').appendChild(otherPlayer);
+                  }
+                  otherPlayer.style.left = `${player.position_x}%`;
+                  otherPlayer.style.top = `${player.position_y}%`;
+                }
+              });
             }
-            otherPlayer.style.left = `${data.position_x}%`;
-            otherPlayer.style.top = `${data.position_y}%`;
-          }
-        })
-        .subscribe();
+          });
+      }
+
+      // Chama a função a cada 2 segundos para atualizar as posições dos jogadores
+      setInterval(fetchPlayersPositions, 2000);
     });
   </script>
 </body>
