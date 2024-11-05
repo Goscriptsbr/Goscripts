@@ -571,8 +571,8 @@ legend {
 }
 
 .radio-group label {
-    margin-right: 50px;
-    font-size: 15px;
+    margin-right: 10px;
+    font-size: 13px;
     cursor: pointer;
 }
 
@@ -9560,35 +9560,39 @@ legend {
     <div>
     <h4>Opção de Entrega:</h4>
     <div class="radio-group">
-        <input type="radio" id="entrega" name="delivery" value="entrega" checked onclick="toggleAddressFields(true)">
+        <input type="radio" id="entrega" name="delivery" value="entrega" checked onclick="toggleAddressFields(true); calcularTaxa()">
         <label for="entrega">Delivery</label>
-        <input type="radio" id="retirar" name="delivery" value="retirar" onclick="toggleAddressFields(false)">
+        
+        <input type="radio" id="retirar" name="delivery" value="retirar" onclick="toggleAddressFields(false); calcularTaxa()">
         <label for="retirar">Retirar no Local</label>
+        
+        <input type="radio" id="areaRural" name="delivery" value="areaRural" onclick="setAreaRuralTax(); toggleAddressFields(false)">
+        <label for="areaRural">Área Rural</label>
     </div>
+</div>
 
     <div class="endereco-container">
-        <h4>Endereço de Entrega</h4>
-        <label for="nome">Nome:</label>
-        <input type="text" id="nome" placeholder="Seu nome">
-    
-        <label for="cep">CEP:</label>
-        <input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
-    
-        <label for="rua">Rua:</label>
-        <input type="text" id="rua" placeholder="Rua">
-    
-        <label for="numero">Número:</label>
-        <input type="text" id="numero" placeholder="Número da Casa">
-    
-        <label for="bairro">Bairro:</label>
-        <input type="text" id="bairro" placeholder="Bairro">
-    
-        <label for="cidade">Cidade:</label>
-        <input type="text" id="cidade" placeholder="Cidade" onblur="buscarEndereco()">
-    
-        <!-- Alterado o campo para Ponto de Referência -->
-        <label for="pontoReferencia">Ponto de Referência:</label>
-        <input type="text" id="pontoReferencia" placeholder="Ponto de Referência">
+    <h4>Endereço de Entrega</h4>
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" placeholder="Seu nome">
+
+    <label for="cep">CEP:</label>
+    <input type="text" id="cep" maxlength="9" placeholder="Digite o CEP (opcional)" onblur="buscarEndereco()">
+
+    <label for="rua">Rua:</label>
+<input type="text" id="rua" placeholder="Rua" onblur="calcularTaxa()">
+
+    <label for="numero">Número:</label>
+    <input type="text" id="numero" placeholder="Número da Casa">
+
+<label for="bairro">Bairro:</label>
+<input type="text" id="bairro" placeholder="Bairro" onblur="calcularTaxa()">
+
+<label for="cidade">Cidade:</label>
+<input type="text" id="cidade" placeholder="Cidade" onblur="calcularTaxa()">
+
+    <label for="pontoReferencia">Ponto de Referência:</label>
+    <input type="text" id="pontoReferencia" placeholder="Ponto de Referência">
     </div>  
 
     <div class="pagamento-container">
@@ -9625,6 +9629,7 @@ legend {
 
 <script>
     let cart = [];
+    let taxaEntrega = 0; // Inicializa taxaEntrega globalmente
 
     function filterItems(category) {
     const items = document.querySelectorAll('.menu-item');
@@ -9867,11 +9872,16 @@ function updatePastelPrice(selectElement, priceDisplayId) {
     priceDisplay.innerText = `${selectedValue.toFixed(2)}`;
 }
 
-function toggleAddressFields(enable) {
+function toggleAddressFields() {
     const fields = document.querySelectorAll('.endereco-container input:not(#nome)');
+
+    // Verifica se a opção "Retirar no Local" está selecionada
+    const isRetirarNoLocal = document.getElementById('retirar').checked;
+
+    // Se "Retirar no Local" estiver selecionado, desativa os campos; caso contrário, ativa
     fields.forEach(field => {
-        field.disabled = !enable;
-        field.required = enable; // Define como obrigatório apenas se for entrega
+        field.disabled = isRetirarNoLocal;
+        field.required = !isRetirarNoLocal; // Define como obrigatório apenas se for entrega
     });
 }
 
@@ -9901,24 +9911,92 @@ function addPastelToCart(selectId) {
     addToCart(`Pastel de ${flavor}`, price);
 }
 
-   let taxaEntrega = 0; // Inicializa taxaEntrega globalmente
+function setAreaRuralTax() {
+    // Define a taxa de entrega para R$15,00 e atualiza globalmente
+    taxaEntrega = 15.00;
 
-function calcularTaxaEntrega(localidade) {
-    const localidadeNormalizada = localidade.trim().toLowerCase(); // Normaliza a entrada para comparação
+    // Atualiza o carrinho para refletir a taxa de entrega fixa de área rural
+    updateCart();
 
-    // Verifica se a localidade contém "estiva", "gerbi" ou variações
-    const estivaGerbiRegex = /(estiva|gerbi|estiv.*gerbi|gerb.*estiva|estiva.*gerbi|gerbi.*estiva)/;
+    // Exibe a mensagem de taxa para área rural
+    mostrarMensagemTaxa(taxaEntrega);
+}
 
-    if (estivaGerbiRegex.test(localidadeNormalizada)) {
-        return 4.00; // Taxa de entrega para Estiva Gerbi
-    } else {
-        return 0.00; // Nenhuma taxa para outras localidades
+let notificacaoExibida = false; // Variável para controlar a exibição da notificação
+
+function calcularTaxa() {
+    // Verifica se a opção "Área Rural" está selecionada
+    if (document.getElementById('areaRural').checked) {
+        setAreaRuralTax(); // Define a taxa fixa de R$15,00 para Área Rural
+        if (!notificacaoExibida) {
+            mostrarMensagemTaxa(15.00); // Mostra a mensagem de taxa para área rural
+            notificacaoExibida = true; // Marca a notificação como exibida
+        }
+        return; // Sai da função para evitar cálculo adicional
     }
+
+    // Caso contrário, calcula a taxa com base na cidade, bairro e rua
+    const cidade = document.getElementById('cidade').value;
+    const bairro = document.getElementById('bairro').value;
+    const rua = document.getElementById('rua').value;
+
+    // Calcula a taxa de entrega usando cidade, bairro e rua, e atualiza a variável global
+    const novaTaxaEntrega = calcularTaxaEntrega(cidade, bairro, rua);
+
+    // Atualiza a taxa de entrega e redefine a notificação se a taxa mudar
+    if (novaTaxaEntrega !== taxaEntrega) {
+        taxaEntrega = novaTaxaEntrega;
+        notificacaoExibida = false; // Redefine a notificação se a taxa mudar
+    }
+
+    // Atualiza o carrinho com a nova taxa
+    updateCart();
+    
+    // Exibe a mensagem de taxa apenas se ainda não foi exibida
+    if (!notificacaoExibida) {
+        mostrarMensagemTaxa(taxaEntrega);
+        notificacaoExibida = true; // Marca a notificação como exibida
+    }
+}
+
+function calcularTaxaEntrega(cidade = '', bairro = '', rua = '') {
+    const cidadeNormalizada = cidade.trim().toLowerCase();
+    const bairroNormalizado = bairro.trim().toLowerCase();
+    const ruaNormalizada = rua ? rua.trim().toLowerCase() : '';
+
+    // Verifica se a rua contém variações de "José Lanzi" ou se o bairro contém "Retiro do Alto"
+    if (ruaNormalizada.includes('dr. josé lanzi') || 
+        ruaNormalizada.includes('doutor josé lanzi') || 
+        ruaNormalizada.includes('josé lanzi') || 
+        bairroNormalizado.includes('retiro do alto')) {
+        return 5.00; // Taxa de entrega para Rodovia Dr. José Lanzi e Retiro do Alto
+    }
+
+    // Verifica se o bairro ou cidade contém variações de "parque industrial", "distrito industrial" ou "guaçu mirim"
+    if (bairroNormalizado.includes('distrito') || bairroNormalizado.includes('industrial') || bairroNormalizado.includes('parque') ||
+        bairroNormalizado.includes('guaçu mirim') || bairroNormalizado.includes('guacú mirim') || bairroNormalizado.includes('guacu mirim') ||
+        bairroNormalizado.includes('jardim guaçu-mirim i') || bairroNormalizado.includes('jardim guacu mirim i') || // Com e sem o traço
+        cidadeNormalizada.includes('distrito') || cidadeNormalizada.includes('industrial') || cidadeNormalizada.includes('parque') ||
+        cidadeNormalizada.includes('guaçu mirim') || cidadeNormalizada.includes('guacú mirim') || cidadeNormalizada.includes('guacu mirim')) {
+        return 8.00; // Taxa de entrega para Jardim Guaçu Mirim, Distrito Industrial, e Parque Industrial
+    }
+
+    // Verifica se o bairro ou cidade contém "Palm" ou "Califórnia" para taxa de R$5,00
+    if (bairroNormalizado.includes('palm') || bairroNormalizado.includes('califórnia') ||
+        cidadeNormalizada.includes('palm') || cidadeNormalizada.includes('califórnia')) {
+        return 5.00; // Taxa de entrega para os condomínios Palm Park e Califórnia
+    }
+
+    // Verifica se a cidade é "Estiva", "Estiva Gerbi" ou "Gerbi" para taxa de R$4,00
+    if (cidadeNormalizada.includes('estiva') || cidadeNormalizada.includes('gerbi')) {
+        return 4.00; // Taxa de entrega para Estiva Gerbi
+    }
+
+    return 0.00; // Nenhuma taxa para outras localidades
 }
 
 function buscarEndereco() {
     const cep = document.getElementById('cep').value.replace(/\D/g, '');
-    const localidadeInput = document.getElementById('cidade').value;
 
     if (cep.length === 8) {
         fetch(`https://viacep.com.br/ws/${cep}/json/`)
@@ -9930,11 +10008,19 @@ function buscarEndereco() {
             })
             .then(data => {
                 if (!data.erro) {
+                    // Preenche os campos de endereço
                     document.getElementById('rua').value = data.logradouro;
                     document.getElementById('bairro').value = data.bairro;
                     document.getElementById('cidade').value = data.localidade;
 
-                    taxaEntrega = calcularTaxaEntrega(data.localidade);
+                    console.log("Dados de endereço obtidos pelo CEP:");
+                    console.log("Cidade:", data.localidade);
+                    console.log("Bairro:", data.bairro);
+
+                    // Calcula a taxa com base na cidade e no bairro e atualiza a variável global taxaEntrega
+                    taxaEntrega = calcularTaxaEntrega(data.localidade, data.bairro);
+                    console.log("Taxa de entrega calculada pelo CEP:", taxaEntrega);
+
                     updateCart(); // Atualiza o carrinho com a nova taxa
                     mostrarMensagemTaxa(taxaEntrega); // Mostra a taxa no modal
                 } else {
@@ -9948,12 +10034,22 @@ function buscarEndereco() {
     } else if (cep.length > 0) {
         alert('CEP inválido! Deve conter 8 dígitos.');
     } else {
-        if (localidadeInput.trim() === '') {
-            alert('Por favor, digite o CEP ou a cidade para calcular a taxa de entrega.');
+        const cidade = document.getElementById('cidade').value.trim();
+        const bairro = document.getElementById('bairro').value.trim();
+
+        if (cidade === '' && bairro === '') {
+            alert('Por favor, digite o CEP, a cidade ou o bairro.');
             return;
         }
 
-        taxaEntrega = calcularTaxaEntrega(localidadeInput.trim());
+        console.log("Dados de endereço preenchidos manualmente:");
+        console.log("Cidade:", cidade);
+        console.log("Bairro:", bairro);
+
+        // Calcula a taxa com base nos valores preenchidos manualmente
+        taxaEntrega = calcularTaxaEntrega(cidade, bairro);
+        console.log("Taxa de entrega calculada manualmente:", taxaEntrega);
+
         updateCart(); // Atualiza o carrinho com a nova taxa
         mostrarMensagemTaxa(taxaEntrega); // Mostra a taxa no modal
     }
@@ -9964,12 +10060,17 @@ function mostrarMensagemTaxa(taxa) {
     
     // Mostra a mensagem de taxa dependendo da localidade
     if (taxa === 4.00) {
-        taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} e já foi adicionada ao seu total!`;
+        taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} já foi adicionada ao seu total!`;
+    } else if (taxa === 5.00) {
+        taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} já foi adicionada ao seu total!`;
+    } else if (taxa === 8.00) {
+        taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} já foi adicionada ao seu total!`;
+    } else if (taxa === 15.00) {
+        taxaMensagem.textContent = `Sua taxa de entrega é R$ ${taxa.toFixed(2).replace('.', ',')} já foi adicionada ao seu total!`;
     } else {
-        taxaMensagem.textContent = `Envie seu pedido primeiro para saber com estabelecimento o valor da taxa de entrega. Só envie o pagamento após saber o valor!!`;
+        taxaMensagem.textContent = `Se caso for para retirar seu pedido desconsidere essa mensagem, se caso for delivery e não aparecer o valor da taxa de entrega, combine com estabelecimento.`;
     }
-    
-    document.getElementById('taxaModal').style.display = 'block'; // Mostra o modal
+     document.getElementById('taxaModal').style.display = 'block'; // Mostra o modal
 }
 
 function fecharModal() {
@@ -9982,6 +10083,7 @@ function updateCart() {
     cartItems.innerHTML = '';
     let total = 0;
 
+    // Calcula o total dos itens do carrinho
     cart.forEach((item, index) => {
         const li = document.createElement('li');
         li.className = 'cart-item';
@@ -9992,12 +10094,13 @@ function updateCart() {
         total += item.price * item.quantity;
     });
 
-    // Adiciona a taxa de entrega ao total apenas se for Estiva Gerbi
-    if (taxaEntrega === 4.00) {
+    // Adiciona a taxa de entrega ao total do carrinho
+    if (taxaEntrega > 0) {
         total += taxaEntrega; 
     }
-    
-    cartTotal.textContent = `${total.toFixed(2).replace('.', ',')}`; // Atualiza o total do carrinho
+
+    // Atualiza o total do carrinho apenas com o valor
+    cartTotal.textContent = `${total.toFixed(2).replace('.', ',')}`;
 }
 
 function updatePrice(selectElement, priceId, smallPrice, largePrice) {
@@ -10069,7 +10172,8 @@ function sendOrder() {
 
     originalCart = [...cart]; // Salva o carrinho original
 
-    const isDelivery = document.getElementById('entrega').checked; // Verifica se a entrega é selecionada
+    const isDelivery = document.getElementById('entrega').checked; // Verifica se a entrega está selecionada
+    const isAreaRural = document.getElementById('areaRural').checked; // Verifica se "Área Rural" está selecionada
 
     // Coleta os dados do cliente e endereço
     const nome = document.getElementById('nome').value;
@@ -10085,7 +10189,7 @@ function sendOrder() {
         return;
     }
 
-    if (isDelivery && (!rua || !numero || !bairro || !cidade || !pontoReferencia)) {
+    if ((isDelivery || isAreaRural) && (!rua || !numero || !bairro || !cidade || !pontoReferencia)) {
         alert("Por favor, preencha todos os campos do endereço!");
         return;
     }
@@ -10099,7 +10203,7 @@ function sendOrder() {
     const now = new Date();
     const horarioPedido = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-    let message = `Pedido de ${nome} às ${horarioPedido}:\n`;
+    let message = `*Pedido de ${nome} às ${horarioPedido}:*\n`;
 
     const groupedItems = {};
 
@@ -10114,35 +10218,46 @@ function sendOrder() {
 
     // Adiciona os itens na mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
-        message += `• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n\n`;
+        message += `\n• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n\n`;
     }
+    
+    message += `\n=======================\n\n`;
 
     let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let taxaEntrega = 0;
 
     // Adiciona a taxa de entrega, se aplicável
-    if (isDelivery) {
-        taxaEntrega = calcularTaxaEntrega(cidade); // Chama a função para calcular a taxa
+    if (isAreaRural) {
+        // Aplica a taxa fixa de R$15,00 para Área Rural
+        const taxaEntrega = 15.00;
+        total += taxaEntrega;
+        message += `\n*Total:* R$ ${total.toFixed(2)}\n`;
+        message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (Área Rural)\n`;
+    } else if (isDelivery) {
+        // Calcula a taxa de entrega usando cidade e bairro
+        const taxaEntrega = calcularTaxaEntrega(cidade, bairro);
 
-        // Verifica se a entrega é para Estiva Gerbi
-        if (taxaEntrega === 4.00) {
+        if (taxaEntrega > 0) {
             total += taxaEntrega;
-            message += `Total: R$ ${total.toFixed(2)}\n`;
-            message += `Taxa de Entrega: R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
+            message += `*Total:* R$ ${total.toFixed(2)}\n`;
+            message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
         } else {
-            message += `Total: R$ ${total.toFixed(2)}\n`;
-            message += `Taxa de Entrega: Combinar o valor da taxa de entrega via WhatsApp!\n`;
+            message += `*Total:* R$ ${total.toFixed(2)}\n`;
+            message += `*Taxa de Entrega:* Combinar o valor da taxa de entrega via WhatsApp!\n`;
         }
     } else {
-        message += `Total: R$ ${total.toFixed(2)}\n`;
+        message += `*Total:* R$ ${total.toFixed(2)}\n`;
     }
+    
+    message += `\n=======================\n`;
 
     // Inclui os dados de entrega na mensagem após o total
-    if (isDelivery) {
-        message += `\nEndereço de Entrega:\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
+    if (isDelivery || isAreaRural) {
+        message += `\n*Endereço de Entrega:*\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
     }
+    
+    message += `\n=======================\n`;
 
-    message += `\nForma de Pagamento: ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
+    message += `\n*Forma de Pagamento:* ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
 
     if (paymentMethod === 'dinheiro') {
         const troco = document.getElementById('troco').value;
