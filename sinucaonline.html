@@ -14,51 +14,13 @@
         .cart { position: fixed; bottom: 0; width: 100%; background-color: #222; color: #FFA500; padding: 10px; }
         .cart-item { display: flex; justify-content: space-between; }
         #product-form { margin: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; display: none; } /* Esconde o formulário inicialmente */
-        .hamburger-menu {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    cursor: pointer;
-    font-size: 24px;
-}
-
-.menu-options {
-    display: none;
-    position: absolute;
-    top: 60px;
-    right: 20px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 150px;
-    z-index: 1000;
-}
-
-.menu-options a {
-    display: block;
-    padding: 10px;
-    text-decoration: none;
-    color: #333;
-}
-
-.menu-options a:hover {
-    background-color: #f0f0f0;
-}
     </style>
 </head>
 <body>
 
 <header>
     <h1>Cardápio Digital</h1>
-    <!-- Ícone de menu hambúrguer -->
-    <div class="hamburger-menu" onclick="toggleMenu()">&#9776;</div>
 </header>
-
-<!-- Menu suspenso que aparece ao clicar no hambúrguer -->
-<div class="menu-options" id="menu-options">
-    <a href="https://goscripts.online/gameon">Login</a>
-    <a href="#">Pedidos Enviados</a>
-</div>
 
 <div class="category-menu">
     <button onclick="openCategory('pizzas')">Pizzas</button>
@@ -78,9 +40,8 @@
     <p>Total: R$ <span id="total-value">0.00</span></p>
 </div>
 
-<!-- Formulário para adicionar produtos -->
 <div id="product-form">
-    <h2>Adicionar Produto</h2>
+    <h2>Adicionar Produto</</h2>
     <label for="product-name">Nome:</label>
     <input type="text" id="product-name" placeholder="Nome do Produto">
     
@@ -185,7 +146,7 @@
         }
 
         // Verifica se o UID do usuário corresponde ao UID do dono
-        if (user && user.id === OWNER_UID) {
+        if (user && user.user && user.user.id === OWNER_UID) {
             document.getElementById('product-form').style.display = 'block';
         } else {
             document.getElementById('product-form').style.display = 'none';
@@ -196,10 +157,11 @@
         await carregarCardapio(); // Carrega os produtos ao carregar a página
         verificarPermissao(); // Verifica a permissão de acesso ao carregar a página
     });
+
     function toggleMenu() {
-    const menu = document.getElementById('menu-options');
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-}
+        const menu = document.getElementById('menu-options');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
 </script>
 
 </body>
