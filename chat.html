@@ -308,8 +308,8 @@ async function verificarPermissao() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-    await carregarCardapio(); // Carrega os produtos ao carregar a página
-    await verificarPermissao(); // Verifica a permissão de acesso ao carregar a página
+    await verificarPermissao(); // Verifica a permissão do usuário primeiro
+    await carregarCardapio(); // Carrega o cardápio apenas após verificar a permissão
 });
 
     // Função para alternar o menu de opções
