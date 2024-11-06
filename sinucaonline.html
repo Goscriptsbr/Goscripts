@@ -291,28 +291,9 @@ function salvarOuAdicionarProduto() {
         alert("Produto adicionado com sucesso!");
         closeEditModal();
 
-        if (data && data[0]) {
-            // Adiciona o novo produto ao array local e ao container da categoria atual
-            products[categoria].push(data[0]);
-            
-            // Seleciona o container de produtos e cria um elemento de produto novo
-            const categoryProducts = document.getElementById('category-products');
-            const productElement = document.createElement('div');
-            productElement.classList.add('product');
-            productElement.innerHTML = `
-                <span class="product-title">${data[0].nome}</span>
-                <span class="price">R$ ${data[0].preco.toFixed(2).replace('.', ',')}</span>
-                <p>${data[0].descricao}</p>
-                ${isOwner ? `<button onclick="editarProduto(${data[0].id}, '${categoria}')">Editar</button>
-                             <button onclick="removerProduto(${data[0].id}, '${categoria}')">Remover</button>` : ''}
-            `;
-            
-            // Adiciona o novo produto ao container de produtos da categoria
-            categoryProducts.appendChild(productElement);
-
-            // Atualiza a exibição da categoria ativa
-            document.getElementById('category-container').style.display = 'block';
-        }
+        // Atualiza o cardápio e recarrega a categoria ativa para exibir o novo produto
+        await carregarCardapio();
+        openCategory(categoria);
     }
 }
 
