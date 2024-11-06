@@ -123,8 +123,9 @@
 </div>
 
 <!-- Modal para adicionar ou editar produtos -->
+<!-- Modal para adicionar ou editar produtos -->
 <div id="edit-modal">
-    <h2>Adicionar Produto</h2>
+    <h2 id="modal-title">Adicionar Produto</h2> <!-- O título será atualizado dinamicamente -->
     <label for="product-name">Nome:</label>
     <input type="text" id="product-name" placeholder="Nome do Produto">
     
@@ -142,7 +143,8 @@
     <label for="product-description">Descrição:</label>
     <input type="text" id="product-description" placeholder="Descrição do Produto">
     
-    <button onclick="adicionarProduto()">Salvar Produto</button>
+    <!-- O botão salvar chama a função correta com base no contexto (adicionar ou editar) -->
+    <button id="save-product-button" onclick="salvarOuAdicionarProduto()">Salvar Produto</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -177,69 +179,138 @@
     }
 
     function openCategory(category) {
-        const categoryTitle = document.getElementById('category-title');
-        const categoryProducts = document.getElementById('category-products');
-        categoryTitle.innerText = category.charAt(0).toUpperCase() + category.slice(1);
-        categoryProducts.innerHTML = '';
+    const categoryTitle = document.getElementById('category-title');
+    const categoryProducts = document.getElementById('category-products');
+    categoryTitle.innerText = category.charAt(0).toUpperCase() + category.slice(1);
+    categoryProducts.innerHTML = '';
 
-        products[category].forEach(product => {
-            const productElement = document.createElement('div');
-            productElement.classList.add('product');
-            productElement.innerHTML = `
-                <span class="product-title">${product.nome}</span>
-                <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
-                <p>${product.descricao}</p>
-            `;
-            categoryProducts.appendChild(productElement);
-        });
+    products[category].forEach(product => {
+        const productElement = document.createElement('div');
+        productElement.classList.add('product');
+        productElement.innerHTML = `
+            <span class="product-title">${product.nome}</span>
+            <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
+            <p>${product.descricao}</p>
+            ${isOwner ? `<button onclick="editarProduto(${product.id}, '${category}')">Editar</button>
+                         <button onclick="removerProduto(${product.id})">Remover</button>` : ''}
+        `;
+        categoryProducts.appendChild(productElement);
+    });
 
-        document.getElementById('category-container').style.display = 'block';
+    document.getElementById('category-container').style.display = 'block';
+}
+    
+    let editingProductId = null;
+
+function editarProduto(id, category) {
+    const product = products[category].find(item => item.id === id);
+    if (product) {
+        document.getElementById('product-name').value = product.nome;
+        document.getElementById('product-price').value = product.preco;
+        document.getElementById('product-category').value = product.category;
+        document.getElementById('product-description').value = product.descricao;
+        
+        editingProductId = id; // Armazena o ID do produto em edição
+        document.getElementById('modal-title').innerText = "Editar Produto";
+        openEditModal();
     }
+}
+
+async function salvarProduto() {
+    const nome = document.getElementById('product-name').value;
+    const preco = parseFloat(document.getElementById('product-price').value);
+    const categoria = document.getElementById('product-category').value;
+    const descricao = document.getElementById('product-description').value;
+
+    if (!nome || isNaN(preco) || !categoria || !descricao) {
+        alert("Por favor, preencha todos os campos corretamente.");
+        return;
+    }
+
+    const { error } = await supabaseClient.from('cardapio').update({
+        nome, preco, category: categoria, descricao
+    }).eq('id', editingProductId);
+
+    if (error) {
+        console.error("Erro ao salvar produto:", error);
+        alert("Erro ao salvar produto.");
+    } else {
+        alert("Produto atualizado com sucesso!");
+        await carregarCardapio();
+        closeEditModal();
+        editingProductId = null; // Reset após salvar
+    }
+}
+
+async function removerProduto(id) {
+    const { error } = await supabaseClient.from('cardapio').delete().eq('id', id);
+
+    if (error) {
+        console.error("Erro ao remover produto:", error);
+        alert("Erro ao remover produto.");
+    } else {
+        alert("Produto removido com sucesso!");
+        await carregarCardapio();
+    }
+}
+
+function salvarOuAdicionarProduto() {
+    if (editingProductId) {
+        salvarProduto(); // Se estamos editando um produto existente
+    } else {
+        adicionarProduto(); // Se estamos adicionando um novo produto
+    }
+}
 
     async function adicionarProduto() {
-        const nome = document.getElementById('product-name').value;
-        const preco = parseFloat(document.getElementById('product-price').value);
-        const categoria = document.getElementById('product-category').value;
-        const descricao = document.getElementById('product-description').value;
+    const nome = document.getElementById('product-name').value;
+    const preco = parseFloat(document.getElementById('product-price').value);
+    const categoria = document.getElementById('product-category').value;
+    const descricao = document.getElementById('product-description').value;
 
-        if (!nome || isNaN(preco) || !categoria || !descricao) {
-            alert("Por favor, preencha todos os campos corretamente.");
-            return;
-        }
-
-        const { error } = await supabaseClient.from('cardapio').insert([
-            { nome, preco, category: categoria, descricao }
-        ]);
-
-        if (error) {
-            console.error("Erro ao adicionar produto:", error);
-            alert("Erro ao adicionar produto.");
-        } else {
-            alert("Produto adicionado com sucesso!");
-            await carregarCardapio(); // Atualiza o cardápio na interface após adicionar
-            closeEditModal(); // Fecha o modal após adicionar o produto
-        }
+    if (!nome || isNaN(preco) || !categoria || !descricao) {
+        alert("Por favor, preencha todos os campos corretamente.");
+        return;
     }
 
-    // Função para verificar a permissão do usuário
-    async function verificarPermissao() {
-        const { data: user, error } = await supabaseClient.auth.getUser();
+    const { error } = await supabaseClient.from('cardapio').insert([
+        { nome, preco, category: categoria, descricao }
+    ]);
 
-        if (error) {
-            console.error("Erro ao obter usuário:", error);
-            return;
-        }
+    if (error) {
+        console.error("Erro ao adicionar produto:", error);
+        alert("Erro ao adicionar produto.");
+    } else {
+        alert("Produto adicionado com sucesso!");
+        await carregarCardapio(); // Atualiza o cardápio na interface após adicionar
+        closeEditModal(); // Fecha o modal após adicionar o produto
+    }
+}
 
-        // Verifica se o UID do usuário corresponde ao UID do dono
-        if (user && user.user && user.user.id === OWNER_UID) {
-            document.getElementById('edit-link').style.display = 'block'; // Mostra a opção "Editar" no menu
-        }
+    let isOwner = false; // Variável global para armazenar se o usuário é o dono
+
+// Função para verificar a permissão do usuário
+async function verificarPermissao() {
+    const { data: user, error } = await supabaseClient.auth.getUser();
+
+    if (error) {
+        console.error("Erro ao obter usuário:", error);
+        return;
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-        await carregarCardapio(); // Carrega os produtos ao carregar a página
-        verificarPermissao(); // Verifica a permissão de acesso ao carregar a página
-    });
+    // Verifica se o UID do usuário corresponde ao UID do dono
+    if (user && user.user && user.user.id === OWNER_UID) {
+        document.getElementById('edit-link').style.display = 'block'; // Mostra a opção "Editar" no menu
+        isOwner = true; // Define isOwner como true para o dono
+    } else {
+        isOwner = false; // Define isOwner como false para outros usuários
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await verificarPermissao(); // Verifica a permissão do usuário primeiro
+    await carregarCardapio(); // Carrega o cardápio apenas após verificar a permissão
+});
 
     // Função para alternar o menu de opções
     function toggleMenu() {
