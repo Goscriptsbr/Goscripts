@@ -13,7 +13,7 @@
         .product { padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .cart { position: fixed; bottom: 0; width: 100%; background-color: #222; color: #FFA500; padding: 10px; }
         .cart-item { display: flex; justify-content: space-between; }
-        #product-form { margin: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        #product-form { margin: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; display: none; } /* Esconde o formulário inicialmente */
     </style>
 </head>
 <body>
@@ -65,6 +65,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
+    // UID do dono do estabelecimento
+    const OWNER_UID = '46a65542-c54b-420e-8946-e822a6f21bb9';
+
     // Inicialize o cliente Supabase
     const SUPABASE_URL = 'https://jkcdogakjwcpezuaqgki.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprY2RvZ2FrandjcGV6dWFxZ2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA2ODc2OTksImV4cCI6MjA0NjI2MzY5OX0.MxzcUE3s8Cyty6Y8IP4O-1Tzx57RVnZi1VDNSixswQE';
@@ -73,25 +76,23 @@
     const products = { pizzas: [], esfirras: [], bebidas: [], refrigerantes: [] };
 
     async function carregarCardapio() {
-    products.pizzas = [];
-    products.esfirras = [];
-    products.bebidas = [];
-    products.refrigerantes = [];
+        products.pizzas = [];
+        products.esfirras = [];
+        products.bebidas = [];
+        products.refrigerantes = [];
 
-    const { data, error } = await supabaseClient.from('cardapio').select('*');
-    if (error) { 
-        console.error("Erro ao carregar o cardápio:", error); 
-        return; 
-    }
-
-    console.log(data); // Verifica se os dados estão chegando corretamente
-
-    data.forEach(item => {
-        if (products[item.category]) {
-            products[item.category].push(item);
+        const { data, error } = await supabaseClient.from('cardapio').select('*');
+        if (error) { 
+            console.error("Erro ao carregar o cardápio:", error); 
+            return; 
         }
-    });
-}
+
+        data.forEach(item => {
+            if (products[item.category]) {
+                products[item.category].push(item);
+            }
+        });
+    }
 
     function openCategory(category) {
         const categoryTitle = document.getElementById('category-title');
@@ -137,8 +138,25 @@
         }
     }
 
+    async function verificarPermissao() {
+        const { data: user, error } = await supabaseClient.auth.getUser();
+
+        if (error) {
+            console.error("Erro ao obter usuário:", error);
+            return;
+        }
+
+        // Verifica se o UID do usuário corresponde ao UID do dono
+        if (user && user.id === OWNER_UID) {
+            document.getElementById('product-form').style.display = 'block';
+        } else {
+            document.getElementById('product-form').style.display = 'none';
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", async () => {
         await carregarCardapio(); // Carrega os produtos ao carregar a página
+        verificarPermissao(); // Verifica a permissão de acesso ao carregar a página
     });
 </script>
 
