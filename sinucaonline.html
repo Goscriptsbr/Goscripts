@@ -1,1 +1,164 @@
- jjsjd
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Digital</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        header { background-color: #FFA500; color: white; text-align: center; padding: 20px; }
+        .category-menu { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
+        .category-menu button { padding: 10px 20px; background-color: #222; color: #FFA500; border: none; cursor: pointer; }
+        .category-content { display: none; }
+        .product { padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .cart { position: fixed; bottom: 0; width: 100%; background-color: #222; color: #FFA500; padding: 10px; }
+        .cart-item { display: flex; justify-content: space-between; }
+        #product-form { margin: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; display: none; } /* Esconde o formulário inicialmente */
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Cardápio Digital</h1>
+</header>
+
+<div class="category-menu">
+    <button onclick="openCategory('pizzas')">Pizzas</button>
+    <button onclick="openCategory('esfirras')">Esfihas</button>
+    <button onclick="openCategory('bebidas')">Bebidas</button>
+    <button onclick="openCategory('refrigerantes')">Refrigerantes</button>
+</div>
+
+<div id="category-container">
+    <h2 id="category-title">Categoria</h2>
+    <div id="category-products"></div>
+</div>
+
+<div class="cart" id="cart">
+    <h2>Carrinho</h2>
+    <div id="cart-items"></div>
+    <p>Total: R$ <span id="total-value">0.00</span></p>
+</div>
+
+<!-- Formulário para adicionar produtos -->
+<div id="product-form">
+    <h2>Adicionar Produto</h2>
+    <label for="product-name">Nome:</label>
+    <input type="text" id="product-name" placeholder="Nome do Produto">
+    
+    <label for="product-price">Preço:</label>
+    <input type="number" id="product-price" placeholder="Preço do Produto">
+    
+    <label for="product-category">Categoria:</label>
+    <select id="product-category">
+        <option value="pizzas">Pizzas</option>
+        <option value="esfirras">Esfihas</option>
+        <option value="bebidas">Bebidas</option>
+        <option value="refrigerantes">Refrigerantes</option>
+    </select>
+
+    <label for="product-description">Descrição:</label>
+    <input type="text" id="product-description" placeholder="Descrição do Produto">
+    
+    <button onclick="adicionarProduto()">Adicionar Produto</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+    // UID do dono do estabelecimento
+    const OWNER_UID = '46a65542-c54b-420e-8946-e822a6f21bb9';
+
+    // Inicialize o cliente Supabase
+    const SUPABASE_URL = 'https://jkcdogakjwcpezuaqgki.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprY2RvZ2FrandjcGV6dWFxZ2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA2ODc2OTksImV4cCI6MjA0NjI2MzY5OX0.MxzcUE3s8Cyty6Y8IP4O-1Tzx57RVnZi1VDNSixswQE';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const products = { pizzas: [], esfirras: [], bebidas: [], refrigerantes: [] };
+
+    async function carregarCardapio() {
+        products.pizzas = [];
+        products.esfirras = [];
+        products.bebidas = [];
+        products.refrigerantes = [];
+
+        const { data, error } = await supabaseClient.from('cardapio').select('*');
+        if (error) { 
+            console.error("Erro ao carregar o cardápio:", error); 
+            return; 
+        }
+
+        data.forEach(item => {
+            if (products[item.category]) {
+                products[item.category].push(item);
+            }
+        });
+    }
+
+    function openCategory(category) {
+        const categoryTitle = document.getElementById('category-title');
+        const categoryProducts = document.getElementById('category-products');
+        categoryTitle.innerText = category.charAt(0).toUpperCase() + category.slice(1);
+        categoryProducts.innerHTML = '';
+
+        products[category].forEach(product => {
+            const productElement = document.createElement('div');
+            productElement.classList.add('product');
+            productElement.innerHTML = `
+                <span class="product-title">${product.nome}</span>
+                <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
+                <p>${product.descricao}</p>
+            `;
+            categoryProducts.appendChild(productElement);
+        });
+
+        document.getElementById('category-container').style.display = 'block';
+    }
+
+    async function adicionarProduto() {
+        const nome = document.getElementById('product-name').value;
+        const preco = parseFloat(document.getElementById('product-price').value);
+        const categoria = document.getElementById('product-category').value;
+        const descricao = document.getElementById('product-description').value;
+
+        if (!nome || isNaN(preco) || !categoria || !descricao) {
+            alert("Por favor, preencha todos os campos corretamente.");
+            return;
+        }
+
+        const { error } = await supabaseClient.from('cardapio').insert([
+            { nome, preco, category: categoria, descricao }
+        ]);
+
+        if (error) {
+            console.error("Erro ao adicionar produto:", error);
+            alert("Erro ao adicionar produto.");
+        } else {
+            alert("Produto adicionado com sucesso!");
+            await carregarCardapio(); // Atualiza o cardápio na interface após adicionar
+        }
+    }
+
+    async function verificarPermissao() {
+        const { data: user, error } = await supabaseClient.auth.getUser();
+
+        if (error) {
+            console.error("Erro ao obter usuário:", error);
+            return;
+        }
+
+        // Verifica se o UID do usuário corresponde ao UID do dono
+        if (user && user.id === OWNER_UID) {
+            document.getElementById('product-form').style.display = 'block';
+        } else {
+            document.getElementById('product-form').style.display = 'none';
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        await carregarCardapio(); // Carrega os produtos ao carregar a página
+        verificarPermissao(); // Verifica a permissão de acesso ao carregar a página
+    });
+</script>
+
+</body>
+</html>
