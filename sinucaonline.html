@@ -249,7 +249,7 @@ async function salvarProduto() {
     }
 }
 
-async function removerProduto(id) {
+async function removerProduto(id, categoria) {
     const { error } = await supabaseClient.from('cardapio').delete().eq('id', id);
 
     if (error) {
@@ -257,7 +257,10 @@ async function removerProduto(id) {
         alert("Erro ao remover produto.");
     } else {
         alert("Produto removido com sucesso!");
+        
+        // Atualiza o cardápio e recarrega a categoria ativa para exibir a lista atualizada
         await carregarCardapio();
+        openCategory(categoria);
     }
 }
 
