@@ -191,8 +191,8 @@
             <span class="product-title">${product.nome}</span>
             <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
             <p>${product.descricao}</p>
-            <button onclick="editarProduto(${product.id}, '${category}')">Editar</button>
-            <button onclick="removerProduto(${product.id})">Remover</button>
+            ${isOwner ? `<button onclick="editarProduto(${product.id}, '${category}')">Editar</button>
+                         <button onclick="removerProduto(${product.id})">Remover</button>` : ''}
         `;
         categoryProducts.appendChild(productElement);
     });
@@ -287,25 +287,30 @@ function salvarOuAdicionarProduto() {
     }
 }
 
-    // Função para verificar a permissão do usuário
-    async function verificarPermissao() {
-        const { data: user, error } = await supabaseClient.auth.getUser();
+    let isOwner = false; // Variável global para armazenar se o usuário é o dono
 
-        if (error) {
-            console.error("Erro ao obter usuário:", error);
-            return;
-        }
+// Função para verificar a permissão do usuário
+async function verificarPermissao() {
+    const { data: user, error } = await supabaseClient.auth.getUser();
 
-        // Verifica se o UID do usuário corresponde ao UID do dono
-        if (user && user.user && user.user.id === OWNER_UID) {
-            document.getElementById('edit-link').style.display = 'block'; // Mostra a opção "Editar" no menu
-        }
+    if (error) {
+        console.error("Erro ao obter usuário:", error);
+        return;
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-        await carregarCardapio(); // Carrega os produtos ao carregar a página
-        verificarPermissao(); // Verifica a permissão de acesso ao carregar a página
-    });
+    // Verifica se o UID do usuário corresponde ao UID do dono
+    if (user && user.user && user.user.id === OWNER_UID) {
+        document.getElementById('edit-link').style.display = 'block'; // Mostra a opção "Editar" no menu
+        isOwner = true; // Define isOwner como true para o dono
+    } else {
+        isOwner = false; // Define isOwner como false para outros usuários
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await carregarCardapio(); // Carrega os produtos ao carregar a página
+    await verificarPermissao(); // Verifica a permissão de acesso ao carregar a página
+});
 
     // Função para alternar o menu de opções
     function toggleMenu() {
