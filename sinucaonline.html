@@ -257,10 +257,8 @@ async function removerProduto(id, categoria) {
         alert("Erro ao remover produto.");
     } else {
         alert("Produto removido com sucesso!");
-
-        // Remove o produto do array local
-        products[categoria] = products[categoria].filter(item => item.id !== id);
-        openCategory(categoria); // Atualiza a categoria ativa
+        await carregarCardapio(); // Recarrega os dados do cardápio
+        openCategory(categoria); // Recarrega a categoria para mostrar a lista atualizada
     }
 }
 
