@@ -192,7 +192,7 @@
             <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
             <p>${product.descricao}</p>
             ${isOwner ? `<button onclick="editarProduto(${product.id}, '${category}')">Editar</button>
-                         <button onclick="removerProduto(${product.id})">Remover</button>` : ''}
+                         <button onclick="removerProduto(${product.id}, '${category}')">Remover</button>` : ''}
         `;
         categoryProducts.appendChild(productElement);
     });
@@ -261,8 +261,7 @@ async function removerProduto(id, categoria) {
         // Remove o produto do array local da categoria
         products[categoria] = products[categoria].filter(product => product.id !== id);
 
-        // Atualiza a exibição da categoria ativa
-        await carregarCardapio();
+        // Atualiza a exibição da categoria ativa para refletir a remoção em tempo real
         openCategory(categoria);
     }
 }
