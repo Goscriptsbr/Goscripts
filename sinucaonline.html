@@ -261,32 +261,10 @@ async function removerProduto(id, categoria) {
         // Remove o produto do array local da categoria
         products[categoria] = products[categoria].filter(product => product.id !== id);
 
-        // Atualiza o container da categoria em tempo real
-        updateCategoryDisplay(categoria);
+        // Atualiza a exibição da categoria ativa
+        await carregarCardapio();
+        openCategory(categoria);
     }
-}
-
-// Função para atualizar a exibição da categoria
-function updateCategoryDisplay(category) {
-    const categoryTitle = document.getElementById('category-title');
-    const categoryProducts = document.getElementById('category-products');
-    categoryTitle.innerText = category.charAt(0).toUpperCase() + category.slice(1);
-    categoryProducts.innerHTML = '';
-
-    products[category].forEach(product => {
-        const productElement = document.createElement('div');
-        productElement.classList.add('product');
-        productElement.innerHTML = `
-            <span class="product-title">${product.nome}</span>
-            <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
-            <p>${product.descricao}</p>
-            ${isOwner ? `<button onclick="editarProduto(${product.id}, '${category}')">Editar</button>
-                         <button onclick="removerProduto(${product.id}, '${category}')">Remover</button>` : ''}
-        `;
-        categoryProducts.appendChild(productElement);
-    });
-
-    document.getElementById('category-container').style.display = 'block';
 }
 
 function salvarOuAdicionarProduto() {
