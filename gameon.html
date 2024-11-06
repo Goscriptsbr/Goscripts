@@ -1,1 +1,163 @@
-jsjsjsjsj
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login e Registro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <style>
+        /* Estilos gerais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 400px;
+            width: 100%;
+        }
+        .form-section {
+            padding: 20px;
+            text-align: center;
+        }
+        .form-section h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4a90e2;
+        }
+        .form-section input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-section button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4a90e2;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .form-section button:hover {
+            background-color: #357ABD;
+        }
+        /* Estilo da notificação */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4a90e2;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        .notification.show {
+            display: block;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h1>Login</h1>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="E-mail" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button type="button" onclick="login()">Entrar</button>
+            </form>
+        </div>
+        <div class="form-section">
+            <h1>Registro</h1>
+            <form id="register-form">
+                <input type="email" id="register-email" placeholder="E-mail" required>
+                <input type="password" id="register-password" placeholder="Senha" required>
+                <button type="button" onclick="register()">Registrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notificação -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const SUPABASE_URL = 'https://jkcdogakjwcpezuaqgki.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprY2RvZ2FrandjcGV6dWFxZ2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA2ODc2OTksImV4cCI6MjA0NjI2MzY5OX0.MxzcUE3s8Cyty6Y8IP4O-1Tzx57RVnZi1VDNSixswQE';
+            const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            function showNotification(message, success = true) {
+                const notification = document.getElementById("notification");
+                notification.textContent = message;
+                notification.style.backgroundColor = success ? '#4a90e2' : '#e74c3c';
+                notification.classList.add("show");
+
+                setTimeout(() => {
+                    notification.classList.remove("show");
+                }, 3000);
+            }
+
+            async function register() {
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+
+                const { user, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    showNotification("Erro ao registrar: " + error.message, false);
+                } else {
+                    showNotification("Registro bem-sucedido! Verifique seu e-mail.");
+                }
+            }
+
+            async function login() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        showNotification("Erro ao fazer login: " + error.message, false);
+    } else {
+        showNotification("Login bem-sucedido!");
+        window.location.href = "https://goscripts.online/sinucaonline";
+    }
+}
+
+            window.register = register;
+            window.login = login;
+        });
+    </script>
+</body>
+</html>
