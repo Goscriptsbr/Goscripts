@@ -354,15 +354,15 @@
     }
 
     #options-modal .close-options-modal {
-        background: none;
-        color: red;
-        font-size: 16px;
-        border: none;
-        cursor: pointer;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-    }
+    background: none;
+    color: red;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
     </style>
 </head>
 <body>
@@ -437,15 +437,13 @@
     <button class="main-button" onclick="finalizarPedido()">Finalizar Pedido</button>
 </div>
 
-<!-- Modal para opções de editar e remover -->
-<div id="options-modal">
+<!-- Modal de opções para editar e remover produto -->
+<div id="options-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); z-index: 2000; width: 200px;">
     <button class="close-options-modal" onclick="fecharOptionsModal()">X</button>
-    <button onclick="abrirEditModal()">Editar Produto</button>
-    <button onclick="confirmarRemocao()">Remover Produto</button>
+    <button onclick="editarProduto(selectedProductId, selectedCategory)" style="width: 100%; margin: 10px 0;">Editar Produto</button>
+    <button onclick="removerProduto(selectedProductId, selectedCategory)" style="width: 100%; margin: 10px 0;">Remover Produto</button>
 </div>
 
-
-<!-- Modal para adicionar ou editar produtos -->
 <!-- Modal para adicionar ou editar produtos -->
 <div id="edit-modal">
     <h2 id="modal-title">Adicionar Produto</h2> <!-- O título será atualizado dinamicamente -->
@@ -525,19 +523,17 @@
     document.getElementById('category-container').style.display = 'block';
 }
 
-let selectedProductId = null;
-let selectedCategory = null;
+let selectedProductId;
+let selectedCategory;
 
-function abrirOptionsModal(id, category) {
-    selectedProductId = id;
+function abrirOptionsModal(productId, category) {
+    selectedProductId = productId;
     selectedCategory = category;
     document.getElementById('options-modal').style.display = 'block';
 }
 
 function fecharOptionsModal() {
     document.getElementById('options-modal').style.display = 'none';
-    selectedProductId = null;
-    selectedCategory = null;
 }
 
 function abrirEditModal() {
