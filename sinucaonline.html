@@ -6,13 +6,54 @@
     <title>Cardápio Digital</title>
     <style>
         body { font-family: Arial, sans-serif; }
-        header { background-color: #FFA500; color: white; text-align: center; padding: 20px; position: relative; }
-        .category-menu { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
-        .category-menu button { padding: 10px 20px; background-color: #222; color: #FFA500; border: none; cursor: pointer; }
-        .category-content { display: none; }
-        .product { padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        .cart { position: fixed; bottom: 0; width: 100%; background-color: #222; color: #FFA500; padding: 10px; }
-        .cart-item { display: flex; justify-content: space-between; }
+        header { background-color: #FFA500; color: white; text-align: center; padding: 50px; position: relative; width: 82%; left: -4.1%; top: -10px; }
+        
+        .category-menu-container {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 10px 0;
+    position: relative;
+    width: 100%;
+}
+
+.category-menu {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    width: calc(100% - 80px); /* Ajuste a largura para acomodar as setas */
+    padding: 10px 0;
+}
+
+.category-menu button {
+    background-color: #FFA500;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.category-menu button:hover {
+    background-color: #e59400;
+}
+
+.arrow-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #FFA500;
+    padding: 5px;
+}
+
+.arrow-button:hover {
+    color: #e59400;
+}
         
         .hamburger-menu {
             position: absolute;
@@ -22,28 +63,57 @@
             font-size: 24px;
         }
         
-        .menu-options {
-            display: none;
-            position: absolute;
-            top: 60px;
-            right: 20px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 150px;
-            z-index: 1000;
-        }
+     /* Estilos do menu lateral */
+.menu-options {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: -200px; /* Fora da tela */
+    height: 100vh;
+    background: #ffffff;
+    border-radius: 0 0 10px 10px;
+    width: 200px;
+    padding-top: 20px;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+    z-index: 3000;
+    transition: transform 0.3s ease;
+    opacity: 0.95;
+}
 
-        .menu-options a {
-            display: block;
-            padding: 10px;
-            text-decoration: none;
-            color: #333;
-        }
+/* Classe para exibir o menu lateral */
+.menu-options.show {
+    display: block;
+    transform: translateX(-200px); /* Move para dentro da tela */
+}
 
-        .menu-options a:hover {
-            background-color: #f0f0f0;
-        }
+/* Estilos do botão de seta para fechar */
+.close-menu {
+    position: absolute;
+    top: 50%;
+    left: -20px; /* Posiciona a seta fora do menu */
+    background: #FFA500;
+    color: white;
+    border: none;
+    border-radius: 0 5px 5px 0;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* Estilos dos links no menu */
+.menu-options a {
+    display: block;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.menu-options a:hover {
+    background-color: #f5f5f5;
+    color: #FFA500;
+}
 
         /* Modal flutuante para edição */
         #edit-modal {
@@ -87,40 +157,149 @@
         #edit-modal button:hover {
             background-color: #357ABD;
         }
+        
+/* Estilo para o modal do carrinho */
+#cart-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 30px;
+    width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    max-height: 80vh; /* Limita a altura do modal para manter tudo visível */
+    overflow-y: auto; /* Habilita o scroll para o modal inteiro se ultrapassar 80vh */
+    border: 2px solid black;
+}
+
+#cart-modal-items {
+    max-height: 200px; /* Define uma altura máxima para a área dos itens */
+    overflow-y: auto; /* Adiciona scroll apenas para os itens */
+    margin-bottom: 15px; /* Espaço entre os itens e o próximo elemento */
+}
+
+/* Estilo para o botão "X" de fechamento no canto superior direito */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: red;
+    cursor: pointer;
+}
+
+/* Estilo para o botão principal de finalizar pedido dentro do modal */
+.main-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#cart-modal input, #cart-modal select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#fixed-cart-button {
+    position: fixed;
+    bottom: 20px; /* Define a posição vertical */
+    right: 35%; /* Define a posição horizontal */
+    padding: 10px 20px;
+    background-color: #FFA500;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 1000; /* Mantém o botão acima de outros elementos */
+}
     </style>
 </head>
 <body>
 
+<!-- Botão de Menu Hambúrguer no Header -->
 <header>
     <h1>Cardápio Digital</h1>
-    <!-- Ícone de menu hambúrguer -->
     <div class="hamburger-menu" onclick="toggleMenu()">&#9776;</div>
 </header>
 
-<!-- Menu suspenso que aparece ao clicar no hambúrguer -->
+<!-- Menu Lateral com botão de seta para fechar -->
 <div class="menu-options" id="menu-options">
+    <button class="close-menu" onclick="toggleMenu()">&#10095;</button> <!-- Seta para fechar o menu -->
     <a href="https://goscripts.online/gameon">Login</a>
     <a href="#">Pedidos Enviados</a>
     <a href="#" id="edit-link" onclick="openEditModal()" style="display: none;">Editar</a> <!-- Link de edição para o dono -->
 </div>
 
-<div class="category-menu">
-    <button onclick="openCategory('pizzas')">Pizzas</button>
-    <button onclick="openCategory('esfirras')">Esfihas</button>
-    <button onclick="openCategory('bebidas')">Bebidas</button>
-    <button onclick="openCategory('refrigerantes')">Refrigerantes</button>
+<div class="category-menu-container">
+    <button class="arrow-button" onclick="scrollCategoryMenu(-1)">&#10094;</button>
+    <div class="category-menu">
+        <button onclick="openCategory('pizzas')">Pizzas</button>
+        <button onclick="openCategory('esfirras')">Esfihas</button>
+        <button onclick="openCategory('bebidas')">Bebidas</button>
+        <button onclick="openCategory('refrigerantes')">Refrigerantes</button>
+    </div>
+    <button class="arrow-button" onclick="scrollCategoryMenu(1)">&#10095;</button>
 </div>
 
 <div id="category-container">
-    <h2 id="category-title">Categoria</h2>
+    <h2 id="category-title">Selecione uma categoria para ver!</h2>
     <div id="category-products"></div>
 </div>
 
-<div class="cart" id="cart">
-    <h2>Carrinho</h2>
-    <div id="cart-items"></div>
-    <p>Total: R$ <span id="total-value">0.00</span></p>
+<button onclick="abrirCarrinho()" id="fixed-cart-button">Ver Carrinho</button>
+
+<div id="cart-modal">
+    <button class="close-button" onclick="fecharCarrinho()">X</button>
+    <h2>Seu Carrinho</h2>
+    <div id="cart-modal-items"></div>
+    <p>Total: R$ <span id="cart-modal-total">0.00</span></p>
+
+    <h3>Informações para entrega</h3>
+    <label for="name">Nome:</label>
+    <input type="text" id="name" placeholder="Nome completo">
+
+    <label for="cep">CEP:</label>
+    <input type="text" id="cep" placeholder="CEP" onblur="preencherEndereco()">
+
+    <label for="rua">Rua:</label>
+    <input type="text" id="rua" placeholder="Rua">
+
+    <label for="numero">Número:</label>
+    <input type="text" id="numero" placeholder="Número da casa">
+
+    <label for="bairro">Bairro:</label>
+    <input type="text" id="bairro" placeholder="Bairro">
+
+    <label for="cidade">Cidade:</label>
+    <input type="text" id="cidade" placeholder="Cidade">
+
+    <label for="ponto-referencia">Ponto de Referência:</label>
+    <input type="text" id="ponto-referencia" placeholder="Ponto de Referência">
+
+    <label for="pagamento">Forma de Pagamento:</label>
+    <select id="pagamento">
+        <option value="dinheiro">Dinheiro</option>
+        <option value="cartao">Cartão</option>
+        <option value="pix">Pix</option>
+    </select>
+
+    <button class="main-button" onclick="finalizarPedido()">Finalizar Pedido</button>
 </div>
+
 
 <!-- Modal para adicionar ou editar produtos -->
 <!-- Modal para adicionar ou editar produtos -->
@@ -191,6 +370,7 @@
             <span class="product-title">${product.nome}</span>
             <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
             <p>${product.descricao}</p>
+            <button onclick="adicionarAoCarrinho(${product.id}, '${category}')">Adicionar ao Carrinho</button>
             ${isOwner ? `<button onclick="editarProduto(${product.id}, '${category}')">Editar</button>
                          <button onclick="removerProduto(${product.id}, '${category}')">Remover</button>` : ''}
         `;
@@ -198,6 +378,95 @@
     });
 
     document.getElementById('category-container').style.display = 'block';
+}
+
+let carrinho = [];
+
+function adicionarAoCarrinho(id, category) {
+    const product = products[category].find(item => item.id === id);
+    if (product) {
+        carrinho.push(product);
+        atualizarCarrinhoModal();
+        alert(`${product.nome} foi adicionado ao carrinho.`);
+    } else {
+        console.error("Produto não encontrado para adicionar ao carrinho.");
+    }
+}
+
+function atualizarCarrinhoModal() {
+    const cartModalItems = document.getElementById('cart-modal-items');
+    const cartModalTotal = document.getElementById('cart-modal-total');
+    
+    cartModalItems.innerHTML = ''; // Limpa os itens do carrinho
+
+    let total = 0;
+    carrinho.forEach((product, index) => {
+        total += product.preco;
+        
+        // Criação do item do carrinho como um contêiner flexível
+        const itemElement = document.createElement('div');
+        itemElement.style.display = 'flex';
+        itemElement.style.alignItems = 'center';
+        itemElement.style.justifyContent = 'space-between';
+        itemElement.style.marginBottom = '8px';
+
+        // Elemento com o nome e preço do produto
+        const productInfo = document.createElement('span');
+        productInfo.innerText = `${product.nome} - R$ ${product.preco.toFixed(2).replace('.', ',')}`;
+
+        // Botão "X" para remover o item
+        const removeButton = document.createElement('button');
+        removeButton.innerText = 'X';
+        removeButton.onclick = () => removerDoCarrinho(index);
+        removeButton.style.color = 'red';
+        removeButton.style.background = 'none';
+        removeButton.style.border = 'none';
+        removeButton.style.cursor = 'pointer';
+        removeButton.style.fontSize = '14px'; // Ajuste para o tamanho desejado
+        removeButton.style.padding = '0';
+        removeButton.style.marginLeft = '10px'; // Espaço entre o nome e o botão
+
+        // Adiciona os elementos ao item do carrinho
+        itemElement.appendChild(productInfo);
+        itemElement.appendChild(removeButton);
+
+        // Adiciona o item ao modal do carrinho
+        cartModalItems.appendChild(itemElement);
+    });
+
+    // Atualiza o total
+    cartModalTotal.innerText = total.toFixed(2).replace('.', ',');
+}
+
+function abrirCarrinho() {
+    document.getElementById('cart-modal').style.display = 'block';
+}
+
+function fecharCarrinho() {
+    document.getElementById('cart-modal').style.display = 'none';
+}
+
+// Função para preencher o endereço com base no CEP
+async function preencherEndereco() {
+    const cep = document.getElementById('cep').value;
+    if (cep.length === 8) {
+        try {
+            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await response.json();
+            if (!data.erro) {
+                document.getElementById('rua').value = data.logradouro;
+                document.getElementById('bairro').value = data.bairro;
+                document.getElementById('cidade').value = data.localidade;
+            }
+        } catch (error) {
+            console.error("Erro ao buscar o CEP:", error);
+        }
+    }
+}
+
+function removerDoCarrinho(index) {
+    carrinho.splice(index, 1); // Remove o item do carrinho pelo índice
+    atualizarCarrinhoModal(); // Atualiza o modal do carrinho
 }
     
     let editingProductId = null;
@@ -328,10 +597,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
     // Função para alternar o menu de opções
-    function toggleMenu() {
-        const menu = document.getElementById('menu-options');
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
+    // Função para alternar a visibilidade do menu
+function toggleMenu() {
+    const menu = document.getElementById('menu-options');
+    menu.classList.toggle('show');
+}
 
     // Função para abrir o modal de edição
     function openEditModal() {
@@ -342,6 +612,68 @@ document.addEventListener("DOMContentLoaded", async () => {
     function closeEditModal() {
         document.getElementById('edit-modal').style.display = 'none';
     }
+    
+    function finalizarPedido() {
+    const nome = document.getElementById('name').value;
+    const cep = document.getElementById('cep').value;
+    const rua = document.getElementById('rua').value;
+    const numero = document.getElementById('numero').value;
+    const bairro = document.getElementById('bairro').value;
+    const cidade = document.getElementById('cidade').value;
+    const pontoReferencia = document.getElementById('ponto-referencia').value;
+    const pagamento = document.getElementById('pagamento').value;
+
+    console.log("Dados do Pedido:", {
+        nome, cep, rua, numero, bairro, cidade, pontoReferencia, pagamento
+    });
+    fecharCarrinho(); // Fecha o modal após finalizar o pedido
+}
+
+function scrollCategoryMenu(direction) {
+    const categoryMenu = document.querySelector('.category-menu');
+    const scrollAmount = 200; // Ajuste a distância de rolagem
+
+    categoryMenu.scrollBy({
+        left: direction * scrollAmount,
+        behavior: 'smooth'
+    });
+}
+
+let startX;
+
+document.querySelector('.category-menu').addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+});
+
+document.querySelector('.category-menu').addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    const change = startX - touch.clientX;
+
+    if (Math.abs(change) > 50) { // Define um limite para detectar o swipe
+        scrollCategoryMenu(change > 0 ? 1 : -1);
+        startX = touch.clientX; // Atualiza para o próximo movimento
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const cartModalItems = document.getElementById('cart-modal-items');
+    const cartModalTotal = document.getElementById('cart-modal-total');
+
+    // Verifique se os elementos existem antes de tentar manipular o conteúdo
+    if (cartModalItems && cartModalTotal) {
+        atualizarCarrinhoModal();
+    } else {
+        console.error("Elementos do modal de carrinho não encontrados no DOM.");
+    }
+});
+
+function abrirCarrinho() {
+    document.getElementById('cart-modal').style.display = 'block';
+}
+
+function fecharCarrinho() {
+    document.getElementById('cart-modal').style.display = 'none';
+}
 </script>
 
 </body>
