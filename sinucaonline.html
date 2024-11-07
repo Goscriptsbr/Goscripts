@@ -310,6 +310,59 @@
     cursor: pointer;
     z-index: 1000; /* Mantém o botão acima de outros elementos */
 }
+
+    /* Estilo para o botão de opções (...) */
+    .options-button {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #333;
+        align-self: flex-end;
+        padding: 5px;
+        margin-top: -10px;
+    }
+
+    /* Modal de opções (Editar/Remover) */
+    #options-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        width: 200px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 3000;
+    }
+
+    #options-modal button {
+        width: 100%;
+        padding: 10px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+
+    #options-modal button:hover {
+        background-color: #357ABD;
+    }
+
+    #options-modal .close-options-modal {
+        background: none;
+        color: red;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
     </style>
 </head>
 <body>
@@ -384,6 +437,13 @@
     <button class="main-button" onclick="finalizarPedido()">Finalizar Pedido</button>
 </div>
 
+<!-- Modal para opções de editar e remover -->
+<div id="options-modal">
+    <button class="close-options-modal" onclick="fecharOptionsModal()">X</button>
+    <button onclick="abrirEditModal()">Editar Produto</button>
+    <button onclick="confirmarRemocao()">Remover Produto</button>
+</div>
+
 
 <!-- Modal para adicionar ou editar produtos -->
 <!-- Modal para adicionar ou editar produtos -->
@@ -451,17 +511,47 @@
         const productElement = document.createElement('div');
         productElement.classList.add('product');
         productElement.innerHTML = `
-            <span class="product-title">${product.nome}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="product-title">${product.nome}</span>
+                ${isOwner ? `<button class="options-button" onclick="abrirOptionsModal(${product.id}, '${category}')">...</button>` : ''}
+            </div>
             <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
             <p>${product.descricao}</p>
             <button onclick="adicionarAoCarrinho(${product.id}, '${category}')">Adicionar ao Carrinho</button>
-            ${isOwner ? `<button onclick="editarProduto(${product.id}, '${category}')">Editar</button>
-                         <button onclick="removerProduto(${product.id}, '${category}')">Remover</button>` : ''}
         `;
         categoryProducts.appendChild(productElement);
     });
 
     document.getElementById('category-container').style.display = 'block';
+}
+
+let selectedProductId = null;
+let selectedCategory = null;
+
+function abrirOptionsModal(id, category) {
+    selectedProductId = id;
+    selectedCategory = category;
+    document.getElementById('options-modal').style.display = 'block';
+}
+
+function fecharOptionsModal() {
+    document.getElementById('options-modal').style.display = 'none';
+    selectedProductId = null;
+    selectedCategory = null;
+}
+
+function abrirEditModal() {
+    if (selectedProductId && selectedCategory) {
+        editarProduto(selectedProductId, selectedCategory); // Abre o modal de edição com o produto selecionado
+        fecharOptionsModal();
+    }
+}
+
+function confirmarRemocao() {
+    if (selectedProductId && selectedCategory) {
+        removerProduto(selectedProductId, selectedCategory); // Remove o produto selecionado
+        fecharOptionsModal();
+    }
 }
 
 let carrinho = [];
