@@ -8,6 +8,56 @@
         body { font-family: Arial, sans-serif; }
         header { background-color: #FFA500; color: white; text-align: center; padding: 50px; position: relative; width: 82%; left: -4.1%; top: -10px; }
         
+        /* Estilos para os produtos dentro das categorias */
+.product {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.product:hover {
+    transform: translateY(-5px);
+}
+
+.product-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.price {
+    font-size: 16px;
+    color: green;
+}
+
+.product p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+.product button {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    align-self: flex-start;
+    transition: background-color 0.3s ease;
+}
+
+.product button:hover {
+    background-color: #357ABD;
+}
+        
         .category-menu-container {
     display: flex;
     align-items: center;
@@ -158,52 +208,86 @@
             background-color: #357ABD;
         }
         
-/* Estilo para o modal do carrinho */
-#cart-modal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 30px;
-    width: 400px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 2000;
-    max-height: 80vh; /* Limita a altura do modal para manter tudo visível */
-    overflow-y: auto; /* Habilita o scroll para o modal inteiro se ultrapassar 80vh */
-    border: 2px solid black;
-}
+    /* Estilo para cada item do carrinho */
+    .cart-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #f9f9f9;
+    }
 
-#cart-modal-items {
-    max-height: 200px; /* Define uma altura máxima para a área dos itens */
-    overflow-y: auto; /* Adiciona scroll apenas para os itens */
-    margin-bottom: 15px; /* Espaço entre os itens e o próximo elemento */
-}
+    .cart-item-info {
+        flex-grow: 1;
+        font-size: 14px;
+        color: #333;
+    }
 
-/* Estilo para o botão "X" de fechamento no canto superior direito */
-.close-button {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: red;
-    cursor: pointer;
-}
+    .cart-item-info .product-name {
+        font-weight: bold;
+        font-size: 16px;
+        color: #333;
+    }
 
-/* Estilo para o botão principal de finalizar pedido dentro do modal */
-.main-button {
-    width: 100%;
-    padding: 10px;
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
+    .cart-item-info .product-price {
+        font-size: 14px;
+        color: #e59400;
+        margin-top: 5px;
+    }
+
+    /* Botão de remover item */
+    .remove-button {
+        color: red;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 5px;
+    }
+
+    /* Estilo do modal do carrinho */
+    #cart-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        width: 90%;
+        max-width: 450px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 2000;
+        max-height: 80vh;
+        overflow-y: auto;
+        border: 2px solid #333;
+    }
+
+    .close-button {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 18px;
+        color: red;
+        cursor: pointer;
+    }
+
+    .main-button {
+        width: 100%;
+        padding: 10px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 15px;
+    }
 
 #cart-modal input, #cart-modal select {
     width: 100%;
@@ -396,35 +480,28 @@ function adicionarAoCarrinho(id, category) {
 function atualizarCarrinhoModal() {
     const cartModalItems = document.getElementById('cart-modal-items');
     const cartModalTotal = document.getElementById('cart-modal-total');
-    
-    cartModalItems.innerHTML = ''; // Limpa os itens do carrinho
 
+    cartModalItems.innerHTML = ''; // Limpa os itens do carrinho
     let total = 0;
+
     carrinho.forEach((product, index) => {
         total += product.preco;
-        
+
         // Criação do item do carrinho como um contêiner flexível
         const itemElement = document.createElement('div');
-        itemElement.style.display = 'flex';
-        itemElement.style.alignItems = 'center';
-        itemElement.style.justifyContent = 'space-between';
-        itemElement.style.marginBottom = '8px';
+        itemElement.classList.add('cart-item'); // Aplica a classe do estilo
 
-        // Elemento com o nome e preço do produto
-        const productInfo = document.createElement('span');
-        productInfo.innerText = `${product.nome} - R$ ${product.preco.toFixed(2).replace('.', ',')}`;
+        // Informações do produto no carrinho
+        const productInfo = document.createElement('div');
+        productInfo.classList.add('cart-item-info');
+        productInfo.innerHTML = `<span class="product-name">${product.nome}</span>
+                                 <span class="product-price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>`;
 
         // Botão "X" para remover o item
         const removeButton = document.createElement('button');
         removeButton.innerText = 'X';
+        removeButton.classList.add('remove-button');
         removeButton.onclick = () => removerDoCarrinho(index);
-        removeButton.style.color = 'red';
-        removeButton.style.background = 'none';
-        removeButton.style.border = 'none';
-        removeButton.style.cursor = 'pointer';
-        removeButton.style.fontSize = '14px'; // Ajuste para o tamanho desejado
-        removeButton.style.padding = '0';
-        removeButton.style.marginLeft = '10px'; // Espaço entre o nome e o botão
 
         // Adiciona os elementos ao item do carrinho
         itemElement.appendChild(productInfo);
