@@ -592,12 +592,9 @@
     <input type="number" id="product-price" placeholder="Preço do Produto">
     
     <label for="product-category">Categoria:</label>
-    <select id="product-category">
-        <option value="pizzas">Pizzas</option>
-        <option value="esfirras">Esfihas</option>
-        <option value="bebidas">Bebidas</option>
-        <option value="refrigerantes">Refrigerantes</option>
-    </select>
+<select id="product-category">
+    <!-- Opções de categoria serão preenchidas dinamicamente -->
+</select>
 
     <label for="product-description">Descrição:</label>
     <input type="text" id="product-description" placeholder="Descrição do Produto">
@@ -1140,6 +1137,51 @@ async function carregarCategorias() {
 document.addEventListener("DOMContentLoaded", async () => {
     await carregarCategorias();
 });
+
+async function carregarCategoriasParaSelect() {
+    const productCategorySelect = document.getElementById('product-category');
+    productCategorySelect.innerHTML = ''; // Limpa as opções atuais
+
+    const { data: categorias, error } = await supabaseClient.from('categoriadecardapio').select('*');
+    if (error) {
+        console.error("Erro ao carregar categorias para o select:", error);
+        return;
+    }
+
+    // Adiciona cada categoria como uma opção no select
+    categorias.forEach(categoria => {
+        const option = document.createElement('option');
+        option.value = categoria.nome;
+        option.text = categoria.nome.charAt(0).toUpperCase() + categoria.nome.slice(1);
+        productCategorySelect.appendChild(option);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await verificarPermissao();
+    await carregarCardapio();
+    await carregarCategorias(); // Carrega categorias no menu
+    await carregarCategoriasParaSelect(); // Carrega categorias no select do modal de produto
+});
+
+async function carregarCategoriasParaSelect() {
+    const productCategorySelect = document.getElementById('product-category');
+    productCategorySelect.innerHTML = ''; // Limpa as opções atuais
+
+    const { data: categorias, error } = await supabaseClient.from('categoriadecardapio').select('*');
+    if (error) {
+        console.error("Erro ao carregar categorias para o select:", error);
+        return;
+    }
+
+    // Adiciona cada categoria como uma opção no select
+    categorias.forEach(categoria => {
+        const option = document.createElement('option');
+        option.value = categoria.nome;
+        option.text = categoria.nome.charAt(0).toUpperCase() + categoria.nome.slice(1);
+        productCategorySelect.appendChild(option);
+    });
+}
 </script>
 
 </body>
