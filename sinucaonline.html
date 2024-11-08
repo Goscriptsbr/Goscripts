@@ -620,23 +620,23 @@
     const products = { pizzas: [], esfirras: [], bebidas: [], refrigerantes: [] };
 
     async function carregarCardapio() {
-        products.pizzas = [];
-        products.esfirras = [];
-        products.bebidas = [];
-        products.refrigerantes = [];
-
-        const { data, error } = await supabaseClient.from('cardapio').select('*');
-        if (error) { 
-            console.error("Erro ao carregar o cardápio:", error); 
-            return; 
-        }
-
-        data.forEach(item => {
-            if (products[item.category]) {
-                products[item.category].push(item);
-            }
-        });
+    const { data, error } = await supabaseClient.from('cardapio').select('*');
+    if (error) { 
+        console.error("Erro ao carregar o cardápio:", error); 
+        return; 
     }
+
+    // Limpa o objeto de produtos
+    Object.keys(products).forEach(category => products[category] = []);
+
+    // Popula produtos para as categorias
+    data.forEach(item => {
+        if (!products[item.category]) {
+            products[item.category] = []; // Cria a categoria dinamicamente se não existir
+        }
+        products[item.category].push(item);
+    });
+}
 
     function openCategory(category) {
     const categoryTitle = document.getElementById('category-title');
