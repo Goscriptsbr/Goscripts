@@ -1028,63 +1028,118 @@ function fecharCategoriaModal() {
 }
 
 // Função para listar categorias no modal
-function listarCategorias() {
+async function listarCategorias() {
     const categoriaList = document.getElementById('categoria-list');
     const categoryMenu = document.getElementById('category-menu');
 
-    categoriaList.innerHTML = ''; // Limpa a lista no modal
-    categoryMenu.innerHTML = ''; // Limpa o menu de categorias na interface principal
+    // Limpa a lista de categorias no modal e no menu principal
+    categoriaList.innerHTML = '';
+    categoryMenu.innerHTML = '';
 
-    categorias.forEach((categoria, index) => {
+    const { data: categorias, error } = await supabaseClient.from('categoriadecardapio').select('*');
+    if (error) {
+        console.error("Erro ao carregar categorias:", error);
+        return;
+    }
+
+    categorias.forEach((categoria) => {
         // Atualiza a lista de categorias no modal
         const listItem = document.createElement('li');
         listItem.innerHTML = `
-            <input type="text" value="${categoria}" onchange="renomearCategoria(${index}, this.value)">
-            <button onclick="removerCategoria(${index})">Remover</button>
+            <input type="text" value="${categoria.nome}" onchange="renomearCategoria(${categoria.id}, this.value)">
+            <button onclick="removerCategoria(${categoria.id})">Remover</button>
         `;
         categoriaList.appendChild(listItem);
 
         // Atualiza o menu de categorias principal
         const categoryButton = document.createElement('button');
-        categoryButton.innerText = categoria.charAt(0).toUpperCase() + categoria.slice(1);
-        categoryButton.onclick = () => openCategory(categoria);
+        categoryButton.innerText = categoria.nome.charAt(0).toUpperCase() + categoria.nome.slice(1);
+        categoryButton.onclick = () => openCategory(categoria.nome);
         categoryMenu.appendChild(categoryButton);
     });
 }
 
 // Função para adicionar uma nova categoria
-function adicionarCategoria() {
+async function adicionarCategoria() {
     if (!isOwner) return alert("Acesso não autorizado.");
 
     const novaCategoria = document.getElementById('nova-categoria').value.trim();
-    if (novaCategoria && !categorias.includes(novaCategoria.toLowerCase())) {
-        categorias.push(novaCategoria.toLowerCase());
-        document.getElementById('nova-categoria').value = ''; // Limpa o campo
-        listarCategorias(); // Atualiza o menu e o modal de categorias
+    if (novaCategoria) {
+        const { data, error } = await supabaseClient.from('categoriadecardapio').insert([{ nome: novaCategoria.toLowerCase() }]);
+        
+        if (error) {
+            console.error("Erro ao adicionar categoria:", error);
+            alert("Erro ao adicionar categoria.");
+        } else {
+            alert("Categoria adicionada com sucesso!");
+            document.getElementById('nova-categoria').value = ''; // Limpa o campo
+            listarCategorias(); // Atualiza o menu e o modal de categorias
+        }
     } else {
-        alert("Categoria já existe ou é inválida.");
+        alert("Nome de categoria inválido.");
     }
 }
 
 // Função para renomear uma categoria
-function renomearCategoria(index, novoNome) {
+async function renomearCategoria(id, novoNome) {
     if (!isOwner) return alert("Acesso não autorizado.");
 
-    if (novoNome && !categorias.includes(novoNome.toLowerCase())) {
-        categorias[index] = novoNome.toLowerCase();
-        listarCategorias();
+    if (novoNome) {
+        const { error } = await supabaseClient.from('categoriadecardapio').update({ nome: novoNome.toLowerCase() }).eq('id', id);
+        
+        if (error) {
+            console.error("Erro ao renomear categoria:", error);
+            alert("Erro ao renomear categoria.");
+        } else {
+            alert("Categoria renomeada com sucesso!");
+            listarCategorias();
+        }
     } else {
-        alert("Nome inválido ou já existente.");
+        alert("Nome inválido.");
     }
 }
 
 // Função para remover uma categoria
-function removerCategoria(index) {
+async function removerCategoria(id) {
     if (!isOwner) return alert("Acesso não autorizado.");
 
-    categorias.splice(index, 1);
-    listarCategorias();
+    const { error } = await supabaseClient.from('categoriadecardapio').delete().eq('id', id);
+    
+    if (error) {
+        console.error("Erro ao remover categoria:", error);
+        alert("Erro ao remover categoria.");
+    } else {
+        alert("Categoria removida com sucesso!");
+        listarCategorias();
+    }
 }
+
+// Função para carregar categorias da nova tabela
+async function carregarCategorias() {
+    const { data, error } = await supabaseClient.from('categoriadecardapio').select('*');
+    
+    if (error) {
+        console.error("Erro ao carregar categorias:", error);
+        return;
+    }
+
+    // Limpa o menu de categorias antes de atualizar
+    const categoryMenu = document.getElementById('category-menu');
+    categoryMenu.innerHTML = '';
+
+    // Adiciona cada categoria ao menu
+    data.forEach(categoria => {
+        const categoryButton = document.createElement('button');
+        categoryButton.innerText = categoria.nome.charAt(0).toUpperCase() + categoria.nome.slice(1);
+        categoryButton.onclick = () => openCategory(categoria.nome);
+        categoryMenu.appendChild(categoryButton);
+    });
+}
+
+// Chame a função de carregar categorias quando a página for carregada
+document.addEventListener("DOMContentLoaded", async () => {
+    await carregarCategorias();
+});
 </script>
 
 </body>
