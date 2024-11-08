@@ -517,11 +517,8 @@
 
 <div class="category-menu-container">
     <button class="arrow-button" onclick="scrollCategoryMenu(-1)">&#10094;</button>
-    <div class="category-menu">
-        <button onclick="openCategory('pizzas')">Pizzas</button>
-        <button onclick="openCategory('esfirras')">Esfihas</button>
-        <button onclick="openCategory('bebidas')">Bebidas</button>
-        <button onclick="openCategory('refrigerantes')">Refrigerantes</button>
+    <div class="category-menu" id="category-menu">
+        <!-- Botões de categoria serão adicionados aqui via JavaScript -->
     </div>
     <button class="arrow-button" onclick="scrollCategoryMenu(1)">&#10095;</button>
 </div>
@@ -1033,15 +1030,25 @@ function fecharCategoriaModal() {
 // Função para listar categorias no modal
 function listarCategorias() {
     const categoriaList = document.getElementById('categoria-list');
-    categoriaList.innerHTML = ''; // Limpa a lista
+    const categoryMenu = document.getElementById('category-menu');
+
+    categoriaList.innerHTML = ''; // Limpa a lista no modal
+    categoryMenu.innerHTML = ''; // Limpa o menu de categorias na interface principal
 
     categorias.forEach((categoria, index) => {
+        // Atualiza a lista de categorias no modal
         const listItem = document.createElement('li');
         listItem.innerHTML = `
             <input type="text" value="${categoria}" onchange="renomearCategoria(${index}, this.value)">
             <button onclick="removerCategoria(${index})">Remover</button>
         `;
         categoriaList.appendChild(listItem);
+
+        // Atualiza o menu de categorias principal
+        const categoryButton = document.createElement('button');
+        categoryButton.innerText = categoria.charAt(0).toUpperCase() + categoria.slice(1);
+        categoryButton.onclick = () => openCategory(categoria);
+        categoryMenu.appendChild(categoryButton);
     });
 }
 
@@ -1053,7 +1060,7 @@ function adicionarCategoria() {
     if (novaCategoria && !categorias.includes(novaCategoria.toLowerCase())) {
         categorias.push(novaCategoria.toLowerCase());
         document.getElementById('nova-categoria').value = ''; // Limpa o campo
-        listarCategorias();
+        listarCategorias(); // Atualiza o menu e o modal de categorias
     } else {
         alert("Categoria já existe ou é inválida.");
     }
