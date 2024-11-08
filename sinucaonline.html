@@ -8,12 +8,29 @@
         body { font-family: Arial, sans-serif; }
         header { background-color: #FFA500; color: white; text-align: center; padding: 50px; position: relative; width: 82%; left: -4.1%; top: -10px; }
         
+        .footer {
+    width: 95%;
+    background-color: #333; /* Cor de fundo */
+    color: white; /* Cor do texto */
+    text-align: center;
+    padding: 20px;
+    margin: 0; /* Remove margens que possam afetar a largura */
+    position: relative;
+    left: -2.7%;
+}
+        
         /* Estilos para os produtos dentro das categorias */
+.product-container { /* Contêiner que envolve todos os produtos */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Ajuste o valor do gap conforme necessário */
+    margin-bottom: 10px;
+}
+
 .product {
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 15px;
-    margin: 10px 0;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -363,6 +380,103 @@
     top: 1px;
     right: 2px;
 }
+
+/* Estilo geral do modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 3000;
+    text-align: center;
+}
+
+/* Estilo do título */
+.modal h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+/* Lista de categorias */
+#categoria-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+}
+
+#categoria-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
+/* Campo de entrada para nova categoria */
+.input-text {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Estilo dos botões */
+.button-add,
+.button-close,
+#categoria-list li button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+/* Botão de adicionar categoria */
+.button-add {
+    background-color: #4CAF50;
+    color: white;
+    margin-top: 10px;
+}
+
+.button-add:hover {
+    background-color: #45a049;
+}
+
+/* Botão de fechar modal */
+.button-close {
+    background-color: #FF6347;
+    color: white;
+    margin-top: 10px;
+}
+
+.button-close:hover {
+    background-color: #d9534f;
+}
+
+/* Botão de remover dentro da lista de categorias */
+#categoria-list li button {
+    background-color: #FF6347;
+    color: white;
+    padding: 5px 10px;
+}
+
+#categoria-list li button:hover {
+    background-color: #d9534f;
+}
     </style>
 </head>
 <body>
@@ -379,6 +493,26 @@
     <a href="https://goscripts.online/gameon">Login</a>
     <a href="#">Pedidos Enviados</a>
     <a href="#" id="edit-link" onclick="openEditModal()" style="display: none;">Adicionar produto</a> <!-- Link de edição para o dono -->
+    <div id="gerenciar-categorias" style="display: none;">
+    <a href="#" onclick="abrirCategoriaModal()">Gerenciar Categorias</a>
+</div>
+</div>
+
+<!-- Modal de Gerenciamento de Categorias -->
+<div id="categoria-modal" class="modal">
+    <h2>Gerenciar Categorias</h2>
+
+    <!-- Listar Categorias Existentes -->
+    <ul id="categoria-list">
+        <!-- Categorias serão listadas dinamicamente aqui -->
+    </ul>
+
+    <!-- Formulário para adicionar uma nova categoria -->
+    <input type="text" id="nova-categoria" placeholder="Nova categoria" class="input-text">
+    <button onclick="adicionarCategoria()" class="button-add">Adicionar Categoria</button>
+
+    <!-- Botão para fechar o modal -->
+    <button onclick="fecharCategoriaModal()" class="button-close">Fechar</button>
 </div>
 
 <div class="category-menu-container">
@@ -428,18 +562,25 @@
     <input type="text" id="ponto-referencia" placeholder="Ponto de Referência">
 
     <label for="pagamento">Forma de Pagamento:</label>
-    <select id="pagamento">
-        <option value="dinheiro">Dinheiro</option>
-        <option value="cartao">Cartão</option>
-        <option value="pix">Pix</option>
-    </select>
+<select id="pagamento" onchange="exibirCampoTroco()">
+    <option value="" disabled selected>Selecione</option>
+    <option value="dinheiro">Dinheiro</option>
+    <option value="cartao">Cartão</option>
+    <option value="pix">Pix</option>
+</select>
+
+<!-- Campo para informar o troco -->
+<div id="troco-container" style="display: none;">
+    <label for="troco">Troco para:</label>
+    <input type="number" id="troco" placeholder="Informe o valor do troco">
+</div>
 
     <button class="main-button" onclick="finalizarPedido()">Finalizar Pedido</button>
 </div>
 
 <!-- Modal de opções para editar e remover produto -->
 <div id="options-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); z-index: 2000; width: 200px;">
-    <button class="close-options-modal" onclick="fecharOptionsModal()">Fechar</button>
+    <button class="close-options-modal" onclick="fecharOptionsModal()">X</button>
     <button onclick="editarProduto(selectedProductId, selectedCategory)" style="width: 100%; margin: 10px 0;">Editar Produto</button>
     <button onclick="removerProduto(selectedProductId, selectedCategory)" style="width: 100%; margin: 10px 0;">Remover Produto</button>
 </div>
@@ -467,6 +608,10 @@
     <!-- O botão salvar chama a função correta com base no contexto (adicionar ou editar) -->
     <button id="save-product-button" onclick="salvarOuAdicionarProduto()">Salvar Produto</button>
 </div>
+
+<footer class="footer">
+    © 2024 GoScripts
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
@@ -747,7 +892,8 @@ async function verificarPermissao() {
 
     // Verifica se o UID do usuário corresponde ao UID do dono
     if (user && user.user && user.user.id === OWNER_UID) {
-        document.getElementById('edit-link').style.display = 'block'; // Mostra a opção "Editar" no menu
+        document.getElementById('edit-link').style.display = 'block'; // Mostra a opção "Adicionar Produto" no menu
+        document.getElementById('gerenciar-categorias').style.display = 'block'; // Mostra a opção "Gerenciar Categorias"
         isOwner = true; // Define isOwner como true para o dono
     } else {
         isOwner = false; // Define isOwner como false para outros usuários
@@ -785,11 +931,34 @@ function toggleMenu() {
     const cidade = document.getElementById('cidade').value;
     const pontoReferencia = document.getElementById('ponto-referencia').value;
     const pagamento = document.getElementById('pagamento').value;
+    const troco = document.getElementById('troco').value;
 
-    console.log("Dados do Pedido:", {
-        nome, cep, rua, numero, bairro, cidade, pontoReferencia, pagamento
+    // Texto da mensagem para enviar via WhatsApp
+    let mensagem = `*Pedido de Cardápio Digital*%0A`;
+    mensagem += `*Nome:* ${nome}%0A`;
+    mensagem += `*Endereço:* ${rua}, ${numero}, ${bairro}, ${cidade} - CEP: ${cep}%0A`;
+    mensagem += `*Ponto de Referência:* ${pontoReferencia}%0A`;
+    mensagem += `*Forma de Pagamento:* ${pagamento}%0A`;
+    
+    // Adiciona o troco à mensagem se a forma de pagamento for "Dinheiro"
+    if (pagamento === 'dinheiro' && troco) {
+        mensagem += `*Troco para:* R$ ${parseFloat(troco).toFixed(2).replace('.', ',')}%0A`;
+    }
+
+    mensagem += `%0A*Itens do Carrinho:*%0A`;
+    carrinho.forEach(item => {
+        mensagem += `- ${item.nome} - R$ ${item.preco.toFixed(2).replace('.', ',')}%0A`;
     });
-    fecharCarrinho(); // Fecha o modal após finalizar o pedido
+
+    const total = carrinho.reduce((acc, item) => acc + item.preco, 0);
+    mensagem += `%0A*Total:* R$ ${total.toFixed(2).replace('.', ',')}`;
+
+    // Abrir WhatsApp com o link de mensagem
+    const whatsappLink = `https://wa.me/5519998133764?text=${mensagem}`;
+    window.open(whatsappLink, '_blank');
+
+    // Fechar o carrinho após enviar o pedido
+    fecharCarrinho();
 }
 
 function scrollCategoryMenu(direction) {
@@ -836,6 +1005,78 @@ function abrirCarrinho() {
 
 function fecharCarrinho() {
     document.getElementById('cart-modal').style.display = 'none';
+}
+
+function exibirCampoTroco() {
+    const pagamento = document.getElementById('pagamento').value;
+    const trocoContainer = document.getElementById('troco-container');
+    trocoContainer.style.display = (pagamento === 'dinheiro') ? 'block' : 'none';
+}
+
+let categorias = ["pizzas", "esfirras", "bebidas", "refrigerantes"]; // Exemplo de categorias existentes
+
+// Função para abrir o modal de categorias
+function abrirCategoriaModal() {
+    if (isOwner) {
+        listarCategorias();
+        document.getElementById('categoria-modal').style.display = 'block';
+    } else {
+        alert("Acesso não autorizado.");
+    }
+}
+
+// Função para fechar o modal de categorias
+function fecharCategoriaModal() {
+    document.getElementById('categoria-modal').style.display = 'none';
+}
+
+// Função para listar categorias no modal
+function listarCategorias() {
+    const categoriaList = document.getElementById('categoria-list');
+    categoriaList.innerHTML = ''; // Limpa a lista
+
+    categorias.forEach((categoria, index) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+            <input type="text" value="${categoria}" onchange="renomearCategoria(${index}, this.value)">
+            <button onclick="removerCategoria(${index})">Remover</button>
+        `;
+        categoriaList.appendChild(listItem);
+    });
+}
+
+// Função para adicionar uma nova categoria
+function adicionarCategoria() {
+    if (!isOwner) return alert("Acesso não autorizado.");
+
+    const novaCategoria = document.getElementById('nova-categoria').value.trim();
+    if (novaCategoria && !categorias.includes(novaCategoria.toLowerCase())) {
+        categorias.push(novaCategoria.toLowerCase());
+        document.getElementById('nova-categoria').value = ''; // Limpa o campo
+        listarCategorias();
+    } else {
+        alert("Categoria já existe ou é inválida.");
+    }
+}
+
+// Função para renomear uma categoria
+function renomearCategoria(index, novoNome) {
+    if (!isOwner) return alert("Acesso não autorizado.");
+
+    if (novoNome && !categorias.includes(novoNome.toLowerCase())) {
+        categorias[index] = novoNome.toLowerCase();
+        listarCategorias();
+    } else {
+        alert("Nome inválido ou já existente.");
+    }
+}
+
+// Função para remover uma categoria
+function removerCategoria(index) {
+    if (!isOwner) return alert("Acesso não autorizado.");
+
+    categorias.splice(index, 1);
+    listarCategorias();
 }
 </script>
 
