@@ -508,6 +508,31 @@
     <div id="gerenciar-categorias" style="display: none;">
         <a href="#" onclick="abrirCategoriaModal(); toggleMenu()">Gerenciar Categorias</a>
     </div>
+    <div id="configuracoes-tema" style="display: none;">
+    <a href="#" onclick="abrirTemaModal(); toggleMenu()">Configurações de Tema</a>
+</div>
+</div>
+
+<div id="tema-modal" class="modal">
+    <h2>Configurações de Tema</h2>
+
+    <!-- Campo para alterar o título -->
+    <label for="titulo-pagina">Título da Página:</label>
+    <input type="text" id="titulo-pagina" placeholder="Digite o novo título">
+
+    <!-- Campo para alterar as cores -->
+    <label for="cor-fundo-site">Cor de Fundo do Site:</label>
+    <input type="color" id="cor-fundo-site">
+
+    <label for="cor-fundo-header">Cor de Fundo do Header:</label>
+    <input type="color" id="cor-fundo-header">
+
+    <label for="cor-seta-categoria">Cor da Seta e Botões de Categoria:</label>
+    <input type="color" id="cor-seta-categoria">
+
+    <!-- Botão para salvar as configurações -->
+    <button onclick="salvarTema()" class="button-add">Salvar Configurações</button>
+    <button onclick="fecharTemaModal()" class="button-close">Fechar</button>
 </div>
 
 <!-- Modal de Gerenciamento de Categorias -->
@@ -1197,6 +1222,72 @@ async function carregarCategoriasParaSelect() {
         productCategorySelect.appendChild(option);
     });
 }
+
+function abrirTemaModal() {
+    if (isOwner) {
+        document.getElementById('tema-modal').style.display = 'block';
+    } else {
+        alert("Acesso não autorizado.");
+    }
+}
+
+function fecharTemaModal() {
+    document.getElementById('tema-modal').style.display = 'none';
+}
+
+async function salvarTema() {
+    const titulo = document.getElementById('titulo-pagina').value;
+    const corFundoSite = document.getElementById('cor-fundo-site').value;
+    const corFundoHeader = document.getElementById('cor-fundo-header').value;
+    const corSetaCategoria = document.getElementById('cor-seta-categoria').value;
+
+    // Atualizar o título da página
+    document.querySelector('header h1').innerText = titulo;
+
+    // Aplicar as cores selecionadas
+    document.body.style.backgroundColor = corFundoSite;
+    document.querySelector('header').style.backgroundColor = corFundoHeader;
+    document.querySelectorAll('.arrow-button, .category-menu button').forEach(el => el.style.backgroundColor = corSetaCategoria);
+
+    // Salvar as configurações no banco de dados (opcional)
+    if (isOwner) {
+        const { error } = await supabaseClient.from('cores').upsert({
+            id: OWNER_UID,
+            titulo: titulo,
+            corFundoSite: corFundoSite,
+            corFundoHeader: corFundoHeader,
+            corSetaCategoria: corSetaCategoria
+        });
+
+        if (error) {
+            console.error("Erro ao salvar configurações:", error);
+            alert("Erro ao salvar configurações.");
+        } else {
+            alert("Configurações salvas com sucesso!");
+            fecharTemaModal();
+        }
+    }
+}
+
+async function carregarTema() {
+    const { data, error } = await supabaseClient.from('cores').select('*').eq('id', OWNER_UID).single();
+
+    if (data) {
+        // Aplica as configurações salvas
+        document.querySelector('header h1').innerText = data.titulo;
+        document.body.style.backgroundColor = data.corFundoSite;
+        document.querySelector('header').style.backgroundColor = data.corFundoHeader;
+        document.querySelectorAll('.arrow-button, .category-menu button').forEach(el => el.style.backgroundColor = data.corSetaCategoria);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await verificarPermissao();
+    await carregarCardapio();
+    await carregarCategorias();
+    await carregarCategoriasParaSelect();
+    await carregarTema(); // Carregar configurações de tema
+});
 </script>
 
 </body>
