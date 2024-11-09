@@ -520,6 +520,10 @@
     <label for="titulo-pagina">Título da Página:</label>
     <input type="text" id="titulo-pagina" placeholder="Digite o novo título">
 
+    <!-- Campo para alterar a cor do texto do título -->
+    <label for="cor-texto-titulo">Cor do Texto do Título:</label>
+    <input type="color" id="cor-texto-titulo">
+
     <!-- Campo para alterar as cores -->
     <label for="cor-fundo-site">Cor de Fundo do Site:</label>
     <input type="color" id="cor-fundo-site">
@@ -1238,23 +1242,29 @@ function fecharTemaModal() {
 
 async function salvarTema() {
     const titulo = document.getElementById('titulo-pagina').value;
+    const corTextoTitulo = document.getElementById('cor-texto-titulo').value;
     const corFundoSite = document.getElementById('cor-fundo-site').value;
     const corFundoHeader = document.getElementById('cor-fundo-header').value;
     const corSetaCategoria = document.getElementById('cor-seta-categoria').value;
 
-    // Atualizar o título da página
-    document.querySelector('header h1').innerText = titulo;
+    // Atualizar o título e a cor do texto
+    const tituloElemento = document.querySelector('header h1');
+    tituloElemento.innerText = titulo;
+    tituloElemento.style.color = corTextoTitulo;
 
     // Aplicar as cores selecionadas
     document.body.style.backgroundColor = corFundoSite;
     document.querySelector('header').style.backgroundColor = corFundoHeader;
-    document.querySelectorAll('.arrow-button, .category-menu button').forEach(el => el.style.backgroundColor = corSetaCategoria);
+
+    // Aplica a cor somente na seta, sem mudar o fundo do botão
+    document.querySelectorAll('.arrow-button').forEach(el => el.style.color = corSetaCategoria);
 
     // Salvar as configurações no banco de dados (opcional)
     if (isOwner) {
         const { error } = await supabaseClient.from('cores').upsert({
             id: OWNER_UID,
             titulo: titulo,
+            corTextoTitulo: corTextoTitulo,
             corFundoSite: corFundoSite,
             corFundoHeader: corFundoHeader,
             corSetaCategoria: corSetaCategoria
