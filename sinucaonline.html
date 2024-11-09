@@ -1242,32 +1242,29 @@ function fecharTemaModal() {
 
 async function salvarTema() {
     const titulo = document.getElementById('titulo-pagina').value;
-    const corTextoTitulo = document.getElementById('cor-texto-titulo').value;
     const corFundoSite = document.getElementById('cor-fundo-site').value;
     const corFundoHeader = document.getElementById('cor-fundo-header').value;
     const corSetaCategoria = document.getElementById('cor-seta-categoria').value;
+    const corTextoTitulo = document.getElementById('cor-texto-titulo').value;
 
-    // Atualizar o título e a cor do texto
-    const tituloElemento = document.querySelector('header h1');
-    tituloElemento.innerText = titulo;
-    tituloElemento.style.color = corTextoTitulo;
+    // Atualizar o título da página
+    document.querySelector('header h1').innerText = titulo;
 
     // Aplicar as cores selecionadas
     document.body.style.backgroundColor = corFundoSite;
     document.querySelector('header').style.backgroundColor = corFundoHeader;
-
-    // Aplica a cor somente na seta, sem mudar o fundo do botão
-    document.querySelectorAll('.arrow-button').forEach(el => el.style.color = corSetaCategoria);
+    document.querySelector('header h1').style.color = corTextoTitulo;
+    document.querySelectorAll('.arrow-button, .category-menu button').forEach(el => el.style.color = corSetaCategoria);
 
     // Salvar as configurações no banco de dados (opcional)
     if (isOwner) {
-        const { error } = await supabaseClient.from('cores').upsert({
+        const { error } = await supabaseClient.from('goz').upsert({
             id: OWNER_UID,
             titulo: titulo,
-            corTextoTitulo: corTextoTitulo,
             corFundoSite: corFundoSite,
             corFundoHeader: corFundoHeader,
-            corSetaCategoria: corSetaCategoria
+            corSetaCategoria: corSetaCategoria,
+            corTextoTitulo: corTextoTitulo
         });
 
         if (error) {
@@ -1281,14 +1278,15 @@ async function salvarTema() {
 }
 
 async function carregarTema() {
-    const { data, error } = await supabaseClient.from('cores').select('*').eq('id', OWNER_UID).single();
+    const { data, error } = await supabaseClient.from('goz').select('*').eq('id', OWNER_UID).single();
 
     if (data) {
         // Aplica as configurações salvas
         document.querySelector('header h1').innerText = data.titulo;
         document.body.style.backgroundColor = data.corFundoSite;
         document.querySelector('header').style.backgroundColor = data.corFundoHeader;
-        document.querySelectorAll('.arrow-button, .category-menu button').forEach(el => el.style.backgroundColor = data.corSetaCategoria);
+        document.querySelector('header h1').style.color = data.corTextoTitulo;
+        document.querySelectorAll('.arrow-button, .category-menu button').forEach(el => el.style.color = data.corSetaCategoria);
     }
 }
 
