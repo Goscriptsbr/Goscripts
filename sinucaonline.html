@@ -458,13 +458,20 @@
 
 /* Botão de fechar modal */
 .button-close {
-    background-color: #FF6347;
+    background-color: #FF6347; /* Cor de fundo vermelha */
     color: white;
     margin-top: 10px;
+    padding: 10px; /* Adiciona um espaçamento */
+    width: 100%; /* Largura total para ocupar o botão inteiro */
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
 }
 
 .button-close:hover {
-    background-color: #d9534f;
+    background-color: #d9534f; /* Tom de vermelho mais escuro ao passar o mouse */
 }
 
 /* Botão de remover dentro da lista de categorias */
@@ -490,12 +497,12 @@
 <!-- Menu Lateral com botão de seta para fechar -->
 <div class="menu-options" id="menu-options">
     <button class="close-menu" onclick="toggleMenu()">&#10095;</button> <!-- Seta para fechar o menu -->
-    <a href="https://goscripts.online/gameon">Login</a>
-    <a href="#">Pedidos Enviados</a>
-    <a href="#" id="edit-link" onclick="openEditModal()" style="display: none;">Adicionar produto</a> <!-- Link de edição para o dono -->
+    <a href="https://goscripts.online/gameon" onclick="toggleMenu()">Login</a>
+    <a href="#" onclick="toggleMenu()">Pedidos Enviados</a>
+    <a href="#" id="edit-link" onclick="openEditModal(); toggleMenu()" style="display: none;">Adicionar produto</a> <!-- Link de edição para o dono -->
     <div id="gerenciar-categorias" style="display: none;">
-    <a href="#" onclick="abrirCategoriaModal()">Gerenciar Categorias</a>
-</div>
+        <a href="#" onclick="abrirCategoriaModal(); toggleMenu()">Gerenciar Categorias</a>
+    </div>
 </div>
 
 <!-- Modal de Gerenciamento de Categorias -->
