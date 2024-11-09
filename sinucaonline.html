@@ -370,15 +370,20 @@
         background-color: #357ABD;
     }
 
-    #close-options-modal {
-    background: none;
-    color: red;
-    font-size: 16px;
+   /* Estilo do botão de fechar no modal de opções */
+.close-options-modal {
+    background-color: #FF6347; /* Cor de fundo vermelha */
+    color: white;
     border: none;
+    padding: 10px;
+    border-radius: 5px;
     cursor: pointer;
-    position: absolute;
-    top: 1px;
-    right: 2px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.close-options-modal:hover {
+    background-color: #d9534f; /* Tom de vermelho mais escuro ao passar o mouse */
 }
 
 /* Estilo geral do modal */
