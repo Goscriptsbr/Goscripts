@@ -5,48 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardápio Digital</title>
     <style>
-        :root {
-    --cor-titulo: #333;
-    --cor-cabecalho: #FFA500;
-    --cor-setas: #FFA500;
-    --cor-fundo-categoria: #ffffff;
-}
-
-body {
-    font-family: Arial, sans-serif;
-}
-
-header {
-    background-color: var(--cor-cabecalho);
-    color: white;
-    text-align: center;
-    padding: 50px;
-    position: relative;
-    width: 82%;
-    left: -4.1%;
-    top: -10px;
-}
-
-header h1 {
-    color: var(--cor-titulo);
-}
-
-.footer {
+        body { font-family: Arial, sans-serif; }
+        header { background-color: #FFA500; color: white; text-align: center; padding: 50px; position: relative; width: 82%; left: -4.1%; top: -10px; }
+        
+        .footer {
     width: 95%;
-    background-color: #333;
-    color: white;
+    background-color: #333; /* Cor de fundo */
+    color: white; /* Cor do texto */
     text-align: center;
     padding: 20px;
-    margin: 0;
+    margin: 0; /* Remove margens que possam afetar a largura */
     position: relative;
     left: -2.7%;
 }
-
-/* Estilos para os produtos dentro das categorias */
-.product-container {
+        
+        /* Estilos para os produtos dentro das categorias */
+.product-container { /* Contêiner que envolve todos os produtos */
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 20px; /* Ajuste o valor do gap conforme necessário */
     margin-bottom: 10px;
 }
 
@@ -97,16 +74,14 @@ header h1 {
 .product button:hover {
     background-color: #357ABD;
 }
-
-/* Menu de categorias */
-.category-menu-container {
+        
+        .category-menu-container {
     display: flex;
     align-items: center;
     overflow: hidden;
     padding: 10px 0;
     position: relative;
     width: 100%;
-    background-color: var(--cor-fundo-categoria);
 }
 
 .category-menu {
@@ -114,12 +89,12 @@ header h1 {
     gap: 10px;
     overflow-x: auto;
     scroll-behavior: smooth;
-    width: calc(100% - 80px);
+    width: calc(100% - 80px); /* Ajuste a largura para acomodar as setas */
     padding: 10px 0;
 }
 
 .category-menu button {
-    background-color: var(--cor-cabecalho);
+    background-color: #FFA500;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -139,20 +114,28 @@ header h1 {
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: var(--cor-setas);
+    color: #FFA500;
     padding: 15px;
 }
 
 .arrow-button:hover {
     color: #e59400;
 }
-
-/* Menu lateral */
+        
+        .hamburger-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        
+     /* Estilos do menu lateral */
 .menu-options {
     display: none;
     position: fixed;
     top: 0;
-    right: -200px;
+    right: -200px; /* Fora da tela */
     height: 100vh;
     background: #ffffff;
     border-radius: 0 0 10px 10px;
@@ -164,16 +147,18 @@ header h1 {
     opacity: 0.95;
 }
 
+/* Classe para exibir o menu lateral */
 .menu-options.show {
     display: block;
-    transform: translateX(-200px);
+    transform: translateX(-200px); /* Move para dentro da tela */
 }
 
+/* Estilos do botão de seta para fechar */
 .close-menu {
     position: absolute;
     top: 50%;
-    left: -20px;
-    background: var(--cor-cabecalho);
+    left: -20px; /* Posiciona a seta fora do menu */
+    background: #FFA500;
     color: white;
     border: none;
     border-radius: 0 5px 5px 0;
@@ -182,6 +167,7 @@ header h1 {
     font-size: 18px;
 }
 
+/* Estilos dos links no menu */
 .menu-options a {
     display: block;
     padding: 15px 20px;
@@ -193,51 +179,51 @@ header h1 {
 
 .menu-options a:hover {
     background-color: #f5f5f5;
-    color: var(--cor-cabecalho);
+    color: #FFA500;
 }
 
-/* Modal de edição */
-#edit-modal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 2000;
-    width: 300px;
-}
+        /* Modal flutuante para edição */
+        #edit-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            width: 300px;
+        }
 
-#edit-modal h2 {
-    margin-bottom: 15px;
-    text-align: center;
-}
+        #edit-modal h2 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
 
-#edit-modal input, #edit-modal select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
+        #edit-modal input, #edit-modal select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
 
-#edit-modal button {
-    width: 100%;
-    padding: 10px;
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
+        #edit-modal button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
 
-#edit-modal button:hover {
-    background-color: #357ABD;
-}
+        #edit-modal button:hover {
+            background-color: #357ABD;
+        }
         
     /* Estilo para cada item do carrinho */
     .cart-item {
@@ -522,30 +508,6 @@ header h1 {
     <div id="gerenciar-categorias" style="display: none;">
         <a href="#" onclick="abrirCategoriaModal(); toggleMenu()">Gerenciar Categorias</a>
     </div>
-    <div id="configuracoes-temas" style="display: none;">
-    <a href="#" onclick="abrirConfiguracaoTemaModal(); toggleMenu()">Configurar Tema</a>
-</div>
-</div>
-
-<div id="tema-modal" class="modal">
-    <h2>Configurações de Tema</h2>
-    <label for="titulo-texto">Texto do Título:</label>
-    <input type="text" id="titulo-texto" placeholder="Texto do Título">
-
-    <label for="cor-titulo">Cor do Título:</label>
-    <input type="color" id="cor-titulo">
-
-    <label for="cor-cabecalho">Cor do Cabeçalho:</label>
-    <input type="color" id="cor-cabecalho">
-
-    <label for="cor-setas">Cor das Setas:</label>
-    <input type="color" id="cor-setas">
-
-    <label for="cor-fundo-categoria">Cor do Fundo da Categoria:</label>
-    <input type="color" id="cor-fundo-categoria">
-
-    <button onclick="salvarConfiguracoesTema()">Salvar</button>
-    <button onclick="fecharTemaModal()">Fechar</button>
 </div>
 
 <!-- Modal de Gerenciamento de Categorias -->
@@ -923,7 +885,7 @@ function salvarOuAdicionarProduto() {
     }
 }
 
-   let isOwner = false; // Variável global para armazenar se o usuário é o dono
+    let isOwner = false; // Variável global para armazenar se o usuário é o dono
 
 // Função para verificar a permissão do usuário
 async function verificarPermissao() {
@@ -938,7 +900,6 @@ async function verificarPermissao() {
     if (user && user.user && user.user.id === OWNER_UID) {
         document.getElementById('edit-link').style.display = 'block'; // Mostra a opção "Adicionar Produto" no menu
         document.getElementById('gerenciar-categorias').style.display = 'block'; // Mostra a opção "Gerenciar Categorias"
-        document.getElementById('configuracoes-temas').style.display = 'block'; // Mostra a opção "Configurações de Tema" para o dono
         isOwner = true; // Define isOwner como true para o dono
     } else {
         isOwner = false; // Define isOwner como false para outros usuários
@@ -946,12 +907,9 @@ async function verificarPermissao() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-        await verificarPermissao();
-        await carregarCardapio();
-        await carregarCategorias(); 
-        await carregarCategoriasParaSelect();
-        await carregarConfiguracoesTema(); // Carrega o tema ao iniciar a página
-    });
+    await verificarPermissao(); // Verifica a permissão do usuário primeiro
+    await carregarCardapio(); // Carrega o cardápio apenas após verificar a permissão
+});
 
     // Função para alternar o menu de opções
     // Função para alternar a visibilidade do menu
@@ -1238,77 +1196,6 @@ async function carregarCategoriasParaSelect() {
         option.text = categoria.nome.charAt(0).toUpperCase() + categoria.nome.slice(1);
         productCategorySelect.appendChild(option);
     });
-}
-
-// Função para aplicar as configurações de tema ao carregar a página
-function aplicarConfiguracoesTema(config) {
-    document.querySelector('header h1').innerText = config.titulo_texto || 'Cardápio Digital';
-    document.documentElement.style.setProperty('--cor-titulo', config.cor_titulo);
-    document.documentElement.style.setProperty('--cor-cabecalho', config.cor_cabecalho);
-    document.documentElement.style.setProperty('--cor-setas', config.cor_setas);
-    document.documentElement.style.setProperty('--cor-fundo-categoria', config.cor_fundo_categoria);
-}
-
-// Função para carregar as configurações de tema do banco de dados
-async function carregarConfiguracoesTema() {
-    await verificarPermissao(); // Verifica permissão antes de carregar as configurações
-
-    const { data, error } = await supabaseClient
-        .from('configuracoes_temas')
-        .select('*')
-        .limit(1); // Carregar apenas a primeira configuração, se houver
-
-    if (error) {
-        console.error("Erro ao carregar configurações de tema:", error);
-        return;
-    }
-
-    if (data && data.length > 0) {
-        const config = data[0];
-        document.getElementById('titulo-texto').value = config.titulo_texto || '';
-        document.getElementById('cor-titulo').value = config.cor_titulo || '#000000';
-        document.getElementById('cor-cabecalho').value = config.cor_cabecalho || '#FFA500';
-        document.getElementById('cor-setas').value = config.cor_setas || '#FFA500';
-        document.getElementById('cor-fundo-categoria').value = config.cor_fundo_categoria || '#FFFFFF';
-        aplicarConfiguracoesTema(config);
-    }
-}
-
-async function salvarConfiguracoesTema() {
-    const tituloTexto = document.getElementById('titulo-texto').value;
-    const corTitulo = document.getElementById('cor-titulo').value;
-    const corCabecalho = document.getElementById('cor-cabecalho').value;
-    const corSetas = document.getElementById('cor-setas').value;
-    const corFundoCategoria = document.getElementById('cor-fundo-categoria').value;
-
-    // Substitui upsert por update e especifica o id que será atualizado
-    const { error } = await supabaseClient.from('configuracoes_temas').update({
-        titulo_texto: tituloTexto,
-        cor_titulo: corTitulo,
-        cor_cabecalho: corCabecalho,
-        cor_setas: corSetas,
-        cor_fundo_categoria: corFundoCategoria
-    }).eq('id', 1); // Aqui, '1' é o ID do registro que queremos atualizar
-
-    if (error) {
-        console.error("Erro ao salvar configurações de tema:", error);
-        alert("Erro ao salvar configurações de tema.");
-    } else {
-        alert("Configurações de tema salvas com sucesso!");
-    }
-}
-
-// Função para abrir o modal de configuração de tema
-function abrirConfiguracaoTemaModal() {
-    verificarPermissao().then(() => { // Verifica permissão antes de abrir o modal
-        document.getElementById('tema-modal').style.display = 'block';
-        carregarConfiguracoesTema(); // Carregar as configurações ao abrir o modal
-    });
-}
-
-// Função para fechar o modal de configuração de tema
-function fecharTemaModal() {
-    document.getElementById('tema-modal').style.display = 'none';
 }
 </script>
 
