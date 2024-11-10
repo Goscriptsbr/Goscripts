@@ -522,7 +522,7 @@ header h1 {
     <div id="gerenciar-categorias" style="display: none;">
         <a href="#" onclick="abrirCategoriaModal(); toggleMenu()">Gerenciar Categorias</a>
     </div>
-    <div id="configuracoes-tema" style="display: none;">
+    <div id="configuracoes-temas" style="display: none;">
     <a href="#" onclick="abrirConfiguracaoTemaModal(); toggleMenu()">Configurar Tema</a>
 </div>
 </div>
@@ -938,7 +938,7 @@ async function verificarPermissao() {
     if (user && user.user && user.user.id === OWNER_UID) {
         document.getElementById('edit-link').style.display = 'block'; // Mostra a opção "Adicionar Produto" no menu
         document.getElementById('gerenciar-categorias').style.display = 'block'; // Mostra a opção "Gerenciar Categorias"
-        document.getElementById('configuracoes-tema').style.display = 'block'; // Mostra a opção "Configurações de Tema" para o dono
+        document.getElementById('configuracoes-temas').style.display = 'block'; // Mostra a opção "Configurações de Tema" para o dono
         isOwner = true; // Define isOwner como true para o dono
     } else {
         isOwner = false; // Define isOwner como false para outros usuários
