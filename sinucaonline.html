@@ -5,25 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardápio Digital</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        header { background-color: #FFA500; color: white; text-align: center; padding: 50px; position: relative; width: 82%; left: -4.1%; top: -10px; }
-        
-        .footer {
+        :root {
+    --cor-titulo: #333;
+    --cor-cabecalho: #FFA500;
+    --cor-setas: #FFA500;
+    --cor-fundo-categoria: #ffffff;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background-color: var(--cor-cabecalho);
+    color: white;
+    text-align: center;
+    padding: 50px;
+    position: relative;
+    width: 82%;
+    left: -4.1%;
+    top: -10px;
+}
+
+header h1 {
+    color: var(--cor-titulo);
+}
+
+.footer {
     width: 95%;
-    background-color: #333; /* Cor de fundo */
-    color: white; /* Cor do texto */
+    background-color: #333;
+    color: white;
     text-align: center;
     padding: 20px;
-    margin: 0; /* Remove margens que possam afetar a largura */
+    margin: 0;
     position: relative;
     left: -2.7%;
 }
-        
-        /* Estilos para os produtos dentro das categorias */
-.product-container { /* Contêiner que envolve todos os produtos */
+
+/* Estilos para os produtos dentro das categorias */
+.product-container {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Ajuste o valor do gap conforme necessário */
+    gap: 20px;
     margin-bottom: 10px;
 }
 
@@ -74,14 +97,16 @@
 .product button:hover {
     background-color: #357ABD;
 }
-        
-        .category-menu-container {
+
+/* Menu de categorias */
+.category-menu-container {
     display: flex;
     align-items: center;
     overflow: hidden;
     padding: 10px 0;
     position: relative;
     width: 100%;
+    background-color: var(--cor-fundo-categoria);
 }
 
 .category-menu {
@@ -89,12 +114,12 @@
     gap: 10px;
     overflow-x: auto;
     scroll-behavior: smooth;
-    width: calc(100% - 80px); /* Ajuste a largura para acomodar as setas */
+    width: calc(100% - 80px);
     padding: 10px 0;
 }
 
 .category-menu button {
-    background-color: #FFA500;
+    background-color: var(--cor-cabecalho);
     color: white;
     padding: 10px 20px;
     border: none;
@@ -114,28 +139,20 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #FFA500;
+    color: var(--cor-setas);
     padding: 15px;
 }
 
 .arrow-button:hover {
     color: #e59400;
 }
-        
-        .hamburger-menu {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            cursor: pointer;
-            font-size: 24px;
-        }
-        
-     /* Estilos do menu lateral */
+
+/* Menu lateral */
 .menu-options {
     display: none;
     position: fixed;
     top: 0;
-    right: -200px; /* Fora da tela */
+    right: -200px;
     height: 100vh;
     background: #ffffff;
     border-radius: 0 0 10px 10px;
@@ -147,18 +164,16 @@
     opacity: 0.95;
 }
 
-/* Classe para exibir o menu lateral */
 .menu-options.show {
     display: block;
-    transform: translateX(-200px); /* Move para dentro da tela */
+    transform: translateX(-200px);
 }
 
-/* Estilos do botão de seta para fechar */
 .close-menu {
     position: absolute;
     top: 50%;
-    left: -20px; /* Posiciona a seta fora do menu */
-    background: #FFA500;
+    left: -20px;
+    background: var(--cor-cabecalho);
     color: white;
     border: none;
     border-radius: 0 5px 5px 0;
@@ -167,7 +182,6 @@
     font-size: 18px;
 }
 
-/* Estilos dos links no menu */
 .menu-options a {
     display: block;
     padding: 15px 20px;
@@ -179,51 +193,51 @@
 
 .menu-options a:hover {
     background-color: #f5f5f5;
-    color: #FFA500;
+    color: var(--cor-cabecalho);
 }
 
-        /* Modal flutuante para edição */
-        #edit-modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 2000;
-            width: 300px;
-        }
+/* Modal de edição */
+#edit-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    width: 300px;
+}
 
-        #edit-modal h2 {
-            margin-bottom: 15px;
-            text-align: center;
-        }
+#edit-modal h2 {
+    margin-bottom: 15px;
+    text-align: center;
+}
 
-        #edit-modal input, #edit-modal select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
+#edit-modal input, #edit-modal select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
 
-        #edit-modal button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+#edit-modal button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
-        #edit-modal button:hover {
-            background-color: #357ABD;
-        }
+#edit-modal button:hover {
+    background-color: #357ABD;
+}
         
     /* Estilo para cada item do carrinho */
     .cart-item {
@@ -1228,9 +1242,10 @@ async function carregarCategoriasParaSelect() {
 
 function aplicarConfiguracoesTema(config) {
     document.querySelector('header h1').innerText = config.titulo_texto || 'Cardápio Digital';
-    document.querySelector('header').style.backgroundColor = config.cor_cabecalho;
-    document.querySelectorAll('.arrow-button').forEach(button => button.style.color = config.cor_setas);
-    document.querySelector('.category-menu-container').style.backgroundColor = config.cor_fundo_categoria;
+    document.documentElement.style.setProperty('--cor-titulo', config.cor_titulo);
+    document.documentElement.style.setProperty('--cor-cabecalho', config.cor_cabecalho);
+    document.documentElement.style.setProperty('--cor-setas', config.cor_setas);
+    document.documentElement.style.setProperty('--cor-fundo-categoria', config.cor_fundo_categoria);
 }
 
 async function carregarConfiguracoesTema() {
