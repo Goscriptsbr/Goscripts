@@ -1274,37 +1274,27 @@ async function carregarConfiguracoesTema() {
     }
 }
 
-// Função para salvar as configurações de tema no banco de dados
 async function salvarConfiguracoesTema() {
-    await verificarPermissao(); // Verifica permissão antes de salvar as configurações
-
     const tituloTexto = document.getElementById('titulo-texto').value;
     const corTitulo = document.getElementById('cor-titulo').value;
     const corCabecalho = document.getElementById('cor-cabecalho').value;
     const corSetas = document.getElementById('cor-setas').value;
     const corFundoCategoria = document.getElementById('cor-fundo-categoria').value;
 
-    const { data, error } = await supabaseClient.from('configuracoes_temas').upsert({
+    // Substitui upsert por update e especifica o id que será atualizado
+    const { error } = await supabaseClient.from('configuracoes_temas').update({
         titulo_texto: tituloTexto,
         cor_titulo: corTitulo,
         cor_cabecalho: corCabecalho,
         cor_setas: corSetas,
         cor_fundo_categoria: corFundoCategoria
-    });
+    }).eq('id', 1); // Aqui, '1' é o ID do registro que queremos atualizar
 
     if (error) {
         console.error("Erro ao salvar configurações de tema:", error);
         alert("Erro ao salvar configurações de tema.");
     } else {
         alert("Configurações de tema salvas com sucesso!");
-        aplicarConfiguracoesTema({
-            titulo_texto: tituloTexto,
-            cor_titulo: corTitulo,
-            cor_cabecalho: corCabecalho,
-            cor_setas: corSetas,
-            cor_fundo_categoria: corFundoCategoria
-        });
-        fecharTemaModal();
     }
 }
 
