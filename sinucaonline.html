@@ -1228,7 +1228,7 @@ async function carregarCategoriasParaSelect() {
 
 async function carregarConfiguracoesTema() {
     const { data, error } = await supabaseClient
-        .from('configuracoes_tema')
+        .from('configuracoes_tema') // Altere para 'configuracoes_temas' se a tabela estiver no plural
         .select('*')
         .eq('user_uid', OWNER_UID);
 
