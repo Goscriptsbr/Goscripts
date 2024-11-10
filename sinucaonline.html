@@ -931,13 +931,13 @@ async function verificarPermissao() {
     }
 }
 
-// Executa o código ao carregar a página
 document.addEventListener("DOMContentLoaded", async () => {
-    await verificarPermissao(); // Verifica a permissão do usuário primeiro
-    await carregarCardapio(); // Carrega o cardápio apenas após verificar a permissão
-    await carregarCategorias(); // Carrega categorias no menu
-    await carregarCategoriasParaSelect(); // Carrega categorias no select do modal de produto
-});
+        await verificarPermissao();
+        await carregarCardapio();
+        await carregarCategorias(); 
+        await carregarCategoriasParaSelect();
+        await carregarConfiguracoesTema(); // Carrega o tema ao iniciar a página
+    });
 
     // Função para alternar o menu de opções
     // Função para alternar a visibilidade do menu
@@ -1228,7 +1228,7 @@ async function carregarCategoriasParaSelect() {
 
 async function carregarConfiguracoesTema() {
     const { data, error } = await supabaseClient
-        .from('configuracoes_tema') // Altere para 'configuracoes_temas' se a tabela estiver no plural
+        .from('configuracoes_temas') // Nome correto da tabela
         .select('*')
         .eq('user_uid', OWNER_UID);
 
@@ -1262,7 +1262,7 @@ async function salvarConfiguracoesTema() {
     const corSetas = document.getElementById('cor-setas').value;
     const corFundoCategoria = document.getElementById('cor-fundo-categoria').value;
 
-    const { data, error } = await supabaseClient.from('configuracoes_tema').upsert({
+    const { data, error } = await supabaseClient.from('configuracoes_temas').upsert({
         user_uid: OWNER_UID,
         titulo_texto: tituloTexto,
         cor_titulo: corTitulo,
@@ -1289,7 +1289,7 @@ async function salvarConfiguracoesTema() {
 
 function abrirConfiguracaoTemaModal() {
     document.getElementById('tema-modal').style.display = 'block';
-    carregarConfiguracoesTema(); // Carrega as configurações de tema para exibir os valores atuais no modal
+    carregarConfiguracoesTema(); // Corrigi a chamada para carregar corretamente as configurações
 }
 
 function fecharTemaModal() {
