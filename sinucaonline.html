@@ -1240,6 +1240,7 @@ async function carregarCategoriasParaSelect() {
     });
 }
 
+// Função para aplicar as configurações de tema ao carregar a página
 function aplicarConfiguracoesTema(config) {
     document.querySelector('header h1').innerText = config.titulo_texto || 'Cardápio Digital';
     document.documentElement.style.setProperty('--cor-titulo', config.cor_titulo);
@@ -1248,9 +1249,12 @@ function aplicarConfiguracoesTema(config) {
     document.documentElement.style.setProperty('--cor-fundo-categoria', config.cor_fundo_categoria);
 }
 
+// Função para carregar as configurações de tema do banco de dados
 async function carregarConfiguracoesTema() {
+    await verificarPermissao(); // Verifica permissão antes de carregar as configurações
+
     const { data, error } = await supabaseClient
-        .from('configuracoes_temas') // Nome correto da tabela
+        .from('configuracoes_temas')
         .select('*')
         .limit(1); // Carregar apenas a primeira configuração, se houver
 
@@ -1270,7 +1274,10 @@ async function carregarConfiguracoesTema() {
     }
 }
 
+// Função para salvar as configurações de tema no banco de dados
 async function salvarConfiguracoesTema() {
+    await verificarPermissao(); // Verifica permissão antes de salvar as configurações
+
     const tituloTexto = document.getElementById('titulo-texto').value;
     const corTitulo = document.getElementById('cor-titulo').value;
     const corCabecalho = document.getElementById('cor-cabecalho').value;
@@ -1301,11 +1308,15 @@ async function salvarConfiguracoesTema() {
     }
 }
 
+// Função para abrir o modal de configuração de tema
 function abrirConfiguracaoTemaModal() {
-    document.getElementById('tema-modal').style.display = 'block';
-    carregarConfiguracoesTema(); // Corrigi a chamada para carregar corretamente as configurações
+    verificarPermissao().then(() => { // Verifica permissão antes de abrir o modal
+        document.getElementById('tema-modal').style.display = 'block';
+        carregarConfiguracoesTema(); // Carregar as configurações ao abrir o modal
+    });
 }
 
+// Função para fechar o modal de configuração de tema
 function fecharTemaModal() {
     document.getElementById('tema-modal').style.display = 'none';
 }
