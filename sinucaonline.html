@@ -1286,6 +1286,15 @@ async function salvarConfiguracoesTema() {
         fecharTemaModal();
     }
 }
+
+function abrirConfiguracaoTemaModal() {
+    document.getElementById('tema-modal').style.display = 'block';
+    carregarConfiguracoesTema(); // Carrega as configurações de tema para exibir os valores atuais no modal
+}
+
+function fecharTemaModal() {
+    document.getElementById('tema-modal').style.display = 'none';
+}
 </script>
 
 </body>
