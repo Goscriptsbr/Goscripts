@@ -1226,11 +1226,18 @@ async function carregarCategoriasParaSelect() {
     });
 }
 
+function aplicarConfiguracoesTema(config) {
+    document.querySelector('header h1').innerText = config.titulo_texto || 'Cardápio Digital';
+    document.querySelector('header').style.backgroundColor = config.cor_cabecalho;
+    document.querySelectorAll('.arrow-button').forEach(button => button.style.color = config.cor_setas);
+    document.querySelector('.category-menu-container').style.backgroundColor = config.cor_fundo_categoria;
+}
+
 async function carregarConfiguracoesTema() {
     const { data, error } = await supabaseClient
         .from('configuracoes_temas') // Nome correto da tabela
         .select('*')
-        .eq('user_uid', OWNER_UID);
+        .limit(1); // Carregar apenas a primeira configuração, se houver
 
     if (error) {
         console.error("Erro ao carregar configurações de tema:", error);
@@ -1248,13 +1255,6 @@ async function carregarConfiguracoesTema() {
     }
 }
 
-function aplicarConfiguracoesTema(config) {
-    document.querySelector('header h1').innerText = config.titulo_texto || 'Cardápio Digital';
-    document.querySelector('header').style.backgroundColor = config.cor_cabecalho;
-    document.querySelectorAll('.arrow-button').forEach(button => button.style.color = config.cor_setas);
-    document.querySelector('.category-menu-container').style.backgroundColor = config.cor_fundo_categoria;
-}
-
 async function salvarConfiguracoesTema() {
     const tituloTexto = document.getElementById('titulo-texto').value;
     const corTitulo = document.getElementById('cor-titulo').value;
@@ -1263,13 +1263,12 @@ async function salvarConfiguracoesTema() {
     const corFundoCategoria = document.getElementById('cor-fundo-categoria').value;
 
     const { data, error } = await supabaseClient.from('configuracoes_temas').upsert({
-        user_uid: OWNER_UID,
         titulo_texto: tituloTexto,
         cor_titulo: corTitulo,
         cor_cabecalho: corCabecalho,
         cor_setas: corSetas,
         cor_fundo_categoria: corFundoCategoria
-    }, { onConflict: ['user_uid'] });
+    });
 
     if (error) {
         console.error("Erro ao salvar configurações de tema:", error);
