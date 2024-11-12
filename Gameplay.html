@@ -210,7 +210,7 @@
 }
 
 /* Botão de fechamento estilizado */
-#edit-modal .close-button {
+#edit-modal .close-button{
     position: absolute;
     top: 5px;
     right: -180px;
@@ -442,21 +442,20 @@
     background-color: #b89014; /* Tom mais escuro para o efeito hover */
 }
 
-/* Botão para fechar o modal */
 .close-button {
     position: absolute;
     top: 10px;
     right: 15px;
-    font-size: 18px;
-    color: #FF6347;
-    cursor: pointer;
+    font-size: 24px;
+    color: #e74c3c !important; /* Vermelho */
     background: none;
     border: none;
+    cursor: pointer;
     transition: color 0.3s ease;
 }
 
 .close-button:hover {
-    color: #d9534f; /* Vermelho mais escuro ao passar o mouse */
+    color: #c0392b !important; /* Vermelho mais escuro no hover */
 }
 
 #fixed-cart-button {
@@ -558,8 +557,9 @@
     letter-spacing: 0.5px; /* Espaçamento entre letras para maior elegância */
 }
 
-/* Estilo dos botões dentro do modal */
-.modal button {
+/* Remova o estilo geral de .modal button */
+
+.modal .button-add {
     width: 100%;
     padding: 12px;
     border: none;
@@ -573,8 +573,26 @@
     margin-top: 10px;
 }
 
-.modal button:hover {
-    background-color: #0d2e63; /* Efeito de hover mais escuro */
+.modal .button-add:hover {
+    background-color: #45a049;
+}
+
+.modal .close-category-button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: red;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.modal .close-category-button:hover {
+    background-color: #c0392b;
 }
 
 /* Estilo dos campos de entrada no modal */
@@ -603,13 +621,13 @@
     background: none;
     border: none;
     font-size: 24px;
-    color: #e74c3c; /* Vermelho para destacar o botão de fechar */
+    color: #e74c3c !important; /* Força a cor vermelha */
     cursor: pointer;
     transition: color 0.3s ease;
 }
 
 .modal .close-button:hover {
-    color: #c0392b; /* Tom mais escuro no hover */
+    color: #c0392b !important; /* Força a cor vermelha mais escura no hover */
 }
 
 /* Lista de categorias */
@@ -714,6 +732,7 @@
     display: block;
     opacity: 1;
 }
+
     </style>
 </head>
 <body>
@@ -751,7 +770,7 @@
     <button onclick="adicionarCategoria()" class="button-add">Adicionar Categoria</button>
 
     <!-- Botão para fechar o modal -->
-    <button onclick="fecharCategoriaModal()" class="button-close">Fechar</button>
+    <button onclick="fecharCategoriaModal()" class="close-category-button">fechar</button>
 </div>
 
 <div class="category-menu-container">
@@ -759,6 +778,8 @@
     <div class="category-menu" id="category-menu">
         <!-- Botões de categoria serão adicionados aqui via JavaScript -->
     </div>
+    
+    
     <button class="arrow-button" onclick="scrollCategoryMenu(1)">&#10095;</button>
 </div>
 
@@ -820,8 +841,8 @@
 <!-- Modal de opções para editar e remover produto -->
 <div id="options-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); z-index: 2000; width: 200px;">
     <button class="close-options-modal" onclick="fecharOptionsModal()" style="background-color: #FF6347; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 16px;">Fechar janela</button>
-    <button onclick="editarProduto(selectedProductId, selectedCategory)" style="width: 100%; margin: 10px 0;">Editar Produto</button>
-    <button onclick="removerProduto(selectedProductId, selectedCategory)" style="width: 100%; margin: 10px 0;">Remover Produto</button>
+    <button onclick="editarProduto(selectedProductId, selectedCategory); fecharOptionsModal();" style="width: 100%; margin: 10px 0;">Editar Produto</button>
+    <button onclick="removerProduto(selectedProductId, selectedCategory); fecharOptionsModal();" style="width: 100%; margin: 10px 0;">Remover Produto</button>
 </div>
 
 <!-- Modal para adicionar ou editar produtos -->
