@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GamePlay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
        body {
     font-family: Arial, sans-serif;
@@ -750,6 +751,66 @@
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Aumenta a sombra ao passar o mouse */
 }
 
+.localizacao-button {
+    background-color: #D4A017; /* Dourado */
+    color: #ffffff;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra para dar profundidade */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Espaço entre o ícone e o texto */
+}
+
+.localizacao-button:hover {
+    background-color: #b89014; /* Dourado mais escuro no hover */
+    transform: translateY(-2px); /* Efeito de elevação */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.localizacao-button:active {
+    background-color: #9e7a11; /* Dourado ainda mais escuro no clique */
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header-localizacao-button {
+    background-color: #D4A017; /* Cor de fundo */
+    color: #ffffff;
+    width: 50px; /* Largura e altura para um botão redondo */
+    height: 50px;
+    border: none;
+    border-radius: 50%; /* Torna o botão circular */
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 20px; /* Espaço entre o logo e o botão */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra */
+    position: absolute;
+    top: 80%; /* Ajuste conforme necessário */
+    right: 42%; /* Ajuste conforme necessário */
+}
+
+.header-localizacao-button:hover {
+    background-color: #b89014; /* Tom mais escuro no hover */
+    transform: scale(1.1); /* Efeito de leve aumento no hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.header-localizacao-button:active {
+    background-color: #9e7a11; /* Cor no clique */
+    transform: scale(1); /* Restaura o tamanho ao clicar */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
     </style>
 </head>
 <body>
@@ -759,6 +820,9 @@
     <a href="https://goscripts.online/Gameplay">
         <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_185534_4100.jpg" alt="gameplay" style="max-width: 100%; height: auto;">
     </a>
+    <button id="localizacao" onclick="abrirGoogleMaps()" class="header-localizacao-button">
+        <i class="fas fa-map-marker-alt"></i> <!-- Ícone de localização -->
+    </button>
     <div class="hamburger-menu" onclick="toggleMenu()">&#9776;</div>
 </header>
 
@@ -823,27 +887,42 @@
     <div id="cart-modal-items"></div>
     <p>Total: R$ <span id="cart-modal-total">0.00</span></p>
 
+    <h3>Opção de Entrega</h3>
+<select id="entrega" onchange="atualizarCamposEntrega()">
+    <option value="" disabled selected>Selecione</option>
+    <option value="delivery">Delivery</option>
+    <option value="retirar">Retirar no Local</option>
+</select>
+
+<div id="informacoes-entrega">
     <h3>Informações para entrega</h3>
     <label for="name">Nome:</label>
     <input type="text" id="name" placeholder="Nome completo">
 
-    <label for="cep">CEP:</label>
-    <input type="text" id="cep" placeholder="CEP" onblur="preencherEndereco()">
+    <!-- Seção de Endereço (oculta para opção "Retirar no Local") -->
+    <div id="endereco-section">
+        <label for="cep">CEP:</label>
+        <input type="text" id="cep" placeholder="CEP" onblur="preencherEndereco()">
 
-    <label for="rua">Rua:</label>
-    <input type="text" id="rua" placeholder="Rua">
+        <label for="rua">Rua:</label>
+        <input type="text" id="rua" placeholder="Rua">
 
-    <label for="numero">Número:</label>
-    <input type="text" id="numero" placeholder="Número da casa">
+        <label for="numero">Número:</label>
+        <input type="text" id="numero" placeholder="Número da casa">
 
-    <label for="bairro">Bairro:</label>
-    <input type="text" id="bairro" placeholder="Bairro">
+        <label for="bairro">Bairro:</label>
+        <input type="text" id="bairro" placeholder="Bairro">
 
-    <label for="cidade">Cidade:</label>
-    <input type="text" id="cidade" placeholder="Cidade">
+        <label for="cidade">Cidade:</label>
+        <input type="text" id="cidade" placeholder="Cidade">
+        
+        <label for="ponto-referencia">Ponto de Referência:</label>
+        <input type="text" id="ponto-referencia" placeholder="Ponto de Referência">
+    </div>
+</div>
 
-    <label for="ponto-referencia">Ponto de Referência:</label>
-    <input type="text" id="ponto-referencia" placeholder="Ponto de Referência">
+<!-- Botão de localização (aparece quando "Retirar no Local" é selecionado) -->
+<button id="localizacao-button" style="display: none;" onclick="abrirGoogleMaps()" class="localizacao-button">Ver Localização no Google Maps</button>
 
     <label for="pagamento">Forma de Pagamento:</label>
 <select id="pagamento" onchange="exibirCampoTroco()">
@@ -1221,27 +1300,40 @@ function toggleMenu() {
     
     function finalizarPedido() {
     const nome = document.getElementById('name').value;
-    const cep = document.getElementById('cep').value;
-    const rua = document.getElementById('rua').value;
-    const numero = document.getElementById('numero').value;
-    const bairro = document.getElementById('bairro').value;
-    const cidade = document.getElementById('cidade').value;
-    const pontoReferencia = document.getElementById('ponto-referencia').value;
+    const entrega = document.getElementById('entrega').value; // Verifica a opção de entrega selecionada
     const pagamento = document.getElementById('pagamento').value;
     const troco = document.getElementById('troco').value;
-
-    // Texto da mensagem para enviar via WhatsApp
     let mensagem = `*Pedido pra GamePlay*%0A`;
+
+    // Adiciona o nome do cliente
     mensagem += `*Nome:* ${nome}%0A`;
-    mensagem += `*Endereço:* ${rua}, ${numero}, ${bairro}, ${cidade} - CEP: ${cep}%0A`;
-    mensagem += `*Ponto de Referência:* ${pontoReferencia}%0A`;
+
+    // Verifica se é Delivery ou Retirar no Local
+    if (entrega === 'delivery') {
+        const cep = document.getElementById('cep').value;
+        const rua = document.getElementById('rua').value;
+        const numero = document.getElementById('numero').value;
+        const bairro = document.getElementById('bairro').value;
+        const cidade = document.getElementById('cidade').value;
+        const pontoReferencia = document.getElementById('ponto-referencia').value;
+
+        // Adiciona informações de endereço na mensagem
+        mensagem += `*Endereço:* ${rua}, ${numero}, ${bairro}, ${cidade} - CEP: ${cep}%0A`;
+        mensagem += `*Ponto de Referência:* ${pontoReferencia}%0A`;
+    } else {
+        // Adiciona mensagem de Retirada no Local
+        mensagem += `*Entrega:* Retirar no Local%0A`;
+    }
+
+    // Adiciona forma de pagamento
     mensagem += `*Forma de Pagamento:* ${pagamento}%0A`;
-    
-    // Adiciona o troco à mensagem se a forma de pagamento for "Dinheiro"
+
+    // Adiciona o troco se a forma de pagamento for "Dinheiro"
     if (pagamento === 'dinheiro' && troco) {
         mensagem += `*Troco para:* R$ ${parseFloat(troco).toFixed(2).replace('.', ',')}%0A`;
     }
 
+    // Adiciona os itens do carrinho
     mensagem += `%0A*Itens do Carrinho:*%0A`;
     carrinho.forEach(item => {
         mensagem += `- ${item.nome} - R$ ${item.preco.toFixed(2).replace('.', ',')}%0A`;
@@ -1250,11 +1342,13 @@ function toggleMenu() {
     const total = carrinho.reduce((acc, item) => acc + item.preco, 0);
     mensagem += `%0A*Total:* R$ ${total.toFixed(2).replace('.', ',')}`;
 
-    // Abrir WhatsApp com o link de mensagem
+    // Link do WhatsApp com a mensagem
     const whatsappLink = `https://wa.me/5519998966800?text=${mensagem}`;
     window.open(whatsappLink, '_blank');
 
-    // Fechar o carrinho após enviar o pedido
+    // Limpa o carrinho e fecha o modal após enviar o pedido
+    carrinho = [];
+    atualizarCarrinhoModal();
     fecharCarrinho();
 }
 
@@ -1487,6 +1581,28 @@ async function carregarCategoriasParaSelect() {
         option.text = categoria.nome.charAt(0).toUpperCase() + categoria.nome.slice(1);
         productCategorySelect.appendChild(option);
     });
+}
+
+function atualizarCamposEntrega() {
+    const entrega = document.getElementById('entrega').value;
+    const enderecoSection = document.getElementById('endereco-section');
+    const localizacaoButton = document.getElementById('localizacao-button');
+
+    if (entrega === 'retirar') {
+        // Oculta os campos de endereço e exibe o botão de localização
+        enderecoSection.style.display = 'none';
+        localizacaoButton.style.display = 'block';
+    } else {
+        // Exibe os campos de endereço e oculta o botão de localização
+        enderecoSection.style.display = 'block';
+        localizacaoButton.style.display = 'none';
+    }
+}
+
+function abrirGoogleMaps() {
+    // Insira o endereço do estabelecimento aqui
+    const enderecoEstabelecimento = "https://maps.app.goo.gl/NdsNVrT6ybLweLB8A";
+    window.open(enderecoEstabelecimento, '_blank');
 }
 </script>
 
