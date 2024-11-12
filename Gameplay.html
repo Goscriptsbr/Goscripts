@@ -932,20 +932,24 @@
         imageContainer.style.display = 'none';
     }
 
-    products[category].forEach(product => {
-        const productElement = document.createElement('div');
-        productElement.classList.add('product');
-        productElement.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span class="product-title">${product.nome}</span>
-                ${isOwner ? `<button class="options-button" onclick="abrirOptionsModal(${product.id}, '${category}')">...</button>` : ''}
-            </div>
-            <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
-            <p>${product.descricao}</p>
-            <button onclick="adicionarAoCarrinho(${product.id}, '${category}')">Adicionar ao Carrinho</button>
-        `;
-        categoryProducts.appendChild(productElement);
-    });
+    if (products[category] && products[category].length > 0) {
+        products[category].forEach(product => {
+            const productElement = document.createElement('div');
+            productElement.classList.add('product');
+            productElement.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="product-title">${product.nome}</span>
+                    ${isOwner ? `<button class="options-button" onclick="abrirOptionsModal(${product.id}, '${category}')">...</button>` : ''}
+                </div>
+                <span class="price">R$ ${product.preco.toFixed(2).replace('.', ',')}</span>
+                <p>${product.descricao}</p>
+                <button onclick="adicionarAoCarrinho(${product.id}, '${category}')">Adicionar ao Carrinho</button>
+            `;
+            categoryProducts.appendChild(productElement);
+        });
+    } else {
+        categoryProducts.innerHTML = '<p>Esta categoria ainda não possui itens.</p>';
+    }
 
     document.getElementById('category-container').style.display = 'block';
 }
