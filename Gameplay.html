@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GamePlay</title>
     <style>
-        body { font-family: Arial, sans-serif; }
+       body {
+    font-family: Arial, sans-serif;
+    background-color: #e0e7ff; /* Defina a cor de fundo desejada */
+}
+        
         header { background-color: #0f367b; color: white; text-align: center; padding: 50px; position: relative; width: 82%; left: -4.1%; top: -10px; }
         
         .footer {
@@ -733,6 +737,19 @@
     opacity: 1;
 }
 
+.styled-image {
+    max-width: 100%;
+    margin-bottom: 15px;
+    border-radius: 10px; /* Arredonda as bordas */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra suave */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transição suave */
+}
+
+.styled-image:hover {
+    transform: scale(1.05); /* Aumenta ligeiramente ao passar o mouse */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Aumenta a sombra ao passar o mouse */
+}
+
     </style>
 </head>
 <body>
@@ -785,6 +802,13 @@
 
 <div id="category-container">
     <h2 id="category-title">Selecione uma categoria para ver!</h2>
+    
+    <!-- Contêiner para as imagens -->
+<div id="image-container" style="text-align: center; margin-top: 20px;">
+    <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_223700_0762.jpg" alt="Imagem 1" class="styled-image">
+    <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_224107_7974.jpg" alt="Imagem 2" class="styled-image">
+</div>
+
     <div id="category-products"></div>
 </div>
 
@@ -898,8 +922,15 @@
     function openCategory(category) {
     const categoryTitle = document.getElementById('category-title');
     const categoryProducts = document.getElementById('category-products');
+    const imageContainer = document.getElementById('image-container'); // Seleciona o contêiner das imagens
+
     categoryTitle.innerText = category.charAt(0).toUpperCase() + category.slice(1);
     categoryProducts.innerHTML = '';
+
+    // Oculta o contêiner de imagens quando uma categoria é selecionada
+    if (imageContainer) {
+        imageContainer.style.display = 'none';
+    }
 
     products[category].forEach(product => {
         const productElement = document.createElement('div');
