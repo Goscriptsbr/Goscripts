@@ -471,8 +471,8 @@
     padding: 10px 20px;
     background-color: #0f367b;
     color: white;
-    border: 2px solid blue;
-    border-radius: 5px;
+    border: 2px solid white;
+    border-radius: 10px;
     font-size: 16px;
     cursor: pointer;
     z-index: 1000; /* Mantém o botão acima de outros elementos */
@@ -740,7 +740,7 @@
 }
 
 .styled-image {
-    max-width: 90%;
+    max-width: 70%;
     margin-bottom: 15px;
     border-radius: 10px; /* Arredonda as bordas */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra suave */
@@ -784,11 +784,11 @@
 .header-localizacao-button {
     background-color: #D4A017; /* Cor de fundo */
     color: #ffffff;
-    width: 50px; /* Largura e altura para um botão redondo */
-    height: 50px;
+    width: 30px; /* Largura e altura para um botão redondo */
+    height: 30px;
     border: none;
     border-radius: 50%; /* Torna o botão circular */
-    font-size: 20px;
+    font-size: 15px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -797,8 +797,8 @@
     transition: background-color 0.3s ease, transform 0.2s ease;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra */
     position: absolute;
-    top: 80%; /* Ajuste conforme necessário */
-    right: 42%; /* Ajuste conforme necessário */
+    top: 85%; /* Ajuste conforme necessário */
+    right: 45%; /* Ajuste conforme necessário */
 }
 
 .header-localizacao-button:hover {
@@ -819,7 +819,7 @@
 <!-- Botão de Menu Hambúrguer no Header -->
 <header style="display: flex; justify-content: center; align-items: center;">
     <a href="https://goscripts.online/Gameplay">
-        <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_185534_4100.jpg" alt="gameplay" style="max-width: 100%; height: auto;">
+        <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_185534_4100.jpg" alt="gameplay" style="max-width: 80%; height: auto;">
     </a>
     <button id="localizacao" onclick="abrirGoogleMaps()" class="header-localizacao-button">
         <i class="fas fa-map-marker-alt"></i> <!-- Ícone de localização -->
@@ -870,8 +870,8 @@
     
     <!-- Contêiner para as imagens -->
 <div id="image-container" style="text-align: center; margin-top: 20px;">
-    <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_223700_0762.jpg" alt="Imagem 1" class="styled-image">
-    <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_224107_7974.jpg" alt="Imagem 2" class="styled-image">
+    <img src="https://gozgames.neocities.org/Imagens.teste/Compress_20241112_151526_6492.jpg" alt="Imagem 1" class="styled-image">
+    <img src="https://gozgames.neocities.org/Imagens.teste/Compress_20241112_151526_6707.jpg" alt="Imagem 2" class="styled-image">
 </div>
 
     <div id="category-products"></div>
@@ -1602,7 +1602,7 @@ function atualizarCamposEntrega() {
 
 function abrirGoogleMaps() {
     // Insira o endereço do estabelecimento aqui
-    const enderecoEstabelecimento = "https://maps.app.goo.gl/r7gPWuhAZX5RQ7rP6";
+    const enderecoEstabelecimento = "https://maps.app.goo.gl/NdsNVrT6ybLweLB8A";
     window.open(enderecoEstabelecimento, '_blank');
 }
 </script>
