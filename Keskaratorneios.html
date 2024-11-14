@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro do Torneio</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #1b1b1b;
+        color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        flex-direction: column;
+      }
+
+      header {
+        width: 100%;
+        max-width: 500px;
+        overflow: hidden;
+        border-radius: 10px;
+        margin-bottom: 1em;
+      }
+
+      header img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: cover;
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+      }
+
+      header img:hover {
+        transform: scale(1.05); /* Efeito de zoom ao passar o mouse */
+      }
+
+      .registration-form {
+        background-color: #282c34;
+        padding: 2em;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        margin: 0 1em;
+      }
+
+      .registration-form h2 {
+        color: #ff4500;
+        margin-bottom: 1em;
+        font-size: 1.8em;
+      }
+
+      .form-group {
+        margin-bottom: 1.5em;
+        text-align: left;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5em;
+        font-size: 1.1em;
+      }
+
+      .form-group input, .form-group select {
+        width: 100%;
+        padding: 0.8em;
+        font-size: 1.1em;
+        border-radius: 5px;
+        border: 1px solid #555;
+        background-color: #3a3f47;
+        color: #f0f0f0;
+      }
+
+      .form-group select {
+        appearance: none;
+      }
+
+      .submit-button, .back-button {
+        padding: 0.8em 1.5em;
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #fff;
+        background-color: #ff4500;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        width: 100%;
+        margin-bottom: 1em;
+      }
+
+      .submit-button:hover, .back-button:hover {
+        background-color: #ff6347;
+      }
+    </style>
+</head>
+<body>
+    <!-- Header com link de imagem -->
+    <header>
+        <a href="https://goscripts.online/Keskara">
+            <img src="https://keskara.neocities.org/Fonto/Compress_20241114_002657_7840.jpg" alt="Logo do Keskara">
+        </a>
+    </header>
+
+    <!-- Formulário de Registro -->
+    <div class="registration-form">
+        <button onclick="window.location.href='https://goscripts.online/Keskara'" class="back-button">Voltar ao Início</button>
+        <h2>Registro do Torneio</h2>
+        
+        <!-- Seleção de Tipo de Torneio -->
+        <div class="form-group">
+            <label for="tournament-type">Selecione o Tipo de Torneio:</label>
+            <select id="tournament-type" onchange="updatePlayerFields()">
+                <option value="">Escolha o Tipo de Torneio</option>
+                <option value="1v1">1v1</option>
+                <option value="2v2">2v2</option>
+                <option value="3v3">3v3</option>
+            </select>
+        </div>
+
+        <form onsubmit="sendToWhatsApp(event)">
+            <!-- Campos de Jogadores -->
+            <div id="player-fields"></div>
+
+            <button type="submit" class="submit-button">Registrar</button>
+        </form>
+    </div>
+
+    <script>
+        function updatePlayerFields() {
+            const tournamentType = document.getElementById("tournament-type").value;
+            const playerFields = document.getElementById("player-fields");
+
+            // Limpa os campos anteriores
+            playerFields.innerHTML = "";
+
+            // Define o número de jogadores com base no tipo de torneio
+            let numPlayers;
+            if (tournamentType === "1v1") numPlayers = 1;
+            else if (tournamentType === "2v2") numPlayers = 2;
+            else if (tournamentType === "3v3") numPlayers = 3;
+
+            // Gera campos para cada jogador
+            for (let i = 1; i <= numPlayers; i++) {
+                playerFields.innerHTML += `
+                    <div class="form-group">
+                        <label for="epic-id-${i}">ID da Epic Games - Jogador ${i}:</label>
+                        <input type="text" id="epic-id-${i}" name="epic_id_${i}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="rank-${i}">Rank - Jogador ${i}:</label>
+                        <select id="rank-${i}" name="rank_${i}" required>
+                            <option value="">Selecione o Rank</option>
+                            <option value="bronze 1">Bronze 1</option>
+                            <option value="bronze 2">Bronze 2</option>
+                            <option value="bronze 3">Bronze 3</option>
+                            <option value="prata 1">Prata 1</option>
+                            <option value="prata 2">Prata 2</option>
+                            <option value="prata 3">Prata 3</option>
+                            <option value="ouro 1">Ouro 1</option>
+                            <option value="ouro 2">Ouro 2</option>
+                            <option value="ouro 3">Ouro 3</option>
+                            <option value="platina 1">Platina 1</option>
+                            <option value="platina 2">Platina 2</option>
+                            <option value="platina 3">Platina 3</option>
+                            <option value="diamante 1">Diamante 1</option>
+                            <option value="diamante 2">Diamante 2</option>
+                            <option value="diamante 3">Diamante 3</option>
+                            <option value="campeão 1">Campeão 1</option>
+                            <option value="campeão 2">Campeão 2</option>
+                            <option value="campeão 3">Campeão 3</option>
+                            <option value="grande-campeão 1">Grande-Campeão 1</option>
+                            <option value="grande-campeão 2">Grande-Campeão 2</option>
+                            <option value="grande-campeão 3">Grande-Campeão 3</option>
+                            <option value="Supersonic legend">Supersonic legend</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="platform-${i}">Plataforma - Jogador ${i}:</label>
+                        <select id="platform-${i}" name="platform_${i}" required>
+                            <option value="">Selecione a Plataforma</option>
+                            <option value="pc">PC</option>
+                            <option value="ps4">PlayStation</option>
+                            <option value="xbox">Xbox</option>
+                            <option value="switch">Nintendo Switch</option>
+                        </select>
+                    </div>
+                `;
+            }
+        }
+
+        function sendToWhatsApp(event) {
+            event.preventDefault();
+
+            const tournamentType = document.getElementById("tournament-type").value;
+            let message = `Registro do Torneio: ${tournamentType}%0A`;
+
+            const numPlayers = tournamentType === "1v1" ? 1 : tournamentType === "2v2" ? 2 : 3;
+
+            for (let i = 1; i <= numPlayers; i++) {
+                const epicId = document.getElementById(`epic-id-${i}`).value;
+                const rank = document.getElementById(`rank-${i}`).value;
+                const platform = document.getElementById(`platform-${i}`).value;
+
+                message += `%0AJogador ${i}:%0AID da Epic Games: ${epicId}%0ARank: ${rank}%0APlataforma: ${platform}%0A`;
+            }
+
+            const whatsappUrl = `https://wa.me/5519998133764?text=${message}`;
+            window.open(whatsappUrl, "_blank");
+        }
+    </script>
+</body>
+</html>
