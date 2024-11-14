@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket League Team - Keskara</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1b1b1b;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        header {
+            background-color: #ff4500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 250px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .nav-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background-color: rgba(40, 44, 52, 0.9);
+        }
+
+        nav {
+            display: flex;
+            gap: 2em;
+            padding: 1em 0;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+        }
+
+        nav a {
+            color: #ff4500;
+            text-decoration: none;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 0.5em 1em;
+            border-radius: 4px;
+            transition: color 0.3s, background-color 0.3s;
+            white-space: nowrap; /* Evita quebra de linha */
+        }
+
+        nav a:hover {
+            color: #ffffff;
+            background-color: #ff6347;
+        }
+
+        nav a.active {
+            color: #ffffff;
+            background-color: #ff4500;
+        }
+
+        /* Setas para navegação */
+        .nav-container .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(40, 44, 52, 0.8);
+            border: none;
+            color: #ff4500;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 0.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .nav-container .scroll-left {
+            left: 0;
+        }
+
+        .nav-container .scroll-right {
+            right: 0;
+        }
+
+        section {
+            display: none;
+            padding: 2em;
+            margin: 1em 0;
+            background-color: #1b1b1b;
+            border: 2px solid #ff4500;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        h2 {
+            color: #ff4500;
+            margin-bottom: 0.5em;
+            font-size: 1.8em;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 0.5em 1.5em;
+            margin-top: 1em;
+            font-size: 1em;
+            color: #fff;
+            background-color: #ff4500;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #ff6347;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5em;
+            margin-top: 1em;
+        }
+
+        .social-icon {
+            font-size: 2em;
+            color: #ff4500;
+            transition: color 0.3s;
+        }
+
+        .social-icon:hover {
+            color: #f0f0f0;
+            cursor: pointer;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5em;
+            background-color: #282c34;
+            color: #f0f0f0;
+            width: 100%;
+        }
+        
+        .section-title {
+    color: #ff4500;
+    font-size: 2em;
+    text-align: center;
+    margin-bottom: 1em;
+    text-transform: uppercase;
+}
+
+.about-content {
+    background-color: #282c34;
+    padding: 1.5em;
+    border-radius: 8px;
+    color: #f0f0f0;
+    line-height: 1.6;
+}
+
+.about-content h3 {
+    font-size: 1.5em;
+    color: #ff4500;
+    margin-bottom: 0.5em;
+    text-align: center;
+}
+
+.about-content p {
+    margin-bottom: 1em;
+    text-align: justify;
+}
+
+.about-content p:last-child {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #ff6347;
+}
+
+.tournament-section {
+    background-color: #282c34;
+    padding: 2em;
+    border-radius: 8px;
+    color: #f0f0f0;
+    text-align: center;
+}
+
+.tournament-section .section-title {
+    color: #ff4500;
+    font-size: 2em;
+    margin-bottom: 0.5em;
+}
+
+.tournament-description {
+    font-size: 1.2em;
+    margin-bottom: 1em;
+}
+
+.prize-list {
+    list-style: none;
+    padding: 0;
+    margin: 1em 0;
+}
+
+.prize-list li {
+    font-size: 1.2em;
+    background-color: #3a3f47;
+    margin: 0.5em 0;
+    padding: 0.8em;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.prize-list li i {
+    color: #ffd700;
+    font-size: 1.5em;
+}
+
+.tournament-call {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 1em 0;
+    color: #ff6347;
+}
+
+.enroll-button {
+    padding: 0.8em 1.5em;
+    font-size: 1.1em;
+    font-weight: bold;
+    background-color: #ff4500;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.enroll-button:hover {
+    background-color: #ff6347;
+}
+
+.giveaway-section {
+    background-color: #282c34;
+    padding: 2em;
+    border-radius: 8px;
+    color: #f0f0f0;
+    text-align: center;
+    margin-top: 1em;
+}
+
+.giveaway-section .section-title {
+    color: #ff4500;
+    font-size: 2em;
+    margin-bottom: 0.5em;
+}
+
+.giveaway-description {
+    font-size: 1.2em;
+    margin-bottom: 1em;
+}
+
+.giveaway-call {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 1em 0;
+    color: #ff6347;
+}
+
+.participate-button {
+    padding: 0.8em 1.5em;
+    font-size: 1.1em;
+    font-weight: bold;
+    background-color: #ff4500;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.participate-button:hover {
+    background-color: #ff6347;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Banner de Boas-Vindas -->
+        <header>
+            <img src="https://keskara.neocities.org/Fonto/Compress_20241114_002657_7840.jpg" alt="Logo do Keskara">
+        </header>
+
+        <!-- Navegação com rolagem -->
+        <div class="nav-container">
+            <button class="scroll-btn scroll-left" onclick="scrollNav(-200)">&laquo;</button>
+            <nav>
+    <a href="#" onclick="showSection('inicio', this)" class="active">Início</a>
+    <a href="#" onclick="showSection('torneios', this)">Torneios</a>
+    <a href="#" onclick="showSection('sorteios', this)">Sorteios</a>
+    <a href="#" onclick="showSection('redes', this)">Redes Sociais</a>
+</nav>
+            <button class="scroll-btn scroll-right" onclick="scrollNav(200)">&raquo;</button>
+        </div>
+
+        <!-- Seção Início -->
+        <section id="inicio" class="active">
+    <h2 class="section-title">Início</h2>
+    <div class="about-content">
+        <h3>Sobre Nós</h3>
+        <p>O time <strong>Keskara</strong> é um grupo que aceita todos os tipos de ranks. Nosso objetivo é criar uma comunidade acolhedora e competitiva para jogadores de Rocket League. Originalmente conhecido como <strong>Lyrics9team</strong>, nosso time foi fundado em 2020 e, desde então, temos participado ativamente de torneios e competições.</p>
+        <p>Além disso, organizamos torneios com premiações em dinheiro para os três primeiros colocados e realizamos sorteios para nossa comunidade algumas vezes ao mês.</p>
+        <p><strong>Junte-se a nós e faça parte dessa jornada no mundo do Rocket League!</strong></p>
+        <a href="https://chat.whatsapp.com/HggBPaBKIqd3uFVgaSULkl" target="_blank" class="button">Entrar</a>
+    </div>
+</section>
+
+       <section id="torneios" class="tournament-section">
+    <h2 class="section-title">Torneios</h2>
+    <p class="tournament-description">Organizamos torneios com premiações em dinheiro para os três primeiros colocados! Confira as premiações:</p>
+    <ul class="prize-list">
+        <li><i class="fas fa-trophy"></i> <strong>1º Lugar:</strong> [Premiação]</li>
+        <li><i class="fas fa-medal"></i> <strong>2º Lugar:</strong> [Premiação]</li>
+        <li><i class="fas fa-award"></i> <strong>3º Lugar:</strong> [Premiação]</li>
+    </ul>
+    <p class="tournament-call">Participe e mostre suas habilidades!</p>
+    <a href="https://example.com/inscricao" target="_blank" class="button enroll-button">Inscreva-se no Torneio</a>
+</section>
+
+        <section id="sorteios" class="giveaway-section">
+    <h2 class="section-title">Sorteios</h2>
+    <p class="giveaway-description">Realizamos sorteios exclusivos para nossa comunidade algumas vezes ao mês! Participe para ter a chance de ganhar prêmios incríveis.</p>
+    <p class="giveaway-call">Não perca essa oportunidade!</p>
+    <a href="https://example.com/sorteios" target="_blank" class="button participate-button">Participar dos Sorteios</a>
+</section>
+
+        <!-- Seção Redes Sociais -->
+<section id="redes">
+    <h2>Redes Sociais</h2>
+    <p>Conecte-se conosco nas redes sociais ou entre em nosso Discord e grupo no WhatsApp.</p>
+    <div class="social-icons">
+        <a href="https://chat.whatsapp.com/HggBPaBKIqd3uFVgaSULkl" class="social-icon" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://discord.gg/k66Xquc8fk" class="social-icon" target="_blank"><i class="fab fa-discord"></i></a>
+        <a href="https://www.instagram.com/keskara_dp?igsh=MWlzbzEzdXprZXUzZQ==" class="social-icon" target="_blank"><i class="fab fa-instagram"></i></a>
+    </div>
+</section>
+
+        <footer>
+            <p>&copy; 2024 Keskara Team. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+
+    <script>
+        function showSection(sectionId, linkElement) {
+    // Exibe a seção correspondente
+    document.querySelectorAll("section").forEach(section => {
+        section.classList.remove("active");
+    });
+    document.getElementById(sectionId).classList.add("active");
+
+    // Atualiza a classe ativa no menu
+    document.querySelectorAll("nav a").forEach(link => {
+        link.classList.remove("active");
+    });
+    linkElement.classList.add("active");
+}
+
+        function scrollNav(offset) {
+            const nav = document.querySelector("nav");
+            nav.scrollBy({
+                left: offset,
+                behavior: "smooth"
+            });
+        }
+    </script>
+</body>
+</html>
