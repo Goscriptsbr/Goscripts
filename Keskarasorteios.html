@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscrição no Sorteio</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #1b1b1b;
+        color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        flex-direction: column;
+      }
+
+      header {
+        width: 100%;
+        max-width: 500px;
+        overflow: hidden;
+        border-radius: 10px;
+        margin-bottom: 1em;
+      }
+
+      header img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: cover;
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+      }
+
+      header img:hover {
+        transform: scale(1.05); /* Efeito de zoom ao passar o mouse */
+      }
+
+      .registration-form {
+        background-color: #282c34;
+        padding: 2em;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        margin: 0 1em;
+      }
+
+      .registration-form h2 {
+        color: #ff4500;
+        margin-bottom: 1em;
+        font-size: 1.8em;
+      }
+
+      .form-group {
+        margin-bottom: 1.5em;
+        text-align: left;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5em;
+        font-size: 1.1em;
+      }
+
+      .form-group input, .form-group select {
+        width: 100%;
+        padding: 0.8em;
+        font-size: 1.1em;
+        border-radius: 5px;
+        border: 1px solid #555;
+        background-color: #3a3f47;
+        color: #f0f0f0;
+      }
+
+      .submit-button, .back-button {
+        padding: 0.8em 1.5em;
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #fff;
+        background-color: #ff4500;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        width: 100%;
+        margin-bottom: 1em;
+      }
+
+      .submit-button:hover, .back-button:hover {
+        background-color: #ff6347;
+      }
+    </style>
+</head>
+<body>
+    <!-- Header com link de imagem -->
+    <header>
+        <a href="https://goscripts.online/Keskara">
+            <img src="https://keskara.neocities.org/Fonto/Compress_20241114_002657_7840.jpg" alt="Logo do Keskara">
+        </a>
+    </header>
+
+    <!-- Formulário de Inscrição no Sorteio -->
+    <div class="registration-form">
+        <button onclick="window.location.href='https://goscripts.online/Keskara'" class="back-button">Voltar ao Início</button>
+        <h2>Inscrição no Sorteio</h2>
+        
+        <form onsubmit="sendToWhatsApp(event)">
+            <!-- Campo Nome -->
+            <div class="form-group">
+                <label for="name">Nome Completo:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <!-- Campo ID da Epic Games -->
+            <div class="form-group">
+                <label for="epic-id">ID da Epic Games:</label>
+                <input type="text" id="epic-id" name="epic_id" required>
+            </div>
+
+            <!-- Campo Plataforma -->
+            <div class="form-group">
+                <label for="platform">Plataforma:</label>
+                <select id="platform" name="platform" required>
+                    <option value="">Selecione a Plataforma</option>
+                    <option value="pc">PC</option>
+                    <option value="ps4">PlayStation</option>
+                    <option value="xbox">Xbox</option>
+                    <option value="switch">Nintendo Switch</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-button">Participar do Sorteio</button>
+        </form>
+    </div>
+
+    <script>
+        function sendToWhatsApp(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("name").value;
+            const epicId = document.getElementById("epic-id").value;
+            const platform = document.getElementById("platform").value;
+
+            let message = `Inscrição no Sorteio:%0A`;
+            message += `Nome: ${name}%0A`;
+            message += `ID da Epic Games: ${epicId}%0A`;
+            message += `Plataforma: ${platform}%0A`;
+
+            const whatsappUrl = `https://wa.me/5519998133764?text=${message}`;
+            window.open(whatsappUrl, "_blank");
+        }
+    </script>
+</body>
+</html>
