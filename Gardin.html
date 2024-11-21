@@ -9701,9 +9701,10 @@ legend {
 </div>
 
     <div id="troco-container" class="hidden">
-        <label for="troco">Troco para:</label>
-        <input type="number" id="troco" placeholder="Valor em reais">
-    </div>
+    <label for="troco">Troco para:</label>
+    <input type="number" id="troco" placeholder="Valor em reais">
+    <div id="valorTrocoCalculado"></div>
+</div>
 
     <div id="pix-container" class="hidden">
         <h4>Chave Pix</h4>
@@ -10270,18 +10271,18 @@ function sendOrder() {
         return;
     }
 
-    originalCart = [...cart]; // Salva o carrinho original
-
+    const originalCart = [...cart]; // Salva o carrinho original
     const isDelivery = document.getElementById('entrega').checked; // Verifica se a entrega está selecionada
     const isAreaRural = document.getElementById('areaRural').checked; // Verifica se "Área Rural" está selecionada
 
     // Coleta os dados do cliente e endereço
-    const nome = document.getElementById('nome').value;
-    const rua = document.getElementById('rua').value;
-    const numero = document.getElementById('numero').value;
-    const bairro = document.getElementById('bairro').value;
-    const cidade = document.getElementById('cidade').value;
-    const pontoReferencia = document.getElementById('pontoReferencia').value;
+    const nome = document.getElementById('nome').value.trim();
+    const rua = document.getElementById('rua').value.trim();
+    const numero = document.getElementById('numero').value.trim();
+    const bairro = document.getElementById('bairro').value.trim();
+    const cidade = document.getElementById('cidade').value.trim();
+    const pontoReferencia = document.getElementById('pontoReferencia').value.trim();
+    const paymentMethod = document.getElementById('payment-method').value;
 
     // Validação de campos obrigatórios
     if (!nome) {
@@ -10294,20 +10295,33 @@ function sendOrder() {
         return;
     }
 
-    const paymentMethod = document.getElementById('payment-method').value;
     if (!paymentMethod) {
         alert("Por favor, selecione uma forma de pagamento!");
         return;
     }
 
+    // Verifica e calcula o troco, se necessário
+    let troco = 0;
+    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    if (paymentMethod === 'dinheiro') {
+        troco = parseFloat(document.getElementById('troco').value) || 0;
+
+        if (troco < total) {
+            alert("O valor do troco é insuficiente!");
+            return;
+        }
+    }
+
+    // Calcula o horário do pedido
     const now = new Date();
     const horarioPedido = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
+    // Monta a mensagem do pedido
     let message = `*Pedido de ${nome} às ${horarioPedido}:*\n`;
 
+    // Agrupa os itens do carrinho
     const groupedItems = {};
-
-    // Agrupa os itens por nome e detalhes
     cart.forEach(item => {
         const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
         if (!groupedItems[key]) {
@@ -10318,61 +10332,56 @@ function sendOrder() {
 
     // Adiciona os itens na mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
-        message += `\n• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n\n`;
+        message += `\n• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n`;
     }
-    
-    message += `\n=======================\n\n`;
 
-    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-    // Adiciona a taxa de entrega, se aplicável
-    if (isAreaRural) {
-        // Aplica a taxa fixa de R$15,00 para Área Rural
-        const taxaEntrega = 15.00;
-        total += taxaEntrega;
-        message += `\n*Total:* R$ ${total.toFixed(2)}\n`;
-        message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (Área Rural)\n`;
-    } else if (isDelivery) {
-        // Calcula a taxa de entrega usando cidade e bairro
-        const taxaEntrega = calcularTaxaEntrega(cidade, bairro);
-
-        if (taxaEntrega > 0) {
-            total += taxaEntrega;
-            message += `*Total:* R$ ${total.toFixed(2)}\n`;
-            message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
-        } else {
-            message += `*Total:* R$ ${total.toFixed(2)}\n`;
-            message += `*Taxa de Entrega:* Combinar o valor da taxa de entrega via WhatsApp!\n`;
-        }
-    } else {
-        message += `*Total:* R$ ${total.toFixed(2)}\n`;
-    }
-    
     message += `\n=======================\n`;
 
-    // Inclui os dados de entrega na mensagem após o total
+    // Adiciona taxa de entrega, se aplicável
+    if (isAreaRural) {
+        const taxaEntrega = 15.00;
+        total += taxaEntrega;
+        message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (Área Rural)\n`;
+    } else if (isDelivery) {
+        const taxaEntrega = calcularTaxaEntrega(cidade, bairro);
+        if (taxaEntrega > 0) {
+            total += taxaEntrega;
+            message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)}\n`;
+        } else {
+            message += `*Taxa de Entrega:* Combinar valor via WhatsApp\n`;
+        }
+    }
+
+    // Adiciona o total na mensagem
+    message += `*Total:* R$ ${total.toFixed(2)}\n`;
+
+    // Inclui os dados de entrega, se aplicável
     if (isDelivery || isAreaRural) {
         message += `\n*Endereço de Entrega:*\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
     }
-    
+
     message += `\n=======================\n`;
 
+    // Inclui o método de pagamento
     message += `\n*Forma de Pagamento:* ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
 
     if (paymentMethod === 'dinheiro') {
-        const troco = document.getElementById('troco').value;
-        if (!troco) {
-            alert("Por favor, preencha o valor do troco!");
-            return;
+        message += `Troco para: R$ ${troco.toFixed(2)}\n`;
+        if (troco > total) {
+            const trocoCalculado = troco - total;
+            message += `Troco a devolver: R$ ${trocoCalculado.toFixed(2)}\n`;
         }
-        message += `Troco para: R$ ${parseFloat(troco).toFixed(2)}\n`;
     }
 
+    // Prepara a mensagem para envio via WhatsApp
     const encodedMessage = encodeURIComponent(message);
     const whatsappURL = `https://wa.me/5519989544409?text=${encodedMessage}`;
 
+    // Abre o WhatsApp
     window.open(whatsappURL, '_blank');
-    clearCart(); // Limpa o carrinho após envio
+
+    // Limpa o carrinho após envio
+    clearCart();
 }
 
     function removeFromCart(index) {
@@ -10487,25 +10496,34 @@ categoryList.addEventListener('touchmove', (e) => {
 });
 
 function handlePaymentMethodChange() {
-        const paymentMethod = document.getElementById('payment-method').value;
-        const pixMessage = document.getElementById('pix-message');
-        const pixContainer = document.getElementById('pix-container');
-        const trocoContainer = document.getElementById('troco-container');
+    const paymentMethod = document.getElementById('payment-method').value;
+    const pixMessage = document.getElementById('pix-message');
+    const pixContainer = document.getElementById('pix-container');
+    const trocoContainer = document.getElementById('troco-container');
 
-        // Esconde todos os containers inicialmente
-        pixMessage.classList.add('hidden');
-        pixContainer.classList.add('hidden');
-        trocoContainer.classList.add('hidden');
+    // Esconde todos os containers inicialmente
+    pixMessage.classList.add('hidden');
+    pixContainer.classList.add('hidden');
+    trocoContainer.classList.add('hidden');
 
-        // Mostra a mensagem e o container do Pix se "pix" for selecionado
-        if (paymentMethod === 'pix') {
+    switch (paymentMethod) {
+        case 'pix':
+            // Mostra mensagem e container do Pix
             pixMessage.classList.remove('hidden');
             pixContainer.classList.remove('hidden');
-        } else if (paymentMethod === 'dinheiro') {
+            break;
+
+        case 'dinheiro':
+            // Mostra o container do troco
             trocoContainer.classList.remove('hidden');
-        }
-        // Aqui você pode adicionar a lógica para outros métodos de pagamento, se necessário
+            break;
+
+        // Caso para outros métodos de pagamento
+        default:
+            // Outros métodos não exibem mensagens ou containers específicos
+            break;
     }
+}
 </script>
 
 </body>
