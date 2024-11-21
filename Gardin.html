@@ -10252,8 +10252,8 @@ function atualizarTotalCarrinho(precoAdicionado = 0) {
     
     function updateJuicePrice(selectElement, priceElementId) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
-    const price = selectedOption.value;
-    document.getElementById(priceElementId).textContent = `R$ ${price},00`;
+    const price = parseFloat(selectedOption.value).toFixed(2).replace('.', ','); // Garante 2 casas decimais e substitui '.' por ','
+    document.getElementById(priceElementId).textContent = `R$ ${price}`;
 }
 
     let originalCart = []; // Armazena uma cópia do carrinho original
