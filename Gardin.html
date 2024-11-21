@@ -728,6 +728,7 @@ legend {
         <li><a href="#" onclick="filterItems('porções')">Porções</a></li>
         <li><a href="#" onclick="filterItems('Hotdog')">Hotdog</a></li>
         <li><a href="#" onclick="filterItems('Macarrão')">Macarrão</a></li>
+        <li><a href="#" onclick="filterItems('sorvetes')">Sorvetes</a></li>
     </ul>
     <button id="scroll-right" onclick="scrollRightItems()">»</button></button></button>
 </nav>
@@ -9249,7 +9250,7 @@ legend {
 
     <div class="price-container">
         <span>R$</span>
-        <span id="pastel-price">8,00</span>
+        <span id="pastel-price">12,00</span>
     </div>
 
     <button onclick="addPastelToCart('sabor-pastel')">Adicionar</button>
@@ -9535,6 +9536,97 @@ legend {
 
     <button class="add-button" onclick="addAcaiToCart()">Adicionar ao Carrinho</button>
 </section>
+
+<!-- Sorvete -->
+
+<div class="menu-item" data-category="sorvetes">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5My62qWA1c7R1KranbestlhtBCkGrM5kAHfRLqbeouNvGTTAMlXlrR4tm&s=10"
+        alt="Suco ao Leite" />
+        <h3>Picolés</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="sorvete-picole-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'sorvete-picole-price')">
+        <option value="2">picolé de chocolate - R$ 2,00</option>
+        <option value="2">picolé de morango - R$ 2,00</option>
+        <option value="2">picolé de leitinho - R$ 2,00</option>
+        <option value="2">picolé de uva - R$ 2,00</option>
+        <option value="2">picolé de leite condensado - R$ 2,00</option>
+        <option value="2">picolé de milho - R$ 2,00</option>
+        <option value="2">picolé de limão - R$ 2,00</option>
+        <option value="2">picolé de açaí - R$ 2,00</option>
+        <option value="2">picolé de mamão - R$ 2,00</option>
+        <option value="2">picolé de coco - R$ 2,00</option>
+        <option value="2">picolé de coco queimado - R$ 2,00</option>
+        <option value="2">picolé de blueice - R$ 2,00</option>
+        <option value="2">picolé de abacaxi - R$ 2,00</option>
+        <option value="2">picolé de melancia - R$ 2,00</option>
+        <option value="2">picolé de amendoim - R$ 2,00</option>
+        <option value="2">picolé de nata - R$ 2,00</option>
+        <option value="2">picolé de groselha - R$ 2,00</option>
+    </select>
+    
+        <span id="sorvete-picole-price">R$ 2,00</span>
+        <button onclick="addJuiceToCart('sorvete-picole-select')">Adicionar</button>
+    </div>
+
+<div class="menu-item" data-category="sorvetes">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQ-zlbKKIBsYR042vWC3MOTRyM0C4ISeJx1i4JpCjOG9m2eD6AF6H2Cw1w&s=10"
+        alt="Suco ao Leite" />
+        <h3>Pote 1.5L</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="sorvete-juice-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'sorvete-juice-price')">
+        <option value="17.90">1.5L Napolitano - R$ 17,90</option>
+        <option value="17.90">1.5L Flocos - R$ 17,90</option>
+    </select>
+    
+        <span id="sorvete-juice-price">R$ 17,90</span>
+        <button onclick="addJuiceToCart('sorvete-juice-select')">Adicionar</button>
+    </div>
+    
+    <div class="menu-item" data-category="sorvetes">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQ-zlbKKIBsYR042vWC3MOTRyM0C4ISeJx1i4JpCjOG9m2eD6AF6H2Cw1w&s=10"
+        alt="Suco ao Leite" />
+        <h3>Pote 2L</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="sorvete-pote-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'sorvete-pote-price')">
+        <option value="24.90">2L Chocolate - R$ 24,90</option>
+        <option value="24.90">2L creme - R$ 24,90</option>
+        <option value="24.90">2L flocos - R$ 24,90</option>
+        <option value="24.90">2L napolitano - R$ 24,90</option>
+        <option value="24.90">2L abacaxi - R$ 24,90</option>
+        <option value="24.90">2L maracujá - R$ 24,90</option>
+        <option value="24.90">2L limão - R$ 24,90</option>
+        <option value="24.90">2L leite condensado - R$ 24,90</option>
+        <option value="24.90">2L morango - R$ 24,90</option>
+       <option value="24.90">2L blueice - R$ 24,90</option>
+       <option value="24.90">2L milho - R$ 24,90</option>
+    </select>
+    
+        <span id="sorvete-pote-price">R$ 24,90</span>
+        <button onclick="addJuiceToCart('sorvete-pote-select')">Adicionar</button>
+    </div>
+    
+    <div class="menu-item" data-category="sorvetes">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQ-zlbKKIBsYR042vWC3MOTRyM0C4ISeJx1i4JpCjOG9m2eD6AF6H2Cw1w&s=10"
+        alt="Suco ao Leite" />
+        <h3>Pote 2L trufado</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="sorvete-trufado-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'sorvete-trufado-price')">
+        <option value="32.90">2L Trufado Chocolate - R$ 32,90</option>
+        <option value="32.90">2L Trufado morango - R$ 32,90</option>
+        <option value="32.90">2L Trufado leitinho - R$ 32,90</option>
+    </select>
+    
+        <span id="sorvete-trufado-price">R$ 32,90</span>
+        <button onclick="addJuiceToCart('sorvete-trufado-select')">Adicionar</button>
+    </div>
 
 <!-- Modal -->
 <div id="taxaModal" class="modal">
