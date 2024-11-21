@@ -10436,17 +10436,44 @@ function copyPix() {
     });
 }
 
+function normalizeText(text) {
+    return text
+        .toLowerCase() // Converte para minúsculas
+        .normalize('NFD') // Decompõe os caracteres unicode
+        .replace(/[\u0300-\u036f]/g, ''); // Remove os diacríticos (acentos)
+}
+
 function searchItems() {
-    const input = document.getElementById('search-input').value.toLowerCase();
+    const input = document.getElementById('search-input').value.trim();
+    const normalizedInput = normalizeText(input); // Normaliza o texto de entrada
+    const keywords = normalizedInput.split(' '); // Divide a entrada em palavras-chave
     const items = document.querySelectorAll('.menu-item');
+    let found = false; // Indica se algum item foi encontrado
 
     items.forEach(item => {
         const titleElement = item.querySelector('h3');
-        // Verifica se o elemento h3 existe antes de acessar textContent
-        const itemName = titleElement ? titleElement.textContent.toLowerCase() : '';
+        const descriptionElement = item.querySelector('p'); // Exemplo: busca também na descrição, se existir
+        const itemName = titleElement ? normalizeText(titleElement.textContent) : '';
+        const itemDescription = descriptionElement ? normalizeText(descriptionElement.textContent) : '';
+        
+        // Combina título e descrição para a busca
+        const searchableText = `${itemName} ${itemDescription}`;
 
-        item.style.display = itemName.includes(input) ? 'block' : 'none';
+        // Verifica se todas as palavras-chave estão no texto pesquisável
+        const matches = keywords.every(keyword => searchableText.includes(keyword));
+        if (matches) {
+            item.style.display = 'block';
+            found = true;
+        } else {
+            item.style.display = 'none';
+        }
     });
+
+    // Mostra mensagem se nenhum item for encontrado
+    const noResultsMessage = document.getElementById('no-results');
+    if (noResultsMessage) {
+        noResultsMessage.style.display = found ? 'none' : 'block';
+    }
 }
 
 let isDragging = false;
