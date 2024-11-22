@@ -92,6 +92,71 @@ nav ul li a {
     border-radius: 15%;
 }
 
+/* Container das categorias */
+#category-list {
+    display: flex;
+    gap: 10px; /* Espaço entre os botões */
+    overflow-x: auto;
+    list-style: none;
+    padding: 10px;
+    margin: 0;
+    background-color: #000; /* Fundo preto para combinar */
+    border-radius: 10px; /* Cantos arredondados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra mais marcante */
+}
+
+/* Estilo de cada item */
+#category-list li {
+    display: inline;
+}
+
+/* Botões de categoria */
+#category-list li a {
+    display: inline-block;
+    padding: 8px 16px;
+    color: #fff; /* Texto branco */
+    background-color: #ff9900; /* Fundo amarelo */
+    border: 2px solid #ff9900; /* Borda combinando */
+    border-radius: 6px; /* Cantos arredondados */
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+/* Efeito ao passar o mouse */
+#category-list li a:hover {
+    background-color: #ffcc00; /* Fundo laranja ao hover */
+    color: #000; /* Texto preto no hover */
+    border-color: #ffcc00; /* Alinha a borda ao fundo */
+}
+
+/* Botões de rolagem */
+#scroll-left, #scroll-right {
+    background-color: #ff9900; /* Fundo laranja */
+    color: #fff; /* Texto branco */
+    border: none;
+    border-radius: 50%; /* Botão circular */
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+}
+
+#scroll-left:hover, #scroll-right:hover {
+    background-color: #ffcc00; /* Fundo amarelo ao hover */
+}
+
+/* Barra de rolagem oculta */
+#category-list::-webkit-scrollbar {
+    display: none;
+}
+
 #menu-items {
     display: flex;
     flex-wrap: wrap;
@@ -677,30 +742,44 @@ legend {
     margin-top: 10px;
 }
 
-.status-aberto {
-    color: #4CAF50; /* Verde */
-    font-weight: bold;
-    background-color: rgba(76, 175, 80, 0.1);
-    padding: 4px 8px;
-    border-radius: 5px;
-}
-
-.status-fechado {
-    color: #F44336; /* Vermelho */
-    font-weight: bold;
-    background-color: rgba(244, 67, 54, 0.1);
-    padding: 4px 8px;
-    border-radius: 5px;
-}
-
+/* Estilo para o texto de funcionamento */
 .funcionamento {
-    font-size: 12px;
-    color: #fff;
-    margin-top: 20px; /* Aumente o valor para descer mais */
-    font-weight: 200;
+    font-size: 14px; /* Um pouco maior para melhor leitura */
+    color: #ffc107; /* Amarelo para combinar com o tema */
+    margin-top: 50px;
+    font-weight: 300; /* Peso leve para não competir com o resto do conteúdo */
     text-align: center;
-    position: relative; /* Permite ajuste com top */
-    top: 10px; /* Ajuste conforme necessário */
+    line-height: 1.5; /* Melhor espaçamento entre linhas */
+    position: relative;
+    top: 10px;
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo transparente para destaque */
+    padding: 10px 15px; /* Adiciona espaço interno */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Adiciona sombra */
+}
+
+/* Status aberto */
+.status-aberto {
+    color: #4CAF50; /* Verde vibrante */
+    font-weight: bold;
+    background-color: rgba(76, 175, 80, 0.2); /* Fundo verde claro */
+    padding: 6px 12px; /* Mais espaçamento interno */
+    border-radius: 20px; /* Cantos bem arredondados */
+    text-transform: uppercase; /* Texto em letras maiúsculas */
+    font-size: 13px; /* Ligeiramente maior */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra sutil */
+}
+
+/* Status fechado */
+.status-fechado {
+    color: #F44336; /* Vermelho vibrante */
+    font-weight: bold;
+    background-color: rgba(244, 67, 54, 0.2); /* Fundo vermelho claro */
+    padding: 6px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    font-size: 13px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
     </style>
 </head>
