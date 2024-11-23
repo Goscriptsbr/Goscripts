@@ -290,19 +290,19 @@ label {
     display: none;
 }
 
-/* Estilo do carrinho */
 #cart {
     position: fixed;
-    bottom: 80px;
-    right: 5px;
+    bottom: 20px; /* Distância da parte inferior da tela */
+    right: 5%; /* A 5% da borda direita */
     background-color: #FFA726; /* Fundo laranja mais suave */
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    display: none; /* Oculto inicialmente */
-    max-height: 600px;
-    width: 350px;
-    overflow-y: auto;
+    display: none; /* Inicialmente oculto */
+    width: 90%; /* Largura adaptável, ocupa 90% da tela */
+    max-width: 350px; /* Largura máxima para não ser maior que 350px */
+    max-height: 80vh; /* Altura máxima de 80% da tela */
+    overflow-y: auto; /* Permite rolagem se necessário */
     transition: all 0.3s ease;
     border: 2px solid black;
     animation: slideIn 0.3s ease-out;
@@ -328,6 +328,30 @@ label {
     color: black;
     border-bottom: 2px solid black;
     padding-bottom: 10px;
+}
+
+/* Ajustes para telas menores */
+@media (max-width: 768px) {
+    #cart {
+        width: 90%; /* Modal ocupa 90% da largura da tela */
+        bottom: 10px; /* Distância reduzida do fundo */
+        right: 5%; /* Ajuste da distância da borda direita */
+    }
+
+    #cart h3 {
+        font-size: 18px; /* Ajuste do tamanho da fonte */
+    }
+}
+
+@media (max-width: 480px) {
+    #cart {
+        width: 95%; /* Modal ocupa 95% da largura em telas menores */
+        bottom: 5px; /* Distância menor do fundo */
+    }
+
+    #cart h3 {
+        font-size: 16px; /* Ajuste ainda menor da fonte */
+    }
 }
 
 /* Botão de fechar */
