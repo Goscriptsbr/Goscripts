@@ -92,6 +92,71 @@ nav ul li a {
     border-radius: 15%;
 }
 
+/* Container das categorias */
+#category-list {
+    display: flex;
+    gap: 10px; /* Espaço entre os botões */
+    overflow-x: auto;
+    list-style: none;
+    padding: 10px;
+    margin: 0;
+    background-color: #000; /* Fundo preto para combinar */
+    border-radius: 10px; /* Cantos arredondados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra mais marcante */
+}
+
+/* Estilo de cada item */
+#category-list li {
+    display: inline;
+}
+
+/* Botões de categoria */
+#category-list li a {
+    display: inline-block;
+    padding: 8px 16px;
+    color: #fff; /* Texto branco */
+    background-color: #ff9900; /* Fundo amarelo */
+    border: 2px solid #ff9900; /* Borda combinando */
+    border-radius: 6px; /* Cantos arredondados */
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+/* Efeito ao passar o mouse */
+#category-list li a:hover {
+    background-color: #ffcc00; /* Fundo laranja ao hover */
+    color: #000; /* Texto preto no hover */
+    border-color: #ffcc00; /* Alinha a borda ao fundo */
+}
+
+/* Botões de rolagem */
+#scroll-left, #scroll-right {
+    background-color: #ff9900; /* Fundo laranja */
+    color: #fff; /* Texto branco */
+    border: none;
+    border-radius: 50%; /* Botão circular */
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+}
+
+#scroll-left:hover, #scroll-right:hover {
+    background-color: #ffcc00; /* Fundo amarelo ao hover */
+}
+
+/* Barra de rolagem oculta */
+#category-list::-webkit-scrollbar {
+    display: none;
+}
+
 #menu-items {
     display: flex;
     flex-wrap: wrap;
@@ -677,30 +742,44 @@ legend {
     margin-top: 10px;
 }
 
-.status-aberto {
-    color: #4CAF50; /* Verde */
-    font-weight: bold;
-    background-color: rgba(76, 175, 80, 0.1);
-    padding: 4px 8px;
-    border-radius: 5px;
-}
-
-.status-fechado {
-    color: #F44336; /* Vermelho */
-    font-weight: bold;
-    background-color: rgba(244, 67, 54, 0.1);
-    padding: 4px 8px;
-    border-radius: 5px;
-}
-
+/* Estilo para o texto de funcionamento */
 .funcionamento {
-    font-size: 12px;
-    color: #fff;
-    margin-top: 20px; /* Aumente o valor para descer mais */
-    font-weight: 200;
+    font-size: 14px; /* Um pouco maior para melhor leitura */
+    color: #ffc107; /* Amarelo para combinar com o tema */
+    margin-top: 50px;
+    font-weight: 300; /* Peso leve para não competir com o resto do conteúdo */
     text-align: center;
-    position: relative; /* Permite ajuste com top */
-    top: 10px; /* Ajuste conforme necessário */
+    line-height: 1.5; /* Melhor espaçamento entre linhas */
+    position: relative;
+    top: 10px;
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo transparente para destaque */
+    padding: 10px 15px; /* Adiciona espaço interno */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Adiciona sombra */
+}
+
+/* Status aberto */
+.status-aberto {
+    color: #4CAF50; /* Verde vibrante */
+    font-weight: bold;
+    background-color: rgba(76, 175, 80, 0.2); /* Fundo verde claro */
+    padding: 6px 12px; /* Mais espaçamento interno */
+    border-radius: 20px; /* Cantos bem arredondados */
+    text-transform: uppercase; /* Texto em letras maiúsculas */
+    font-size: 13px; /* Ligeiramente maior */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra sutil */
+}
+
+/* Status fechado */
+.status-fechado {
+    color: #F44336; /* Vermelho vibrante */
+    font-weight: bold;
+    background-color: rgba(244, 67, 54, 0.2); /* Fundo vermelho claro */
+    padding: 6px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    font-size: 13px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
     </style>
 </head>
@@ -728,6 +807,7 @@ legend {
         <li><a href="#" onclick="filterItems('porções')">Porções</a></li>
         <li><a href="#" onclick="filterItems('Hotdog')">Hotdog</a></li>
         <li><a href="#" onclick="filterItems('Macarrão')">Macarrão</a></li>
+        <li><a href="#" onclick="filterItems('sorvetes')">Sorvetes</a></li>
     </ul>
     <button id="scroll-right" onclick="scrollRightItems()">»</button></button></button>
 </nav>
@@ -9249,7 +9329,7 @@ legend {
 
     <div class="price-container">
         <span>R$</span>
-        <span id="pastel-price">8,00</span>
+        <span id="pastel-price">12,00</span>
     </div>
 
     <button onclick="addPastelToCart('sabor-pastel')">Adicionar</button>
@@ -9536,6 +9616,97 @@ legend {
     <button class="add-button" onclick="addAcaiToCart()">Adicionar ao Carrinho</button>
 </section>
 
+<!-- Sorvete -->
+
+<div class="menu-item" data-category="sorvetes">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5My62qWA1c7R1KranbestlhtBCkGrM5kAHfRLqbeouNvGTTAMlXlrR4tm&s=10"
+        alt="Suco ao Leite" />
+        <h3>Picolés</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="sorvete-picole-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'sorvete-picole-price')">
+        <option value="2">picolé de chocolate - R$ 2,00</option>
+        <option value="2">picolé de morango - R$ 2,00</option>
+        <option value="2">picolé de leitinho - R$ 2,00</option>
+        <option value="2">picolé de uva - R$ 2,00</option>
+        <option value="2">picolé de leite condensado - R$ 2,00</option>
+        <option value="2">picolé de milho - R$ 2,00</option>
+        <option value="2">picolé de limão - R$ 2,00</option>
+        <option value="2">picolé de açaí - R$ 2,00</option>
+        <option value="2">picolé de mamão - R$ 2,00</option>
+        <option value="2">picolé de coco - R$ 2,00</option>
+        <option value="2">picolé de coco queimado - R$ 2,00</option>
+        <option value="2">picolé de blueice - R$ 2,00</option>
+        <option value="2">picolé de abacaxi - R$ 2,00</option>
+        <option value="2">picolé de melancia - R$ 2,00</option>
+        <option value="2">picolé de amendoim - R$ 2,00</option>
+        <option value="2">picolé de nata - R$ 2,00</option>
+        <option value="2">picolé de groselha - R$ 2,00</option>
+    </select>
+    
+        <span id="sorvete-picole-price">R$ 2,00</span>
+        <button onclick="addJuiceToCart('sorvete-picole-select')">Adicionar</button>
+    </div>
+
+<div class="menu-item" data-category="sorvetes">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQ-zlbKKIBsYR042vWC3MOTRyM0C4ISeJx1i4JpCjOG9m2eD6AF6H2Cw1w&s=10"
+        alt="Suco ao Leite" />
+        <h3>Pote 1.5L</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="sorvete-juice-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'sorvete-juice-price')">
+        <option value="17.90">1.5L Napolitano - R$ 17,90</option>
+        <option value="17.90">1.5L Flocos - R$ 17,90</option>
+    </select>
+    
+        <span id="sorvete-juice-price">R$ 17,90</span>
+        <button onclick="addJuiceToCart('sorvete-juice-select')">Adicionar</button>
+    </div>
+    
+    <div class="menu-item" data-category="sorvetes">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQ-zlbKKIBsYR042vWC3MOTRyM0C4ISeJx1i4JpCjOG9m2eD6AF6H2Cw1w&s=10"
+        alt="Suco ao Leite" />
+        <h3>Pote 2L</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="sorvete-pote-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'sorvete-pote-price')">
+        <option value="24.90">2L Chocolate - R$ 24,90</option>
+        <option value="24.90">2L creme - R$ 24,90</option>
+        <option value="24.90">2L flocos - R$ 24,90</option>
+        <option value="24.90">2L napolitano - R$ 24,90</option>
+        <option value="24.90">2L abacaxi - R$ 24,90</option>
+        <option value="24.90">2L maracujá - R$ 24,90</option>
+        <option value="24.90">2L limão - R$ 24,90</option>
+        <option value="24.90">2L leite condensado - R$ 24,90</option>
+        <option value="24.90">2L morango - R$ 24,90</option>
+       <option value="24.90">2L blueice - R$ 24,90</option>
+       <option value="24.90">2L milho - R$ 24,90</option>
+    </select>
+    
+        <span id="sorvete-pote-price">R$ 24,90</span>
+        <button onclick="addJuiceToCart('sorvete-pote-select')">Adicionar</button>
+    </div>
+    
+    <div class="menu-item" data-category="sorvetes">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQ-zlbKKIBsYR042vWC3MOTRyM0C4ISeJx1i4JpCjOG9m2eD6AF6H2Cw1w&s=10"
+        alt="Suco ao Leite" />
+        <h3>Pote 2L trufado</h3>
+    
+        <label for="bebida-juice-select">Opções:</label>
+    <select id="sorvete-trufado-select" class="milk-juice-select" 
+            onchange="updateJuicePrice(this, 'sorvete-trufado-price')">
+        <option value="32.90">2L Trufado Chocolate - R$ 32,90</option>
+        <option value="32.90">2L Trufado morango - R$ 32,90</option>
+        <option value="32.90">2L Trufado leitinho - R$ 32,90</option>
+    </select>
+    
+        <span id="sorvete-trufado-price">R$ 32,90</span>
+        <button onclick="addJuiceToCart('sorvete-trufado-select')">Adicionar</button>
+    </div>
+
 <!-- Modal -->
 <div id="taxaModal" class="modal">
     <div class="modal-content">
@@ -9609,9 +9780,10 @@ legend {
 </div>
 
     <div id="troco-container" class="hidden">
-        <label for="troco">Troco para:</label>
-        <input type="number" id="troco" placeholder="Valor em reais">
-    </div>
+    <label for="troco">Troco para:</label>
+    <input type="number" id="troco" placeholder="Valor em reais">
+    <div id="valorTrocoCalculado"></div>
+</div>
 
     <div id="pix-container" class="hidden">
         <h4>Chave Pix</h4>
@@ -10159,8 +10331,8 @@ function atualizarTotalCarrinho(precoAdicionado = 0) {
     
     function updateJuicePrice(selectElement, priceElementId) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
-    const price = selectedOption.value;
-    document.getElementById(priceElementId).textContent = `R$ ${price},00`;
+    const price = parseFloat(selectedOption.value).toFixed(2).replace('.', ','); // Garante 2 casas decimais e substitui '.' por ','
+    document.getElementById(priceElementId).textContent = `R$ ${price}`;
 }
 
     let originalCart = []; // Armazena uma cópia do carrinho original
@@ -10178,18 +10350,18 @@ function sendOrder() {
         return;
     }
 
-    originalCart = [...cart]; // Salva o carrinho original
-
+    const originalCart = [...cart]; // Salva o carrinho original
     const isDelivery = document.getElementById('entrega').checked; // Verifica se a entrega está selecionada
     const isAreaRural = document.getElementById('areaRural').checked; // Verifica se "Área Rural" está selecionada
 
     // Coleta os dados do cliente e endereço
-    const nome = document.getElementById('nome').value;
-    const rua = document.getElementById('rua').value;
-    const numero = document.getElementById('numero').value;
-    const bairro = document.getElementById('bairro').value;
-    const cidade = document.getElementById('cidade').value;
-    const pontoReferencia = document.getElementById('pontoReferencia').value;
+    const nome = document.getElementById('nome').value.trim();
+    const rua = document.getElementById('rua').value.trim();
+    const numero = document.getElementById('numero').value.trim();
+    const bairro = document.getElementById('bairro').value.trim();
+    const cidade = document.getElementById('cidade').value.trim();
+    const pontoReferencia = document.getElementById('pontoReferencia').value.trim();
+    const paymentMethod = document.getElementById('payment-method').value;
 
     // Validação de campos obrigatórios
     if (!nome) {
@@ -10202,20 +10374,33 @@ function sendOrder() {
         return;
     }
 
-    const paymentMethod = document.getElementById('payment-method').value;
     if (!paymentMethod) {
         alert("Por favor, selecione uma forma de pagamento!");
         return;
     }
 
+    // Verifica e calcula o troco, se necessário
+    let troco = 0;
+    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    if (paymentMethod === 'dinheiro') {
+        troco = parseFloat(document.getElementById('troco').value) || 0;
+
+        if (troco < total) {
+            alert("O valor do troco é insuficiente!");
+            return;
+        }
+    }
+
+    // Calcula o horário do pedido
     const now = new Date();
     const horarioPedido = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
+    // Monta a mensagem do pedido
     let message = `*Pedido de ${nome} às ${horarioPedido}:*\n`;
 
+    // Agrupa os itens do carrinho
     const groupedItems = {};
-
-    // Agrupa os itens por nome e detalhes
     cart.forEach(item => {
         const key = `${item.name}${item.details ? ': ' + item.details : ''}`;
         if (!groupedItems[key]) {
@@ -10226,61 +10411,56 @@ function sendOrder() {
 
     // Adiciona os itens na mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
-        message += `\n• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n\n`;
+        message += `\n• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n`;
     }
-    
-    message += `\n=======================\n\n`;
 
-    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-    // Adiciona a taxa de entrega, se aplicável
-    if (isAreaRural) {
-        // Aplica a taxa fixa de R$15,00 para Área Rural
-        const taxaEntrega = 15.00;
-        total += taxaEntrega;
-        message += `\n*Total:* R$ ${total.toFixed(2)}\n`;
-        message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (Área Rural)\n`;
-    } else if (isDelivery) {
-        // Calcula a taxa de entrega usando cidade e bairro
-        const taxaEntrega = calcularTaxaEntrega(cidade, bairro);
-
-        if (taxaEntrega > 0) {
-            total += taxaEntrega;
-            message += `*Total:* R$ ${total.toFixed(2)}\n`;
-            message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (já adicionada ao total!)\n`;
-        } else {
-            message += `*Total:* R$ ${total.toFixed(2)}\n`;
-            message += `*Taxa de Entrega:* Combinar o valor da taxa de entrega via WhatsApp!\n`;
-        }
-    } else {
-        message += `*Total:* R$ ${total.toFixed(2)}\n`;
-    }
-    
     message += `\n=======================\n`;
 
-    // Inclui os dados de entrega na mensagem após o total
+    // Adiciona taxa de entrega, se aplicável
+    if (isAreaRural) {
+        const taxaEntrega = 15.00;
+        total += taxaEntrega;
+        message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (Área Rural)\n`;
+    } else if (isDelivery) {
+        const taxaEntrega = calcularTaxaEntrega(cidade, bairro);
+        if (taxaEntrega > 0) {
+            total += taxaEntrega;
+            message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)}\n`;
+        } else {
+            message += `*Taxa de Entrega:* Combinar valor via WhatsApp\n`;
+        }
+    }
+
+    // Adiciona o total na mensagem
+    message += `*Total:* R$ ${total.toFixed(2)}\n`;
+
+    // Inclui os dados de entrega, se aplicável
     if (isDelivery || isAreaRural) {
         message += `\n*Endereço de Entrega:*\nRua: ${rua}, Nº: ${numero}\nBairro: ${bairro}\nCidade: ${cidade}\nPonto de Referência: ${pontoReferencia}\n`;
     }
-    
+
     message += `\n=======================\n`;
 
+    // Inclui o método de pagamento
     message += `\n*Forma de Pagamento:* ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
 
     if (paymentMethod === 'dinheiro') {
-        const troco = document.getElementById('troco').value;
-        if (!troco) {
-            alert("Por favor, preencha o valor do troco!");
-            return;
+        message += `Troco para: R$ ${troco.toFixed(2)}\n`;
+        if (troco > total) {
+            const trocoCalculado = troco - total;
+            message += `Troco a devolver: R$ ${trocoCalculado.toFixed(2)}\n`;
         }
-        message += `Troco para: R$ ${parseFloat(troco).toFixed(2)}\n`;
     }
 
+    // Prepara a mensagem para envio via WhatsApp
     const encodedMessage = encodeURIComponent(message);
     const whatsappURL = `https://wa.me/5519989544409?text=${encodedMessage}`;
 
+    // Abre o WhatsApp
     window.open(whatsappURL, '_blank');
-    clearCart(); // Limpa o carrinho após envio
+
+    // Limpa o carrinho após envio
+    clearCart();
 }
 
     function removeFromCart(index) {
@@ -10335,17 +10515,44 @@ function copyPix() {
     });
 }
 
+function normalizeText(text) {
+    return text
+        .toLowerCase() // Converte para minúsculas
+        .normalize('NFD') // Decompõe os caracteres unicode
+        .replace(/[\u0300-\u036f]/g, ''); // Remove os diacríticos (acentos)
+}
+
 function searchItems() {
-    const input = document.getElementById('search-input').value.toLowerCase();
+    const input = document.getElementById('search-input').value.trim();
+    const normalizedInput = normalizeText(input); // Normaliza o texto de entrada
+    const keywords = normalizedInput.split(' '); // Divide a entrada em palavras-chave
     const items = document.querySelectorAll('.menu-item');
+    let found = false; // Indica se algum item foi encontrado
 
     items.forEach(item => {
         const titleElement = item.querySelector('h3');
-        // Verifica se o elemento h3 existe antes de acessar textContent
-        const itemName = titleElement ? titleElement.textContent.toLowerCase() : '';
+        const descriptionElement = item.querySelector('p'); // Exemplo: busca também na descrição, se existir
+        const itemName = titleElement ? normalizeText(titleElement.textContent) : '';
+        const itemDescription = descriptionElement ? normalizeText(descriptionElement.textContent) : '';
+        
+        // Combina título e descrição para a busca
+        const searchableText = `${itemName} ${itemDescription}`;
 
-        item.style.display = itemName.includes(input) ? 'block' : 'none';
+        // Verifica se todas as palavras-chave estão no texto pesquisável
+        const matches = keywords.every(keyword => searchableText.includes(keyword));
+        if (matches) {
+            item.style.display = 'block';
+            found = true;
+        } else {
+            item.style.display = 'none';
+        }
     });
+
+    // Mostra mensagem se nenhum item for encontrado
+    const noResultsMessage = document.getElementById('no-results');
+    if (noResultsMessage) {
+        noResultsMessage.style.display = found ? 'none' : 'block';
+    }
 }
 
 let isDragging = false;
@@ -10395,25 +10602,34 @@ categoryList.addEventListener('touchmove', (e) => {
 });
 
 function handlePaymentMethodChange() {
-        const paymentMethod = document.getElementById('payment-method').value;
-        const pixMessage = document.getElementById('pix-message');
-        const pixContainer = document.getElementById('pix-container');
-        const trocoContainer = document.getElementById('troco-container');
+    const paymentMethod = document.getElementById('payment-method').value;
+    const pixMessage = document.getElementById('pix-message');
+    const pixContainer = document.getElementById('pix-container');
+    const trocoContainer = document.getElementById('troco-container');
 
-        // Esconde todos os containers inicialmente
-        pixMessage.classList.add('hidden');
-        pixContainer.classList.add('hidden');
-        trocoContainer.classList.add('hidden');
+    // Esconde todos os containers inicialmente
+    pixMessage.classList.add('hidden');
+    pixContainer.classList.add('hidden');
+    trocoContainer.classList.add('hidden');
 
-        // Mostra a mensagem e o container do Pix se "pix" for selecionado
-        if (paymentMethod === 'pix') {
+    switch (paymentMethod) {
+        case 'pix':
+            // Mostra mensagem e container do Pix
             pixMessage.classList.remove('hidden');
             pixContainer.classList.remove('hidden');
-        } else if (paymentMethod === 'dinheiro') {
+            break;
+
+        case 'dinheiro':
+            // Mostra o container do troco
             trocoContainer.classList.remove('hidden');
-        }
-        // Aqui você pode adicionar a lógica para outros métodos de pagamento, se necessário
+            break;
+
+        // Caso para outros métodos de pagamento
+        default:
+            // Outros métodos não exibem mensagens ou containers específicos
+            break;
     }
+}
 </script>
 
 </body>
