@@ -10186,6 +10186,11 @@ function calcularTaxaEntrega(cidade = '', bairro = '', rua = '') {
     const bairroNormalizado = bairro.trim().toLowerCase();
     const ruaNormalizada = rua ? rua.trim().toLowerCase() : '';
 
+    // Verifica se a cidade é "Estiva", "Estiva Gerbi" ou "Gerbi" para taxa de R$4,00
+    if (cidadeNormalizada.includes('estiva') || cidadeNormalizada.includes('gerbi')) {
+        return 4.00; // Taxa de entrega para Estiva Gerbi
+    }
+
     // Verifica se a rua contém variações de "José Lanzi" ou se o bairro contém "Retiro do Alto"
     if (ruaNormalizada.includes('dr. josé lanzi') || 
         ruaNormalizada.includes('doutor josé lanzi') || 
@@ -10195,31 +10200,26 @@ function calcularTaxaEntrega(cidade = '', bairro = '', rua = '') {
     }
 
     // Verifica se o bairro ou cidade contém variações de "Parque Industrial", "Distrito Industrial" ou "Guaçu Mirim"
-if (bairroNormalizado.includes('parque industrial') || 
-    bairroNormalizado.includes('distrito') || 
-    bairroNormalizado.includes('industrial') || 
-    bairroNormalizado.includes('guaçu mirim') || 
-    bairroNormalizado.includes('guacú mirim') || 
-    bairroNormalizado.includes('guacu mirim') || 
-    bairroNormalizado.includes('jardim guaçu-mirim i') || 
-    bairroNormalizado.includes('jardim guacu mirim i') || 
-    cidadeNormalizada.includes('distrito') || 
-    cidadeNormalizada.includes('industrial') || 
-    cidadeNormalizada.includes('guaçu mirim') || 
-    cidadeNormalizada.includes('guacú mirim') || 
-    cidadeNormalizada.includes('guacu mirim')) {
-    return 8.00; // Taxa de entrega para Jardim Guaçu Mirim, Distrito Industrial, e Parque Industrial
-}
+    if (bairroNormalizado.includes('parque industrial') || 
+        bairroNormalizado.includes('distrito') || 
+        bairroNormalizado.includes('industrial') || 
+        bairroNormalizado.includes('guaçu mirim') || 
+        bairroNormalizado.includes('guacú mirim') || 
+        bairroNormalizado.includes('guacu mirim') || 
+        bairroNormalizado.includes('jardim guaçu-mirim i') || 
+        bairroNormalizado.includes('jardim guacu mirim i') || 
+        cidadeNormalizada.includes('distrito') || 
+        cidadeNormalizada.includes('industrial') || 
+        cidadeNormalizada.includes('guaçu mirim') || 
+        cidadeNormalizada.includes('guacú mirim') || 
+        cidadeNormalizada.includes('guacu mirim')) {
+        return 8.00; // Taxa de entrega para Jardim Guaçu Mirim, Distrito Industrial, e Parque Industrial
+    }
 
     // Verifica se o bairro ou cidade contém "Palm" ou "Califórnia" para taxa de R$5,00
     if (bairroNormalizado.includes('palm') || bairroNormalizado.includes('califórnia') ||
         cidadeNormalizada.includes('palm') || cidadeNormalizada.includes('califórnia')) {
         return 5.00; // Taxa de entrega para os condomínios Palm Park e Califórnia
-    }
-
-    // Verifica se a cidade é "Estiva", "Estiva Gerbi" ou "Gerbi" para taxa de R$4,00
-    if (cidadeNormalizada.includes('estiva') || cidadeNormalizada.includes('gerbi')) {
-        return 4.00; // Taxa de entrega para Estiva Gerbi
     }
 
     return 0.00; // Nenhuma taxa para outras localidades
