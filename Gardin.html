@@ -9395,7 +9395,11 @@ legend {
         <option value="3.50">Agua sem gás - R$ 3,50</option>
         <option value="4">Agua com gás - R$ 4,00</option>
         <option value="4">Suco Bioleve - R$ 4,00</option>
-        <option value="7">Refrigerante lata - R$ 7,00</option>
+        <option value="7">Refrigerante lata coca-cola - R$ 7,00</option>
+        <option value="7">Refrigerante lata fanta uva - R$ 7,00</option>
+        <option value="7">Refrigerante lata fanta laranja - R$ 7,00</option>
+        <option value="7">Refrigerante lata sprite - R$ 7,00</option>
+        <option value="7">Refrigerante lata (outro) mencionar via whatsapp - R$ 7,00</option>
         <option value="9">Refrigerante 600ml - R$ 9,00</option>
         <option value="13">Refrigerante 2L Fanta - R$ 13,00</option>
         <option value="13">Refrigerante 2L Sprite - R$ 13,00</option>
@@ -9821,7 +9825,7 @@ legend {
     <select id="payment-method" onchange="handlePaymentMethodChange()">
         <option value="" disabled selected>Selecione</option>
         <option value="pix">Pix</option>
-        <option value="cartao">Cartão de Crédito (Máquininha)</option>
+        <option value="cartao">Cartão  (Máquininha)</option>
         <option value="dinheiro">Dinheiro</option>
     </select>
     
@@ -10492,7 +10496,7 @@ function sendOrder() {
     message += `\n=======================\n`;
 
     // Inclui o método de pagamento
-    message += `\n*Forma de Pagamento:* ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
+    message += `\n*Forma de Pagamento:* ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão (máquina)' : 'Pix'}\n`;
 
     if (paymentMethod === 'dinheiro') {
         message += `Troco para: R$ ${troco.toFixed(2)}\n`;
