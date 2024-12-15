@@ -317,7 +317,7 @@ label {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: white;
+    background-color: black;
     border: 2px solid #ccc;
     padding: 20px;
     border-radius: 10px;
@@ -342,8 +342,8 @@ label {
 /* Estilo do botão de fechar */
 .close-help {
     position: absolute;
-    top: -15px;
-    right: -8px;
+    top: -25px;
+    right: -18px;
     font-size: 25px;
     cursor: pointer;
     color: red;
@@ -10049,6 +10049,13 @@ function openHelp() {
 // Função para fechar o modal
 function closeHelp() {
     document.getElementById('help-modal').style.display = 'none'; // Oculta o modal
+    
+    // Pausar o vídeo ao fechar o modal
+    const iframe = document.querySelector('#help-modal iframe');
+    const iframeSrc = iframe.src; // Salva a URL atual do iframe
+    
+    iframe.src = ''; // Limpa o src para parar a reprodução do vídeo
+    iframe.src = iframeSrc; // Restaura o src para que o vídeo pare de tocar
 }
 
 function addVitaminToCart() {
