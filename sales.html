@@ -9,8 +9,8 @@
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(to bottom right, orange, orange); /* Gradiente verde suave */
-    background-color: black;
+    background: linear-gradient(to bottom right, #FF8C33, #FFCC00, #FFEB3B);
+background-color: orange;
 }
 
 header {
@@ -47,8 +47,8 @@ nav {
 }
 
 nav button {
-    background-color: orange; /* Verde claro */
-    color: black; /* Cor do texto do botão */
+    background: linear-gradient(to bottom, #FFA726, #F57C00);
+    color: white;
     border: none; /* Remove a borda do botão */
     padding: 10px 15px; /* Espaçamento interno (horizontal maior) */
     cursor: pointer; /* Altera o cursor para indicar que é clicável */
@@ -63,7 +63,7 @@ nav button {
 
 /* Efeito hover */
 nav button:hover {
-    background-color: yellow; /* Verde mais escuro ao passar o mouse */
+    background-color: #388E3C; /* Verde escuro no hover */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra ao passar o mouse */
 }
 
@@ -126,8 +126,8 @@ nav ul li a {
 
 /* Efeito ao passar o mouse */
 #category-list li a:hover {
-    background-color: #ffcc00; /* Fundo laranja ao hover */
-    color: #000; /* Texto preto no hover */
+    background-color: #FFEB3B; /* Maior contraste com o fundo preto */
+    color: #000;
     border-color: #ffcc00; /* Alinha a borda ao fundo */
 }
 
@@ -186,7 +186,8 @@ nav ul li a {
 }
 
 .menu-item:hover {
-    transform: scale(1.05); /* Leve aumento no tamanho */
+    transform: scale(1.05) rotate(1deg);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .menu-item img {
@@ -259,9 +260,9 @@ label {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #FF8C33;
+    background-color: #F4C542;
     color: white;
-    border: 1px solid yellow;
+    border: 1px solid red;
     padding: 15px;
     border-radius: 50%;
     cursor: pointer;
@@ -272,7 +273,7 @@ label {
 
 #cart-icon:hover {
     background-color: orange; /* tom mais escuro ao passar o mouse */
-    border: 2px solid green;
+    border: 1px solid red;
 }
 
 #cart-notification {
@@ -290,20 +291,98 @@ label {
     display: none;
 }
 
+/* Botão flutuante do ponto de interrogação */
+#help-icon {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background-color: #F4C542;
+    color: white;
+    border: 1px solid red;
+    padding: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s;
+}
+
+#help-icon:hover {
+    background-color: orange;
+}
+
+/* Janela flutuante do tutorial */
+#help-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 2px solid #ccc;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: none; /* Inicialmente invisível */
+    width: 80%;
+    max-height: 80%;
+    overflow: hidden;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilo do vídeo dentro do modal */
+#help-modal iframe {
+    width: 100%;
+    height: 80%;
+    max-width: 800px;
+    max-height: 450px;
+}
+
+/* Estilo do botão de fechar */
+.close-help {
+    position: absolute;
+    top: -15px;
+    right: -8px;
+    font-size: 25px;
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
+}
+
+.help-content {
+    position: relative;
+    text-align: center;
+}
+
 #cart {
     position: fixed;
-    bottom: 80px;
-    right: 5px;
-    background-color: orange; /* fundo mais suave */
-    padding: 20px; /* mais espaço interno */
-    border-radius: 12px; /* bordas mais arredondadas */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* sombra mais sutil */
-    display: none; /* oculto */
-    max-height: 600px; /* altura máxima do carrinho */
-    width: 350px;
-    overflow-y: auto; /* rolagem vertical se necessário */
-    transition: all 0.3s ease; /* transição suave para aparecer/desaparecer */
+    bottom: 20px; /* Distância da parte inferior da tela */
+    left: 50%; /* Centraliza horizontalmente a partir do meio */
+    transform: translateX(-50%); /* Ajusta para garantir que fique centralizado */
+    background-color: #FFA726; /* Fundo laranja mais suave */
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: none; /* Inicialmente oculto */
+    width: 90%; /* Largura adaptável, ocupa 90% da tela */
+    max-width: 350px; /* Largura máxima para não ser maior que 350px */
+    max-height: 80vh; /* Altura máxima de 80% da tela */
+    overflow-y: auto; /* Permite rolagem se necessário */
+    transition: all 0.3s ease;
     border: 2px solid black;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 #cart h3 {
@@ -311,17 +390,109 @@ label {
     justify-content: space-between;
     align-items: center;
     margin: 0;
-    font-size: 20px; /* tamanho da fonte do cabeçalho */
-    color: black; /* cor do texto */
-    border-bottom: 2px solid black; /* linha divisória */
+    font-size: 20px;
+    color: black;
+    border-bottom: 2px solid black;
+    padding-bottom: 10px;
 }
 
-/* Estilo do botão de fechar */
+/* Ajustes para telas menores */
+@media (max-width: 768px) {
+    #cart {
+        width: 90%; /* Modal ocupa 90% da largura da tela */
+        bottom: 10px; /* Distância reduzida do fundo */
+        left: 50%; /* Centraliza horizontalmente */
+        transform: translateX(-50%); /* Ajusta para centralizar */
+    }
+
+    #cart h3 {
+        font-size: 18px; /* Ajuste do tamanho da fonte */
+    }
+}
+
+@media (max-width: 480px) {
+    #cart {
+        width: 95%; /* Modal ocupa 95% da largura em telas menores */
+        bottom: 5px; /* Distância menor do fundo */
+        left: 50%; /* Centraliza horizontalmente */
+        transform: translateX(-50%); /* Ajusta para centralizar */
+    }
+
+    #cart h3 {
+        font-size: 16px; /* Ajuste ainda menor da fonte */
+    }
+}
+
+/* Botão de fechar */
 .close-btn {
-    background-color: red;
+    background-color: #FF5722; /* Cor viva */
     color: white;
     border: none;
-    padding: 2px 6px;
+    padding: 5px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.close-btn:hover {
+    background-color: #E64A19;
+}
+
+/* Botão de enviar pedido */
+.send-btn {
+    background-color: #4CAF50; /* Verde elegante */
+    color: white;
+    border: 2px solid black;
+    padding: 10px 20px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 16px;
+    margin-top: 20px;
+    display: block;
+    text-align: center;
+}
+
+.send-btn:hover {
+    background-color: #388E3C;
+}
+
+/* Itens do carrinho */
+.cart-item {
+    display: flex;
+    justify-content: center; /* Centraliza o conteúdo do item */
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    border-bottom: 2px solid black;
+    background-color: #FFB347;
+    border: 1px solid black;
+    border-radius: 8px;
+    width: 100%; /* Faz o item ocupar toda a largura do container */
+    margin-left: -10%;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-item p {
+    margin: 0;
+    font-size: 16px;
+}
+
+/* Botão de remover item */
+.remove-btn {
+    background-color: #F44336;
+    color: white;
+    border: none;
+    padding: 5px;
     border-radius: 50%;
     cursor: pointer;
     font-size: 10px;
@@ -330,69 +501,20 @@ label {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.close-btn:hover {
-    background-color: darkred;
-}
-
-/* Estilo do botão de enviar pedido */
-.send-btn {
-    background-color: #2E8B57;
-    color: white;
-    border: 2px solid black;
-    padding: 10px 20px;
-    border-radius: 15px;
-    cursor: pointer;
     transition: background-color 0.3s;
 }
 
-.send-btn:hover {
-    background-color: #218838;
-}
-
-.cart-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 5px 0;
-    padding: 10px 0; /* padding para mais espaçamento */
-    border-bottom: 2px solid black; /* linha divisória */
-}
-
-.cart-item:last-child {
-    border-bottom: none; /* remove a linha divisória do último item */
-}
-
-.remove-btn {
-    background-color: red;
-    color: white;
-    border: none;
-    padding: 2px 6px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 5px;
-    width: 15px;
-    height: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .remove-btn:hover {
-    background-color: darkred; /* tom mais escuro ao passar o mouse */
+    background-color: #D32F2F;
 }
 
-.hidden {
-    display: none;
-}
-
+/* Estilo do formulário de endereço */
 .endereco-container {
     max-width: 400px;
     margin: 30px auto;
     padding: 20px;
-    background-color: #FFB347;
-    border-radius: 8px;
+    background-color: #FFB347; /* Fundo suave */
+    border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid black;
 }
@@ -401,6 +523,7 @@ label {
     text-align: center;
     color: black;
     margin-bottom: 20px;
+    font-size: 18px;
 }
 
 .endereco-container label {
@@ -421,17 +544,18 @@ label {
 }
 
 .endereco-container input:focus {
-    border-color: #4CAF50;
+    border-color: #FF9800;
     outline: none;
-    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 0 5px rgba(255, 152, 0, 0.3);
 }
 
+/* Estilo da área de pagamento */
 .pagamento-container {
     max-width: 400px;
     margin: 20px auto;
     padding: 20px;
-    background-color: #FFB347;
-    border-radius: 8px;
+    background-color: #FFB347; /* Fundo sutil */
+    border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid black;
 }
@@ -440,9 +564,11 @@ label {
     text-align: center;
     color: #333;
     margin-bottom: 15px;
+    font-size: 18px;
 }
 
-.pagamento-container select {
+.pagamento-container select,
+.pagamento-container input {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
@@ -451,28 +577,14 @@ label {
     transition: border-color 0.3s;
 }
 
-.pagamento-container select:focus {
-    border-color: #4CAF50;
+.pagamento-container select:focus,
+.pagamento-container input:focus {
+    border-color: #FF9800;
     outline: none;
-    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 0 5px rgba(255, 152, 0, 0.3);
 }
 
-.pagamento-container label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: none;
-}
-
-.pagamento-container input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-sizing: border-box;
-}
-
+/* PIX Info */
 .pix-info {
     display: flex;
     align-items: center;
@@ -481,30 +593,29 @@ label {
 
 .pix-info img {
     width: 40px;
-    margin-top: -5%;
+    margin-right: 10px;
 }
 
 .pix-info input {
     border: none;
-    background: #FFB347;
+    background: transparent;
     font-size: 16px;
     flex: 1;
-    cursor: text;
+    color: black;
 }
 
 .pix-info button {
     padding: 10px;
-    background-color: #2E8B57;
+    background-color: #4CAF50;
     color: white;
     border: 1px solid black;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
-    margin-top: -5%;
 }
 
 .pix-info button:hover {
-    background-color: green;
+    background-color: #388E3C;
 }
 
 .menu-item[data-category="acai"] .montar-button {
@@ -9348,7 +9459,11 @@ legend {
         <option value="3.50">Agua sem gás - R$ 3,50</option>
         <option value="4">Agua com gás - R$ 4,00</option>
         <option value="4">Suco Bioleve - R$ 4,00</option>
-        <option value="7">Refrigerante lata - R$ 7,00</option>
+        <option value="7">Refrigerante lata coca-cola - R$ 7,00</option>
+        <option value="7">Refrigerante lata fanta uva - R$ 7,00</option>
+        <option value="7">Refrigerante lata fanta laranja - R$ 7,00</option>
+        <option value="7">Refrigerante lata sprite - R$ 7,00</option>
+        <option value="7">Refrigerante lata (outro) mencionar via whatsapp - R$ 7,00</option>
         <option value="9">Refrigerante 600ml - R$ 9,00</option>
         <option value="13">Refrigerante 2L Fanta - R$ 13,00</option>
         <option value="13">Refrigerante 2L Sprite - R$ 13,00</option>
@@ -9595,7 +9710,10 @@ legend {
         <legend>Mousses:</legend>
         <label><input type="checkbox" value="4.50" data-name="Mousse de Morango"> Morango (+R$ 4,50)</label>
         <label><input type="checkbox" value="4.50" data-name="Mousse de Maracuja"> Maracujá (+R$ 4,50)</label>
-        <label><input type="checkbox" value="4. 50" data-name="Mousse de Limão"> Limão (+R$ 4,50)</label>
+        <label><input type="checkbox" value="4.50" data-name="Mousse de Limão"> Limão (+R$ 4,50)</label>
+        <label><input type="checkbox" value="4.50" data-name="Mousse de uva"> Uva (+R$ 4,50)</label>
+        <label><input type="checkbox" value="4.50" data-name="Mousse de tangerina"> Tangerina (+R$ 4,50)</label>
+        <label><input type="checkbox" value="4.50" data-name="Mousse de abacaxi"> Abacaxi (+R$ 4,50)</label>
         <label><input type="checkbox" value="6" data-name="Mousse de Cereja"> Cereja (+R$ 6,00)</label>
     </fieldset>
 
@@ -9715,6 +9833,17 @@ legend {
     </div>
 </div>
 
+<!-- Botão flutuante de ajuda -->
+<button id="help-icon" onclick="openHelp()">❓</button>
+
+<!-- Modal do tutorial -->
+<div id="help-modal">
+    <div class="help-content">
+        <span class="close-help" onclick="closeHelp()">&times;</span>
+        <iframe src="https://www.youtube.com/embed/Em0TIGFK5yE" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+</div>
+
 <button id="cart-icon" onclick="toggleCart()">🛒
     <div id="cart-notification"></div>
 </button>
@@ -9771,7 +9900,7 @@ legend {
     <select id="payment-method" onchange="handlePaymentMethodChange()">
         <option value="" disabled selected>Selecione</option>
         <option value="pix">Pix</option>
-        <option value="cartao">Cartão de Crédito (Máquininha)</option>
+        <option value="cartao">Cartão  (Máquininha)</option>
         <option value="dinheiro">Dinheiro</option>
     </select>
     
@@ -9910,6 +10039,16 @@ window.onload = function() {
     // Adiciona o açaí ao carrinho com a descrição e o total calculado
     addToCart(acaiDescription, total);
     document.getElementById('acai-builder').classList.add('hidden');
+}
+
+// Função para abrir o modal
+function openHelp() {
+    document.getElementById('help-modal').style.display = 'flex'; // Exibe o modal
+}
+
+// Função para fechar o modal
+function closeHelp() {
+    document.getElementById('help-modal').style.display = 'none'; // Oculta o modal
 }
 
 function addVitaminToCart() {
@@ -10136,6 +10275,11 @@ function calcularTaxaEntrega(cidade = '', bairro = '', rua = '') {
     const bairroNormalizado = bairro.trim().toLowerCase();
     const ruaNormalizada = rua ? rua.trim().toLowerCase() : '';
 
+    // Verifica se a cidade é "Estiva", "Estiva Gerbi" ou "Gerbi" para taxa de R$4,00
+    if (cidadeNormalizada.includes('estiva') || cidadeNormalizada.includes('gerbi')) {
+        return 4.00; // Taxa de entrega para Estiva Gerbi
+    }
+
     // Verifica se a rua contém variações de "José Lanzi" ou se o bairro contém "Retiro do Alto"
     if (ruaNormalizada.includes('dr. josé lanzi') || 
         ruaNormalizada.includes('doutor josé lanzi') || 
@@ -10145,31 +10289,26 @@ function calcularTaxaEntrega(cidade = '', bairro = '', rua = '') {
     }
 
     // Verifica se o bairro ou cidade contém variações de "Parque Industrial", "Distrito Industrial" ou "Guaçu Mirim"
-if (bairroNormalizado.includes('parque industrial') || 
-    bairroNormalizado.includes('distrito') || 
-    bairroNormalizado.includes('industrial') || 
-    bairroNormalizado.includes('guaçu mirim') || 
-    bairroNormalizado.includes('guacú mirim') || 
-    bairroNormalizado.includes('guacu mirim') || 
-    bairroNormalizado.includes('jardim guaçu-mirim i') || 
-    bairroNormalizado.includes('jardim guacu mirim i') || 
-    cidadeNormalizada.includes('distrito') || 
-    cidadeNormalizada.includes('industrial') || 
-    cidadeNormalizada.includes('guaçu mirim') || 
-    cidadeNormalizada.includes('guacú mirim') || 
-    cidadeNormalizada.includes('guacu mirim')) {
-    return 8.00; // Taxa de entrega para Jardim Guaçu Mirim, Distrito Industrial, e Parque Industrial
-}
+    if (bairroNormalizado.includes('parque industrial') || 
+        bairroNormalizado.includes('distrito') || 
+        bairroNormalizado.includes('industrial') || 
+        bairroNormalizado.includes('guaçu mirim') || 
+        bairroNormalizado.includes('guacú mirim') || 
+        bairroNormalizado.includes('guacu mirim') || 
+        bairroNormalizado.includes('jardim guaçu-mirim i') || 
+        bairroNormalizado.includes('jardim guacu mirim i') || 
+        cidadeNormalizada.includes('distrito') || 
+        cidadeNormalizada.includes('industrial') || 
+        cidadeNormalizada.includes('guaçu mirim') || 
+        cidadeNormalizada.includes('guacú mirim') || 
+        cidadeNormalizada.includes('guacu mirim')) {
+        return 8.00; // Taxa de entrega para Jardim Guaçu Mirim, Distrito Industrial, e Parque Industrial
+    }
 
     // Verifica se o bairro ou cidade contém "Palm" ou "Califórnia" para taxa de R$5,00
     if (bairroNormalizado.includes('palm') || bairroNormalizado.includes('califórnia') ||
         cidadeNormalizada.includes('palm') || cidadeNormalizada.includes('califórnia')) {
         return 5.00; // Taxa de entrega para os condomínios Palm Park e Califórnia
-    }
-
-    // Verifica se a cidade é "Estiva", "Estiva Gerbi" ou "Gerbi" para taxa de R$4,00
-    if (cidadeNormalizada.includes('estiva') || cidadeNormalizada.includes('gerbi')) {
-        return 4.00; // Taxa de entrega para Estiva Gerbi
     }
 
     return 0.00; // Nenhuma taxa para outras localidades
@@ -10442,7 +10581,7 @@ function sendOrder() {
     message += `\n=======================\n`;
 
     // Inclui o método de pagamento
-    message += `\n*Forma de Pagamento:* ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão de Crédito' : 'Pix'}\n`;
+    message += `\n*Forma de Pagamento:* ${paymentMethod === 'dinheiro' ? 'Dinheiro' : paymentMethod === 'cartao' ? 'Cartão (máquina)' : 'Pix'}\n`;
 
     if (paymentMethod === 'dinheiro') {
         message += `Troco para: R$ ${troco.toFixed(2)}\n`;
