@@ -10538,7 +10538,7 @@ function sendOrder() {
 
     // Adiciona os itens na mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
-        message += `\n• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n`;
+        message += `\n• (${value.quantity}x) ${key} - R$ ${(value.price * value.quantity).toFixed(2)}\n`;
     }
 
     message += `\n=======================\n`;
