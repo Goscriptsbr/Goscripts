@@ -260,9 +260,9 @@ label {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #FF8C33;
+    background-color: #F4C542;
     color: white;
-    border: 1px solid yellow;
+    border: 1px solid red;
     padding: 15px;
     border-radius: 50%;
     cursor: pointer;
@@ -273,7 +273,7 @@ label {
 
 #cart-icon:hover {
     background-color: orange; /* tom mais escuro ao passar o mouse */
-    border: 2px solid green;
+    border: 1px solid red;
 }
 
 #cart-notification {
@@ -289,6 +289,70 @@ label {
     font-size: 14px;
     line-height: 20px;
     display: none;
+}
+
+/* Botão flutuante do ponto de interrogação */
+#help-icon {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background-color: #F4C542;
+    color: white;
+    border: 1px solid red;
+    padding: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s;
+}
+
+#help-icon:hover {
+    background-color: orange;
+}
+
+/* Janela flutuante do tutorial */
+#help-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: black;
+    border: 2px solid #ccc;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: none; /* Inicialmente invisível */
+    width: 80%;
+    max-height: 80%;
+    overflow: hidden;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilo do vídeo dentro do modal */
+#help-modal iframe {
+    width: 100%;
+    height: 80%;
+    max-width: 800px;
+    max-height: 450px;
+}
+
+/* Estilo do botão de fechar */
+.close-help {
+    position: absolute;
+    top: -25px;
+    right: -18px;
+    font-size: 25px;
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
+}
+
+.help-content {
+    position: relative;
+    text-align: center;
 }
 
 #cart {
@@ -869,7 +933,7 @@ legend {
     <div class="menu-item" data-category="lanches">
         <img src="https://example.com/x-frango-empanado-cheddar.jpg" alt="X-Burger Simples" />
         <h3>X - Burguer Simples</h3>
-        <p>Pão hamburguer, hamburguer, muçarela, presunto.</p>
+        <p>Pão hamburguer, hamburguer, muçarela, presunto, maionese.</p>
         
         <div class="size-addons">
             <div class="size-selection">
@@ -917,7 +981,7 @@ legend {
     <div class="menu-item" data-category="lanches">
         <img src="https://example.com/x-frango-empanado-cheddar.jpg" alt="X-Bacon Simples" />
         <h3>X - Bacon Simples</h3>
-        <p>Pão hamburguer, hamburguer, bacon, muçarela, presunto, alface, tomate.</p>
+        <p>Pão hamburguer, hamburguer, bacon, muçarela, presunto, maionese, alface, tomate.</p>
 
         <div class="size-addons">
             <div class="size-selection">
@@ -965,7 +1029,7 @@ legend {
     <div class="menu-item" data-category="lanches">
     <img src="https://example.com/churrasquinho-simples.jpg" alt="Churrasquinho Simples" />
     <h3>Churrasquinho Simples</h3>
-    <p>Pão francês, contra filé, muçarela, presunto, alface, tomate.</p>
+    <p>Pão francês, contra filé, muçarela, presunto, maionese, alface, tomate.</p>
 
     <div class="size-addons">
         <div class="size-selection">
@@ -1013,7 +1077,7 @@ legend {
 <div class="menu-item" data-category="lanches">
     <img src="https://example.com/churrasco-simples.jpg" alt="Churrasco Simples" />
     <h3>Churrasco Simples</h3>
-    <p>Pão francês, bacon, contra filé, muçarela, presunto, alface, tomate.</p>
+    <p>Pão francês, bacon, contra filé, muçarela, presunto, maionese, alface, tomate.</p>
 
     <div class="size-addons">
         <div class="size-selection">
@@ -1061,7 +1125,7 @@ legend {
 <div class="menu-item" data-category="lanches">
     <img src="https://example.com/x-egg-simples.jpg" alt="X - Egg Simples" />
     <h3>X - Egg Simples</h3>
-    <p>Pão hamburguer, hamburguer, muçarela, presunto, ovo, alface, tomate.</p>
+    <p>Pão hamburguer, hamburguer, muçarela, presunto, maionese, ovo, alface, tomate.</p>
 
     <div class="size-addons">
         <div class="size-selection">
@@ -1109,7 +1173,7 @@ legend {
 <div class="menu-item" data-category="lanches">
     <img src="https://example.com/x-frango-simples.jpg" alt="X - Frango Simples" />
     <h3>X - Frango Simples</h3>
-    <p>Pão hamburguer, frango, muçarela, presunto, alface, tomate.</p>
+    <p>Pão hamburguer, frango, muçarela, presunto, maionese, alface, tomate.</p>
 
     <div class="size-addons">
         <div class="size-selection">
@@ -1157,7 +1221,7 @@ legend {
 <div class="menu-item" data-category="lanches">
     <img src="https://example.com/x-frango-empanado-simples.jpg" alt="X - Frango Empanado Simples" />
     <h3>X - Frango Empanado Simples</h3>
-    <p>Pão hamburguer, frango empanado, muçarela, presunto, alface, tomate.</p>
+    <p>Pão hamburguer, frango empanado, muçarela, presunto, maionese, alface, tomate.</p>
 
     <div class="size-addons">
         <div class="size-selection">
@@ -1205,7 +1269,7 @@ legend {
 <div class="menu-item" data-category="lanches">
     <img src="https://example.com/x-salada-simples.jpg" alt="X - Salada Simples" />
     <h3>X - Salada Simples</h3>
-    <p>Pão hamburguer, hamburguer, muçarela, presunto, alface, tomate.</p>
+    <p>Pão hamburguer, hamburguer, muçarela, presunto, maionese, alface, tomate.</p>
 
     <div class="size-addons">
         <div class="size-selection">
@@ -1253,7 +1317,7 @@ legend {
 <div class="menu-item" data-category="lanches">
     <img src="https://example.com/x-pernil-simples.jpg" alt="X - Pernil Simples" />
     <h3>X - Pernil Simples</h3>
-    <p>Pão francês, pernil, muçarela, presunto, alface, tomate.</p>
+    <p>Pão francês, pernil, muçarela, presunto, maionese, alface, tomate.</p>
 
     <div class="size-addons">
         <div class="size-selection">
@@ -3509,7 +3573,7 @@ legend {
 <div class="menu-item" data-category="lanches">
     <img src="https://example.com/monstro.jpg" alt="Monstro Caseiro" />
     <h3>Monstro Caseiro</h3>
-    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, contra filé, pernil, salsicha, frango, ovo, catupiry, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
+    <p>Ingredientes: Pão de hambúrguer, hambúrguer, calabresa, bacon, contra filé, pernil, salsicha, frango, ovo, muçarela, presunto, batata palha, milho, tomate, alface, maionese.</p>
 
     <div class="size-addons">
         <div class="size-selection">
@@ -9271,14 +9335,14 @@ legend {
 
         <div class="menu-item" data-category="Macarrão"> 
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Vermelho" />
-            <h3>Macarrão Molho Vermelho</h3>
+            <h3>Macarrão Molho Vermelho com carne</h3>
             <p>Molho vermelho, macarrão, bacon, carne, calabresa, milho, orégano, presunto e queijo mussarela.</p>
             
             <div class="size-addons">
                 <div class="size-selection">
                     <label for="size-macarraovermelho">Valor:</label>
                     <select id="size-macarraovermelho">
-                        <option value="26">Padrão - R$ 26,00</option>               
+                        <option value="27">Padrão - R$ 27,00</option>               
                     </select>
                 </div>
             </div>
@@ -9286,7 +9350,7 @@ legend {
             <label for="observacoes-macarraovermelho">Observações:</label>
             <textarea id="observacoes-macarraovermelho" placeholder="(ex: sem bacon) opcional"></textarea>
             
-            <button onclick="addBurgerToCart('Macarrão Molho Vermelho', 'size-macarraovermelho', 'addons-macarraovermelho', 'observacoes-macarraovermelho')">Adicionar</button>
+            <button onclick="addBurgerToCart('Macarrão Molho Vermelho com carne', 'size-macarraovermelho', 'addons-macarraovermelho', 'observacoes-macarraovermelho')">Adicionar</button>
         </div>
         
         <div class="menu-item" data-category="Macarrão"> 
@@ -9298,7 +9362,7 @@ legend {
                 <div class="size-selection">
                     <label for="size-macarraovermelhofrango">Valor:</label>
                     <select id="size-macarraovermelhofrango">
-                        <option value="27">Padrão - R$ 27,00</option>               
+                        <option value="26">Padrão - R$ 26,00</option>               
                     </select>
                 </div>
             </div>
@@ -9311,7 +9375,7 @@ legend {
         
         <div class="menu-item" data-category="Macarrão"> 
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Branco" />
-            <h3>Macarrão Molho Branco</h3>
+            <h3>Macarrão Molho Branco com frango</h3>
             <p>Molho branco, macarrão, bacon, calabresa, frango, milho, orégano, presunto e queijo mussarela.</p>
             
             <div class="size-addons">
@@ -9326,7 +9390,7 @@ legend {
             <label for="observacoes-macarraobranco">Observações:</label>
             <textarea id="observacoes-macarraobranco" placeholder="(ex: sem presunto) opcional"></textarea>
             
-            <button onclick="addBurgerToCart('Macarrão Molho Branco', 'size-macarraobranco', 'addons-macarraobranco', 'observacoes-macarraobranco')">Adicionar</button>
+            <button onclick="addBurgerToCart('Macarrão Molho Branco com frango', 'size-macarraobranco', 'addons-macarraobranco', 'observacoes-macarraobranco')">Adicionar</button>
         </div>
         
 
@@ -9407,7 +9471,7 @@ legend {
         <option value="13">Refrigerante guarana antartica 2L - R$ 13,00</option>
         <option value="9">Refrigerante mogi 2L - R$ 9,00</option>
         <option value="12">Coca cola 1L descartavel - R$ 12,00</option>
-        <option value="13">Coca cola 1,5L descartavel - R$ 13,00</option>
+        <option value="15">Coca cola 1,5L descartavel - R$ 15,00</option>
         <option value="17">Coca cola 2L descartavel - R$ 17,00</option>
         <option value="7">Cerveja lata brahma - R$ 7,00</option>
         <option value="7">Cerveja lata skol - R$ 7,00</option>
@@ -9429,36 +9493,18 @@ legend {
     <label for="juice-select">Escolha o sabor e tamanho:</label>
     <select id="juice-select" class="milk-juice-select" 
      onchange="updateJuicePrice(this, 'juice-price')">
-        <option value="10">Suco Natural Abacaxi 500ml - R$ 10,00</option>
-        <option value="15">Suco Natural Abacaxi 1L - R$ 15,00</option>
+        <option value="10">Suco Natural Abacaxi (hortelã) 500ml - R$ 10,00</option>
+        <option value="15">Suco Natural Abacaxi (hortelã) 1L - R$ 15,00</option>
         <option value="16">Suco Natural Maracujá 500ml - R$ 16,00</option>
         <option value="20">Suco Natural Maracujá 1L - R$ 20,00</option>
         <option value="10">Suco Natural Acerola 500ml - R$ 10,00</option>
         <option value="15">Suco Natural Acerola 1L - R$ 15,00</option>
         <option value="14">Suco Natural Amora 500ml - R$ 14,00</option>
         <option value="19">Suco Natural Amora 1L - R$ 19,00</option>
-        <option value="11">Suco Natural Capuaçu 500ml - R$ 11,00</option>
-        <option value="16">Suco Natural Capuaçu 1L - R$ 16,00</option>
-        <option value="11">Suco Natural Coco 500ml - R$ 11,00</option>
-        <option value="16">Suco Natural Coco 1L - R$ 16,00</option>
         <option value="12">Suco Natural Frutas vermelhas 500ml - R$ 12,00</option>
         <option value="18">Suco Natural Frutas vermelhas 1L - R$ 18,00</option>
-        <option value="10">Suco Natural Goiaba 500ml - R$ 10,00</option>
-        <option value="15">Suco Natural Goiaba 1L - R$ 15,00</option>
-        <option value="11">Suco Natural Graviola 500ml - R$ 11,00</option>
-        <option value="16">Suco Natural Graviola 1L - R$ 16,00</option>
         <option value="10">Suco Natural Limao 500ml - R$ 10,00</option>
         <option value="15">Suco Natural Limao 1L - R$ 15,00</option>
-        <option value="11">Suco Natural Kiwi 500ml - R$ 11,00</option>
-        <option value="16">Suco Natural Kiwi 1L - R$ 16,00</option>
-        <option value="11">Suco Natural Mamão 500ml - R$ 11,00</option>
-        <option value="15">Suco Natural Mamão 1L - R$ 15,00</option>
-        <option value="11">Suco Natural Melão 500ml - R$ 11,00</option>
-        <option value="15">Suco Natural Melão 1L - R$ 15,00</option>
-        <option value="10">Suco Natural Pêssego 500ml - R$ 10,00</option>
-        <option value="15">Suco Natural Pêssego 1L - R$ 15,00</option>
-        <option value="11">Suco Natural Uva 500ml - R$ 11,00</option>
-        <option value="16">Suco Natural Uva 1L - R$ 16,00</option>
         <option value="10">Suco Natural Manga 500ml - R$ 10,00</option>
         <option value="15">Suco Natural Manga 1L - R$ 15,00</option>
     </select>
@@ -9481,14 +9527,12 @@ legend {
     <option value="27">Suco Maracujá cremoso 1L - R$ 27,00</option>
     <option value="14">Suco Chocolate (ovomaltine) cremoso 500ml - R$ 14,00</option>
     <option value="19">Suco Chocolate (ovomaltine) cremoso 1L - R$ 19,00</option>
-    <option value="15">Suco Cocô cremoso 500ml - R$ 15,00</option>
-    <option value="20">Suco Coco cremoso 1L - R$ 20,00</option>
     <option value="14">Suco Laranja cremosa 500ml - R$ 14,00</option>
     <option value="19">Suco Laranja cremosa 1L - R$ 19,00</option>
     <option value="15">Suco Uva cremosa 500ml - R$ 15,00</option>
     <option value="20">Suco Uva cremosa 1L - R$ 20,00</option>
-    <option value="15">Suco Pêssego cremoso 500ml - R$ 15,00</option>
-    <option value="19">Suco Pêssego cremoso 1L - R$ 19,00</option>
+    <option value="15">Suco Amora cremosa 500ml - R$ 15,00</option>
+    <option value="20">Suco Amora cremosa 1L - R$ 20,00</option>
 </select>
 
     <span id="milk-juice-price">R$ 15,00</span>
@@ -9503,11 +9547,12 @@ legend {
     <label for="ninho-juice-select">Escolha o sabor e tamanho:</label>
     <select id="ninho-juice-select" class="milk-juice-select" 
             onchange="updateNinhoJuicePrice(this)">
+        <option value="17">Suco Morango com ninho 500ML - R$ 17,00</option>
         <option value="20">Suco Morango com ninho 1L - R$ 20,00</option>
-        <option value="27">Suco Maracujá com ninho 1L - R$ 27,00</option>
-        <option value="20">Suco Coco com ninho 1L - R$ 20,00</option>
-        <option value="20">Suco Uva com ninho 1L - R$ 20,00</option>
-        <option value="19">Suco Pêssego com ninho 1L - R$ 19,00</option>
+        <option value="17">Suco Maracujá com ninho 500ML - R$ 17,00</option>
+        <option value="20">Suco Maracujá com ninho 1L - R$ 20,00</option>
+        <option value="17">Suco Uva com ninho 500ML - R$ 17,00</option>
+        <option value="27">Suco Uva com ninho 1L - R$ 27,00</option>
     </select>
 
     <span id="ninho-juice-price">R$ 20,00</span>
@@ -9769,6 +9814,17 @@ legend {
     </div>
 </div>
 
+<!-- Botão flutuante de ajuda -->
+<button id="help-icon" onclick="openHelp()">❓</button>
+
+<!-- Modal do tutorial -->
+<div id="help-modal">
+    <div class="help-content">
+        <span class="close-help" onclick="closeHelp()">&times;</span>
+        <iframe src="https://www.youtube.com/embed/Em0TIGFK5yE" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+</div>
+
 <button id="cart-icon" onclick="toggleCart()">🛒
     <div id="cart-notification"></div>
 </button>
@@ -9964,6 +10020,23 @@ window.onload = function() {
     // Adiciona o açaí ao carrinho com a descrição e o total calculado
     addToCart(acaiDescription, total);
     document.getElementById('acai-builder').classList.add('hidden');
+}
+
+// Função para abrir o modal
+function openHelp() {
+    document.getElementById('help-modal').style.display = 'flex'; // Exibe o modal
+}
+
+// Função para fechar o modal
+function closeHelp() {
+    document.getElementById('help-modal').style.display = 'none'; // Oculta o modal
+    
+    // Pausar o vídeo ao fechar o modal
+    const iframe = document.querySelector('#help-modal iframe');
+    const iframeSrc = iframe.src; // Salva a URL atual do iframe
+    
+    iframe.src = ''; // Limpa o src para parar a reprodução do vídeo
+    iframe.src = iframeSrc; // Restaura o src para que o vídeo pare de tocar
 }
 
 function addVitaminToCart() {
@@ -10465,7 +10538,7 @@ function sendOrder() {
 
     // Adiciona os itens na mensagem
     for (const [key, value] of Object.entries(groupedItems)) {
-        message += `\n• ${key} - R$ ${(value.price * value.quantity).toFixed(2)} (x${value.quantity})\n`;
+        message += `\n• (${value.quantity}x) ${key} - R$ ${(value.price * value.quantity).toFixed(2)}\n`;
     }
 
     message += `\n=======================\n`;
