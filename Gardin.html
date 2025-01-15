@@ -10615,14 +10615,17 @@ function sendOrder() {
     }
 
     if ((selectedOption === 'entrega' || selectedOption === 'areaRural') && (!rua || !numero || !bairro || !cidade)) {
-    alert("Por favor, preencha todos os campos do endereço!");
-    return;
-}
+        alert("Por favor, preencha todos os campos do endereço!");
+        return;
+    }
 
     if (!paymentMethod) {
         alert("Por favor, selecione uma forma de pagamento!");
         return;
     }
+
+    // Calcula a taxa de entrega
+    const taxaEntrega = calcularTaxaEntrega(cidade, bairro, rua);
 
     // Verifica e calcula o troco, se necessário
     let troco = 0;
@@ -10667,7 +10670,6 @@ function sendOrder() {
         total += taxaEntrega;
         message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)} (Área Rural)\n`;
     } else if (selectedOption === 'entrega') {
-        const taxaEntrega = calcularTaxaEntrega(cidade, bairro);
         if (taxaEntrega > 0) {
             total += taxaEntrega;
             message += `*Taxa de Entrega:* R$ ${taxaEntrega.toFixed(2)}\n`;
