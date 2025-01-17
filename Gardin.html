@@ -10042,7 +10042,7 @@ function addVitaminToCart() {
     const vitaminPrice = parseFloat(selectedOption.value); // Preço da vitamina
 
     // Adiciona a vitamina ao carrinho
-    addToCart(vitaminName, vitaminPrice);
+    addToCart(vitaminName, vitaminPrice);    
 }
 
     // Função para adicionar itens ao carrinho
@@ -10205,6 +10205,7 @@ function handleDropdownChange() {
 function updateNinhoJuicePrice(selectElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     const price = selectedOption.value;
+   
     document.getElementById('ninho-juice-price').textContent = `R$ ${price},00`;
 }
 
@@ -10213,6 +10214,7 @@ function addNinhoJuiceToCart() {
     const selectedOption = selectElement.options[selectElement.selectedIndex]; // Obtém a opção selecionada
     const juiceName = selectedOption.text; // Nome do suco
     const juicePrice = parseFloat(selectedOption.value); // Preço do suco
+    
 
     // Adiciona o Ninho Juice ao carrinho
     addToCart(juiceName, juicePrice);
@@ -10573,6 +10575,7 @@ function atualizarTotalCarrinho(precoAdicionado = 0) {
 
     updateCart(); // Atualiza a exibição do carrinho
     showNotification(); // Mostra a notificação de item adicionado
+    showItemAddedNotification();
 }
     
     function updateJuicePrice(selectElement, priceElementId) {
