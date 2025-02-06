@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos do Garçom</title>
+</head>
+<body>
+    <h1>Pedido de Mesa</h1>
+
+    <!-- Número da Mesa -->
+    <label for="mesa">Número da Mesa:</label>
+    <input type="number" id="mesa" placeholder="Número da mesa" required>
+    
+    <h2>Selecione o Produto</h2>
+    
+    <div id="produtos">
+        <!-- Produtos vão aparecer aqui -->
+    </div>
+
+    <h3>Carrinho de Pedidos</h3>
+    <ul id="carrinho">
+        <!-- Produtos adicionados ao carrinho vão aparecer aqui -->
+    </ul>
+
+    <button onclick="salvarPedido()">Salvar Pedido</button>
+
+    <h3>Pedidos Salvos</h3>
+    <ul id="pedidos-salvos">
+        <!-- Pedidos salvos vão aparecer aqui -->
+    </ul>
+
+    <script>
+        // Produtos do menu
+        const produtos = [
+            { id: 1, nome: 'Isca de Peixe', preco: 20 },
+            { id: 2, nome: 'Pizza Marguerita', preco: 25 },
+            { id: 3, nome: 'Hambúrguer', preco: 18 },
+            { id: 4, nome: 'Frango Grelhado', preco: 22 },
+            { id: 5, nome: 'Suco Laranja', preco: 8 }
+        ];
+
+        // Variáveis de carrinho e IndexedDB
+        let carrinho = [];
+        let db;
+
+        // Inicializa o IndexedDB
+        function initDB() {
+            const request = indexedDB.open('PedidosDB', 1);
+
+            request.onupgradeneeded = function (event) {
+                db = event.target.result;
+                const store = db.createObjectStore('pedidos', { keyPath: 'id', autoIncrement: true });
+                store.createIndex('mesa', 'mesa', { unique: false });
+            };
+
+            request.onsuccess = function (event) {
+                db = event.target.result;
+                console.log('Banco de dados carregado com sucesso');
+            };
+
+            request.onerror = function (event) {
+                console.error('Erro ao abrir o banco de dados:', event.target.error);
+            };
+        }
+
+        // Exibe os produtos
+        function mostrarProdutos() {
+            const container = document.getElementById('produtos');
+            container.innerHTML = '';
+            produtos.forEach(produto => {
+                const btnProduto = document.createElement('button');
+                btnProduto.innerText = `${produto.nome} - R$${produto.preco}`;
+                btnProduto.onclick = function () {
+                    adicionarAoCarrinho(produto);
+                };
+                container.appendChild(btnProduto);
+            });
+        }
+
+        // Adiciona o produto ao carrinho
+        function adicionarAoCarrinho(produto) {
+            const quantidade = prompt(`Quantas unidades de ${produto.nome}?`);
+            if (quantidade && !isNaN(quantidade) && quantidade > 0) {
+                carrinho.push({ ...produto, quantidade: parseInt(quantidade) });
+                atualizarCarrinho();
+            }
+        }
+
+        // Atualiza a lista de carrinho
+        function atualizarCarrinho() {
+            const ulCarrinho = document.getElementById('carrinho');
+            ulCarrinho.innerHTML = '';
+            carrinho.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `${item.nome} - Quantidade: ${item.quantidade} - R$${item.preco * item.quantidade}
+                    <button onclick="editarProduto(${index})">Editar</button>
+                    <button onclick="removerProduto(${index})">Remover</button>`;
+                ulCarrinho.appendChild(li);
+            });
+        }
+
+        // Edita a quantidade de um produto no carrinho
+        function editarProduto(index) {
+            const novaQuantidade = prompt(`Digite a nova quantidade para ${carrinho[index].nome}:`, carrinho[index].quantidade);
+            if (novaQuantidade && !isNaN(novaQuantidade) && novaQuantidade > 0) {
+                carrinho[index].quantidade = parseInt(novaQuantidade);
+                atualizarCarrinho();
+            }
+        }
+
+        // Remove um produto do carrinho
+        function removerProduto(index) {
+            carrinho.splice(index, 1);
+            atualizarCarrinho();
+        }
+
+        // Exibe os pedidos salvos
+        function exibirPedidos() {
+            const ulPedidos = document.getElementById('pedidos-salvos');
+            ulPedidos.innerHTML = ''; // Limpa a lista
+            const transaction = db.transaction(['pedidos'], 'readonly');
+            const store = transaction.objectStore('pedidos');
+            const request = store.getAll();
+
+            request.onsuccess = function (event) {
+                const pedidos = event.target.result;
+                pedidos.forEach((pedido, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `Mesa: ${pedido.mesa} | Data: ${pedido.data} | Produtos: 
+                    <ul>${pedido.produtos.map(produto => `<li>${produto.nome} - Quantidade: ${produto.quantidade}</li>`).join('')}</ul>
+                    <button onclick="editarPedido(${index})">Editar</button>
+                    <button onclick="removerPedido(${index})">Remover</button>`;
+                    ulPedidos.appendChild(li);
+                });
+            };
+        }
+
+        // Salva o pedido no IndexedDB
+        function salvarPedido() {
+            const numeroMesa = document.getElementById('mesa').value;
+            if (!numeroMesa || carrinho.length === 0) {
+                alert('Por favor, adicione um número de mesa e pelo menos um pedido.');
+                return;
+            }
+
+            const pedido = {
+                mesa: numeroMesa,
+                produtos: carrinho,
+                data: new Date().toISOString()
+            };
+
+            const transaction = db.transaction(['pedidos'], 'readwrite');
+            const store = transaction.objectStore('pedidos');
+            store.add(pedido);
+
+            transaction.oncomplete = function () {
+                alert('Pedido salvo com sucesso!');
+                carrinho = [];
+                atualizarCarrinho();
+                document.getElementById('mesa').value = '';
+                exibirPedidos(); // Atualiza a lista de pedidos salvos
+            };
+
+            transaction.onerror = function () {
+                alert('Erro ao salvar o pedido');
+            };
+        }
+
+        // Edita um pedido salvo
+        function editarPedido(index) {
+            const transaction = db.transaction(['pedidos'], 'readwrite');
+            const store = transaction.objectStore('pedidos');
+            const request = store.get(index + 1); // Usando o id do pedido
+
+            request.onsuccess = function (event) {
+                const pedido = event.target.result;
+                const novaMesa = prompt('Digite o novo número da mesa:', pedido.mesa);
+                if (novaMesa) {
+                    pedido.mesa = novaMesa;
+                    const updateRequest = store.put(pedido);
+                    updateRequest.onsuccess = function () {
+                        alert('Pedido editado com sucesso!');
+                        exibirPedidos(); // Atualiza a lista de pedidos
+                    };
+                }
+            };
+        }
+
+        // Remove um pedido salvo
+        function removerPedido(index) {
+            const transaction = db.transaction(['pedidos'], 'readwrite');
+            const store = transaction.objectStore('pedidos');
+            store.delete(index + 1); // Usando o id do pedido
+
+            transaction.oncomplete = function () {
+                alert('Pedido removido com sucesso!');
+                exibirPedidos(); // Atualiza a lista de pedidos
+            };
+        }
+
+        // Inicializa a aplicação
+        initDB();
+        mostrarProdutos();
+    </script>
+</body>
+</html>
