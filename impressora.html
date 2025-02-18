@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos recebidos - gardin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <style>
+    body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f9;
+    color: #333;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cellipse cx='50' cy='25' rx='35' ry='15' fill='%23dcdcdc'/%3E%3Crect x='20' y='35' width='60' height='10' fill='%23e6e6e6'/%3E%3Crect x='15' y='45' width='70' height='10' fill='%23dcdcdc'/%3E%3Crect x='20' y='55' width='60' height='10' fill='%23e6e6e6'/%3E%3Cellipse cx='50' cy='70' rx='35' ry='15' fill='%23dcdcdc'/%3E%3C/svg%3E");
+    background-size: 80px;
+    background-repeat: repeat;
+}
+    
+    h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: linear-gradient(to right, orange, black, orange);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+   .pedido-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: 0 auto;
+    max-width: 900px;
+    padding: 10px;
+}
+
+.pedido {
+    background-color: #fff;
+    border: 2px solid #ddd;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.pedido:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.pedido h3 {
+    font-size: 0.6rem;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.pedido p {
+    font-size: 1.2rem;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.pedido::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    width: 50px;
+    height: 3px;
+    background-color: #4CAF50;
+    transform: translateX(-50%);
+}
+    .btn {
+        padding: 6px 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 8px;
+        font-size: 0.6rem;
+        font-weight: bold;
+        margin-right: 10px;
+        transition: all 0.3s ease;
+        display: inline-block;
+        text-align: center;
+        margin-top: 12px;
+    }
+    .btn-imprimir {
+        background-color: #4CAF50;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn-excluir {
+        background-color: #f44336;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn-pago {
+        background-color: #2196F3;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn:hover {
+        opacity: 0.9;
+        transform: scale(1.05);
+    }
+    .btn:active {
+        transform: scale(0.98);
+    }
+    @media print {
+        .btn {
+            display: none;
+        }
+    }
+</style>
+</head>
+<body>
+
+    <h1>Recibos de pedidos</h1>
+
+    <div id="pedido-container" class="pedido-container">
+        <!-- Os pedidos vão aparecer aqui -->
+    </div>
+
+    <script>
+        const supabaseUrl = "https://yjwemrbtwzdzgofcxwul.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlqd2VtcmJ0d3pkemdvZmN4d3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk4MzYwNTIsImV4cCI6MjA1NTQxMjA1Mn0.Im8DUHNarrQ5kN9j2OH6RKnhZbVOGcWfS1yyXWuZEIs";
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function fetchPedidos() {
+            const { data, error } = await supabaseClient
+                .from('pedidos')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error(error);
+            } else {
+                displayPedidos(data);
+            }
+        }
+
+        function displayPedidos(pedidos) {
+    const pedidoContainer = document.getElementById('pedido-container');
+    pedidoContainer.innerHTML = '';
+
+    pedidos.forEach(pedido => {
+        const pedidoElement = document.createElement('div');
+        pedidoElement.classList.add('pedido');
+        pedidoElement.id = `pedido-${pedido.id}`;
+
+        const dataHora = new Date(pedido.created_at);
+        const dataFormatada = dataHora.toLocaleString('pt-BR');
+
+        const itens = pedido.itens ? JSON.parse(pedido.itens) : [];
+        let totalPedido = 0;  // Inicializa o total do pedido
+
+        let itensHTML = itens.length > 0
+            ? itens.map(item => {
+                const valor = parseFloat(item.valor);  // Usando 'valor' em vez de 'preco'
+                const quantidade = parseInt(item.quantidade, 10);  // Garantir que a quantidade seja um número inteiro
+                const valorItem = isNaN(valor) || isNaN(quantidade) ? 0 : valor * quantidade;  // Calcular o valor do item
+
+                totalPedido += valorItem;  // Adiciona o valor do item ao total do pedido
+
+                return `<p><strong>Item:</strong> ${item.nome} - <strong>Quantidade:</strong> ${item.quantidade} - <strong>Valor:</strong> R$ ${valorItem.toFixed(2)}</p>`;
+            }).join("")
+            : '<p><strong>Itens não disponíveis.</strong></p>';
+
+        // Exibindo os itens e o total
+        pedidoElement.innerHTML = `
+            <h3>Pedido #${pedido.id}</h3>
+            <p><strong>Mesa:</strong> ${pedido.mesa}</p>
+            <p><strong>Garçom:</strong> ${pedido.garcom}</p>
+            ${itensHTML}
+            <p><strong>Total:</strong> R$ ${totalPedido.toFixed(2)}</p>  <!-- Exibe o total -->
+            <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
+            <p><strong>Status:</strong> <span id="status-${pedido.id}">${pedido.status}</span></p>
+            <button class="btn btn-pago" id="confirmar-pagamento-${pedido.id}">Marcar como Pago</button>
+            <button class="btn btn-imprimir" data-id="${pedido.id}" onclick="imprimirPedido(this)">Imprimir</button>
+            <button class="btn btn-excluir" data-id="${pedido.id}" onclick="excluirPedido(this)">Excluir</button>
+        `;
+        pedidoContainer.appendChild(pedidoElement);
+
+        // Adicionando o evento de clique ao botão de "Marcar como Pago"
+        document.getElementById(`confirmar-pagamento-${pedido.id}`).addEventListener('click', () => confirmarPagamento(pedido.id));
+    });
+}
+
+        // Função para atualizar o status do pedido para 'Pago'
+        async function confirmarPagamento(pedidoId) {
+            try {
+                // Atualizar o status do pedido no Supabase para 'Pago'
+                const { data, error } = await supabaseClient
+                    .from('pedidos')
+                    .update({ status: 'Pago' }) // Atualiza o status para 'Pago'
+                    .eq('id', pedidoId); // Onde o pedido_id é igual ao id do pedido
+
+                if (error) {
+                    console.error("Erro ao atualizar status:", error.message);
+                    alert('Erro ao confirmar pagamento.');
+                } else {
+                    // Atualizando o status na página
+                    document.getElementById(`status-${pedidoId}`).textContent = "Pago";
+                    alert(`Pedido #${pedidoId} marcado como Pago.`);
+                }
+            } catch (error) {
+                console.error("Erro na atualização do status:", error.message);
+                alert('Erro ao confirmar pagamento.');
+            }
+        }
+
+        async function excluirPedido(button) {
+    const pedidoId = button.getAttribute('data-id'); // Pega a ID do pedido do atributo "data-id" no botão
+
+    const { error } = await supabaseClient
+        .from('pedidos')
+        .delete()
+        .eq('id', pedidoId);
+
+    if (error) {
+        console.error('Erro ao excluir pedido:', error);
+    } else {
+        document.getElementById(`pedido-${pedidoId}`).remove(); // Remove o pedido da tela
+        alert(`Pedido #${pedidoId} excluído.`);
+    }
+}
+
+        function imprimirPedido(button) {
+    const pedidoId = button.getAttribute('data-id'); // Pega a ID do pedido do atributo "data-id" no botão
+    const pedidoElement = document.getElementById(`pedido-${pedidoId}`);
+    
+    if (pedidoElement) {
+        // Cria uma cópia do pedido para impressão
+        const pedidoCopy = pedidoElement.cloneNode(true);
+
+        // Remove os botões da cópia
+        const botoes = pedidoCopy.querySelectorAll('.btn');
+        botoes.forEach(botao => botao.remove());
+
+        // Pega o HTML da cópia para ser impresso
+        const textoPedido = pedidoCopy.innerHTML;
+        const janelaImpressao = window.open('', '_blank', 'width=300,height=500');
+        janelaImpressao.document.write('<pre>' + textoPedido + '</pre>');
+        janelaImpressao.document.close();
+        janelaImpressao.print();
+    } else {
+        console.error('Pedido não encontrado!');
+    }
+}    
+
+function connectToBluetooth() {
+    if ('bluetooth' in navigator) {
+        console.log('Bluetooth disponível!');
+
+        navigator.bluetooth.requestDevice({
+            filters: [{ services: ['battery_service'] }] // Ajuste isso para o serviço necessário
+        })
+        .then(device => {
+            console.log('Dispositivo encontrado:', device);
+            // Aqui você pode continuar com o processo de comunicação com o dispositivo
+        })
+        .catch(error => {
+            console.log('Erro ao conectar:', error);
+        });
+    } else {
+        console.log('Bluetooth não disponível no navegador.');
+    }
+}
+
+        fetchPedidos();    
+    </script>
+
+</body>
+</html> 
