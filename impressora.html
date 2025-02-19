@@ -29,8 +29,8 @@
     -webkit-text-fill-color: transparent;
 }
 
-   .pedido-container {
-    display: flex;
+  .pedido-container {
+    display: none; /* Inicialmente escondido */
     flex-direction: column;
     gap: 20px;
     margin: 0 auto;
@@ -47,6 +47,11 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     position: relative;
+}
+
+.mostrar {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .pedido:hover {
@@ -120,16 +125,16 @@
         display: none;
     }
     body {
-        font-size: 24px; /* Aumenta o tamanho da fonte geral */
+        font-size: 18px; /* Aumenta o tamanho da fonte geral */
     }
     .pedido {
-        font-size: 26px; /* Aumenta o tamanho da fonte dos pedidos */
+        font-size: 18px; /* Aumenta o tamanho da fonte dos pedidos */
     }
     .pedido h3 {
-        font-size: 28px; /* Título do pedido maior */
+        font-size: 14px; /* Título do pedido maior */
     }
     .pedido p {
-        font-size: 24px; /* Texto dos pedidos maior */
+        font-size: 18px; /* Texto dos pedidos maior */
     }
 }
 
@@ -145,9 +150,68 @@
     border-top: 1px solid #000; /* Linha fina para divisória */
     margin-bottom: 5px; /* Espaço reduzido entre as divisórias */
 }
+
+/* Estilos para o label */
+label {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 10px;
+    font-family: Arial, sans-serif;
+}
+
+/* Estilos para o campo de senha */
+/* Borda vermelha quando a senha estiver incorreta */
+.senha-erro {
+    border: 2px solid red;
+}
+
+/* Estilos para o campo de senha */
+input[type="password"] {
+    width: 92.5%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    transition: border-color 0.3s ease;
+}
+
+input[type="password"]:focus {
+    border-color: #4CAF50; /* Cor ao focar */
+    outline: none;
+}
+
+/* Estilos específicos para o botão de senha */
+.btn-admin {
+    width: 100%;
+    padding: 12px;
+    background-color: #4CAF50; /* Cor de fundo */
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-admin:hover {
+    background-color: #45a049; /* Cor do botão ao passar o mouse */
+}
+
+.btn-admin:focus {
+    outline: none;
+}
 </style>
 </head>
 <body>
+    
+    <label for="senha">Senha do Administrador:</label>
+<input type="password" id="senha" name="senha" placeholder="Digite a senha para liberar acesso" required>
+<button type="button" class="btn-admin" onclick="verificarSenha()">Pronto</button>
 
     <h1>Recibos de pedidos</h1>
 
@@ -344,6 +408,22 @@ function connectToBluetooth() {
         });
     } else {
         console.log('Bluetooth não disponível no navegador.');
+    }
+}
+
+function verificarSenha() {
+    const senha = document.getElementById('senha').value;  
+    const senhaCorreta = 'gardinadm';  
+
+    if (senha === senhaCorreta) {
+        document.querySelector('.pedido-container').style.display = 'flex'; // Usa 'flex' para manter o layout
+
+        // Esconde os campos de login
+        document.querySelector('label[for="senha"]').style.display = 'none';
+        document.getElementById('senha').style.display = 'none';
+        document.querySelector('button').style.display = 'none';
+    } else {
+        alert("Senha incorreta. Tente novamente.");
     }
 }
 
