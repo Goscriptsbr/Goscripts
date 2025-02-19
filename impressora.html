@@ -115,11 +115,36 @@
     .btn:active {
         transform: scale(0.98);
     }
-    @media print {
-        .btn {
-            display: none;
-        }
+   @media print {
+    .btn {
+        display: none;
     }
+    body {
+        font-size: 24px; /* Aumenta o tamanho da fonte geral */
+    }
+    .pedido {
+        font-size: 26px; /* Aumenta o tamanho da fonte dos pedidos */
+    }
+    .pedido h3 {
+        font-size: 28px; /* Título do pedido maior */
+    }
+    .pedido p {
+        font-size: 24px; /* Texto dos pedidos maior */
+    }
+}
+
+.pedido-linha {
+    text-align: center;  /* Alinha a linha centralizada */
+    font-size: 18px;     /* Ajusta o tamanho da fonte da linha */
+    margin: 5px 0;       /* Espaço superior e inferior para a linha */
+}
+
+.divisoria {
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid #000; /* Linha fina para divisória */
+    margin-bottom: 5px; /* Espaço reduzido entre as divisórias */
+}
 </style>
 </head>
 <body>
@@ -177,17 +202,23 @@
 
         // Exibindo os itens e o total
         pedidoElement.innerHTML = `
-            <h3>Pedido #${pedido.id}</h3>
-            <p><strong>Mesa:</strong> ${pedido.mesa}</p>
-            <p><strong>Garçom:</strong> ${pedido.garcom}</p>
-            ${itensHTML}
-            <p><strong>Total:</strong> R$ ${totalPedido.toFixed(2)}</p>  <!-- Exibe o total -->
-            <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
-            <p><strong>Status:</strong> <span id="status-${pedido.id}">${pedido.status}</span></p>
-            <button class="btn btn-pago" id="confirmar-pagamento-${pedido.id}">Marcar como Pago</button>
-            <button class="btn btn-imprimir" data-id="${pedido.id}" onclick="imprimirPedido(this)">Imprimir</button>
-            <button class="btn btn-excluir" data-id="${pedido.id}" onclick="excluirPedido(this)">Excluir</button>
-        `;
+    <h3>Pedido #${pedido.id}</h3>
+    <p class="pedido-linha">=======================</p> <!-- Linha abaixo de "Pedido #" -->
+    <p><strong>Mesa:</strong> ${pedido.mesa}</p>
+    <p class="divisoria"></p>
+    <p><strong>Garçom:</strong> ${pedido.garcom}</p>
+    <p class="divisoria"></p>
+    ${itensHTML}
+    <p><strong>Total:</strong> R$ ${totalPedido.toFixed(2)}</p>
+    <p class="divisoria"></p>
+    <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
+    <p class="divisoria"></p>
+    <p><strong>Status:</strong> <span id="status-${pedido.id}">${pedido.status}</span></p>
+    <p class="divisoria"></p>
+    <button class="btn btn-pago" id="confirmar-pagamento-${pedido.id}">Marcar como Pago</button>
+    <button class="btn btn-imprimir" data-id="${pedido.id}" onclick="imprimirPedido(this)">Imprimir</button>
+    <button class="btn btn-excluir" data-id="${pedido.id}" onclick="excluirPedido(this)">Excluir</button>
+`;
         pedidoContainer.appendChild(pedidoElement);
 
         // Adicionando o evento de clique ao botão de "Marcar como Pago"
@@ -246,16 +277,56 @@
         const botoes = pedidoCopy.querySelectorAll('.btn');
         botoes.forEach(botao => botao.remove());
 
-        // Pega o HTML da cópia para ser impresso
-        const textoPedido = pedidoCopy.innerHTML;
+        // Adiciona a folha de estilos da página à cópia
+        const style = document.createElement('style');
+        style.innerHTML = `
+            body {
+                font-family: 'Arial', sans-serif;
+                background-color: #fff;
+                color: #000;
+                font-size: 30px; /* Aumentado o tamanho da fonte para 30px */
+                margin: 0;
+                padding: 0;
+            }
+            .pedido {
+                font-size: 30px; /* Aumentado o tamanho da fonte para 30px */
+                padding: 0;
+                margin: 0;
+                text-align: left;
+                line-height: 1.4;
+            }
+            .pedido h3 {
+                font-size: 36px; /* Aumentado o tamanho da fonte para 36px */
+                margin: 5px 0;
+            }
+            .pedido p {
+                font-size: 30px; /* Aumentado o tamanho da fonte para 30px */
+                margin: 0;
+                padding: 0;
+            }
+            .pedido-linha {
+                font-size: 30px; /* Aumentado o tamanho da fonte para 30px */
+                text-align: left;
+            }
+            .divisoria {
+                border-top: 1px solid #000;
+                margin: 5px 0;
+            }
+            .btn, .pedido-footer {
+                display: none; /* Remover qualquer botão ou footer para a impressão */
+            }
+        `;
+        pedidoCopy.appendChild(style);
+
+        // Cria a janela de impressão
         const janelaImpressao = window.open('', '_blank', 'width=300,height=500');
-        janelaImpressao.document.write('<pre>' + textoPedido + '</pre>');
+        janelaImpressao.document.write('<html><head><title>Impressão do Pedido</title></head><body>');
+        janelaImpressao.document.write(pedidoCopy.outerHTML);
+        janelaImpressao.document.write('</body></html>');
         janelaImpressao.document.close();
         janelaImpressao.print();
-    } else {
-        console.error('Pedido não encontrado!');
     }
-}    
+}
 
 function connectToBluetooth() {
     if ('bluetooth' in navigator) {
@@ -280,4 +351,4 @@ function connectToBluetooth() {
     </script>
 
 </body>
-</html> 
+</html>  
