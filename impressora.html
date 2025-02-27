@@ -217,6 +217,22 @@ input[type="password"]:focus {
 
     <div id="pedido-container" class="pedido-container">
         <!-- Os pedidos vão aparecer aqui -->
+        
+        <form id="pagamentoForm">
+    <label for="metodoPagamento">Escolha o Método de Pagamento:</label>
+    <select id="metodoPagamento" name="metodoPagamento">
+        <option value="Pix">Pix</option>
+        <option value="Cartão">Cartão</option>
+        <option value="Dinheiro">Dinheiro</option>
+    </select>
+
+    <div id="campoTroco" style="display:none;">
+        <label for="troco">Valor do Troco:</label>
+        <input type="number" id="troco" name="troco" placeholder="Informe o valor do troco" min="0">
+    </div>
+
+    <button type="button" onclick="confirmarPagamento(123)">Confirmar Pagamento</button>
+</form>
     </div>
 
     <script>
@@ -225,19 +241,29 @@ input[type="password"]:focus {
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function fetchPedidos() {
-            const { data, error } = await supabaseClient
-                .from('pedidos')
-                .select('*')
-                .order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient
+        .from('pedidos')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error(error);
-            } else {
-                displayPedidos(data);
-            }
-        }
+    if (error) {
+        console.error(error);
+    } else {
+        displayPedidos(data);
+    }
+}
 
-        function displayPedidos(pedidos) {
+async function listenForNewPedidos() {
+    supabaseClient
+        .channel('pedidos')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, (payload) => {
+            console.log('Novo pedido recebido:', payload.new);
+            addPedido(payload.new); // Atualiza a tela sem recarregar
+        })
+        .subscribe();
+}
+
+function displayPedidos(pedidos) {
     const pedidoContainer = document.getElementById('pedido-container');
     pedidoContainer.innerHTML = '';
 
@@ -250,70 +276,192 @@ input[type="password"]:focus {
         const dataFormatada = dataHora.toLocaleString('pt-BR');
 
         const itens = pedido.itens ? JSON.parse(pedido.itens) : [];
-        let totalPedido = 0;  // Inicializa o total do pedido
+        let totalPedido = 0;
 
         let itensHTML = itens.length > 0
             ? itens.map(item => {
-                const valor = parseFloat(item.valor);  // Usando 'valor' em vez de 'preco'
-                const quantidade = parseInt(item.quantidade, 10);  // Garantir que a quantidade seja um número inteiro
-                const valorItem = isNaN(valor) || isNaN(quantidade) ? 0 : valor * quantidade;  // Calcular o valor do item
+                const valor = parseFloat(item.valor);
+                const quantidade = parseInt(item.quantidade, 10);
+                const valorItem = isNaN(valor) || isNaN(quantidade) ? 0 : valor * quantidade;
 
-                totalPedido += valorItem;  // Adiciona o valor do item ao total do pedido
+                totalPedido += valorItem;
 
-                return `<p><strong>Item:</strong> ${item.nome} - <strong>Quantidade:</strong> ${item.quantidade} - <strong>Valor:</strong> R$ ${valorItem.toFixed(2)}</p>`;
+                let adicionaisHTML = '';
+                let totalAdicionais = 0;
+                if (item.adicionais && item.adicionais.length > 0) {
+                    adicionaisHTML = item.adicionais.map(adicional => {
+                        const valorAdicional = parseFloat(adicional.valor);
+                        totalAdicionais += isNaN(valorAdicional) ? 0 : valorAdicional;
+                        return `<p><strong>Adicional:</strong> ${adicional.nome} - <strong>Valor:</strong> R$ ${isNaN(valorAdicional) ? '0.00' : valorAdicional.toFixed(2)}</p>`;
+                    }).join('');
+                }
+
+                totalPedido += totalAdicionais;
+
+                return `
+                    <p><strong>Item:</strong> ${item.nome} - <strong>Quantidade:</strong> ${item.quantidade} - <strong>Valor:</strong> R$ ${valorItem.toFixed(2)}</p>
+                    ${adicionaisHTML}
+                `;
             }).join("")
             : '<p><strong>Itens não disponíveis.</strong></p>';
 
-        // Exibindo os itens e o total
         pedidoElement.innerHTML = `
     <h3>Pedido #${pedido.id}</h3>
-    <p class="pedido-linha">=======================</p> <!-- Linha abaixo de "Pedido #" -->
+    <p class="pedido-linha">=======================</p>
     <p><strong>Mesa:</strong> ${pedido.mesa}</p>
     <p class="divisoria"></p>
     <p><strong>Garçom:</strong> ${pedido.garcom}</p>
     <p class="divisoria"></p>
     ${itensHTML}
-    <p><strong>Total:</strong> R$ ${totalPedido.toFixed(2)}</p>
+    <p><strong>Total:</strong> R$ <span id="totalPedido-${pedido.id}">${totalPedido.toFixed(2)}</span></p>
     <p class="divisoria"></p>
     <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
     <p class="divisoria"></p>
     <p><strong>Status:</strong> <span id="status-${pedido.id}">${pedido.status}</span></p>
     <p class="divisoria"></p>
+
+    <!-- Seletor de Método de Pagamento -->
+    <select id="metodoPagamento-${pedido.id}">
+        <option value="Pix">Pix</option>
+        <option value="Cartão">Cartão</option>
+        <option value="Dinheiro">Dinheiro</option>
+    </select>
+
+    <!-- Campo para inserir o valor do Troco, visível apenas se o pagamento for em Dinheiro -->
+    <div id="trocoContainer-${pedido.id}" style="display:none;">
+        <label for="troco-${pedido.id}">Troco pra:</label>
+        <input type="number" id="troco-${pedido.id}" placeholder="Digite o valor do troco" />
+    </div>
+
     <button class="btn btn-pago" id="confirmar-pagamento-${pedido.id}">Marcar como Pago</button>
     <button class="btn btn-imprimir" data-id="${pedido.id}" onclick="imprimirPedido(this)">Imprimir</button>
     <button class="btn btn-excluir" data-id="${pedido.id}" onclick="excluirPedido(this)">Excluir</button>
 `;
+
         pedidoContainer.appendChild(pedidoElement);
 
+        // Adicionando o evento de mudança no método de pagamento para mostrar ou esconder o campo de troco
+        document.getElementById(`metodoPagamento-${pedido.id}`).addEventListener('change', function() {
+            const metodo = this.value;
+            const trocoContainer = document.getElementById(`trocoContainer-${pedido.id}`);
+            if (metodo === 'Dinheiro') {
+                trocoContainer.style.display = 'block'; // Mostra o campo de troco
+            } else {
+                trocoContainer.style.display = 'none'; // Esconde o campo de troco
+            }
+        });
+
         // Adicionando o evento de clique ao botão de "Marcar como Pago"
-        document.getElementById(`confirmar-pagamento-${pedido.id}`).addEventListener('click', () => confirmarPagamento(pedido.id));
+        document.getElementById(`confirmar-pagamento-${pedido.id}`).addEventListener('click', function() {
+            const metodoPagamento = document.getElementById(`metodoPagamento-${pedido.id}`).value;
+            const troco = metodoPagamento === 'Dinheiro' ? parseFloat(document.getElementById(`troco-${pedido.id}`).value) || 0 : 0;
+            confirmarPagamento(pedido.id, metodoPagamento, troco);
+        });
     });
 }
 
-        // Função para atualizar o status do pedido para 'Pago'
-        async function confirmarPagamento(pedidoId) {
-            try {
-                // Atualizar o status do pedido no Supabase para 'Pago'
-                const { data, error } = await supabaseClient
-                    .from('pedidos')
-                    .update({ status: 'Pago' }) // Atualiza o status para 'Pago'
-                    .eq('id', pedidoId); // Onde o pedido_id é igual ao id do pedido
+// Função para mostrar ou esconder o campo de troco
+document.getElementById('metodoPagamento').addEventListener('change', function() {
+    const metodoPagamento = this.value;
+    const campoTroco = document.getElementById('campoTroco');
+    const valorPagoInput = document.getElementById('valorPago'); // Supondo que este seja o campo para inserir o valor pago
+    const trocoDisplay = document.getElementById('trocoDisplay'); // Supondo que este seja o campo para mostrar o troco calculado
 
-                if (error) {
-                    console.error("Erro ao atualizar status:", error.message);
-                    alert('Erro ao confirmar pagamento.');
-                } else {
-                    // Atualizando o status na página
-                    document.getElementById(`status-${pedidoId}`).textContent = "Pago";
-                    alert(`Pedido #${pedidoId} marcado como Pago.`);
-                }
-            } catch (error) {
-                console.error("Erro na atualização do status:", error.message);
-                alert('Erro ao confirmar pagamento.');
+    // Mostra ou esconde o campo de troco
+    if (metodoPagamento === 'Dinheiro') {
+        campoTroco.style.display = 'block';  // Exibe o campo de troco
+
+        // Quando o valor pago for alterado, calcula o troco
+        valorPagoInput.addEventListener('input', function() {
+            const valorPago = parseFloat(valorPagoInput.value) || 0;
+            const totalPedido = parseFloat(document.getElementById('totalPedido').textContent.replace('R$', '').trim());
+            const troco = valorPago - totalPedido;
+
+            if (troco >= 0) {
+                trocoDisplay.textContent = `Troco: R$ ${troco.toFixed(2)}`;
+            } else {
+                trocoDisplay.textContent = 'Troco: -';
+            }
+        });
+    } else {
+        campoTroco.style.display = 'none';   // Esconde o campo de troco
+    }
+});
+
+function atualizarStatusPedido(pedidoId) {
+    const statusElement = document.getElementById(`status-${pedidoId}`);
+    const metodoPagamento = document.getElementById(`metodoPagamento-${pedidoId}`).value;
+    
+    if (metodoPagamento === "Dinheiro") {
+        const trocoContainer = document.getElementById(`trocoContainer-${pedidoId}`);
+        const trocoInput = document.getElementById(`troco-${pedidoId}`);
+
+        // Certifique-se de que o campo de troco está visível
+        trocoContainer.style.display = "block";  // Exibe o campo de troco
+
+        // Agora, você pode acessar o valor do troco, se necessário
+        const trocoValor = trocoInput.value;
+        console.log(`Valor do troco: ${trocoValor}`);
+    } else {
+        const trocoContainer = document.getElementById(`trocoContainer-${pedidoId}`);
+        trocoContainer.style.display = "none";  // Esconde o campo de troco
+    }
+
+    // Atualizar o status do pedido
+    statusElement.textContent = "Pago"; // Exemplo de atualização de status
+}
+
+// Função para confirmar o pagamento e atualizar o banco
+async function confirmarPagamento(pedidoId) {
+    try {
+        const metodoPagamentoElement = document.getElementById(`metodoPagamento-${pedidoId}`);
+        if (!metodoPagamentoElement) {
+            console.error(`Método de pagamento não encontrado para o pedido ${pedidoId}.`);
+            return; // Sai da função se o elemento não for encontrado
+        }
+
+        const metodoPagamento = metodoPagamentoElement.value;
+        let troco = 0; // Valor inicial do troco
+
+        // Pega o total do pedido
+        const totalPedido = parseFloat(document.getElementById(`totalPedido-${pedidoId}`).textContent.replace('R$', '').trim());
+
+        // Se o pagamento for em Dinheiro, tenta pegar o valor pago e calcular o troco
+        if (metodoPagamento === 'Dinheiro') {
+            const valorPagoInput = document.getElementById(`troco-${pedidoId}`);
+            if (valorPagoInput) {
+                const valorPago = parseFloat(valorPagoInput.value) || 0; // Valor pago pelo cliente
+                troco = valorPago - totalPedido; // Calculando o troco a ser devolvido
             }
         }
 
-        async function excluirPedido(button) {
+        // Estrutura do novo status com informações adicionais
+        let novoStatus = `Pago no ${metodoPagamento}`;
+        if (metodoPagamento === 'Dinheiro' && troco >= 0) {
+            novoStatus += ` - Troco: R$ ${troco.toFixed(2)}`;
+        }
+
+        // Atualizando o status no banco
+        const { data, error } = await supabaseClient
+            .from('pedidos')
+            .update({ status: novoStatus }) // Atualiza o campo status com a string formatada
+            .eq('id', pedidoId);  // Identifica o pedido pelo id
+
+        if (error) {
+            console.error("Erro ao atualizar status:", error.message);
+            alert('Erro ao confirmar pagamento.');
+        } else {
+            // Atualizando o status na página
+            document.getElementById(`status-${pedidoId}`).textContent = novoStatus;
+            alert(`Pedido #${pedidoId} marcado como Pago no ${metodoPagamento}.`);
+        }
+    } catch (error) {
+        console.error("Erro na atualização do status:", error.message);
+        alert('Erro ao confirmar pagamento.');
+    }
+}
+
+async function excluirPedido(button) {
     const pedidoId = button.getAttribute('data-id'); // Pega a ID do pedido do atributo "data-id" no botão
 
     const { error } = await supabaseClient
@@ -340,6 +488,17 @@ input[type="password"]:focus {
         // Remove os botões da cópia
         const botoes = pedidoCopy.querySelectorAll('.btn');
         botoes.forEach(botao => botao.remove());
+
+        // Remove os campos de seleção de forma de pagamento (como select ou input)
+        const metodoPagamento = pedidoCopy.querySelector('select[name="metodoPagamento"]');
+        if (metodoPagamento) {
+            metodoPagamento.remove(); // Remove o elemento select se ele existir
+        }
+
+        const metodoPagamentoInput = pedidoCopy.querySelector('input[name="metodoPagamento"]');
+        if (metodoPagamentoInput) {
+            metodoPagamentoInput.remove(); // Remove o campo de input se ele existir
+        }
 
         // Adiciona a folha de estilos da página à cópia
         const style = document.createElement('style');
@@ -376,8 +535,8 @@ input[type="password"]:focus {
                 border-top: 1px solid #000;
                 margin: 5px 0;
             }
-            .btn, .pedido-footer {
-                display: none; /* Remover qualquer botão ou footer para a impressão */
+            .btn, .pedido-footer, select, input {
+                display: none; /* Remover qualquer botão, footer, select ou input para a impressão */
             }
         `;
         pedidoCopy.appendChild(style);
@@ -428,7 +587,8 @@ function verificarSenha() {
 }
 
         fetchPedidos();    
+        listenForNewPedidos();
     </script>
 
 </body>
-</html>  
+</html>
