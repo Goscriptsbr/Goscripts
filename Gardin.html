@@ -987,6 +987,66 @@ legend {
         
         <button onclick="addBurgerToCart('X - Burguer Simples', 'size-burger-simple', 'addons-burger-simple', 'observacoes-burger-simple')">Adicionar</button>
     </div>
+    
+    <div id="menu-items">
+    <div class="menu-item" data-category="porções">
+        <img src="https://example.com/x-frango-empanado-cheddar.jpg" alt="X-Burger Simples" />
+    <h3>Anéis de cebola</h3>
+        <p>Media 500g / Grande 800g</p>
+        
+        <div class="size-addons">
+            <div class="size-selection">
+                <label for="size-burger-cebola">Escolha o tamanho:</label>
+                <select id="size-burger-cebola">
+                    <option value="23">Media - R$ 23,00</option>
+                    <option value="36">Grande - R$ 36,00</option>
+                </select>
+            </div>
+            <div class="addons-selection">
+                <label for="addons-burger-cebola">Adicionais:</label>
+                <select id="addons-burger-cebola" multiple>
+                    <option value='{"name": "Pão de francês Pequeno", "price": 3}'>Pão de francês pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de francês grande", "price": 4}'>Pão de francês grande - R$ 4,00</option>
+                    <option value='{"name": "Pão de hambúrguer pequeno", "price": 3}'>Pão de hambúrguer pequeno - R$ 3,00</option>
+                    <option value='{"name": "Pão de hambúrguer grande", "price": 5}'>Pão de hambúrguer grande - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer pequeno", "price": 5}'>Hambúrguer pequeno - R$ 5,00</option>
+                    <option value='{"name": "Hambúrguer grande", "price": 7}'>Hambúrguer grande - R$ 7,00</option>
+                    <option value='{"name": "Pão brioche", "price": 7}'>Pão brioche - R$ 7,00</option> 
+                    <option value='{"name": "Hambúrguer de costela", "price": 13}'>Hambúrguer de costela - R$ 13,00</option>
+                    <option value='{"name": "Hambúrguer de calabresa", "price": 14}'>Hambúrguer de calabresa - R$ 14,00</option>
+                    <option value='{"name": "Hambúrguer de patinho", "price": 14}'>Hambúrguer de patinho - R$ 14,00</option>
+                    <option value='{"name": "Hambúrguer de maminha", "price": 16}'>Hambúrguer de maminha - R$ 16,00</option>
+                    <option value='{"name": "Hambúrguer de frango", "price": 10}'>Hambúrguer de frango - R$ 10,00</option>
+                    <option value='{"name": "Hambúrguer de peixe", "price": 18}'>Hambúrguer de peixe - R$ 18,00</option>
+                    <option value='{"name": "Hambúrguer de linguiça", "price": 11}'>Hambúrguer de linguiça - R$ 11,00</option> 
+                    <option value='{"name": "Hambúrguer de grão de bico", "price": 10}'>Hambúrguer de grão de bico - R$ 10,00</option>          
+                    <option value='{"name": "Bacon", "price": 6}'>Bacon - R$: 6,00</option>
+                    <option value='{"name": "Calabresa", "price": 6}'>Calabresa - R$ 6,00</option>
+                    <option value='{"name": "Batata frita", "price": 7}'>Batata frita - R$ 7,00</option>
+                    <option value='{"name": "Frango", "price": 7}'>Frango - R$ 7,00</option>
+                    <option value='{"name": "Pernil", "price": 7}'>Pernil - R$ 7,00</option>
+                    <option value='{"name": "Batata palha", "price": 3.50}'>Batata palha - R$ 3,50</option>
+                    <option value='{"name": "Ervilha", "price": 3.50}'>Ervilha - R$ 3,50</option>
+                    <option value='{"name": "Milho", "price": 3.50}'>Milho - R$ 3,50</option>
+                    <option value='{"name": "Catupiry", "price": 7.50}'>Catupiry - R$ 7,50</option>
+                    <option value='{"name": "Cebola", "price": 4}'>Cebola - R$ 4,00</option>
+                    <option value='{"name": "Cheddar", "price": 8}'>Cheddar - R$ 8,00</option>
+                    <option value='{"name": "Contra filé", "price": 9}'>Contra filé - R$ 9,00</option>
+                    <option value='{"name": "Molho Rose", "price": 3}'>Molho rose - R$ 3,00</option>
+                    <option value='{"name": "Molho de alho", "price": 3}'>Molho de alho - R$ 3,00</option>
+                    <option value='{"name": "Cebola caramelizada", "price": 4}'>Cebola caramelizada - R$ 4,00</option>
+                    <option value='{"name": "Ovo", "price": 2}'>Ovo - R$ 2,00</option>
+                    <option value='{"name": "Mussarela fatiada", "price": 3.50}'>Mussarela fatiada - R$ 3,50</option>
+                    <option value='{"name": "Presunto fatiado", "price": 2}'>Presunto fatiado - R$ 2,00</option>
+                </select>
+            </div>
+        </div>
+
+        <label for="observacoes-burger-cebola">Observações:</label>
+        <textarea id="observacoes-burger-cebola" placeholder="(ex: sem alface) opcional"></textarea>
+        
+        <button onclick="addBurgerToCart('Aneis de cebola', 'size-burger-cebola', 'addons-burger-cebola', 'observacoes-burger-cebola')">Adicionar</button>
+    </div>
 
     <div class="menu-item" data-category="lanches">
         <img src="https://example.com/x-frango-empanado-cheddar.jpg" alt="X-Bacon Simples" />
@@ -11331,7 +11391,7 @@ legend {
                 <div class="size-selection">
                     <label for="size-macarraovermelho">Valor:</label>
                     <select id="size-macarraovermelho">
-                        <option value="27">Padrão - R$ 27,00</option>               
+                        <option value="26">Padrão - R$ 26,00</option>               
                     </select>
                 </div>
             </div>
@@ -11345,13 +11405,13 @@ legend {
         <div class="menu-item" data-category="Macarrão"> 
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Vermelho com Frango" />
             <h3>Macarrão Molho Vermelho com Frango</h3>
-            <p>Molho vermelho, macarrão, bacon, frango, calabresa, milho, orégano, presunto e queijo mussarela.</p>
+            <p>Molho vermelho, macarrão, bacon, frango desfiado, calabresa, milho, orégano, presunto e queijo mussarela.</p>
             
             <div class="size-addons">
                 <div class="size-selection">
                     <label for="size-macarraovermelhofrango">Valor:</label>
                     <select id="size-macarraovermelhofrango">
-                        <option value="26">Padrão - R$ 26,00</option>               
+                        <option value="25">Padrão - R$ 25,00</option>               
                     </select>
                 </div>
             </div>
@@ -11365,7 +11425,7 @@ legend {
         <div class="menu-item" data-category="Macarrão"> 
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Branco" />
             <h3>Macarrão Molho Branco com frango</h3>
-            <p>Molho branco, macarrão, bacon, calabresa, frango, milho, orégano, presunto e queijo mussarela.</p>
+            <p>Molho branco, creme de leite, requeijão, macarrão, bacon, calabresa, frango, milho, orégano, presunto e queijo mussarela.</p>
             
             <div class="size-addons">
                 <div class="size-selection">
@@ -11382,11 +11442,10 @@ legend {
             <button onclick="addBurgerToCart('Macarrão Molho Branco com frango', 'size-macarraobranco', 'addons-macarraobranco', 'observacoes-macarraobranco')">Adicionar</button>
         </div>
         
-
         <div class="menu-item" data-category="Macarrão"> 
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Molho Branco com Carne" />
             <h3>Macarrão Molho Branco com Carne</h3>
-            <p>Molho branco, macarrão, bacon, calabresa, carne, milho, orégano, presunto e queijo mussarela.</p>
+            <p>Molho branco, creme de leite, requeijão, macarrão, bacon, calabresa, carne, milho, orégano, presunto e queijo mussarela.</p>
             
             <div class="size-addons">
                 <div class="size-selection">
@@ -11401,6 +11460,46 @@ legend {
             <textarea id="observacoes-macarraobrancocarne" placeholder="(ex: sem carne) opcional"></textarea>
             
             <button onclick="addBurgerToCart('Macarrão Molho Branco com Carne', 'size-macarraobrancocarne', 'addons-macarraobrancocarne', 'observacoes-macarraobrancocarne')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Macarrão"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Rose" />
+            <h3>Macarrão Rose Carne</h3>
+            <p>Molho Rose, macarrão, bacon, calabresa, Carne moida, creme de leite, milho, orégano, presunto e queijo mussarela.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-macarraorosecarne">Valor:</label>
+                    <select id="size-macarraorosecarne">
+                        <option value="27">Padrão - R$ 27,00</option>               
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-macarraorosecarne">Observações:</label>
+            <textarea id="observacoes-macarraorosecarne" placeholder="(ex: sem presunto) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Macarrão Molho Rose Carne', 'size-macarraorosecarne', 'addons-macarraorosecarne', 'observacoes-macarraorosecarne')">Adicionar</button>
+        </div>
+        
+        <div class="menu-item" data-category="Macarrão"> 
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Bolognese_spaghetti_%2824_November_2008%29.jpg/640px-Bolognese_spaghetti_%2824_November_2008%29.jpg" alt="Macarrão Rose" />
+            <h3>Macarrão Rose Frango</h3>
+            <p>Molho Rose, macarrão, bacon, calabresa, Frango desfiado, creme de leite, milho, orégano, presunto e queijo mussarela.</p>
+            
+            <div class="size-addons">
+                <div class="size-selection">
+                    <label for="size-macarraorosefrango">Valor:</label>
+                    <select id="size-macarraorosefrango">
+                        <option value="26">Padrão - R$ 26,00</option>               
+                    </select>
+                </div>
+            </div>
+        
+            <label for="observacoes-macarraorosefrango">Observações:</label>
+            <textarea id="observacoes-macarraorosefrango" placeholder="(ex: sem presunto) opcional"></textarea>
+            
+            <button onclick="addBurgerToCart('Macarrão Molho Rose Frango', 'size-macarraorosefrango', 'addons-macarraorosefrango', 'observacoes-macarraorosefrango')">Adicionar</button>
         </div>
 
         <!-- PASTÉIS -->
