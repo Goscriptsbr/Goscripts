@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cobrinha Moderna ✨</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@400;600&display=swap');
+
+        :root {
+            --grid-size: 20px; /* Tamanho base da grid */
+            /* Cores Padrão (Verde) - Serão atualizadas pelo JS */
+            --snake-head-color: #4CAF50;
+            --snake-body-color1: #8BC34A;
+            --snake-body-color2: #689F38;
+            --fruit-color: #f44336; /* Vermelho da fruta base */
+            --fruit-stem-color: #8D6E63; /* Marrom para o caule */
+            --fruit-leaf-color: #388E3C; /* Verde para a folha */
+            --obstacle-color: #757575; /* Cinza um pouco mais claro para obstáculo */
+            --obstacle-border-color: #424242; /* Borda escura para obstáculo */
+            --portal-color: #2196F3; /* Azul base do portal */
+            --portal-highlight: #BBDEFB; /* Azul claro para brilho do portal */
+            --text-color: #ffffff;
+            --ui-bg: rgba(0, 0, 0, 0.7);
+            --overlay-bg: rgba(0, 0, 0, 0.85);
+            --menu-bg: rgba(0, 0, 0, 0.9); /* Fundo do menu mais escuro */
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            font-family: 'Poppins', sans-serif;
+            touch-action: none; /* Desabilita zoom por toque etc. */
+            background: linear-gradient(135deg, #a5d6a7, #66bb6a); /* Fundo inicial */
+            transition: background 1s ease;
+            position: relative; /* Necessário para posicionar elementos absolutos */
+        }
+
+        /* Container do Jogo */
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: none; /* Começa escondido */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        canvas {
+            display: block;
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 25px rgba(0,0,0,0.3);
+            max-width: 100%;
+            max-height: calc(100% - 70px); /* Deixa espaço para placar */
+            flex-shrink: 0;
+        }
+
+        #info {
+            color: var(--text-color);
+            font-size: clamp(14px, 2.5vw, 18px);
+            font-family: 'Press Start 2P', cursive;
+            background: var(--ui-bg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 3px black;
+            white-space: nowrap;
+            text-align: center;
+            margin-bottom: 15px;
+            width: auto;
+            max-width: 90%;
+        }
+
+        /* Overlay de Game Over */
+        #gameOverOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--overlay-bg);
+            display: none; /* Começa escondido */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            text-align: center;
+            gap: 25px; /* Espaço entre texto e botões */
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #gameOverText {
+            font-family: 'Press Start 2P', cursive;
+            font-size: clamp(24px, 6vw, 40px);
+            color: var(--fruit-color);
+            text-shadow: 3px 3px 5px black;
+        }
+
+        #gameOverButtons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .gameOverButton {
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: clamp(16px, 3.5vw, 22px);
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-width: 180px;
+        }
+
+        .gameOverButton:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+
+        #btnRetry {
+            background: linear-gradient(to right, #4CAF50, #388E3C); /* Verde */
+        }
+
+        #btnBackToMenu {
+            background: linear-gradient(to right, #2196F3, #1976D2); /* Azul */
+        }
+
+        /* Pop-up de Pontuação (+1) */
+        .score-popup {
+            position: absolute; /* Relativo ao #gameContainer */
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            color: var(--fruit-color);
+            animation: fadeUp 0.7s ease-out forwards;
+            z-index: 5;
+            pointer-events: none;
+            /* Transform set by JS */
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 1; transform: translate(-50%, -50%); } /* Começa centralizado */
+            to   { opacity: 0; transform: translate(-50%, -150%); } /* Sobe mais */
+        }
+
+        /* Menu Inicial */
+        #startMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--menu-bg);
+            display: flex; /* Mostrado inicialmente pelo JS */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            color: var(--text-color);
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        #gameTitle {
+            font-family: 'Press Start 2P', cursive;
+            font-size: clamp(28px, 7vw, 45px);
+            margin-bottom: 40px;
+            color: var(--snake-head-color); /* Cor dinâmica */
+            text-shadow: 3px 3px 0px black, 5px 5px 0px rgba(255,255,255,0.2);
+            transition: color 0.3s ease; /* Transição suave da cor */
+        }
+
+        .menuButton {
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: clamp(18px, 4vw, 24px);
+            padding: 15px 35px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            margin: 10px 0;
+            min-width: 200px;
+        }
+
+        .menuButton:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+
+        #btnPlay {
+             background: linear-gradient(to right, #4CAF50, #388E3C); /* Cor dinâmica */
+        }
+
+        #btnRules {
+            background: linear-gradient(to right, #2196F3, #1976D2); /* Azul */
+        }
+
+        #colorSelector {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #colorSelector label {
+             font-family: 'Press Start 2P', cursive;
+             font-size: clamp(12px, 2.5vw, 16px);
+             margin-bottom: 15px;
+        }
+
+        #colorOptions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .colorSwatch {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .colorSwatch:hover {
+            transform: scale(1.15);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .colorSwatch.active {
+            border-color: #ffffff;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+
+        /* Modal de Regras */
+        #rulesModal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 80%;
+            max-width: 500px;
+            background: var(--ui-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            z-index: 60;
+            display: none; /* Controlado por JS com classe .show */
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            user-select: none;
+        }
+
+        #rulesModal.show {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #rulesModal h2 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--portal-color);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: clamp(18px, 4vw, 22px);
+        }
+
+        #rulesText {
+            line-height: 1.7;
+            margin-bottom: 30px;
+            font-size: clamp(14px, 3vw, 16px);
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        #rulesText::-webkit-scrollbar { width: 8px; }
+        #rulesText::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 4px;}
+        #rulesText::-webkit-scrollbar-thumb { background: var(--portal-highlight); border-radius: 4px;}
+        #rulesText::-webkit-scrollbar-thumb:hover { background: var(--portal-color); }
+
+        #btnCloseRules {
+            display: block;
+            margin: 0 auto;
+            background: linear-gradient(to right, #f44336, #c62828); /* Vermelho */
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: clamp(16px, 3.5vw, 20px);
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #btnCloseRules:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="startMenu">
+    <h1 id="gameTitle">Cobrinha Moderna ✨</h1>
+
+    <button id="btnPlay" class="menuButton">Jogar</button>
+    <button id="btnRules" class="menuButton">Regras</button>
+
+    <div id="colorSelector">
+        <label for="colorOptions">Escolha a cor da Cobrinha:</label>
+        <div id="colorOptions">
+            </div>
+    </div>
+</div>
+
+<div id="rulesModal">
+    <h2>Regras do Jogo</h2>
+    <div id="rulesText">
+        <p><strong>Objetivo:</strong> Coma o máximo de frutas que puder para fazer a cobrinha crescer e passar de fase!</p>
+        <p><strong>Controles:</strong></p>
+        <ul>
+            <li><strong>Setas (← ↑ → ↓) ou Teclas W A S D:</strong> Movem a cobrinha na direção desejada.</li>
+            <li><strong>Deslizar na Tela (Mobile):</strong> Deslize o dedo na direção que deseja mover a cobrinha.</li>
+        </ul>
+        <p><strong>Como Jogar:</strong></p>
+        <ul>
+            <li>Coma as frutas vermelhas (<span style="color: var(--fruit-color)">●</span>) para aumentar seu tamanho e pontuação.</li>
+            <li>A cada fase, o número de frutas necessárias para avançar aumenta e a velocidade da cobrinha também.</li>
+            <li>Evite bater nas paredes, nos obstáculos (<span style="color: var(--obstacle-color)">■</span>) ou no próprio corpo da cobrinha.</li>
+            <li>Após comer as frutas necessárias, um portal azul (<span style="color: var(--portal-color)">🌀</span>) aparecerá. Entre no portal para ir para a próxima fase.</li>
+        </ul>
+        <p><strong>Game Over:</strong> O jogo acaba se você colidir com as paredes, obstáculos ou com você mesmo.</p>
+        <p>Divirta-se e boa sorte!</p>
+    </div>
+    <button id="btnCloseRules">Fechar</button>
+</div>
+
+<div id="gameContainer">
+    <div id="info">Fase: 1 | Frutas: 0/5</div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="gameOverOverlay">
+        <div id="gameOverText">Game Over!</div>
+        <div id="gameOverButtons">
+            <button id="btnRetry" class="gameOverButton">Tentar novamente</button>
+            <button id="btnBackToMenu" class="gameOverButton">Voltar ao Menu</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Elementos Globais ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const infoDisplay = document.getElementById('info');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const gameContainer = document.getElementById('gameContainer');
+    const startMenu = document.getElementById('startMenu');
+    const btnPlay = document.getElementById('btnPlay');
+    const btnRules = document.getElementById('btnRules');
+    const rulesModal = document.getElementById('rulesModal');
+    const btnCloseRules = document.getElementById('btnCloseRules');
+    const colorOptionsContainer = document.getElementById('colorOptions');
+    const gameTitle = document.getElementById('gameTitle');
+    const btnRetry = document.getElementById('btnRetry');
+    const btnBackToMenu = document.getElementById('btnBackToMenu');
+
+    // --- Configurações e Variáveis do Jogo ---
+    const box = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-size'));
+    let canvasWidth, canvasHeight;
+    let gridWidth, gridHeight;
+
+    let snake;
+    let direction;
+    let nextDirection; // Buffer para próxima direção
+    let fruit;
+    let obstacles = [];
+    let portal;
+    let frutasPegas;
+    let frutasNecessarias;
+    let fase;
+    let targetSpeed; // ms por movimento
+    let lastUpdateTime = 0;
+    let gameLoopTimeout;
+    let isGameRunning = false;
+
+    const GameState = {
+        MENU: 'menu',
+        RUNNING: 'running',
+        GAME_OVER: 'game_over',
+        LEVEL_TRANSITION: 'level_transition'
+    };
+    let gameState = GameState.MENU;
+
+    // --- Paletas de Cores ---
+    const snakeColorPalettes = [
+        { name: 'green', head: '#4CAF50', body1: '#8BC34A', body2: '#689F38', btnGradient: 'linear-gradient(to right, #4CAF50, #388E3C)' },
+        { name: 'blue', head: '#2196F3', body1: '#64B5F6', body2: '#1976D2', btnGradient: 'linear-gradient(to right, #2196F3, #1976D2)' },
+        { name: 'purple', head: '#9C27B0', body1: '#CE93D8', body2: '#7B1FA2', btnGradient: 'linear-gradient(to right, #9C27B0, #7B1FA2)' },
+        { name: 'orange', head: '#FF9800', body1: '#FFB74D', body2: '#F57C00', btnGradient: 'linear-gradient(to right, #FF9800, #F57C00)' },
+        { name: 'pink', head: '#E91E63', body1: '#F06292', body2: '#C2185B', btnGradient: 'linear-gradient(to right, #E91E63, #C2185B)' },
+    ];
+    let currentPaletteIndex = 0; // Índice da paleta atual
+
+    // --- Funções de Inicialização e Configuração ---
+
+    function applySnakeColor(paletteIndex) {
+        if (paletteIndex < 0 || paletteIndex >= snakeColorPalettes.length) return;
+        const palette = snakeColorPalettes[paletteIndex];
+
+        document.documentElement.style.setProperty('--snake-head-color', palette.head);
+        document.documentElement.style.setProperty('--snake-body-color1', palette.body1);
+        document.documentElement.style.setProperty('--snake-body-color2', palette.body2);
+        gameTitle.style.color = palette.head;
+        btnPlay.style.background = palette.btnGradient;
+
+        const swatches = colorOptionsContainer.querySelectorAll('.colorSwatch');
+        swatches.forEach((swatch, index) => {
+            swatch.classList.toggle('active', index === paletteIndex);
+        });
+        currentPaletteIndex = paletteIndex;
+    }
+
+    function createColorSwatches() {
+        colorOptionsContainer.innerHTML = '';
+        snakeColorPalettes.forEach((palette, index) => {
+            const swatch = document.createElement('div');
+            swatch.classList.add('colorSwatch');
+            swatch.style.backgroundColor = palette.head;
+            swatch.dataset.index = index;
+            swatch.setAttribute('aria-label', `Selecionar cor ${palette.name}`);
+            swatch.addEventListener('click', () => {
+                applySnakeColor(index);
+            });
+            colorOptionsContainer.appendChild(swatch);
+        });
+        applySnakeColor(currentPaletteIndex); // Aplica a cor inicial
+    }
+
+    function initGameVariables() {
+        if (!gridWidth || !gridHeight) {
+            resizeCanvas();
+            if (!gridWidth || !gridHeight) { // Fallback
+                gridWidth = 20; gridHeight = 20;
+                canvasWidth = gridWidth * box; canvasHeight = gridHeight * box;
+                canvas.width = canvasWidth; canvas.height = canvasHeight;
+                console.error("Fallback grid dimensions used.");
+            }
+        }
+        snake = [{ x: Math.floor(gridWidth / 2), y: Math.floor(gridHeight / 2) }];
+        direction = "RIGHT";
+        nextDirection = "RIGHT";
+        frutasPegas = 0;
+        frutasNecessarias = 5; // Inicial
+        fase = 1;
+        targetSpeed = 150; // Velocidade inicial (mais alto = mais lento)
+        obstacles = [];
+        portal = null;
+        updateInfo();
+        updateBackgroundColor(); // Muda fundo a cada novo jogo
+    }
+
+     function startGame() {
+         if (isGameRunning) return;
+         console.log("Starting game...");
+         startMenu.style.display = 'none';
+         rulesModal.classList.remove('show');
+         gameOverOverlay.style.display = 'none'; // Garante que está escondido
+         gameContainer.style.display = 'flex';
+
+         resizeCanvas(); // Garante tamanho correto do canvas
+         initGameVariables();
+         placeItem(placeFruit); // Coloca a primeira fruta
+
+         gameState = GameState.RUNNING;
+         isGameRunning = true;
+         lastUpdateTime = performance.now();
+         if(gameLoopTimeout) cancelAnimationFrame(gameLoopTimeout);
+         gameLoopTimeout = requestAnimationFrame(gameLoop);
+     }
+
+    function resizeCanvas() {
+        if (!gameContainer || getComputedStyle(gameContainer).display === 'none') {
+             return; // Não redimensiona se o jogo não estiver visível
+        }
+        const containerStyle = getComputedStyle(gameContainer);
+        const availableWidth = gameContainer.clientWidth - parseFloat(containerStyle.paddingLeft) - parseFloat(containerStyle.paddingRight);
+        let availableHeight = gameContainer.clientHeight - parseFloat(containerStyle.paddingTop) - parseFloat(containerStyle.paddingBottom);
+        let infoHeight = infoDisplay.offsetHeight + parseFloat(getComputedStyle(infoDisplay).marginBottom);
+        const canvasMaxHeight = availableHeight - infoHeight;
+        const canvasMaxWidth = availableWidth;
+
+        let tempGridWidth = Math.floor(canvasMaxWidth / box);
+        let tempGridHeight = Math.floor(canvasMaxHeight / box);
+        // Garante grid par e mínimo de 10x10
+        gridWidth = Math.max(10, tempGridWidth % 2 !== 0 ? tempGridWidth - 1 : tempGridWidth);
+        gridHeight = Math.max(10, tempGridHeight % 2 !== 0 ? tempGridHeight - 1 : tempGridHeight);
+
+        canvasWidth = gridWidth * box;
+        canvasHeight = gridHeight * box;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+
+         if (snake && snake.length > 0) { // Ajusta cobra se resize ocorrer durante jogo
+             if (snake[0].x >= gridWidth) snake[0].x = gridWidth - 1;
+             if (snake[0].y >= gridHeight) snake[0].y = gridHeight - 1;
+         }
+         // console.log(`Canvas resized to: ${canvasWidth}x${canvasHeight} (${gridWidth}x${gridHeight} grid)`);
+    }
+
+    // --- Posicionamento Seguro de Itens ---
+    function isPositionOccupied(x, y, checkItems = { snake: true, obstacles: true, fruit: true, portal: true }) {
+        if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight) return true; // Fora dos limites
+        if (checkItems.snake && snake) {
+            for (const segment of snake) { if (segment.x === x && segment.y === y) return true; }
+        }
+        if (checkItems.obstacles && obstacles) {
+            for (const obs of obstacles) { if (obs.x === x && obs.y === y) return true; }
+        }
+        if (checkItems.fruit && fruit) { if (fruit.x === x && fruit.y === y) return true; }
+        if (checkItems.portal && portal) { if (portal.x === x && portal.y === y) return true; }
+        return false;
+    }
+
+    function getRandomGridPosition() {
+        return {
+            x: Math.floor(Math.random() * gridWidth),
+            y: Math.floor(Math.random() * gridHeight)
+        };
+    }
+
+    function placeItem(itemPlacerFunc, options = {}) {
+        let pos;
+        let attempts = 0;
+        const maxAttempts = (gridWidth * gridHeight) || 200; // Limite de tentativas
+         if (!gridWidth || !gridHeight || gridWidth * gridHeight <= 0) {
+             console.error("Cannot place item: Invalid grid dimensions."); return;
+         }
+        do {
+            pos = getRandomGridPosition();
+            attempts++;
+        } while (isPositionOccupied(pos.x, pos.y, options) && attempts < maxAttempts);
+
+        if (attempts < maxAttempts) {
+            itemPlacerFunc(pos);
+        } else {
+            console.error(`Failed to place item (${itemPlacerFunc.name}) after ${maxAttempts} attempts.`);
+            // Fallback: Tentar encontrar o primeiro espaço livre (pode ser lento)
+            let foundSpace = false;
+            for (let tryY = 0; tryY < gridHeight && !foundSpace; tryY++) {
+                for (let tryX = 0; tryX < gridWidth && !foundSpace; tryX++) {
+                    if (!isPositionOccupied(tryX, tryY, options)) {
+                        itemPlacerFunc({x: tryX, y: tryY});
+                        console.log("Placed item using fallback search.");
+                        foundSpace = true;
+                    }
+                }
+            }
+            if (!foundSpace) console.error("CRITICAL: No free space found for item.");
+        }
+    }
+
+    function placeFruit(pos) { fruit = pos; }
+    function placePortal(pos) { portal = pos; }
+
+    function generateObstacles(count) {
+        obstacles = [];
+        const safeMarginFromHead = 2;
+        let headX = snake ? snake[0].x : Math.floor(gridWidth / 2);
+        let headY = snake ? snake[0].y : Math.floor(gridHeight / 2);
+        const maxPlacementAttemptsPerObstacle = 50;
+
+        for (let i = 0; i < count; i++) {
+            let placed = false;
+            let attempts = 0;
+            while (!placed && attempts < maxPlacementAttemptsPerObstacle) {
+                 let potentialPos = getRandomGridPosition();
+                 // Verifica distância da cabeça inicial e se não colide com NADA (incluindo outros obstáculos já postos)
+                if (!isPositionOccupied(potentialPos.x, potentialPos.y) &&
+                    (Math.abs(potentialPos.x - headX) > safeMarginFromHead || Math.abs(potentialPos.y - headY) > safeMarginFromHead))
+                {
+                    obstacles.push(potentialPos);
+                    placed = true;
+                }
+                attempts++;
+            }
+             if (!placed) console.warn(`Could not place obstacle ${i + 1} securely.`);
+        }
+        console.log(`Generated ${obstacles.length} obstacles.`);
+    }
+
+    // --- Controles ---
+    document.addEventListener('keydown', handleKeyDown);
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    let touchStartX = 0; let touchStartY = 0;
+
+    function handleKeyDown(event) {
+        if (gameState !== GameState.RUNNING) return;
+        const key = event.key.toLowerCase();
+        let newDirection = direction;
+
+        if (!["arrowleft", "a", "arrowup", "w", "arrowright", "d", "arrowdown", "s"].includes(key)) return;
+        event.preventDefault();
+
+        if ((key === "arrowleft" || key === "a") && direction !== "RIGHT") newDirection = "LEFT";
+        else if ((key === "arrowup" || key === "w") && direction !== "DOWN") newDirection = "UP";
+        else if ((key === "arrowright" || key === "d") && direction !== "LEFT") newDirection = "RIGHT";
+        else if ((key === "arrowdown" || key === "s") && direction !== "UP") newDirection = "DOWN";
+
+        if (newDirection !== direction) { nextDirection = newDirection; }
+    }
+
+    function handleTouchStart(event) {
+        if (gameState !== GameState.RUNNING) return;
+        event.preventDefault();
+        if (event.touches.length > 0) {
+             touchStartX = event.touches[0].clientX;
+             touchStartY = event.touches[0].clientY;
+         } else { touchStartX = 0; touchStartY = 0; }
+    }
+
+    function handleTouchMove(event) {
+         if (!touchStartX || !touchStartY || gameState !== GameState.RUNNING) return;
+        event.preventDefault();
+        if (event.touches.length === 0) return;
+
+        let touchEndX = event.touches[0].clientX;
+        let touchEndY = event.touches[0].clientY;
+        let dx = touchEndX - touchStartX;
+        let dy = touchEndY - touchStartY;
+        let newDirection = direction;
+        const sensitivity = 10;
+
+        if (Math.abs(dx) > Math.abs(dy)) { // Horizontal
+            if (dx > sensitivity && direction !== "LEFT") newDirection = "RIGHT";
+            else if (dx < -sensitivity && direction !== "RIGHT") newDirection = "LEFT";
+        } else { // Vertical
+            if (dy > sensitivity && direction !== "UP") newDirection = "DOWN";
+            else if (dy < -sensitivity && direction !== "DOWN") newDirection = "UP";
+        }
+
+         if (newDirection !== direction) {
+             nextDirection = newDirection;
+             touchStartX = touchEndX; // Reseta o ponto inicial para evitar múltiplos comandos
+             touchStartY = touchEndY;
+         }
+    }
+
+    // --- Funções de Desenho ---
+    function drawRect(x, y, color) { ctx.fillStyle = color; ctx.fillRect(x * box, y * box, box, box); }
+    function drawCircle(x, y, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x * box + box / 2, y * box + box / 2, box / 2, 0, Math.PI * 2); ctx.fill(); }
+    function drawRoundedRect(x, y, width, height, radius, color) {
+        ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y); ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius); ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height); ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius); ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath(); ctx.fill();
+    }
+
+     function drawSnake() {
+         if (!snake || snake.length === 0) return;
+         const headColor = getComputedStyle(document.documentElement).getPropertyValue('--snake-head-color').trim();
+         const bodyColor1 = getComputedStyle(document.documentElement).getPropertyValue('--snake-body-color1').trim();
+         const bodyColor2 = getComputedStyle(document.documentElement).getPropertyValue('--snake-body-color2').trim();
+
+        for (let i = 0; i < snake.length; i++) {
+            const segment = snake[i];
+             if(segment.x < 0 || segment.x >= gridWidth || segment.y < 0 || segment.y >= gridHeight) continue;
+            const isHead = i === 0;
+            const x_pos = segment.x * box; const y_pos = segment.y * box; const radius = box * 0.3;
+            if (isHead) {
+                 drawRoundedRect(x_pos, y_pos, box, box, radius, headColor);
+                 // Olhos
+                 ctx.fillStyle = 'white'; ctx.beginPath();
+                 let eyeOffset1 = {x: 0, y: 0}, eyeOffset2 = {x: 0, y: 0}; const eyeSize = box * 0.1;
+                 if(direction === "UP") { eyeOffset1 = {x: -box*0.2, y: -box*0.2}; eyeOffset2 = {x: box*0.2, y: -box*0.2}; }
+                 else if(direction === "DOWN") { eyeOffset1 = {x: -box*0.2, y: box*0.2}; eyeOffset2 = {x: box*0.2, y: box*0.2}; }
+                 else if(direction === "LEFT") { eyeOffset1 = {x: -box*0.2, y: -box*0.2}; eyeOffset2 = {x: -box*0.2, y: box*0.2}; }
+                 else /* RIGHT */ { eyeOffset1 = {x: box*0.2, y: -box*0.2}; eyeOffset2 = {x: box*0.2, y: box*0.2}; }
+                 ctx.arc(x_pos + box/2 + eyeOffset1.x, y_pos + box/2 + eyeOffset1.y, eyeSize, 0, Math.PI*2);
+                 ctx.arc(x_pos + box/2 + eyeOffset2.x, y_pos + box/2 + eyeOffset2.y, eyeSize, 0, Math.PI*2);
+                 ctx.fill();
+                 // Pupilas
+                 ctx.fillStyle = 'black'; ctx.beginPath();
+                 let pupilOffset = {x: 0, y: 0}; const pupilSize = eyeSize * 0.5;
+                 if(direction === "UP") pupilOffset = {x: 0, y: -eyeSize*0.3};
+                 else if(direction === "DOWN") pupilOffset = {x: 0, y: eyeSize*0.3};
+                 else if(direction === "LEFT") pupilOffset = {x: -eyeSize*0.3, y: 0};
+                 else /* RIGHT */ pupilOffset = {x: eyeSize*0.3, y: 0};
+                 ctx.arc(x_pos + box/2 + eyeOffset1.x + pupilOffset.x, y_pos + box/2 + eyeOffset1.y + pupilOffset.y, pupilSize, 0, Math.PI*2);
+                 ctx.arc(x_pos + box/2 + eyeOffset2.x + pupilOffset.x, y_pos + box/2 + eyeOffset2.y + pupilOffset.y, pupilSize, 0, Math.PI*2);
+                 ctx.fill();
+            } else {
+                drawRoundedRect(x_pos, y_pos, box, box, radius, i % 2 === 0 ? bodyColor1 : bodyColor2);
+            }
+        }
+    }
+
+    function drawFruit() {
+        if (!fruit || fruit.x < 0 || fruit.x >= gridWidth || fruit.y < 0 || fruit.y >= gridHeight) return;
+        const x_pos = fruit.x * box; const y_pos = fruit.y * box;
+        const radius = box / 2; const centerX = x_pos + radius; const centerY = y_pos + radius;
+        const stemColor = getComputedStyle(document.documentElement).getPropertyValue('--fruit-stem-color');
+        const fruitColor = getComputedStyle(document.documentElement).getPropertyValue('--fruit-color');
+        // Caule
+        ctx.fillStyle = stemColor; ctx.fillRect(centerX - box * 0.05, y_pos - box * 0.2, box * 0.1, box * 0.3);
+        // Corpo
+        ctx.fillStyle = fruitColor; ctx.beginPath(); ctx.arc(centerX, centerY, radius * 0.9, 0, Math.PI * 2); ctx.fill();
+        // Brilho
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; ctx.beginPath();
+        ctx.arc(centerX - radius * 0.3, centerY - radius * 0.3, radius * 0.3, Math.PI * 1.3, Math.PI * 1.9); ctx.fill();
+    }
+
+    function drawObstacles() {
+         if (!obstacles || obstacles.length === 0) return;
+         const baseColor = getComputedStyle(document.documentElement).getPropertyValue('--obstacle-color');
+         const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--obstacle-border-color');
+         const radius = box * 0.15;
+        obstacles.forEach(obs => {
+             if(obs.x < 0 || obs.x >= gridWidth || obs.y < 0 || obs.y >= gridHeight) return;
+             const x_pos = obs.x * box; const y_pos = obs.y * box;
+             drawRoundedRect(x_pos, y_pos, box, box, radius, baseColor);
+             ctx.strokeStyle = borderColor; ctx.lineWidth = 1.5;
+             ctx.strokeRect(x_pos + 1, y_pos + 1, box - 2, box - 2); // Borda simples
+        });
+    }
+
+    function drawPortal() {
+        if (!portal || portal.x < 0 || portal.x >= gridWidth || portal.y < 0 || portal.y >= gridHeight) return;
+        const portalColor = getComputedStyle(document.documentElement).getPropertyValue('--portal-color');
+        const portalHighlight = getComputedStyle(document.documentElement).getPropertyValue('--portal-highlight');
+        const pulse = Math.abs(Math.sin(Date.now() / 250));
+        const x_pos = portal.x * box; const y_pos = portal.y * box;
+        const centerX = x_pos + box / 2; const centerY = y_pos + box / 2;
+        // Efeito pulsante
+        const outerSize = box * (1 + pulse * 0.15); const outerAlpha = 0.5 + pulse * 0.2;
+        ctx.fillStyle = `rgba(${hexToRgb(portalColor)}, ${outerAlpha * 0.6})`;
+        ctx.beginPath(); ctx.arc(centerX, centerY, outerSize / 2, 0, Math.PI * 2); ctx.fill();
+        const innerSize = box * (0.8 + pulse * 0.1); const innerAlpha = 0.7 + pulse * 0.3;
+        ctx.fillStyle = `rgba(${hexToRgb(portalColor)}, ${innerAlpha})`;
+        ctx.beginPath(); ctx.arc(centerX, centerY, innerSize / 2, 0, Math.PI * 2); ctx.fill();
+        const coreSize = box * (0.3 + pulse * 0.2); const coreAlpha = 0.8 + pulse * 0.2;
+        ctx.fillStyle = `rgba(${hexToRgb(portalHighlight)}, ${coreAlpha})`;
+        ctx.beginPath(); ctx.arc(centerX, centerY, coreSize / 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.beginPath(); // Centro fixo
+        ctx.arc(centerX, centerY, box * 0.1, 0, Math.PI * 2); ctx.fill();
+    }
+
+     function showScorePopup(x, y) {
+         if (!gameContainer) return;
+         const popup = document.createElement('div');
+         popup.classList.add('score-popup');
+         popup.textContent = '+1';
+         const canvasRelativeX = x * box + box / 2;
+         const canvasRelativeY = y * box; // Posição Y um pouco acima da fruta
+         const relativeX = canvas.offsetLeft + canvasRelativeX;
+         const relativeY = canvas.offsetTop + canvasRelativeY;
+         popup.style.left = `${relativeX}px`;
+         popup.style.top = `${relativeY}px`;
+         popup.style.transform = 'translate(-50%, -50%)'; // Centraliza o popup no ponto
+         gameContainer.appendChild(popup);
+         popup.addEventListener('animationend', () => {
+             popup.remove(); // Remove o elemento após a animação
+         });
+     }
+
+    // --- Lógica do Jogo ---
+    function updateGame() {
+        if (gameState !== GameState.RUNNING || !snake || snake.length === 0) return;
+        direction = nextDirection; // Atualiza a direção com base na entrada pendente
+        let snakeX = snake[0].x, snakeY = snake[0].y;
+        if (direction === "LEFT") snakeX--;
+        else if (direction === "RIGHT") snakeX++;
+        else if (direction === "UP") snakeY--;
+        else if (direction === "DOWN") snakeY++;
+
+        // Colisões
+        if (snakeX < 0 || snakeX >= gridWidth || snakeY < 0 || snakeY >= gridHeight ||
+            (obstacles && obstacles.some(obs => obs.x === snakeX && obs.y === snakeY)) ||
+            snake.slice(1).some(seg => seg.x === snakeX && seg.y === snakeY)) {
+            let reason = "Colisão desconhecida";
+            if (snakeX < 0 || snakeX >= gridWidth || snakeY < 0 || snakeY >= gridHeight) reason = "Bateu na parede!";
+            else if (obstacles && obstacles.some(obs => obs.x === snakeX && obs.y === snakeY)) reason = "Bateu em um obstáculo!";
+            else if (snake.slice(1).some(seg => seg.x === snakeX && seg.y === snakeY)) reason = "Comeu a si mesmo!";
+            triggerGameOver(reason);
+            return;
+        }
+
+        const newHead = { x: snakeX, y: snakeY };
+        let ateFruit = false;
+        if (fruit && snakeX === fruit.x && snakeY === fruit.y) {
+            frutasPegas++; ateFruit = true;
+            showScorePopup(fruit.x, fruit.y); updateInfo();
+            placeItem(placeFruit); // Coloca nova fruta
+            if (frutasPegas >= frutasNecessarias && !portal) { placeItem(placePortal); }
+        }
+
+        if (portal && snakeX === portal.x && snakeY === portal.y) { nextLevel(); return; }
+
+        snake.unshift(newHead);
+        if (!ateFruit) { snake.pop(); }
+    }
+
+    function nextLevel() {
+        if (gameState === GameState.LEVEL_TRANSITION) return;
+        console.log(`Completing Level ${fase}`);
+        gameState = GameState.LEVEL_TRANSITION;
+        fase++; frutasPegas = 0;
+        frutasNecessarias = Math.min(15, 5 + Math.floor(fase * 1.5)); // Dificuldade progressiva
+        targetSpeed = Math.max(50, targetSpeed - 10); // Aumenta velocidade (mínimo 50ms)
+        portal = null; updateInfo(); updateBackgroundColor();
+
+        canvas.style.transition = 'opacity 0.3s ease-out'; canvas.style.opacity = 0.3;
+        setTimeout(() => {
+             resetLevelState();
+             canvas.style.opacity = 1; canvas.style.transition = '';
+             gameState = GameState.RUNNING; nextDirection = direction;
+             lastUpdateTime = performance.now();
+             console.log(`Starting Level ${fase}, Speed: ${targetSpeed}ms`);
+        }, 400);
+    }
+
+    function resetLevelState() {
+         snake = [{ x: Math.floor(gridWidth / 2), y: Math.floor(gridHeight / 2) }];
+         direction = "RIGHT"; nextDirection = "RIGHT";
+         portal = null; obstacles = [];
+         if (fase >= 2) {
+             let obstacleCount = Math.min(Math.floor(gridWidth * gridHeight * 0.04), 2 + fase);
+             generateObstacles(obstacleCount);
+         }
+         placeItem(placeFruit); updateInfo();
+    }
+
+    function triggerGameOver(reason) {
+        if (gameState === GameState.GAME_OVER) return;
+        console.log("Game Over:", reason);
+        gameState = GameState.GAME_OVER;
+        isGameRunning = false;
+        if(gameLoopTimeout) cancelAnimationFrame(gameLoopTimeout);
+        gameOverOverlay.style.display = 'flex';
+        // Atualiza o texto de Game Over (opcional)
+        // gameOverText.textContent = reason; // Ou manter "Game Over!" e mostrar a razão abaixo
+    }
+
+    function restartGame() {
+         console.log("Restarting game...");
+         gameOverOverlay.style.display = 'none';
+         startGame(); // Chama a função que reinicia tudo
+    }
+
+    // --- Loop Principal e Desenho ---
+    function gameLoop(currentTime) {
+        gameLoopTimeout = requestAnimationFrame(gameLoop);
+        if (gameState === GameState.RUNNING) {
+            const deltaTime = currentTime - (lastUpdateTime || currentTime);
+             if (deltaTime >= targetSpeed) {
+                 lastUpdateTime = currentTime - (deltaTime % targetSpeed);
+                 updateGame();
+             }
+        }
+         draw(); // Desenha o estado atual, independentemente do estado lógico
+    }
+
+    function draw() {
+         if (canvasWidth > 0 && canvasHeight > 0) {
+             ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+         } else { return; } // Não desenha se canvas inválido
+
+        if (gameState === GameState.RUNNING || gameState === GameState.LEVEL_TRANSITION || gameState === GameState.GAME_OVER) {
+             drawObstacles(); drawFruit(); drawPortal(); drawSnake();
+        }
+    }
+
+    // --- Funções Utilitárias ---
+    function updateInfo() {
+        const displayFase = Number.isInteger(fase) ? fase : '-';
+        const displayPegas = Number.isInteger(frutasPegas) ? frutasPegas : '-';
+        const displayNecessarias = Number.isInteger(frutasNecessarias) ? frutasNecessarias : '-';
+        infoDisplay.innerText = `Fase: ${displayFase} | Frutas: ${displayPegas}/${displayNecessarias}`;
+    }
+
+    function updateBackgroundColor() {
+         const hue1 = Math.random() * 360; const hue2 = (hue1 + Math.random() * 90 + 30) % 360;
+         const saturation = 55 + Math.random() * 20; const lightness1 = 60 + Math.random() * 15;
+         const lightness2 = 40 + Math.random() * 15;
+         document.body.style.background = `linear-gradient(135deg, hsl(${hue1}, ${saturation}%, ${lightness1}%), hsl(${hue2}, ${saturation}%, ${lightness2}%))`;
+    }
+
+    function hexToRgb(hex) {
+        let r = 0, g = 0, b = 0; if (!hex) return '0,0,0'; hex = hex.trim();
+        if (hex.length == 4) { r = parseInt(hex[1] + hex[1], 16); g = parseInt(hex[2] + hex[2], 16); b = parseInt(hex[3] + hex[3], 16); }
+        else if (hex.length == 7) { r = parseInt(hex[1] + hex[2], 16); g = parseInt(hex[3] + hex[4], 16); b = parseInt(hex[5] + hex[6], 16); }
+        return `${r || 0}, ${g || 0}, ${b || 0}`;
+    }
+
+     // --- Funções do Menu e Modal ---
+     function showStartMenu() {
+         gameState = GameState.MENU;
+         isGameRunning = false;
+         if(gameLoopTimeout) cancelAnimationFrame(gameLoopTimeout);
+         startMenu.style.display = 'flex';
+         gameContainer.style.display = 'none';
+         gameOverOverlay.style.display = 'none';
+         rulesModal.classList.remove('show');
+         updateBackgroundColor(); // Atualiza fundo ao voltar para o menu
+     }
+
+     function showRules() { rulesModal.classList.add('show'); }
+     function hideRules() { rulesModal.classList.remove('show'); }
+
+    // --- Event Listeners ---
+    btnPlay.addEventListener('click', startGame);
+    btnRules.addEventListener('click', showRules);
+    btnCloseRules.addEventListener('click', hideRules);
+    btnRetry.addEventListener('click', restartGame); // Botão Tentar Novamente (Game Over)
+    btnBackToMenu.addEventListener('click', showStartMenu); // Botão Voltar ao Menu (Game Over)
+
+    // --- Inicialização Geral ---
+    window.addEventListener('load', () => {
+        createColorSwatches(); // Cria as opções de cor
+        showStartMenu(); // Mostra o menu inicial
+        window.addEventListener('resize', () => { // Listener para redimensionar
+             if (gameContainer.style.display !== 'none') {
+                 resizeCanvas();
+                 // O draw() é chamado continuamente pelo gameLoop, então não precisa chamar aqui
+             }
+        });
+    });
+
+</script>
+
+</body>
+</html>
