@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Truco Paulista</title>
   <style>
-    /* Estilos gerais (mantidos como no original) */
+    /* Estilos gerais */
     body {
       background: linear-gradient(135deg, #0a5c0a, #157f15);
       color: white;
@@ -16,13 +16,113 @@
       background-color: green;
     }
 
+    /* --- ESTILOS DO MENU E REGRAS --- */
+    #menu-inicio, #regras-jogo {
+        position: fixed; /* Cobre a tela toda */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0a5c0a, #157f15);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100; /* Fica na frente da mesa */
+        padding: 20px;
+        box-sizing: border-box;
+        text-align: center;
+        color: white;
+        background-color: green;
+    }
+
+    #menu-inicio h1 {
+        font-size: 3rem;
+        margin-bottom: 40px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    #menu-inicio button, #regras-jogo button {
+        padding: 15px 30px;
+        font-size: 1.4rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        margin: 10px;
+        min-width: 150px;
+    }
+
+     #menu-inicio button:hover, #regras-jogo button:hover {
+        transform: translateY(-3px);
+     }
+     #menu-inicio button:active, #regras-jogo button:active {
+        transform: scale(0.98);
+     }
+
+    #botao-jogar-menu {
+      background-color: #28a745; color: white;
+    }
+     #botao-jogar-menu:hover { background-color: #218838; }
+
+    #botao-regras-menu {
+      background-color: #007bff; color: white;
+    }
+     #botao-regras-menu:hover { background-color: #0056b3; }
+
+    #regras-jogo {
+        justify-content: flex-start; /* Alinha conteúdo no topo */
+        overflow-y: auto; /* Permite rolar se as regras forem longas */
+        text-align: left; /* Melhora leitura das regras */
+        display: none; /* Começa escondido */
+    }
+
+    #regras-jogo h2 {
+        text-align: center;
+        margin-bottom: 20px;
+         text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+    }
+
+    #regras-jogo .regras-content {
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 15px 25px;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
+        margin-bottom: 20px;
+    }
+
+    #regras-jogo p, #regras-jogo li {
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    #regras-jogo ul {
+      padding-left: 20px;
+      margin-bottom: 15px;
+    }
+     #regras-jogo strong {
+       color: #ffc107; /* Amarelo para destaque */
+     }
+
+
+    #botao-voltar-menu {
+       background-color: #dc3545; color: white;
+       margin-top: 15px; /* Espaço acima do botão voltar */
+       align-self: center; /* Centraliza o botão voltar */
+    }
+     #botao-voltar-menu:hover { background-color: #c82333; }
+
+    /* --- ESTILOS DO JOGO (Mesa) --- */
     #mesa {
-      display: flex;
+      /* display: flex; */ /* Removido daqui, será controlado pelo JS */
+      display: none; /* << IMPORTANTE: Mesa começa escondida */
       flex-direction: column;
       height: 100vh;
       justify-content: space-between;
       padding: 10px;
-      position: relative;
+      position: relative; /* Necessário para posicionar elementos filhos */
       box-sizing: border-box; /* Inclui padding na altura */
     }
 
@@ -30,7 +130,7 @@
       display: flex;
       justify-content: center;
       gap: 10px;
-      padding: 5px;
+      padding: 15px;
       min-height: 100px;
       align-items: center; /* Alinha itens verticalmente */
     }
@@ -39,14 +139,14 @@
       background: white;
       color: black;
       border: 1px solid black;
-      padding: 20px 15px;
+      padding: 35px 15px;
       border-radius: 8px;
       font-size: 1.3rem;
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       transition: transform 0.2s, box-shadow 0.2s;
       display: inline-block;
-      min-width: 60px;
+      min-width: 50px;
       text-align: center;
       user-select: none; /* Impede seleção de texto */
     }
@@ -161,7 +261,7 @@
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0, 0, 0, 0.4);
       padding: 12px;
       border-radius: 10px;
       z-index: 20;
@@ -227,6 +327,61 @@
   </style>
 </head>
 <body>
+
+  <div id="menu-inicio">
+    <h1>Truco Paulista</h1>
+    <button id="botao-jogar-menu">Jogar</button>
+    <button id="botao-regras-menu">Regras</button>
+  </div>
+
+  <div id="regras-jogo">
+    <h2>Regras do Truco Paulista</h2>
+    <div class="regras-content">
+      <p><strong>Objetivo:</strong> Ser a primeira dupla (ou jogador, neste caso contra a máquina) a alcançar 12 pontos.</p>
+      <p><strong>Baralho:</strong> Utiliza-se um baralho espanhol limpo (sem 8, 9, 10 e coringas) ou um baralho francês adaptado, removendo essas cartas.</p>
+      <p><strong>Cartas e Força (Manilhas):</strong></p>
+      <ul>
+        <li>A cada mão, uma carta é virada ("vira"). A carta seguinte na sequência de valores define as <strong>manilhas</strong> (as cartas mais fortes daquela mão).</li>
+        <li>Ordem de força das manilhas (da mais forte para a mais fraca): <strong>Paus (Zap) ♣️ > Copas ♥️ > Espadas ♠️ > Ouros ♦️</strong>.</li>
+        <li>Se a vira for um 3, as manilhas serão os 4s, seguindo a ordem de naipes acima.</li>
+      </ul>
+       <p><strong>Cartas Comuns (Força Normal - da mais forte para a mais fraca):</strong></p>
+       <ul>
+         <li><strong>3 > 2 > A (Ás) > K (Rei) > J (Valete) > Q (Dama) > 7 > 6 > 5 > 4</strong></li>
+         <li>Cartas de mesmo valor têm a mesma força (ex: um 7♦️ empata com um 7♠️, se não forem manilhas).</li>
+       </ul>
+      <p><strong>Como Jogar:</strong></p>
+      <ul>
+        <li>Cada jogador recebe 3 cartas.</li>
+        <li>A mão é disputada em melhor de 3 rodadas. Quem ganhar 2 rodadas vence a mão.</li>
+        <li>Em cada rodada, cada jogador joga uma carta. A carta de maior força vence a rodada.</li>
+        <li>Se a primeira rodada empatar, quem ganhar a segunda vence a mão.</li>
+        <li>Se a segunda rodada empatar, quem ganhou a primeira vence a mão.</li>
+        <li>Se a primeira e a segunda rodadas empatarem, quem ganhar a terceira vence a mão.</li>
+        <li>Se as três rodadas empatarem ("cangar"), ninguém marca pontos na mão.</li>
+        <li>Quem vence a rodada começa jogando na próxima.</li>
+        <li> **Modificado:** Quem vence a *mão* começa jogando a *próxima mão*. Se empatar, o jogador humano começa.</li>
+      </ul>
+      <p><strong>Pontuação e Truco:</strong></p>
+      <ul>
+        <li>Uma mão normal vale <strong>1 ponto</strong>.</li>
+        <li>Um jogador pode pedir <strong>"Truco!"</strong> a qualquer momento antes de jogar sua carta na sua vez. Isso aumenta o valor da mão para <strong>3 pontos</strong>.</li>
+        <li>O adversário pode:
+            <ul>
+                <li><strong>Aceitar:</strong> A mão passa a valer 3 pontos.</li>
+                <li><strong>Recusar ("Correr"):</strong> Quem pediu truco ganha 1 ponto.</li>
+                <li><strong>Pedir "Seis!" (ou "Meio-Pau"):</strong> Aumenta a aposta para 6 pontos.</li>
+            </ul>
+        </li>
+        <li>Se "Seis" for pedido, o jogador que pediu "Truco" pode aceitar (mão vale 6), recusar (adversário ganha 3 pontos) ou pedir <strong>"Nove!"</strong>.</li>
+        <li>Se "Nove" for pedido, o outro jogador pode aceitar (mão vale 9) ou recusar (adversário ganha 6 pontos).</li>
+         <li>Se "Doze" for pedido (geralmente quando já se tem 9 pontos), o outro jogador pode aceitar (mão vale 12 - e o jogo acaba se o placar permitir) ou recusar (adversário ganha 9 pontos).</li>
+        <li>**Mão de Onze:** Quando uma dupla (ou jogador) atinge 11 pontos, a próxima mão vale 3 pontos automaticamente. Os jogadores olham as cartas e decidem se jogam (aceitam) ou correm (dão 1 ponto ao adversário). Nesta mão especial, não é permitido pedir truco. (Esta regra específica da Mão de Onze não está implementada neste código, a aposta pode ser aumentada normalmente).</li>
+      </ul>
+    </div>
+    <button id="botao-voltar-menu">Voltar</button>
+  </div>
+
   <div id="mesa">
     <div class="mao" id="mao-maquina"></div>
 
@@ -269,16 +424,11 @@
     // --- Níveis de Aposta e Pontuações ---
     const NIVEIS_APOSTA = {
         NORMAL: { valor: 1, proximo: 'TRUCO', nomeDisplay: 'Mão',    recusaPaga: 1 },
-        TRUCO:  { valor: 3, proximo: 'SEIS',  nomeDisplay: 'Truco',  recusaPaga: 1 }, // Jogador recusa SEIS -> Máquina ganha 1 (valor do Truco pedido pelo Jogador)
-        SEIS:   { valor: 6, proximo: 'NOVE',  nomeDisplay: 'Seis',   recusaPaga: 3 }, // Jogador recusa NOVE -> Máquina ganha 3 (valor do Seis pedido pelo Jogador)
-        NOVE:   { valor: 9, proximo: 'DOZE',  nomeDisplay: 'Nove',   recusaPaga: 6 }, // Jogador recusa DOZE -> Máquina ganha 6 (valor do Nove pedido pelo Jogador)
-        DOZE:   { valor: 12, proximo: null,   nomeDisplay: 'Doze',   recusaPaga: 9 }  // Jogador recusa ??? -> Máquina ganha 9 (valor do Doze pedido pelo Jogador) - Cenário teórico
-        // Ajuste: A lógica de recusaPaga deve refletir o valor da APOSTA ANTERIOR ACEITA (ou 1 se for o primeiro truco).
-        // CORREÇÃO LÓGICA: recusaPaga é quantos pontos o OPONENTE ganha se ESTE pedido for recusado.
-        // Ex: Jogador pede Truco (vale 3). Máquina recusa -> Jogador ganha 1.
-        // Ex: Máquina pede Seis (vale 6). Jogador recusa -> Máquina ganha 3 (valor do Truco que foi aceito).
+        TRUCO:  { valor: 3, proximo: 'SEIS',  nomeDisplay: 'Truco',  recusaPaga: 1 },
+        SEIS:   { valor: 6, proximo: 'NOVE',  nomeDisplay: 'Seis',   recusaPaga: 3 },
+        NOVE:   { valor: 9, proximo: 'DOZE',  nomeDisplay: 'Nove',   recusaPaga: 6 },
+        DOZE:   { valor: 12, proximo: null,   nomeDisplay: 'Doze',   recusaPaga: 9 }
     };
-
 
     // --- Variáveis Globais de Estado ---
     let baralho = [];
@@ -288,15 +438,20 @@
     let jogadorDaVez = 'jogador', quemIniciouRodada = 'jogador';
     let cartaJogadaCentroJogador = null, cartaJogadaCentroMaquina = null;
     let pontuacaoJogador = 0, pontuacaoMaquina = 0;
-    let podeJogar = false, jogoEmAndamento = true;
+    let podeJogar = false, jogoEmAndamento = false; // <<< Jogo começa parado
+
+    let vencedorDaMaoAnterior = 'jogador'; // <<< VARIÁVEL ADICIONADA: Guarda quem ganhou a última mão (jogador ou maquina)
 
     // --- Variáveis de Estado do Truco ---
     let nivelApostaAtual = 'NORMAL';
     let pontosDaMaoAtual = NIVEIS_APOSTA.NORMAL.valor;
-    let estadoTruco = 'normal'; // 'normal', 'pedido_truco_jogador', 'pedido_seis_maquina', etc.
+    let estadoTruco = 'normal';
     let quemPediuUltimaAposta = null;
 
     // --- Elementos da UI (cache) ---
+    // <<< Elementos do Menu/Regras >>>
+    let menuInicio, regrasJogo, botaoJogarMenu, botaoRegrasMenu, botaoVoltarMenu, mesaJogo;
+    // <<< Elementos do Jogo (já existentes) >>>
     let elMaoJogador, elMaoMaquina, elJogadaJogador, elJogadaMaquina, elCartaVirada, elManilhaInfo, elPlacarFinal, elValorMaoAtual, elBotaoTruco, elMensagemTruco, elRespostaTruco, elFimJogoControles;
 
     // --- Funções Auxiliares ---
@@ -357,6 +512,7 @@
     function distribuirCartas() {
         if (baralho.length < 6) {
             console.error("Erro crítico: Sem cartas suficientes para distribuir!");
+            // Idealmente, o jogo deveria parar aqui ou ter um tratamento melhor
             return;
         }
         maoJogador = baralho.splice(0, 3);
@@ -377,81 +533,102 @@
         if (!elMaoMaquina) return;
         elMaoMaquina.innerHTML = '';
         maoMaquina.forEach(() => {
-            elMaoMaquina.appendChild(criarElementoCarta({}, true));
+            elMaoMaquina.appendChild(criarElementoCarta({}, true)); // Cria cartas escondidas
         });
     }
      function calcularForca(carta) {
-        if (!carta || !carta.valor) return -1;
-        const valorBase = carta.forca;
+        if (!carta || !carta.valor) return -1; // Carta inválida ou nula
+        const valorBase = carta.forca; // Usa o mapeamento VALOR_MAP
+
+        // Checa se é manilha
         if (carta.valor === manilhaValor) {
+            // Força das manilhas baseada no naipe
             switch (carta.naipe) {
-                case '♣️': return 1000; // Zap
+                case '♣️': return 1000; // Zap (Paus)
                 case '♥️': return 999;  // Copas
                 case '♠️': return 998;  // Espadas
-                case '♦️': return 997;  // Ouros
-                default: return 100;
+                case '♦️': return 997;  // Ouros (7 Ouros)
+                default: return 100; // Segurança, não deve acontecer
             }
         }
+        // Se não for manilha, retorna a força normal da carta
         return valorBase;
     }
+    // Função interna para comparar duas cartas
     function compararCartasInterno(c1, c2) {
-        if (!c1 && !c2) return 'empate';
-        if (!c1) return 'c2';
-        if (!c2) return 'c1';
+        if (!c1 && !c2) return 'empate'; // Ambas nulas
+        if (!c1) return 'c2'; // Só c2 existe
+        if (!c2) return 'c1'; // Só c1 existe
+
         const f1 = calcularForca(c1);
         const f2 = calcularForca(c2);
+
         if (f1 === f2) return 'empate';
-        return f1 > f2 ? 'c1' : 'c2';
+        return f1 > f2 ? 'c1' : 'c2'; // Retorna qual carta ganhou ('c1' ou 'c2')
     }
 
     // --- Controle de Botões e Mensagens ---
     function atualizarBotoesTruco() {
         if (!elBotaoTruco || !elRespostaTruco || !elFimJogoControles) return;
 
+        // Mostra/Esconde botão "Jogar Novamente"
         elFimJogoControles.style.display = (estadoTruco === 'finalizado') ? 'block' : 'none';
 
         if (estadoTruco === 'finalizado') {
+            // Se o jogo acabou, esconde o botão de truco e as respostas
             elBotaoTruco.style.display = 'none';
             elRespostaTruco.innerHTML = '';
+            // Mantém a mensagem de fim de jogo
             if (elMensagemTruco && !elMensagemTruco.textContent.startsWith("FIM DE JOGO")) {
                  elMensagemTruco.textContent = '';
             }
         } else {
-            elBotaoTruco.style.display = 'block';
+            // Se o jogo está rolando
+            elBotaoTruco.style.display = 'block'; // Mostra botão principal
 
             const infoNivelAtual = NIVEIS_APOSTA[nivelApostaAtual];
             const proximoNivelChave = infoNivelAtual.proximo;
-            let podePedir = false;
+            let podePedir = false; // Determina se o jogador pode pedir/aumentar a aposta
 
             if (proximoNivelChave) {
+                // Se ainda há níveis de aposta
                 const infoProximoNivel = NIVEIS_APOSTA[proximoNivelChave];
-                elBotaoTruco.textContent = `${infoProximoNivel.nomeDisplay}!`;
-                // Pode pedir se for jogador, jogo rodando, e (estado normal OU aposta aceita pela maquina)
-                podePedir = jogoEmAndamento && jogadorDaVez === 'jogador' &&
-                            (estadoTruco === 'normal' || (estadoTruco.startsWith('aceito_') && quemPediuUltimaAposta === 'maquina'));
+                elBotaoTruco.textContent = `${infoProximoNivel.nomeDisplay}!`; // Texto do botão (Truco!, Seis!, etc.)
+
+                // Condições para poder pedir:
+                podePedir = jogoEmAndamento &&                     // Jogo tem que estar rolando
+                            jogadorDaVez === 'jogador' &&         // Tem que ser a vez do jogador
+                            (estadoTruco === 'normal' ||          // Ou o estado é normal (ninguém pediu ainda)
+                             (estadoTruco.startsWith('aceito_') && quemPediuUltimaAposta === 'maquina')); // Ou a máquina pediu e o jogador aceitou (jogador pode aumentar)
             } else {
+                // Se já está no nível máximo (DOZE)
                 elBotaoTruco.textContent = 'Máximo!';
-                podePedir = false;
+                podePedir = false; // Não pode pedir mais
             }
 
-            // Não pode pedir se já houver um pedido pendente
+            // Não pode pedir se já houver um pedido pendente de resposta
             if (estadoTruco.startsWith('pedido_')) {
                 podePedir = false;
             }
-            elBotaoTruco.disabled = !podePedir;
+            // Garante que botão truco esteja desabilitado se o jogo não começou ou acabou
+            if (!jogoEmAndamento) podePedir = false;
+
+            elBotaoTruco.disabled = !podePedir; // Habilita/desabilita o botão
         }
     }
 
-     function mostrarMensagemTruco(msg, tempo = 3000) {
+    // Mostra uma mensagem na área de truco
+    function mostrarMensagemTruco(msg, tempo = 3000) {
         if (!elMensagemTruco) return;
+        // Se for a mensagem de fim de jogo, não a apaga com timeout
         if (estadoTruco === 'finalizado' && msg.startsWith("FIM DE JOGO")) {
             elMensagemTruco.textContent = msg;
             return;
         }
         elMensagemTruco.textContent = msg;
         if (tempo > 0) {
+            // Limpa a mensagem após 'tempo' ms, a menos que seja uma pergunta esperando resposta
             setTimeout(() => {
-                // Não apaga msg se estiver esperando resposta do jogador ou se o jogo acabou
                 const esperandoRespostaJogador = estadoTruco.startsWith('pedido_') && estadoTruco.endsWith('_maquina');
                 if (elMensagemTruco && elMensagemTruco.textContent === msg && !esperandoRespostaJogador && estadoTruco !== 'finalizado') {
                     elMensagemTruco.textContent = '';
@@ -461,7 +638,8 @@
     }
 
     // --- Lógica de Jogada de Carta ---
-     function jogadorJogaCarta(indice) {
+    function jogadorJogaCarta(indice) {
+        // Verifica se o jogador PODE jogar
         if (!jogoEmAndamento || !podeJogar || jogadorDaVez !== 'jogador' || estadoTruco.startsWith('pedido_')) {
              if (estadoTruco.startsWith('pedido_')) {
                 mostrarMensagemTruco("Responda à aposta antes de jogar!", 2000);
@@ -475,29 +653,31 @@
         }
 
         podeJogar = false; // Impede jogada dupla rápida
-        cartaJogadaCentroJogador = maoJogador.splice(indice, 1)[0];
-        renderizarMaos();
+        cartaJogadaCentroJogador = maoJogador.splice(indice, 1)[0]; // Remove a carta da mão
+        renderizarMaos(); // Atualiza a mão do jogador na tela
         console.log(`Jogador jogou: ${formatarValorDisplay(cartaJogadaCentroJogador.valor)}${cartaJogadaCentroJogador.naipe}`);
 
+        // Mostra a carta jogada no centro
         if (elJogadaJogador) {
             elJogadaJogador.innerHTML = '';
             elJogadaJogador.appendChild(criarElementoCarta(cartaJogadaCentroJogador));
         }
 
-        jogadorDaVez = 'maquina'; // Passa a vez
+        jogadorDaVez = 'maquina'; // Passa a vez para a máquina
         atualizarBotoesTruco(); // Atualiza botão de truco (desabilita para jogador)
 
-        // Se a máquina ainda não jogou na rodada, ela joga. Senão, finaliza a rodada.
+        // Se a máquina ainda não jogou nesta troca, ela decide o que fazer (jogar ou apostar)
+        // Se a máquina já jogou, finaliza a rodada
         if (!cartaJogadaCentroMaquina) {
-            quemIniciouRodada = 'jogador'; // Jogador iniciou esta troca de cartas
+            quemIniciouRodada = 'jogador'; // Jogador iniciou esta troca de cartas na rodada
             setTimeout(maquinaDecideJogada, 800); // Dá um tempo para a IA "pensar"
         } else {
-            finalizarRodada();
+            finalizarRodada(); // Ambas as cartas estão na mesa, compara e finaliza
         }
     }
 
     function maquinaJogaCarta() {
-        // Impede máquina de jogar se o jogo acabou, não for a vez dela, ou se estiver esperando resposta do jogador
+        // Verifica se a máquina PODE jogar
         if (!jogoEmAndamento || maoMaquina.length === 0 || jogadorDaVez !== 'maquina' || (estadoTruco.startsWith('pedido_') && estadoTruco.endsWith('_maquina'))) {
              if (estadoTruco.startsWith('pedido_') && estadoTruco.endsWith('_maquina')){
                  console.log("Máquina esperando resposta do jogador para a aposta.");
@@ -510,11 +690,11 @@
         podeJogar = false; // Impede ações enquanto a máquina joga
 
         let indiceEscolhido = 0;
-        // Lógica simples da IA para escolher a carta
+        // --- Lógica simples da IA para escolher a carta ---
         if (maoMaquina.length > 0) {
             if (cartaJogadaCentroJogador) { // Máquina está respondendo à carta do jogador
-                let indiceGanhadora = -1, forcaGanhadoraMaisFraca = 1001;
-                let indicePerdedoraMaisFraca = 0, forcaPerdedoraMaisFraca = -1;
+                let indiceGanhadora = -1, forcaGanhadoraMaisFraca = 1001; // Guarda a ganhadora mais fraca possível
+                let indicePerdedoraMaisFraca = 0, forcaPerdedoraMaisFraca = -1; // Guarda a perdedora mais fraca
 
                 // Acha a perdedora mais fraca (default)
                  if(maoMaquina.length > 0) {
@@ -526,25 +706,27 @@
                               forcaPerdedoraMaisFraca = forcaAtual;
                           }
                      }
-                     if (maoMaquina.length === 1) indicePerdedoraMaisFraca = 0; // Garante índice válido se só tiver 1 carta
+                     // Garante índice válido se só tiver 1 carta, mesmo que não entre no loop
+                     if (maoMaquina.length === 1) indicePerdedoraMaisFraca = 0;
                  }
 
-
-                // Tenta achar a carta mais fraca que GANHA
+                // Tenta achar a carta mais fraca que GANHA da carta do jogador
                 for(let i = 0; i < maoMaquina.length; i++) {
                    const forcaAtual = calcularForca(maoMaquina[i]);
-                   if (compararCartasInterno(maoMaquina[i], cartaJogadaCentroJogador) === 'c1') { // Se a carta da máquina ganha
+                   // Se a carta da máquina ganha da carta do jogador
+                   if (compararCartasInterno(maoMaquina[i], cartaJogadaCentroJogador) === 'c1') {
+                       // E é a primeira ganhadora encontrada OU é mais fraca que a ganhadora anterior
                        if (indiceGanhadora === -1 || forcaAtual < forcaGanhadoraMaisFraca) {
-                           indiceGanhadora = i;
+                           indiceGanhadora = i; // Guarda esta como a melhor opção (ganhadora mais fraca)
                            forcaGanhadoraMaisFraca = forcaAtual;
                        }
                    }
                 }
-               // Se achou uma ganhadora, usa. Senão, joga a mais fraca.
+               // Se achou uma carta que ganha, usa a mais fraca delas. Senão, joga a carta mais fraca que tem.
                indiceEscolhido = (indiceGanhadora !== -1) ? indiceGanhadora : indicePerdedoraMaisFraca;
 
-            } else { // Máquina está iniciando a troca de cartas
-                 // Joga a carta mais forte que tiver
+            } else { // Máquina está iniciando a troca de cartas (jogador ainda não jogou)
+                 // Joga a carta mais forte que tiver para tentar garantir a rodada
                  let indiceMaisForte = 0, forcaMaisForte = -1;
                  for(let i = 0; i < maoMaquina.length; i++) {
                      let forcaAtual = calcularForca(maoMaquina[i]);
@@ -557,7 +739,7 @@
             }
         } else {
              console.warn("Máquina sem cartas para jogar.");
-             // Se máquina não tem carta, passa a vez de volta e tenta finalizar
+             // Se máquina não tem carta (não deveria acontecer com a lógica atual, mas por segurança)
               jogadorDaVez = 'jogador';
               podeJogar = true;
               atualizarBotoesTruco();
@@ -565,12 +747,13 @@
               return;
         }
 
-        // Garante que o índice é válido
+        // Garante que o índice é válido (segurança extra)
         if (indiceEscolhido < 0 || indiceEscolhido >= maoMaquina.length) indiceEscolhido = 0;
 
-        cartaJogadaCentroMaquina = maoMaquina.splice(indiceEscolhido, 1)[0];
-        renderizarMaoMaquinaReal(); // Atualiza a mão da máquina (com uma carta a menos)
+        cartaJogadaCentroMaquina = maoMaquina.splice(indiceEscolhido, 1)[0]; // Remove carta da mão
+        renderizarMaoMaquinaReal(); // Atualiza a mão da máquina (com cartas escondidas)
 
+        // Mostra a carta jogada no centro
         if (elJogadaMaquina) {
             elJogadaMaquina.innerHTML = '';
             elJogadaMaquina.appendChild(criarElementoCarta(cartaJogadaCentroMaquina));
@@ -582,70 +765,68 @@
         // Se o jogador ainda não jogou, permite que ele jogue. Senão, finaliza a rodada.
         if (!cartaJogadaCentroJogador) {
             quemIniciouRodada = 'maquina'; // Máquina iniciou esta troca
-            if (jogoEmAndamento) {
+            if (jogoEmAndamento) { // Só permite jogar se o jogo ainda estiver ativo
                 podeJogar = true; // Permite ao jogador jogar
                 atualizarBotoesTruco(); // Habilita botão de truco para jogador (se aplicável)
             }
         } else {
-            finalizarRodada();
+            finalizarRodada(); // Ambas as cartas estão na mesa
         }
     }
 
-   // ===========================================================
-// FUNÇÃO maquinaDecideJogada - ATUALIZADA
-// ===========================================================
-function maquinaDecideJogada() {
-    if (!jogoEmAndamento || jogadorDaVez !== 'maquina') return;
+    // --- Lógica de Decisão da Máquina (Aposta ou Joga) ---
+    function maquinaDecideJogada() {
+        if (!jogoEmAndamento || jogadorDaVez !== 'maquina') return;
 
-    // Se há um pedido do jogador pendente, a máquina deve responder
-    if (estadoTruco.startsWith('pedido_') && estadoTruco.endsWith('_jogador')) {
-         console.log("[IA Decisão] Aposta do jogador pendente. Respondendo...");
-         setTimeout(maquinaRespondeAposta, 700 + Math.random() * 600);
-         return;
-    }
+        // 1. Se há um pedido do jogador pendente, a máquina deve responder primeiro
+        if (estadoTruco.startsWith('pedido_') && estadoTruco.endsWith('_jogador')) {
+             console.log("[IA Decisão] Aposta do jogador pendente. Respondendo...");
+             // Adiciona um delay aleatório para parecer mais humano
+             setTimeout(maquinaRespondeAposta, 700 + Math.random() * 600);
+             return; // Não joga carta agora, espera a resposta da aposta
+        }
 
-    // Avalia se pode e deve pedir/aumentar aposta (primeira vez ou após jogador aceitar)
-    const nivelInfoAtualParaDecisao = NIVEIS_APOSTA[nivelApostaAtual]; // Usa o nível ATUAL da mão
-    const podePedirAgora = nivelInfoAtualParaDecisao.proximo &&
-                           (estadoTruco === 'normal' || (estadoTruco.startsWith('aceito_') && quemPediuUltimaAposta === 'jogador'));
+        // 2. Avalia se PODE e DEVE pedir/aumentar aposta
+        const infoNivelAtualParaDecisao = NIVEIS_APOSTA[nivelApostaAtual];
+        // Pode pedir se: há próximo nível de aposta E (estado normal OU jogador aceitou aposta da máquina)
+        const podePedirAgora = infoNivelAtualParaDecisao.proximo &&
+                               (estadoTruco === 'normal' || (estadoTruco.startsWith('aceito_') && quemPediuUltimaAposta === 'jogador'));
 
-    if (podePedirAgora && maquinaAvaliaPedirAposta()) {
-        console.log("[IA Decisão] Máquina vai pedir/aumentar aposta.");
-        // <<<< CORREÇÃO APLICADA: Calcula e passa o nível correto >>>>
-        const nivelCorretoParaPedir = nivelInfoAtualParaDecisao.proximo; // Nível que a IA vai pedir (TRUCO, SEIS, etc.)
+        // Se pode pedir E a avaliação da mão sugere pedir (função maquinaAvaliaPedirAposta)
+        if (podePedirAgora && maquinaAvaliaPedirAposta()) {
+            console.log("[IA Decisão] Máquina vai pedir/aumentar aposta.");
+            const nivelCorretoParaPedir = infoNivelAtualParaDecisao.proximo; // Pega o próximo nível (TRUCO, SEIS, etc.)
 
-        if (nivelCorretoParaPedir) {
-            // Agenda a chamada passando o nível correto
-            setTimeout(() => pedirApostaMaquina(nivelCorretoParaPedir), 500 + Math.random() * 500);
-        } else {
-            // Segurança: não deveria chegar aqui se podePedirAgora é true, mas previne erros
-            console.warn("IA tentou pedir aposta inicial, mas não há próximo nível a partir de", nivelApostaAtual);
-            maquinaJogaCarta(); // Joga carta como fallback
+            if (nivelCorretoParaPedir) {
+                 // Delay antes de pedir
+                setTimeout(() => pedirApostaMaquina(nivelCorretoParaPedir), 500 + Math.random() * 500);
+            } else {
+                // Segurança: Se algo der errado e não houver próximo nível
+                console.warn("IA tentou pedir aposta, mas não há próximo nível a partir de", nivelApostaAtual);
+                maquinaJogaCarta(); // Joga carta como fallback
+            }
+        }
+        else {
+             // 3. Se não vai apostar, joga uma carta
+             maquinaJogaCarta();
         }
     }
-    else {
-         // Se não vai apostar, joga uma carta
-         maquinaJogaCarta();
-    }
-}
-// ===========================================================
-// FIM DA FUNÇÃO maquinaDecideJogada ATUALIZADA
-// ===========================================================
 
     // --- Lógica de Aposta (Pedir, Avaliar, Responder) ---
     function pedirApostaJogador() {
         const infoNivelAtual = NIVEIS_APOSTA[nivelApostaAtual];
         const proximoNivelChave = infoNivelAtual.proximo;
+        // Não pode pedir se já está no máximo (DOZE)
         if (!proximoNivelChave) {
             mostrarMensagemTruco("Aposta já está no máximo!", 2000);
             return;
         }
 
-        // Verifica se é o momento certo para o jogador pedir
+        // Verifica se o jogador PODE pedir (mesma lógica de atualizarBotoesTruco)
         const podePedir = jogoEmAndamento && jogadorDaVez === 'jogador' &&
                           (estadoTruco === 'normal' || (estadoTruco.startsWith('aceito_') && quemPediuUltimaAposta === 'maquina'));
 
-        // Não pode pedir se outra aposta já está pendente
+        // Não pode pedir se já tem uma aposta na mesa esperando resposta
         if (estadoTruco.startsWith('pedido_')) {
              mostrarMensagemTruco("Aguarde a resposta ou responda primeiro!", 2500);
              return;
@@ -657,600 +838,621 @@ function maquinaDecideJogada() {
             return;
         }
 
-        // Realiza o pedido
         const infoProximoNivel = NIVEIS_APOSTA[proximoNivelChave];
         console.log(`Jogador pediu ${infoProximoNivel.nomeDisplay}!`);
-        estadoTruco = `pedido_${proximoNivelChave.toLowerCase()}_jogador`;
-        quemPediuUltimaAposta = 'jogador';
-        podeJogar = false; // Bloqueia jogar cartas
-        atualizarBotoesTruco(); // Desabilita botão de pedir
+        estadoTruco = `pedido_${proximoNivelChave.toLowerCase()}_jogador`; // Ex: pedido_truco_jogador
+        quemPediuUltimaAposta = 'jogador'; // Marca quem fez o último pedido
+        podeJogar = false; // Não pode jogar carta enquanto espera resposta
+        atualizarBotoesTruco(); // Desabilita botão de pedir do jogador
         mostrarMensagemTruco(`Você pediu ${infoProximoNivel.nomeDisplay}! Aguardando máquina...`, 0); // Mensagem persistente
 
-        // Agenda a resposta da máquina
+        // Delay para a máquina responder
         setTimeout(maquinaRespondeAposta, 1400 + Math.random() * 800);
     }
 
-   // ===========================================================
-// FUNÇÃO pedirApostaMaquina - VERSÃO CORRIGIDA (Recebe Nível)
-// ===========================================================
-// Adicionamos um parâmetro: nivelParaPedirChave (ex: 'TRUCO', 'SEIS')
-function pedirApostaMaquina(nivelParaPedirChave) {
-
-    // Verifica se o nível passado é válido e existe em NIVEIS_APOSTA
-    if (!nivelParaPedirChave || !NIVEIS_APOSTA[nivelParaPedirChave]) {
-        console.error(`IA: Tentativa de pedir nível inválido ou não fornecido: ${nivelParaPedirChave}`);
-        // Como fallback, tenta jogar uma carta se for a vez da máquina
-        if (jogadorDaVez === 'maquina') {
-             maquinaJogaCarta();
+    function pedirApostaMaquina(nivelParaPedirChave) {
+        // Validação básica
+        if (!nivelParaPedirChave || !NIVEIS_APOSTA[nivelParaPedirChave]) {
+            console.error(`IA: Tentativa de pedir nível inválido ou não fornecido: ${nivelParaPedirChave}`);
+            // Tenta jogar carta como fallback se for a vez da máquina
+            if (jogadorDaVez === 'maquina') { maquinaJogaCarta(); }
+            return;
         }
-        return;
+
+        const infoNivelPedido = NIVEIS_APOSTA[nivelParaPedirChave];
+        console.log(`Máquina pediu ${infoNivelPedido.nomeDisplay}!`);
+
+        estadoTruco = `pedido_${nivelParaPedirChave.toLowerCase()}_maquina`; // Ex: pedido_seis_maquina
+        quemPediuUltimaAposta = 'maquina';
+        podeJogar = false; // Jogador não pode jogar carta
+
+        mostrarMensagemTruco(`Máquina pediu ${infoNivelPedido.nomeDisplay}! Responda:`, 0); // Mensagem persistente
+
+        // Cria os botões de resposta para o jogador
+        if (elRespostaTruco) {
+            elRespostaTruco.innerHTML = ''; // Limpa botões antigos
+            // Botão Aceitar
+            elRespostaTruco.innerHTML += `<button id="botao-aceitar-truco" onclick="jogadorRespondeAposta('aceitar')">Aceitar (Vale ${infoNivelPedido.valor})</button>`;
+
+            // Botão Recusar
+            const pontosRecusa = infoNivelPedido.recusaPaga; // Pontos que a máquina ganha se o jogador recusar
+            elRespostaTruco.innerHTML += `<button id="botao-recusar-truco" onclick="jogadorRespondeAposta('recusar')">Recusar (Máq ganha ${pontosRecusa})</button>`;
+
+            // Botão Aumentar (só aparece se não for DOZE)
+            if (infoNivelPedido.proximo) {
+                const proximoAumentoInfo = NIVEIS_APOSTA[infoNivelPedido.proximo];
+                elRespostaTruco.innerHTML += `<button id="botao-aumentar-aposta" onclick="jogadorRespondeAposta('aumentar')">Aumentar (${proximoAumentoInfo.nomeDisplay}!)?</button>`;
+            }
+        }
+        atualizarBotoesTruco(); // Desabilita o botão principal de pedir do jogador
     }
 
-    // Pega as informações do nível que foi passado como argumento
-    const infoNivelPedido = NIVEIS_APOSTA[nivelParaPedirChave];
-    console.log(`Máquina pediu ${infoNivelPedido.nomeDisplay}!`);
-
-    // Define o novo estado do jogo (pedido da máquina pendente)
-    // Usa o nível que foi passado como argumento
-    estadoTruco = `pedido_${nivelParaPedirChave.toLowerCase()}_maquina`;
-    quemPediuUltimaAposta = 'maquina'; // Registra que foi a máquina
-    podeJogar = false; // Ninguém pode jogar cartas agora
-
-    // Atualiza a mensagem na tela para o jogador
-    mostrarMensagemTruco(`Máquina pediu ${infoNivelPedido.nomeDisplay}! Responda:`, 0); // Mensagem persistente
-
-    // Monta os botões de resposta para o jogador
-     if (elRespostaTruco) {
-         elRespostaTruco.innerHTML = ''; // Limpa botões antigos
-         elRespostaTruco.innerHTML += `<button id="botao-aceitar-truco" onclick="jogadorRespondeAposta('aceitar')">Aceitar (Vale ${infoNivelPedido.valor})</button>`;
-
-         // Calcula quantos pontos a máquina ganha se o jogador recusar ESTE pedido
-         // Usa infoNivelPedido (o nível que a máquina está pedindo AGORA)
-         const pontosRecusa = infoNivelPedido.recusaPaga;
-         elRespostaTruco.innerHTML += `<button id="botao-recusar-truco" onclick="jogadorRespondeAposta('recusar')">Recusar (Máq ganha ${pontosRecusa})</button>`;
-
-         // Se ainda houver um próximo nível de aposta DEPOIS do que está sendo pedido
-         if (infoNivelPedido.proximo) {
-             const proximoAumentoInfo = NIVEIS_APOSTA[infoNivelPedido.proximo];
-             elRespostaTruco.innerHTML += `<button id="botao-aumentar-aposta" onclick="jogadorRespondeAposta('aumentar')">Aumentar (${proximoAumentoInfo.nomeDisplay}!)?</button>`;
-         }
-     }
-
-     // Atualiza a aparência/estado dos botões gerais de truco
-     atualizarBotoesTruco();
-}
-// ===========================================================
-// FIM DA FUNÇÃO pedirApostaMaquina ATUALIZADA
-// ===========================================================
-
-
+    // IA avalia se deve pedir/aumentar a aposta baseado na mão
     function maquinaAvaliaPedirAposta() {
-         // Lógica simples para IA decidir se pede/aumenta aposta
-         if(maoMaquina.length === 0) return false;
-         const temManilha = maoMaquina.some(carta => calcularForca(carta) >= 997);
-         const fortes = maoMaquina.filter(carta => calcularForca(carta) >= VALOR_MAP['A']).length; // Q, J, K, A, 2, 3
-         const nivelAtualChave = nivelApostaAtual;
+         if(maoMaquina.length === 0) return false; // Não pede sem cartas
 
-         // Critérios variam conforme o nível da aposta atual
+         // Heurística simples:
+         const temManilha = maoMaquina.some(carta => calcularForca(carta) >= 997); // Tem alguma das 4 manilhas?
+         const fortes = maoMaquina.filter(carta => calcularForca(carta) >= VALOR_MAP['A']).length; // Quantas cartas são Ás, 2 ou 3?
+         const nivelAtualChave = nivelApostaAtual; // Nível atual da aposta (NORMAL, TRUCO, etc.)
+
+         // Lógica de decisão simples baseada no nível e nas cartas
          switch(nivelAtualChave) {
              case 'NORMAL': // Para pedir TRUCO
-                 // Pede se tiver manilha, ou 2+ cartas fortes, ou 1 forte e estiver ganhando rodadas
+                 // Pede se tiver manilha OU 2+ cartas fortes OU (1 carta forte E está ganhando rodadas)
                  return temManilha || fortes >= 2 || (fortes >= 1 && vitoriasRodadaMaquina > vitoriasRodadaJogador) ;
              case 'TRUCO': // Para pedir SEIS
-                 // Mais conservador: precisa de manilha e pelo menos 1 forte
+                 // Pede se tiver manilha E pelo menos 1 carta forte
                  return temManilha && fortes >= 1;
              case 'SEIS': // Para pedir NOVE
-                  // Ainda mais conservador: precisa de manilha e 2+ fortes
-                 return temManilha && fortes >= 2;
+                 // Pede se tiver manilha E pelo menos 2 cartas fortes
+                  return temManilha && fortes >= 2;
              case 'NOVE': // Para pedir DOZE
-                 // Muito conservador: precisa do Zap, outra manilha e mais uma forte
+                 // Pede se tiver o Zap (Paus) E outra manilha E pelo menos 1 carta forte (incluindo as manilhas)
                  const temZap = maoMaquina.some(c => calcularForca(c) === 1000);
-                 return temZap && temManilha && fortes >=1 ; // Na verdade, ter zap e manilha já garante 2 fortes se não forem a mesma carta
-             default: return false; // Não pede se já estiver em DOZE
+                 return temZap && temManilha && fortes >=1 ; // Se tem zap, já conta como manilha e forte
+             default: return false; // Não pede DOZE ou além
          }
     }
 
-    // ===========================================================
-// FUNÇÃO maquinaRespondeAposta - ATUALIZADA
-// ===========================================================
-function maquinaRespondeAposta() {
-     // Verifica se está no estado correto para responder
-     if (!estadoTruco.startsWith('pedido_') || !estadoTruco.endsWith('_jogador')) {
-         console.error("IA: Função maquinaRespondeAposta chamada em estado inválido:", estadoTruco);
-         if(jogadorDaVez === 'maquina') maquinaJogaCarta(); // Tenta jogar se a vez for dela
-         return;
-     }
+    // IA responde a um pedido de aposta do JOGADOR
+    function maquinaRespondeAposta() {
+         // Verifica se está no estado correto
+         if (!estadoTruco.startsWith('pedido_') || !estadoTruco.endsWith('_jogador')) {
+             console.error("IA: Função maquinaRespondeAposta chamada em estado inválido:", estadoTruco);
+             // Tenta jogar carta como fallback se for a vez da máquina
+             if(jogadorDaVez === 'maquina') maquinaJogaCarta();
+             return;
+         }
 
-     // Identifica qual nível o jogador pediu
-     const nivelPedidoChave = estadoTruco.split('_')[1].toUpperCase();
-     const nivelPedidoInfo = NIVEIS_APOSTA[nivelPedidoChave];
+         // Extrai o nível que foi pedido (TRUCO, SEIS, etc.)
+         const nivelPedidoChave = estadoTruco.split('_')[1].toUpperCase();
+         const nivelPedidoInfo = NIVEIS_APOSTA[nivelPedidoChave];
+         const pontosGanhosPelaRecusa = nivelPedidoInfo.recusaPaga; // Pontos que o jogador ganha se a máquina recusar
 
-     // Calcula quantos pontos o JOGADOR ganha se a máquina recusar
-     const pontosGanhosPelaRecusa = nivelPedidoInfo.recusaPaga;
+         // Se a máquina não tem mais cartas, ela recusa
+         if(maoMaquina.length === 0) {
+             console.log("[IA Resp Aposta] Sem cartas, máquina recusa.");
+             mostrarMensagemTruco(`Máquina Recusou (sem cartas)! Você ganhou ${pontosGanhosPelaRecusa} ponto${pontosGanhosPelaRecusa > 1 ? 's' : ''}.`, 4000);
+             pontuacaoJogador += pontosGanhosPelaRecusa;
+             mostrarPlacar();
+             finalizarMaoAposRecusa(); // Finaliza a mão
+             return;
+         }
 
-     // Se máquina não tem cartas, recusa automaticamente
-     if(maoMaquina.length === 0) {
-         console.log("[IA Resp Aposta] Sem cartas, máquina recusa.");
-          mostrarMensagemTruco(`Máquina Recusou (sem cartas)! Você ganhou ${pontosGanhosPelaRecusa} ponto${pontosGanhosPelaRecusa > 1 ? 's' : ''}.`, 4000);
-         pontuacaoJogador += pontosGanhosPelaRecusa;
-         mostrarPlacar();
-         finalizarMaoAposRecusa();
-         return;
-     }
+         // Avalia a mão (similar a maquinaAvaliaPedirAposta)
+         const temManilha = maoMaquina.some(carta => calcularForca(carta) >= 997);
+         const fortes = maoMaquina.filter(carta => calcularForca(carta) >= VALOR_MAP['A']).length;
+         let decisao = 'recusar'; // Decisão padrão
 
-     // Avalia a mão da máquina
-     const temManilha = maoMaquina.some(carta => calcularForca(carta) >= 997);
-     const fortes = maoMaquina.filter(carta => calcularForca(carta) >= VALOR_MAP['A']).length;
-     let decisao = 'recusar'; // Decisão padrão é recusar
+         // Lógica de decisão para responder
+         switch(nivelPedidoChave) {
+             case 'TRUCO': // Jogador pediu TRUCO
+                 // Aceita se tiver manilha OU 1+ forte OU (1 forte E está ganhando)
+                 if (temManilha || fortes >= 1 || (fortes >= 1 && vitoriasRodadaMaquina > vitoriasRodadaJogador) ) decisao = 'aceitar';
+                 // Se decidiu aceitar E pode aumentar E a avaliação sugere aumentar, decide aumentar
+                 if (decisao === 'aceitar' && nivelPedidoInfo.proximo && maquinaAvaliaPedirAposta()) { decisao = 'aumentar'; }
+                 break;
+             case 'SEIS': // Jogador pediu SEIS
+                 // Aceita se tiver manilha E 1+ forte
+                 if (temManilha && fortes >= 1) decisao = 'aceitar';
+                 if (decisao === 'aceitar' && nivelPedidoInfo.proximo && maquinaAvaliaPedirAposta()) { decisao = 'aumentar'; }
+                 break;
+             case 'NOVE': // Jogador pediu NOVE
+                 // Aceita se tiver manilha E 2+ fortes
+                  if (temManilha && fortes >= 2) decisao = 'aceitar';
+                  // Avalia se aumenta para DOZE (mesma lógica de pedir DOZE)
+                  if (decisao === 'aceitar' && nivelPedidoInfo.proximo && maquinaAvaliaPedirAposta()) { decisao = 'aumentar'; }
+                 break;
+             case 'DOZE': // Jogador pediu DOZE
+                 // Aceita só se tiver Zap E outra manilha
+                  const temZap = maoMaquina.some(c => calcularForca(c) === 1000);
+                  if (temManilha && temZap) decisao = 'aceitar';
+                 break;
+         }
 
-     // Lógica da IA para decidir aceitar/aumentar/recusar
-     switch(nivelPedidoChave) {
-         case 'TRUCO':
-             if (temManilha || fortes >= 1 || (fortes >= 1 && vitoriasRodadaMaquina > vitoriasRodadaJogador) ) decisao = 'aceitar';
-             if (decisao === 'aceitar' && nivelPedidoInfo.proximo && maquinaAvaliaPedirAposta()) { decisao = 'aumentar'; }
-             break;
-         case 'SEIS':
-             if (temManilha && fortes >= 1) decisao = 'aceitar';
-             if (decisao === 'aceitar' && nivelPedidoInfo.proximo && maquinaAvaliaPedirAposta()) { decisao = 'aumentar'; }
-             break;
-         case 'NOVE':
-              if (temManilha && fortes >= 2) decisao = 'aceitar';
-              if (decisao === 'aceitar' && nivelPedidoInfo.proximo && maquinaAvaliaPedirAposta()) { decisao = 'aumentar'; }
-             break;
-         case 'DOZE':
-              const temZap = maoMaquina.some(c => calcularForca(c) === 1000);
-              if (temManilha && temZap) decisao = 'aceitar';
-             break;
-     }
+         console.log(`[IA Resp Aposta] Jogador pediu: ${nivelPedidoChave}. Mão(M:${temManilha}, F:${fortes}). Decisão: ${decisao}`);
 
-     console.log(`[IA Resp Aposta] Jogador pediu: ${nivelPedidoChave}. Mão(M:${temManilha}, F:${fortes}). Decisão: ${decisao}`);
+         // Executa a decisão
+         if (decisao === 'aceitar') {
+             console.log(`Máquina ACEITOU o ${nivelPedidoInfo.nomeDisplay}!`);
+             estadoTruco = `aceito_${nivelPedidoChave.toLowerCase()}`; // Ex: aceito_truco
+             nivelApostaAtual = nivelPedidoChave; // Atualiza o nível da aposta
+             pontosDaMaoAtual = nivelPedidoInfo.valor; // Atualiza os pontos da mão
+             quemPediuUltimaAposta = 'jogador'; // Jogador foi o último a propor a aposta aceita
+             atualizarValorMaoDisplay();
+             mostrarMensagemTruco(`Máquina Aceitou! Mão vale ${pontosDaMaoAtual}. Sua vez de jogar.`, 3000);
+             jogadorDaVez = 'jogador'; // Volta a vez para o jogador continuar a rodada
+             podeJogar = true;
+             atualizarBotoesTruco(); // Habilita o botão de aumentar do jogador (se aplicável)
 
-     // Executa a decisão
-     if (decisao === 'aceitar') {
-         console.log(`Máquina ACEITOU o ${nivelPedidoInfo.nomeDisplay}!`);
-         estadoTruco = `aceito_${nivelPedidoChave.toLowerCase()}`;
-         nivelApostaAtual = nivelPedidoChave; // << ATUALIZA nivelApostaAtual AQUI
-         pontosDaMaoAtual = nivelPedidoInfo.valor;
-         quemPediuUltimaAposta = 'jogador';
-         atualizarValorMaoDisplay();
-         mostrarMensagemTruco(`Máquina Aceitou! Mão vale ${pontosDaMaoAtual}. Sua vez de jogar.`, 3000);
-         jogadorDaVez = 'jogador';
-         podeJogar = true;
-         atualizarBotoesTruco();
+         } else if (decisao === 'aumentar') {
+              const proximoNivelAumento = nivelPedidoInfo.proximo; // Pega o próximo nível (SEIS, NOVE, DOZE)
+              // Segurança: Verifica se realmente existe um próximo nível
+              if (!proximoNivelAumento) {
+                    console.error("IA tentou aumentar além do DOZE!");
+                    // Fallback: Aceita o nível atual como segurança
+                     console.log(`Máquina ACEITOU o ${nivelPedidoInfo.nomeDisplay}! (Fallback)`);
+                     estadoTruco = `aceito_${nivelPedidoChave.toLowerCase()}`;
+                     nivelApostaAtual = nivelPedidoChave;
+                     pontosDaMaoAtual = nivelPedidoInfo.valor;
+                     quemPediuUltimaAposta = 'jogador';
+                     atualizarValorMaoDisplay();
+                     mostrarMensagemTruco(`Máquina Aceitou! Mão vale ${pontosDaMaoAtual}. Sua vez de jogar.`, 3000);
+                     jogadorDaVez = 'jogador';
+                     podeJogar = true;
+                     atualizarBotoesTruco();
+                    return;
+              }
+              console.log(`Máquina decidiu AUMENTAR para ${NIVEIS_APOSTA[proximoNivelAumento].nomeDisplay}!`);
+              // Chama a função para a máquina fazer o pedido de aumento
+              pedirApostaMaquina(proximoNivelAumento);
 
-     } else if (decisao === 'aumentar') {
-          const proximoNivelAumento = nivelPedidoInfo.proximo; // Nível que a IA quer pedir (ex: NOVE)
-          if (!proximoNivelAumento) {
-                console.error("IA tentou aumentar além do DOZE!");
-                 console.log(`Máquina ACEITOU o ${nivelPedidoInfo.nomeDisplay}! (Fallback)`);
-                 estadoTruco = `aceito_${nivelPedidoChave.toLowerCase()}`;
-                 nivelApostaAtual = nivelPedidoChave; // << ATUALIZA nivelApostaAtual AQUI
-                 pontosDaMaoAtual = nivelPedidoInfo.valor;
-                 quemPediuUltimaAposta = 'jogador';
-                 atualizarValorMaoDisplay();
-                 mostrarMensagemTruco(`Máquina Aceitou! Mão vale ${pontosDaMaoAtual}. Sua vez de jogar.`, 3000);
-                 jogadorDaVez = 'jogador';
-                 podeJogar = true;
-                 atualizarBotoesTruco();
-                return;
-          }
-          console.log(`Máquina decidiu AUMENTAR para ${NIVEIS_APOSTA[proximoNivelAumento].nomeDisplay}!`);
-          // <<<< CORREÇÃO APLICADA: Passa o nível correto para pedir >>>>
-          pedirApostaMaquina(proximoNivelAumento);
+         } else { // decisao === 'recusar'
+             console.log(`Máquina RECUSOU o ${nivelPedidoInfo.nomeDisplay}!`);
+             mostrarMensagemTruco(`Máquina Recusou! Você ganhou ${pontosGanhosPelaRecusa} ponto${pontosGanhosPelaRecusa > 1 ? 's' : ''}.`, 4000);
+             pontuacaoJogador += pontosGanhosPelaRecusa; // Adiciona pontos ao jogador
+             mostrarPlacar();
+             finalizarMaoAposRecusa(); // Encerra a mão
+         }
+    }
 
-     } else { // decisao === 'recusar'
-         console.log(`Máquina RECUSOU o ${nivelPedidoInfo.nomeDisplay}!`);
-         mostrarMensagemTruco(`Máquina Recusou! Você ganhou ${pontosGanhosPelaRecusa} ponto${pontosGanhosPelaRecusa > 1 ? 's' : ''}.`, 4000);
-         pontuacaoJogador += pontosGanhosPelaRecusa;
-         mostrarPlacar();
-         finalizarMaoAposRecusa();
-     }
-}
-// ===========================================================
-// FIM DA FUNÇÃO maquinaRespondeAposta ATUALIZADA
-// ===========================================================
-
-
-     // Jogador responde ao pedido da Máquina
-     function jogadorRespondeAposta(resposta) {
+    // Jogador responde a um pedido de aposta da MÁQUINA (clicando nos botões)
+    function jogadorRespondeAposta(resposta) {
+         // Verifica se está no estado correto
          if (!estadoTruco.startsWith('pedido_') || !estadoTruco.endsWith('_maquina')) {
              console.error("Jogador tentou responder aposta em estado inválido:", estadoTruco);
              mostrarMensagemTruco("Não há aposta da máquina para responder.", 2000);
              return;
          }
 
-         const nivelPedidoChave = estadoTruco.split('_')[1].toUpperCase(); // Nível que a MÁQUINA pediu
+         // Extrai o nível que foi pedido pela máquina
+         const nivelPedidoChave = estadoTruco.split('_')[1].toUpperCase();
          const nivelPedidoInfo = NIVEIS_APOSTA[nivelPedidoChave];
+         const pontosGanhosPelaRecusa = nivelPedidoInfo.recusaPaga; // Pontos que a máquina ganha se o jogador recusar
 
-         // Pontos que a MÁQUINA ganha se o JOGADOR recusar o pedido DELA
-         const pontosGanhosPelaRecusa = nivelPedidoInfo.recusaPaga;
-
-         if (elRespostaTruco) elRespostaTruco.innerHTML = ''; // Limpa botões de resposta
+         // Limpa os botões de resposta
+         if (elRespostaTruco) elRespostaTruco.innerHTML = '';
 
          if (resposta === 'aceitar') {
              console.log(`Jogador ACEITOU o ${nivelPedidoInfo.nomeDisplay}!`);
-             estadoTruco = `aceito_${nivelPedidoChave.toLowerCase()}`;
-             nivelApostaAtual = nivelPedidoChave;
-             pontosDaMaoAtual = nivelPedidoInfo.valor;
-             quemPediuUltimaAposta = 'maquina';
+             estadoTruco = `aceito_${nivelPedidoChave.toLowerCase()}`; // Ex: aceito_seis
+             nivelApostaAtual = nivelPedidoChave; // Atualiza nível da aposta
+             pontosDaMaoAtual = nivelPedidoInfo.valor; // Atualiza pontos da mão
+             quemPediuUltimaAposta = 'maquina'; // Máquina foi a última a propor a aposta aceita
              atualizarValorMaoDisplay();
              mostrarMensagemTruco(`Você Aceitou! Mão vale ${pontosDaMaoAtual}. Máquina continua...`, 3000);
-             jogadorDaVez = 'maquina'; // Vez da máquina jogar/decidir
-             podeJogar = false; // Jogador não pode jogar carta
-             atualizarBotoesTruco();
-             setTimeout(maquinaDecideJogada, 800); // Máquina decide o próximo passo
+             jogadorDaVez = 'maquina'; // A vez continua/volta para a máquina jogar a carta
+             podeJogar = false; // Jogador não pode jogar agora
+             atualizarBotoesTruco(); // Atualiza botões (habilita o de aumentar da máquina, se aplicável)
+             // Delay antes da máquina jogar a carta
+             setTimeout(maquinaDecideJogada, 800);
 
          } else if (resposta === 'aumentar') {
-             const proximoNivelChave = nivelPedidoInfo.proximo; // Nível que o jogador quer pedir
+             const proximoNivelChave = nivelPedidoInfo.proximo; // Pega o próximo nível (SEIS, NOVE, DOZE)
+             // Segurança: Verifica se realmente pode aumentar
              if (!proximoNivelChave) {
-                 // Não deveria ser possível clicar se não há próximo nível, mas por segurança:
                  console.error("Erro: Jogador tentou aumentar além do Doze!");
-                 // Reapresenta a questão original da máquina
-                 pedirApostaMaquina();
+                 // Reapresenta a questão para o jogador escolher aceitar/recusar o DOZE
+                 pedirApostaMaquina(nivelPedidoChave); // Chama de novo para mostrar os botões de DOZE
                  return;
              }
              console.log(`Jogador decidiu AUMENTAR para ${NIVEIS_APOSTA[proximoNivelChave].nomeDisplay}!`);
              const infoProximoNivel = NIVEIS_APOSTA[proximoNivelChave];
-             estadoTruco = `pedido_${proximoNivelChave.toLowerCase()}_jogador`; // Agora é um pedido do jogador
+             // Agora o estado é um pedido do JOGADOR para o próximo nível
+             estadoTruco = `pedido_${proximoNivelChave.toLowerCase()}_jogador`; // Ex: pedido_nove_jogador
              quemPediuUltimaAposta = 'jogador';
              podeJogar = false;
-             mostrarMensagemTruco(`Você pediu ${infoProximoNivel.nomeDisplay}! Aguardando máquina...`, 0);
-             atualizarBotoesTruco();
-             setTimeout(maquinaRespondeAposta, 1400 + Math.random() * 800); // Agenda resposta da máquina
+             mostrarMensagemTruco(`Você pediu ${infoProximoNivel.nomeDisplay}! Aguardando máquina...`, 0); // Mensagem persistente
+             atualizarBotoesTruco(); // Desabilita botão principal do jogador
+             // Delay para a máquina responder ao aumento do jogador
+             setTimeout(maquinaRespondeAposta, 1400 + Math.random() * 800);
 
          } else { // resposta === 'recusar'
              console.log(`Jogador RECUSOU o ${nivelPedidoInfo.nomeDisplay}!`);
              mostrarMensagemTruco(`Você Recusou! Máquina ganhou ${pontosGanhosPelaRecusa} ponto${pontosGanhosPelaRecusa > 1 ? 's' : ''}.`, 4000);
-             pontuacaoMaquina += pontosGanhosPelaRecusa; // Máquina ganha os pontos
+             pontuacaoMaquina += pontosGanhosPelaRecusa; // Adiciona pontos à máquina
              mostrarPlacar();
-             finalizarMaoAposRecusa(); // Finaliza a mão
+             finalizarMaoAposRecusa(); // Encerra a mão
          }
     }
 
     // --- Finalização da Mão e Jogo ---
+
+    // Função chamada especificamente quando uma aposta é recusada
     function finalizarMaoAposRecusa() {
          console.log("Finalizando mão após recusa de aposta.");
          nivelApostaAtual = 'NORMAL'; // Reseta nível para próxima mão
-         estadoTruco = 'normal'; // Reseta estado para próxima mão
+         estadoTruco = 'normal';    // Reseta estado do truco
          mostrarPlacar();
          podeJogar = false;
-         revelarCartasMaquinaFimJogo(); // Mostra cartas restantes da máquina
+         revelarCartasMaquinaFimJogo(); // Mostra cartas da máquina
 
-         // Verifica se o jogo acabou
+         // Verifica se a pontuação atingiu a vitória
          if (pontuacaoJogador >= PONTOS_VITORIA || pontuacaoMaquina >= PONTOS_VITORIA) {
              jogoEmAndamento = false;
-             estadoTruco = 'finalizado';
+             estadoTruco = 'finalizado'; // Marca o jogo como finalizado
              let msgFinal = `FIM DE JOGO! ${pontuacaoJogador >= PONTOS_VITORIA ? 'Você venceu' : 'A Máquina venceu'} (por recusa de aposta)!`;
              console.log(msgFinal);
-             mostrarMensagemTruco(msgFinal, 0); // Mensagem final persistente
-             atualizarBotoesTruco(); // Esconde botão de truco, mostra "Jogar Novamente"
+             mostrarMensagemTruco(msgFinal, 0); // Mostra mensagem final persistente
+             atualizarBotoesTruco(); // Mostra o botão "Jogar Novamente"
+             vencedorDaMaoAnterior = (pontuacaoJogador >= PONTOS_VITORIA) ? 'jogador' : 'maquina'; // Guarda quem ganhou o jogo
          } else {
-             // Se o jogo não acabou, prepara a próxima mão após um intervalo
+             // Se o jogo não acabou, prepara a próxima mão
              console.log("Preparando próxima mão após recusa...");
+             // Guarda quem ganhou os pontos pela recusa para iniciar a próxima mão
+             // (A pontuação já foi adicionada, então verificamos quem está na frente ou quem pediu)
+              vencedorDaMaoAnterior = quemPediuUltimaAposta === 'jogador' ? 'jogador' : 'maquina';
+
              setTimeout(() => {
-                  if (estadoTruco !== 'finalizado') { // Segurança extra
-                     jogoEmAndamento = true;
-                     iniciarPartida(); // Começa nova mão
+                  if (estadoTruco !== 'finalizado') { // Checa novamente se o jogo não acabou
+                     iniciarPartida(); // Inicia a próxima mão
                  }
-             }, 3500); // Tempo para ver as cartas reveladas/mensagem
+             }, 3500); // Tempo maior para ler a mensagem de recusa
          }
     }
 
+    // Finaliza uma rodada (comparando as cartas jogadas)
     function finalizarRodada() {
+        // Não faz nada se o jogo/mão já acabou
         if (!jogoEmAndamento || estadoTruco === 'finalizado') {
             console.log("Tentativa de finalizar rodada com jogo/mão já finalizado.");
             return;
         }
-         // Apenas log se a rodada está sendo finalizada normalmente
-         if (estadoTruco.startsWith('aceito_') || estadoTruco === 'normal') {
-             console.log("Finalizando rodada...");
-         } else if (estadoTruco.startsWith('pedido_')) {
-              // Isso não deveria acontecer idealmente, mas registra se ocorrer
+        // Loga o estado se for suspeito (aposta pendente)
+         if (estadoTruco.startsWith('pedido_')) {
               console.warn("Finalizando rodada com aposta pendente? Estado:", estadoTruco);
          }
 
         const cJogador = cartaJogadaCentroJogador;
         const cMaquina = cartaJogadaCentroMaquina;
 
-        // Verifica se ambos jogaram para comparar
+        // Precisa ter as duas cartas no centro para comparar
         if (!cJogador || !cMaquina) {
             console.log("Rodada não pode ser finalizada: falta carta de um dos jogadores no centro.");
-             // Idealmente, a lógica de turno garante que isso não aconteça,
-             // mas se acontecer, a rodada não avança.
-             // Poderia devolver a vez para quem falta jogar, mas a lógica atual já faz isso.
+            // Isso pode acontecer se a lógica de turno falhar, mas não deveria.
+            // Se acontecer, pode ser necessário forçar o próximo turno ou resetar.
+             if (jogadorDaVez === 'jogador') podeJogar = true; // Devolve a vez se algo deu errado
             return;
         }
 
-
+        // Compara as cartas
         const resultado = compararCartasInterno(cJogador, cMaquina);
         const bolinha = document.getElementById(`bolinha-rodada${rodadaAtual}`);
         if(!bolinha) { console.error("Elemento bolinha não encontrado para rodada:", rodadaAtual); }
 
-        let proximoJogadorInicia = quemIniciouRodada; // Por padrão, quem começou a rodada anterior começa a próxima
+        // Define quem começa jogando a PRÓXIMA rodada (não a próxima mão)
+        let proximoJogadorIniciaRodada = quemIniciouRodada; // Quem começa a próxima rodada é quem ganhou esta
 
          console.log(`Resultado Rodada ${rodadaAtual}: Jogador(${cJogador ? formatarValorDisplay(cJogador.valor)+cJogador.naipe : 'X'}) vs Máquina(${cMaquina ? formatarValorDisplay(cMaquina.valor)+cMaquina.naipe : 'X'}) -> ${resultado}`);
 
         // Atualiza contagem de vitórias e cor da bolinha
-        if (resultado === 'c1') { // Jogador venceu a rodada
+        if (resultado === 'c1') { // Jogador ganhou a rodada
             vitoriasRodadaJogador++;
              if(bolinha) bolinha.className = 'bolinha vencedor-jogador';
-            proximoJogadorInicia = 'jogador'; // Quem ganha começa a próxima
-        } else if (resultado === 'c2') { // Máquina venceu a rodada
+            proximoJogadorIniciaRodada = 'jogador';
+        } else if (resultado === 'c2') { // Máquina ganhou a rodada
             vitoriasRodadaMaquina++;
              if(bolinha) bolinha.className = 'bolinha vencedor-maquina';
-            proximoJogadorInicia = 'maquina'; // Quem ganha começa a próxima
-        } else { // Empate
+            proximoJogadorIniciaRodada = 'maquina';
+        } else { // Empate na rodada
             empatesRodada++;
             if(bolinha) bolinha.className = 'bolinha empate';
-            // Em caso de empate, quem ganhou a rodada anterior começa.
-            // Se a primeira empatou, mantém quem começou a primeira.
-             if (rodadaAtual > 1) {
-                  const bolinhaAnterior = document.getElementById(`bolinha-rodada${rodadaAtual - 1}`);
-                  // Verifica a classe da bolinha anterior para decidir quem começa
-                   if (bolinhaAnterior?.classList.contains('vencedor-jogador')) proximoJogadorInicia = 'jogador';
-                   else if (bolinhaAnterior?.classList.contains('vencedor-maquina')) proximoJogadorInicia = 'maquina';
-                   // Se a anterior também empatou, mantém quem iniciou a mão/rodada anterior (já em proximoJogadorInicia)
-             }
-             console.log(`Rodada ${rodadaAtual} empatou. Próximo a iniciar: ${proximoJogadorInicia}`);
+            // Se empatou, quem começou a rodada anterior começa a próxima (regra comum)
+            // Se for a primeira rodada, quem ganhou a mão anterior (ou jogador por padrão) começa.
+            // A variável `quemIniciouRodada` já guarda quem começou esta troca, então se empatar, ele começa de novo.
+            proximoJogadorIniciaRodada = quemIniciouRodada; // Quem começou esta, começa a próxima se empatar
+            console.log(`Rodada ${rodadaAtual} empatou. Próximo a iniciar rodada: ${proximoJogadorIniciaRodada}`);
         }
 
-        jogadorDaVez = proximoJogadorInicia; // Define quem começa a próxima rodada/turno
-        quemIniciouRodada = proximoJogadorInicia; // Atualiza quem iniciou a última rodada resolvida
+        // Define quem joga a primeira carta da próxima rodada
+        jogadorDaVez = proximoJogadorIniciaRodada;
+        quemIniciouRodada = proximoJogadorIniciaRodada; // Atualiza quem vai iniciar a próxima troca
         rodadaAtual++; // Avança para a próxima rodada
 
-        // Limpa as cartas do centro após um tempo e verifica o fim da partida/inicia novo turno
+        // Delay para limpar a mesa e verificar fim da mão/jogo
         setTimeout(() => {
+            // Limpa as cartas do centro
             if(elJogadaJogador) elJogadaJogador.innerHTML = '';
             if(elJogadaMaquina) elJogadaMaquina.innerHTML = '';
             cartaJogadaCentroJogador = null;
             cartaJogadaCentroMaquina = null;
 
+            // Verifica se a MÃO acabou (e consequentemente o jogo)
             if(jogoEmAndamento && estadoTruco !== 'finalizado') {
-                 // Verifica se a MÃO (partida) acabou
-                 if (!verificarFimPartida()) {
-                      // Se a mão não acabou, inicia o próximo turno da rodada
-                      iniciarTurno();
+                 if (!verificarFimPartida()) { // Se a mão NÃO acabou
+                      iniciarTurno(); // Começa a próxima rodada/turno
                  }
-                 // Se verificarFimPartida() retornou true, ela já cuidou de iniciar a próxima mão ou finalizar o jogo.
              } else {
                   console.log("FinalizarRodada: Jogo/Mão já encerrado, não iniciando novo turno.");
+                  // Atualiza botões caso o jogo tenha sido finalizado neste ponto
+                  if(estadoTruco === 'finalizado') atualizarBotoesTruco();
              }
-        }, 1800); // Tempo para visualizar o resultado da rodada
+        }, 1800); // Tempo para ver o resultado da rodada
     }
 
-     function verificarFimPartida() {
-        // Não verifica fim se jogo já acabou ou se aposta está pendente
+    // Verifica se a MÃO atual terminou e atualiza o placar/inicia próxima mão ou jogo
+    function verificarFimPartida() {
+        // Não verifica se o jogo já está finalizado ou esperando resposta de aposta
         if (!jogoEmAndamento || estadoTruco.startsWith('pedido_') || estadoTruco === 'finalizado') return false;
 
         let fimDeMao = false;
-        let vencedorMao = null;
-        let motivo = "";
-        let pontosGanhosNaMao = pontosDaMaoAtual; // Pontos em disputa na mão atual
+        let vencedorMao = null; // 'jogador', 'maquina' ou null (empate)
+        let motivo = ""; // Para log
+        let pontosGanhosNaMao = pontosDaMaoAtual; // Pontos em disputa nesta mão
 
-        // Condições de fim de mão (melhor de 3 rodadas)
+        // --- Condições de Fim de Mão ---
+        // 1. Alguém fez 2 vitórias de rodada
         if (vitoriasRodadaJogador >= 2) { fimDeMao = true; vencedorMao = 'jogador'; motivo = "Jogador fez 2 vitórias."; }
         else if (vitoriasRodadaMaquina >= 2) { fimDeMao = true; vencedorMao = 'maquina'; motivo = "Máquina fez 2 vitórias."; }
-        // Empate na primeira, decisão na segunda
-        else if (rodadaAtual > 2 && empatesRodada === 1 && document.getElementById('bolinha-rodada1')?.classList.contains('empate')) {
+        // 2. Empatou a primeira e alguém ganhou a segunda (mão acaba na segunda rodada)
+        else if (rodadaAtual > 2 && empatesRodada >= 1 && document.getElementById('bolinha-rodada1')?.classList.contains('empate')) {
              const b2 = document.getElementById('bolinha-rodada2')?.classList;
              if (b2?.contains('vencedor-jogador')) { fimDeMao = true; vencedorMao = 'jogador'; motivo = "Empatou 1a, Jogador ganhou 2a."; }
              else if (b2?.contains('vencedor-maquina')) { fimDeMao = true; vencedorMao = 'maquina'; motivo = "Empatou 1a, Máquina ganhou 2a."; }
-             // Se empatou a 1a e 2a, espera a 3a
+             // Se empatou a primeira E a segunda, continua para a terceira
         }
-         // Vitória na primeira, empate na segunda -> Vitória de quem ganhou a primeira
-         else if (rodadaAtual > 2 && empatesRodada === 1 && document.getElementById('bolinha-rodada2')?.classList.contains('empate') ) {
+        // 3. Ganhou a primeira e empatou a segunda (mão acaba na segunda rodada)
+         else if (rodadaAtual > 2 && empatesRodada >= 1 && document.getElementById('bolinha-rodada2')?.classList.contains('empate') ) {
              const b1 = document.getElementById('bolinha-rodada1')?.classList;
               if (b1?.contains('vencedor-jogador')) { fimDeMao = true; vencedorMao = 'jogador'; motivo = "Jogador ganhou 1a, Empatou 2a."; }
               else if (b1?.contains('vencedor-maquina')) { fimDeMao = true; vencedorMao = 'maquina'; motivo = "Máquina ganhou 1a, Empatou 2a."; }
         }
-        // Após 3 rodadas
+        // 4. Chegou na terceira rodada (rodadaAtual > 3 significa que a 3ª acabou de ser processada)
         else if (rodadaAtual > 3) {
             fimDeMao = true;
             motivo = "3 rodadas completas. ";
-            // Empate triplo ou Empate nas 3 primeiras -> Ninguém ganha pontos
-            if (empatesRodada === 3 ||
-                (document.getElementById('bolinha-rodada1')?.classList.contains('empate') &&
-                 document.getElementById('bolinha-rodada2')?.classList.contains('empate') &&
-                 document.getElementById('bolinha-rodada3')?.classList.contains('empate')) )
-             {
-                  vencedorMao = null; motivo += "Empate triplo."; pontosGanhosNaMao = 0; // Ninguém pontua no empate triplo
-             }
-             // Decisão por mais vitórias
-             else if (vitoriasRodadaJogador > vitoriasRodadaMaquina) { vencedorMao = 'jogador'; motivo += "Jogador com mais vitórias."; }
-             else if (vitoriasRodadaMaquina > vitoriasRodadaJogador) { vencedorMao = 'maquina'; motivo += "Máquina com mais vitórias."; }
-             // Empate 1x1 em vitórias (com 1 empate) -> Quem ganhou a primeira leva
-             else { // vitoriasJogador == 1, vitoriasMaquina == 1, empates == 1
-                  const b1 = document.getElementById('bolinha-rodada1')?.classList;
-                   if (!b1) { // Segurança
-                       console.error("Não foi possível encontrar bolinha 1 para desempate 1x1");
-                       vencedorMao = null; motivo += "Erro no desempate."; pontosGanhosNaMao = 0;
-                   } else if (b1.contains('vencedor-jogador')) {
-                       vencedorMao = 'jogador';
-                       motivo += `Desempate pela 1a rodada (jogador).`;
-                   } else if (b1.contains('vencedor-maquina')) {
-                        vencedorMao = 'maquina';
-                        motivo += `Desempate pela 1a rodada (máquina).`;
-                   } else { // Primeira empatou, decisão foi na 2a e 3a (1x1)
-                        // Este caso é coberto pela lógica de quem ganhou mais vitórias.
-                        // Mas se por algum bug chegar aqui:
-                       console.warn("Condição de desempate final inesperada:", {vJ:vitoriasRodadaJogador, vM:vitoriasRodadaMaquina, E:empatesRodada});
-                       vencedorMao = null; motivo += "Empate complexo."; pontosGanhosNaMao = 0;
-                   }
-             }
+            // 4a. Empate triplo ou Empate 1a e 2a (quem ganha a 3a leva) ou Empate 1a e 3a (quem ganhou a 2a leva) etc.
+            // Simplificação: Verifica vitórias totais após 3 rodadas.
+            if (vitoriasRodadaJogador > vitoriasRodadaMaquina) { vencedorMao = 'jogador'; motivo += "Jogador com mais vitórias."; }
+            else if (vitoriasRodadaMaquina > vitoriasRodadaJogador) { vencedorMao = 'maquina'; motivo += "Máquina com mais vitórias."; }
+            else { // Empate em número de vitórias (1x1 com 1 empate, ou 0x0 com 3 empates)
+                // Regra do Truco: Quem ganhou a primeira rodada vence em caso de empate em vitórias após 3 rodadas.
+                const b1 = document.getElementById('bolinha-rodada1')?.classList;
+                if (empatesRodada === 3 || // Empate triplo ("Cangar")
+                   (b1?.contains('empate') && document.getElementById('bolinha-rodada2')?.classList.contains('empate')) ) // Empatou as duas primeiras, resultado da 3a define
+                {
+                    const b3 = document.getElementById('bolinha-rodada3')?.classList;
+                     if (b3?.contains('vencedor-jogador')) { vencedorMao = 'jogador'; motivo += "Empatou 1a e 2a, Jogador ganhou 3a.";}
+                     else if (b3?.contains('vencedor-maquina')) {vencedorMao = 'maquina'; motivo += "Empatou 1a e 2a, Máquina ganhou 3a.";}
+                     else { // Empate triplo
+                         vencedorMao = null; motivo += "Empate triplo (cangou)."; pontosGanhosNaMao = 0;
+                     }
+
+                } else if (b1?.contains('vencedor-jogador')) { // Jogador ganhou a primeira (desempate)
+                     vencedorMao = 'jogador';
+                     motivo += `Desempate pela 1a rodada (jogador).`;
+                } else if (b1?.contains('vencedor-maquina')) { // Máquina ganhou a primeira (desempate)
+                      vencedorMao = 'maquina';
+                      motivo += `Desempate pela 1a rodada (máquina).`;
+                } else { // Caso não previsto (ex: erro nas classes das bolinhas)
+                     console.warn("Condição de desempate final inesperada:", {vJ:vitoriasRodadaJogador, vM:vitoriasRodadaMaquina, E:empatesRodada});
+                     vencedorMao = null; motivo += "Empate complexo."; pontosGanhosNaMao = 0;
+                }
+            }
         }
 
-        // Se a mão acabou...
+        // --- Processamento do Fim da Mão ---
         if (fimDeMao) {
             console.log(`---------------- Fim da Mão (${motivo}) ----------------`);
-            podeJogar = false; // Bloqueia jogadas
-            estadoTruco = 'normal'; // Reseta estado da aposta para a próxima mão
-            revelarCartasMaquinaFimJogo(); // Mostra cartas restantes
+            podeJogar = false; // Ninguém pode jogar mais nesta mão
+            estadoTruco = 'normal'; // Reseta estado do truco para a próxima mão
+            revelarCartasMaquinaFimJogo(); // Mostra as cartas restantes da máquina
 
-            // Adiciona pontos ao vencedor da mão
+            vencedorDaMaoAnterior = vencedorMao; // <<< ATUALIZA QUEM GANHOU ESTA MÃO
+
+            // Adiciona pontos e mostra mensagem
             if (vencedorMao === 'jogador') {
                 pontuacaoJogador += pontosGanhosNaMao;
                 mostrarMensagemTruco(`Você ganhou a mão! (+${pontosGanhosNaMao})`, 3000);
             } else if (vencedorMao === 'maquina') {
                 pontuacaoMaquina += pontosGanhosNaMao;
                  mostrarMensagemTruco(`Máquina ganhou a mão! (+${pontosGanhosNaMao})`, 3000);
-            } else { // Empate triplo
+            } else { // Empate (Cangou)
+                vencedorDaMaoAnterior = 'jogador'; // <<< SE EMPATOU, JOGADOR COMEÇA A PRÓXIMA
                 console.log("Mão empatada sem pontuação.");
                 mostrarMensagemTruco("Mão empatou! Ninguém pontua.", 3000);
             }
-            mostrarPlacar(); // Atualiza placar geral
+            mostrarPlacar(); // Atualiza o placar na tela
 
-             // Verifica se o JOGO acabou
+            // --- Verificação de Fim de JOGO ---
              if (pontuacaoJogador >= PONTOS_VITORIA || pontuacaoMaquina >= PONTOS_VITORIA) {
-                 jogoEmAndamento = false; // Para o jogo
-                 estadoTruco = 'finalizado'; // Estado final
+                 jogoEmAndamento = false; // Jogo acabou
+                 estadoTruco = 'finalizado'; // Marca como finalizado
                  let msgFinal = `FIM DE JOGO! ${pontuacaoJogador >= PONTOS_VITORIA ? 'Você venceu!' : 'A Máquina venceu!'}`;
                  console.log(msgFinal);
-                 // Pequeno delay para garantir que a mensagem da mão apareça antes da final
+                 // Pequeno delay para garantir que a mensagem de ganhar a mão apareça antes da de fim de jogo
                  setTimeout(() => mostrarMensagemTruco(msgFinal, 0), 50);
                  atualizarBotoesTruco(); // Mostra botão "Jogar Novamente"
-                 return true; // Indica que a partida acabou
+                 // Não agenda a próxima mão
              } else {
-                 // Se o jogo continua, agenda o início da próxima mão
-                 console.log("Preparando próxima mão...");
+                 // --- Prepara a Próxima Mão ---
+                 console.log(`Preparando próxima mão... Vencedor anterior foi: ${vencedorDaMaoAnterior}`);
                  setTimeout(() => {
-                     if (estadoTruco !== 'finalizado') { // Segurança
-                         jogoEmAndamento = true;
-                         iniciarPartida(); // Começa nova mão
+                     if (estadoTruco !== 'finalizado') { // Checa de novo (segurança)
+                         iniciarPartida(); // Chama a função para começar a próxima mão
                      }
-                 }, 3000); // Tempo para ver resultado da mão/cartas
-                 return true; // Indica que a mão acabou, mas não a partida
+                 }, 3000); // Tempo para ler a mensagem da mão
              }
+             return true; // Indica que a mão terminou
         }
-        return false; // Indica que a mão ainda não acabou
+
+        return false; // Mão não terminou ainda
     }
 
     // --- Controle de Turno e Placar ---
+
+    // Inicia um turno (vez de jogar carta ou decidir aposta)
     function iniciarTurno() {
+        // Não inicia turno se o jogo acabou ou está esperando resposta de aposta
         if (!jogoEmAndamento || estadoTruco === 'finalizado') {
             console.log("Início de turno bloqueado: jogo finalizado.");
+            atualizarBotoesTruco(); // Garante que botões estejam no estado final
             return;
         }
-        // Não inicia turno se uma aposta estiver pendente
         if (estadoTruco.startsWith('pedido_')) {
             console.log("Início de turno bloqueado: aposta pendente.");
-             atualizarBotoesTruco(); // Garante que botões reflitam o estado pendente
+             atualizarBotoesTruco(); // Garante botões corretos para responder aposta
             return;
         }
 
-        // Limpa cartas do centro (redundante? finalizarRodada já faz isso, mas garante)
+        // Limpa as cartas do centro (caso não tenha sido limpo por finalizarRodada)
         if(elJogadaJogador) elJogadaJogador.innerHTML = '';
         if(elJogadaMaquina) elJogadaMaquina.innerHTML = '';
         cartaJogadaCentroJogador = null;
         cartaJogadaCentroMaquina = null;
 
-         console.log(`--- Rodada ${rodadaAtual}, Turno ${jogadorDaVez}, Mão valendo ${pontosDaMaoAtual} ---`);
+         console.log(`--- Rodada ${rodadaAtual}, Vez de ${jogadorDaVez}, Mão valendo ${pontosDaMaoAtual} ---`);
 
-        // Define quem joga
+        // Se for a vez da máquina
         if (jogadorDaVez === 'maquina') {
-            podeJogar = false; // Jogador não pode jogar
-            atualizarBotoesTruco();
-            // Agenda a decisão da máquina (apostar ou jogar carta)
+            podeJogar = false; // Jogador não pode clicar
+            atualizarBotoesTruco(); // Desabilita botão de truco do jogador
+            // Delay para a máquina "pensar"
             setTimeout(maquinaDecideJogada, 900 + Math.random() * 400);
-        } else { // Vez do jogador
-            podeJogar = true; // Jogador pode jogar carta
-            atualizarBotoesTruco(); // Atualiza estado do botão de truco
+        } else { // Se for a vez do jogador
+            podeJogar = true; // Jogador pode clicar nas cartas
+            atualizarBotoesTruco(); // Habilita botão de truco do jogador (se aplicável)
              console.log("Aguardando jogador...");
         }
     }
+    // Atualiza o placar na tela
     function mostrarPlacar() {
         if(elPlacarFinal){
              elPlacarFinal.innerText = `Placar: Você ${pontuacaoJogador} x ${pontuacaoMaquina} Máquina`;
-        } else { console.error("'placar-final' não encontrado!") }
+        } else { console.error("Elemento 'placar-final' não encontrado!") }
     }
 
     // --- Função para iniciar nova MÃO ---
-    function iniciarPartida() {
-      // Garante que controles de fim de jogo estão escondidos e botão de truco visível
-      if(elFimJogoControles) elFimJogoControles.style.display = 'none';
-      if(elBotaoTruco) elBotaoTruco.style.display = 'block';
-
-      // Impede iniciar nova mão se o jogo já terminou e não clicou em "Jogar Novamente"
-      if (estadoTruco === 'finalizado' && !jogoEmAndamento) {
-            console.log("Jogo finalizado. Clique em 'Jogar Novamente'.");
+    function iniciarPartida() { // Renomeado para iniciarMao seria mais preciso, mas mantendo o original
+      // Não inicia nova mão se o jogo já terminou (esperando clicar em jogar novamente)
+      if (!jogoEmAndamento && estadoTruco === 'finalizado') {
+            console.log("Jogo finalizado. Não iniciando nova partida automaticamente (esperando 'Jogar Novamente').");
             return;
       }
 
       console.log("================ Início da Mão ================");
-      jogoEmAndamento = true;
+      jogoEmAndamento = true; // Garante que o jogo está ativo para esta mão
+      if(elFimJogoControles) elFimJogoControles.style.display = 'none'; // Esconde "Jogar Novamente"
+      if(elBotaoTruco) elBotaoTruco.style.display = 'block'; // Mostra botão de truco
+
+      // Prepara o baralho e cartas
       criarBaralho();
       embaralhar();
       sortearManilha();
-      distribuirCartas(); // Renderiza mãos aqui dentro
+      distribuirCartas();
 
       // Reseta contadores e estados da mão
       rodadaAtual = 1;
       vitoriasRodadaJogador = 0; vitoriasRodadaMaquina = 0; empatesRodada = 0;
-      // Simplificado: Jogador sempre começa a primeira rodada da mão
-      // (A regra de quem começa a mão pode variar, mas simplifica o início)
-      jogadorDaVez = 'jogador';
-      quemIniciouRodada = 'jogador';
+      // jogadorDaVez = 'jogador'; // <<< REMOVIDO
+      // quemIniciouRodada = 'jogador'; // <<< REMOVIDO
       cartaJogadaCentroJogador = null; cartaJogadaCentroMaquina = null;
+
+       // <<< LÓGICA MODIFICADA: DECIDE QUEM COMEÇA A MÃO BASEADO NO VENCEDOR DA MÃO ANTERIOR >>>
+        if (vencedorDaMaoAnterior === 'maquina') {
+            console.log("Máquina venceu a mão anterior, ela começa esta mão.");
+            jogadorDaVez = 'maquina';
+            quemIniciouRodada = 'maquina';
+        } else {
+            // Se jogador ganhou, empatou, ou é a primeira mão do jogo
+            console.log("Jogador começa esta mão (venceu/empatou anterior ou é a primeira).");
+            jogadorDaVez = 'jogador';
+            quemIniciouRodada = 'jogador';
+        }
+       // <<< FIM DA LÓGICA MODIFICADA >>>
 
       // Reseta estado e valor da aposta
       nivelApostaAtual = 'NORMAL';
       pontosDaMaoAtual = NIVEIS_APOSTA.NORMAL.valor;
-      estadoTruco = 'normal';
+      estadoTruco = 'normal'; // Estado inicial da aposta
       quemPediuUltimaAposta = null;
-      atualizarValorMaoDisplay();
-      mostrarMensagemTruco('', 0); // Limpa mensagem anterior
+      atualizarValorMaoDisplay(); // Mostra "Vale: 1 ponto"
+      mostrarMensagemTruco('', 0); // Limpa mensagens
       if(elRespostaTruco) elRespostaTruco.innerHTML = ''; // Limpa botões de resposta
 
-      // Limpa bolinhas das rodadas
+      // Limpa as bolinhas de rodada
       for (let i = 1; i <= 3; i++) {
           const bolinha = document.getElementById(`bolinha-rodada${i}`);
           if(bolinha) bolinha.className = 'bolinha';
       }
 
-      // Limpa cartas jogadas no centro (visualmente)
+      // Limpa cartas do centro (redundante, mas seguro)
       if(elJogadaJogador) elJogadaJogador.innerHTML = '';
       if(elJogadaMaquina) elJogadaMaquina.innerHTML = '';
 
-      mostrarPlacar(); // Mostra placar atualizado (deve ser o mesmo, mas garante)
-      iniciarTurno(); // Começa o primeiro turno da mão
+      mostrarPlacar(); // Garante que o placar está visível
+      iniciarTurno(); // Começa o primeiro turno da mão com o jogadorDaVez correto
     }
 
     // --- Função Jogar Novamente ---
     function jogarNovamente() {
         console.log("==================== NOVO JOGO ====================");
-        pontuacaoJogador = 0; // Zera placar
+        pontuacaoJogador = 0; // Reseta placar
         pontuacaoMaquina = 0;
-        estadoTruco = 'normal'; // Reseta estado
-        jogoEmAndamento = true; // Define jogo como ativo
+        estadoTruco = 'normal'; // Reseta estado do truco
+        vencedorDaMaoAnterior = 'jogador'; // Garante que jogador comece o novo jogo
+        // jogoEmAndamento = true; // Não precisa, iniciarPartida fará isso
         iniciarPartida(); // Inicia a primeira mão do novo jogo
     }
 
     // --- Função Revelar Cartas no Fim ---
     function revelarCartasMaquinaFimJogo() {
          if (!elMaoMaquina) return;
-         const maoRevelar = [...maoMaquina]; // Copia cartas restantes
-         elMaoMaquina.innerHTML = ''; // Limpa display atual
-         if (maoRevelar.length > 0) {
-             maoRevelar.forEach(carta => {
-                 const div = criarElementoCarta(carta); // Cria elemento da carta (visível)
+         const maoParaRevelar = [...maoMaquina]; // Copia as cartas restantes
+         elMaoMaquina.innerHTML = ''; // Limpa a área da mão da máquina
+         if (maoParaRevelar.length > 0) {
+             // Cria elementos de carta visíveis para as cartas que sobraram
+             maoParaRevelar.forEach(carta => {
+                 const div = criarElementoCarta(carta);
                  div.style.cursor = 'default'; // Não clicável
                  div.style.opacity = '0.8'; // Levemente transparente
                  elMaoMaquina.appendChild(div);
              });
          } else {
-             // Mensagem se a máquina não tinha mais cartas
+              // Mensagem se não sobraram cartas
               elMaoMaquina.innerHTML = '<span style="font-size:0.9rem; opacity: 0.7;">(Sem cartas restantes)</span>';
          }
      }
 
-    // --- Início do Jogo ---
+    // --- Início do Jogo e Configuração do Menu ---
     document.addEventListener('DOMContentLoaded', () => {
+         // Tenta obter hora local de SP para log, fallback para hora local
          let agora = new Date();
-         try { // Tenta obter hora de SP, se falhar usa local
+         try {
              agora = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
          } catch (e) { console.warn("Não foi possível obter hora de São Paulo, usando hora local.");}
-         console.log("Truco Paulista Carregado - Mogi Guaçu, SP: " + agora.toLocaleString('pt-BR'));
+         console.log("Truco Paulista Carregado - Mogi Guaçu, SP: " + agora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }));
 
-         // Cache dos elementos da UI para performance
+
+         // <<< Cache dos elementos da UI (Menu, Regras, Jogo) >>>
+         menuInicio = document.getElementById('menu-inicio');
+         regrasJogo = document.getElementById('regras-jogo');
+         botaoJogarMenu = document.getElementById('botao-jogar-menu');
+         botaoRegrasMenu = document.getElementById('botao-regras-menu');
+         botaoVoltarMenu = document.getElementById('botao-voltar-menu');
+         mesaJogo = document.getElementById('mesa'); // Referência à div da mesa
+
          elMaoJogador=document.getElementById('mao-jogador');
          elMaoMaquina=document.getElementById('mao-maquina');
          elJogadaJogador=document.getElementById('jogada-jogador');
@@ -1264,16 +1466,43 @@ function maquinaRespondeAposta() {
          elRespostaTruco=document.getElementById('resposta-truco');
          elFimJogoControles=document.getElementById('fim-jogo-controles');
 
-         // Verifica se todos os elementos essenciais foram encontrados
-         const elementosEssenciais = [elMaoJogador,elMaoMaquina,elJogadaJogador,elJogadaMaquina,elCartaVirada,elManilhaInfo,elPlacarFinal,elValorMaoAtual,elBotaoTruco,elMensagemTruco,elRespostaTruco,elFimJogoControles];
+         // Verifica se todos os elementos essenciais foram encontrados para evitar erros
+         const elementosEssenciais = [
+             menuInicio, regrasJogo, botaoJogarMenu, botaoRegrasMenu, botaoVoltarMenu, mesaJogo,
+             elMaoJogador,elMaoMaquina,elJogadaJogador,elJogadaMaquina,elCartaVirada,elManilhaInfo,
+             elPlacarFinal,elValorMaoAtual,elBotaoTruco,elMensagemTruco,elRespostaTruco,elFimJogoControles
+         ];
          if (elementosEssenciais.some(el => !el)) {
-             console.error("ERRO GRAVE: Um ou mais elementos essenciais da UI não foram encontrados! Verifique os IDs no HTML.");
+             console.error("ERRO GRAVE: Um ou mais elementos essenciais da UI (Menu ou Jogo) não foram encontrados! Verifique os IDs no HTML.");
              alert("Erro ao carregar a interface do jogo. Verifique o console (F12) para detalhes.");
-             return; // Impede a inicialização do jogo
+             return; // Impede a execução do resto do script
          }
 
-         // Inicia a primeira mão do jogo
-         iniciarPartida();
+         // <<< Lógica dos botões do Menu >>>
+         botaoJogarMenu.addEventListener('click', () => {
+             menuInicio.style.display = 'none'; // Esconde menu
+             regrasJogo.style.display = 'none'; // Esconde regras (caso estivessem abertas)
+             mesaJogo.style.display = 'flex'; // <<< MOSTRA a mesa do jogo usando flexbox
+             // jogoEmAndamento = true; // Não precisa, iniciarPartida fará isso
+             iniciarPartida(); // <<< INICIA o jogo AGORA que o botão foi clicado
+         });
+
+         botaoRegrasMenu.addEventListener('click', () => {
+             menuInicio.style.display = 'none'; // Esconde menu
+             regrasJogo.style.display = 'flex'; // Mostra regras (como flex para centralizar)
+         });
+
+         botaoVoltarMenu.addEventListener('click', () => {
+             regrasJogo.style.display = 'none'; // Esconde regras
+             menuInicio.style.display = 'flex'; // Mostra menu inicial novamente
+         });
+
+         // --- Configuração Inicial (antes do jogo começar) ---
+         // iniciarPartida(); // << REMOVIDO daqui! O jogo só começa ao clicar em "Jogar"
+         console.log("Interface carregada. Menu inicial exibido.");
+         atualizarBotoesTruco(); // Garante estado inicial correto dos botões de truco (desabilitados)
+         mostrarPlacar(); // Mostra placar inicial (0 a 0)
+         renderizarMaoMaquinaReal(); // Mostra as costas das cartas da máquina
     });
 </script>
 </body>
