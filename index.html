@@ -3,254 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoScripts</title>
+    <title>GoScripts - Criação de Sites Profissionais</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
+        /* --- Variáveis CSS --- */
+        :root {
+            --primary-color: #007BFF; /* Azul principal */
+            --primary-color-darker: #0056b3; /* Azul mais escuro para hover */
+            --bg-color: #000000; /* Fundo principal (preto) */
+            --card-bg-color: #1a1a1a; /* Fundo dos cards (cinza escuro) */
+            --text-color: #ffffff; /* Cor do texto principal (branco) */
+            --text-color-secondary: #cccccc; /* Cor do texto secundário (cinza claro) */
+            --border-color: #333333; /* Cor da borda sutil */
+            --whatsapp-color: #25d366; /* Verde WhatsApp */
+            --font-stack: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Pilha de fontes */
+        }
+
+        /* --- Reset Básico e Globais --- */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         html, body {
             height: 100%;
-            margin: 0;
         }
+
         body {
             display: flex;
             flex-direction: column;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            background-color: black;            
-        }
-        header {
-    background: url('https://gozgames.neocities.org/1745943001077.jpg') no-repeat center center;
-    background-size: cover;
-    color: #fff;
-    padding: 12.0em 0;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-        header img {
-            max-width: 250px; 
-            height: auto;
-            margin-bottom: 10px;
-        }
-        header p {
-            margin: 0;
-            font-size: 1.0em;
-            font-weight: bold;
-        }
-        main {
-            flex: 1;
-            width: 80%;
-            margin: auto;
-            padding-bottom: 2em;
-        }
-        section {
-            padding: 2em 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 20px;
-        }
-        section h2 {
-            font-size: 2em;
-            color: #007BFF;
-            margin-bottom: 0.5em;
-        }
-        .services, .contact {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 1em;
-        }
-        .service, .contact-info {
-            position: relative;
-            flex: 1;
-            margin: 1em;
-            padding: 1.5em;
-            background: black;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 4px solid transparent; /* Ajuste a largura da borda conforme necessário */
-            border-image: linear-gradient(90deg, transparent, blue, transparent) 1; /* Ajuste a largura da borda conforme necessário */
-            overflow: hidden;
-            animation: moveBorder 3s linear infinite;
+            font-family: var(--font-stack);
+            color: var(--text-color-secondary); /* Usar cinza claro para parágrafos */
+            background-color: var(--bg-color);
+            line-height: 1.7; /* Aumentar um pouco o espaçamento entre linhas */
+            font-size: 16px; /* Base de tamanho de fonte */
         }
 
-        @keyframes moveBorder {
-            0% {
-                border-image-source: linear-gradient(90deg, transparent, blue, transparent);
-            }
-            50% {
-                border-image-source: linear-gradient(180deg, transparent, blue, transparent);
-            }
-            100% {
-                border-image-source: linear-gradient(270deg, transparent, blue, transparent);
-            }
+        /* --- Container Principal --- */
+        .container {
+            width: 90%;
+            max-width: 1100px; /* Limite máximo para telas grandes */
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 15px;
+            padding-right: 15px;
         }
+
+        /* --- Header --- */
+        header {
+            /* Adiciona um overlay escuro para melhor contraste do texto */
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://gozgames.neocities.org/1745943001077.jpg') no-repeat center center;
+            background-size: cover;
+            color: var(--text-color);
+            padding: 8em 0; /* Padding reduzido */
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        /* Remover regras de imagem e p dentro do header se não houver conteúdo visível */
+
+        /* --- Main Content --- */
+        main {
+            flex: 1;
+            padding-top: 3em; /* Espaçamento acima do conteúdo principal */
+            padding-bottom: 3em; /* Espaçamento abaixo */
+        }
+
+        /* --- Seções --- */
+        section {
+            padding: 3em 0; /* Espaçamento vertical entre seções */
+            /* border-bottom: 1px solid var(--border-color); */ /* Removida borda inferior */
+            margin-bottom: 2em; /* Adicionado espaçamento inferior */
+        }
+        section:last-of-type {
+             margin-bottom: 0; /* Remover margem da última seção antes do form/footer */
+        }
+
+        section h2 {
+            font-size: 2.2em; /* Tamanho do título */
+            color: var(--primary-color);
+            margin-bottom: 1em; /* Espaçamento abaixo do título */
+            text-align: center; /* Centralizar títulos das seções */
+            font-weight: 700; /* Peso da fonte para títulos */
+        }
+
+        section p {
+             color: var(--text-color-secondary); /* Cor de parágrafo padrão */
+             margin-bottom: 1.5em;
+             max-width: 750px; /* Limitar largura de parágrafos para melhor leitura */
+             margin-left: auto;
+             margin-right: auto;
+             text-align: center; /* Centralizar parágrafos introdutórios */
+        }
+        section p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* --- Cards (Serviços, Contato Info) --- */
+        .services, .contact {
+            display: grid; /* Usar Grid para melhor controle */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Layout responsivo */
+            gap: 2em; /* Espaçamento entre os cards */
+            text-align: left; /* Alinhar texto dos cards à esquerda */
+        }
+         .contact {
+            display: block; /* Seção de contato com botão é diferente */
+            text-align: center;
+         }
+
+        .service, .contact-info {
+            background: var(--card-bg-color);
+            border-radius: 8px; /* Bordas levemente arredondadas */
+            padding: 2em;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            border: 2px solid var(--border-color); /* Borda sutil inicial */
+        }
+
         .service:hover, .contact-info:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary-color); /* Borda azul no hover */
         }
-        button {
-            background: blue;
-            color: #fff;
-            border: 1px solid white;
-            padding: 0.75em 1.5em;
+
+        .service h2, .contact-info h2 { /* Estilo para H2 dentro dos cards */
+             font-size: 1.5em;
+             color: var(--text-color); /* Título do card em branco */
+             margin-bottom: 0.8em;
+             text-align: left; /* Alinhar à esquerda */
+        }
+         .service p, .contact-info p {
+             color: var(--text-color-secondary);
+             text-align: left; /* Alinhar à esquerda */
+             margin-bottom: 0.5em; /* Menor espaçamento em parágrafos de card */
+             max-width: none; /* Remover limite de largura dentro dos cards */
+         }
+
+        /* --- Botões --- */
+        button, .button-link { /* Adicionar classe .button-link se usar <a> como botão */
+            display: inline-block; /* Permitir margin/padding */
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none; /* Remover borda */
+            padding: 0.8em 1.8em; /* Padding ajustado */
             border-radius: 5px;
             cursor: pointer;
             font-size: 1.1em;
-            transition: background 0.3s, transform 0.3s;
+            font-weight: bold; /* Texto do botão em negrito */
+            text-decoration: none; /* Remover sublinhado se for link */
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            margin-top: 1em; /* Espaçamento acima do botão */
         }
-        button:hover {
-            background: black;
+
+        button:hover, .button-link:hover {
+            background: var(--primary-color-darker); /* Escurecer no hover */
             transform: translateY(-2px);
         }
-        footer {
-            background: url('https://goscript.neocities.org/Imagens.png/be128a33-a82b-46ac-b376-bcef40d271f7.jpg') no-repeat center center;
-            color: #fff;
-            text-align: center;
-            padding: 1.5em 0;
-            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-        }
-        footer p {
-            margin: 0;
-        }
-        p {
-            color: white;
-            line-height: 1.6;
-        }
-        
-        @keyframes pulse {
-    0% {
-        box-shadow: 0 0 10px rgba(37, 211, 102, 0.8), 0 0 20px rgba(37, 211, 102, 0.6), 0 0 30px rgba(37, 211, 102, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 20px rgba(37, 211, 102, 1), 0 0 40px rgba(37, 211, 102, 0.8), 0 0 60px rgba(37, 211, 102, 0.6);
-    }
-    100% {
-        box-shadow: 0 0 10px rgba(37, 211, 102, 0.8), 0 0 20px rgba(37, 211, 102, 0.6), 0 0 30px rgba(37, 211, 102, 0.4);
-    }
-}
 
-.whatsapp-float {
-    position: fixed;
-    width: 60px;
-    height: 60px;
-    bottom: 130px;
-    right: 25px;
-    background-color: #25d366;
-    color: #fff;
-    border-radius: 50px;
-    text-align: center;
-    font-size: 30px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
-    animation: pulse 1.5s infinite;
-}
-        .whatsapp-float:hover {
-            transform: scale(1.1);
+        /* --- Carrossel --- */
+        .partners h2 {
+            margin-bottom: 0.5em; /* Menos espaço abaixo do título do carrossel */
         }
-        .whatsapp-icon {
-            margin-top: 15px;
-        }
+         .partners p {
+            margin-bottom: 2em; /* Mais espaço abaixo do texto introdutório */
+         }
+
         .carousel {
             position: relative;
             overflow: hidden;
-            margin-bottom: 20px;
+            margin-bottom: 2em;
+            border-radius: 8px; /* Arredondar cantos do carrossel */
         }
         .carousel-images {
             display: flex;
-            transition: transform 0.5s ease;
+            transition: transform 0.5s ease-in-out; /* Transição mais suave */
         }
         .carousel-images a {
-            flex: 1;
+            flex: 0 0 100%; /* Garante que cada item ocupe 100% */
             min-width: 100%;
         }
         .carousel-images img {
             width: 100%;
             height: auto;
             display: block;
+            object-fit: cover; /* Garante que a imagem cubra a área */
+            aspect-ratio: 16 / 9; /* Proporção comum, ajuste se necessário */
         }
         .carousel-button {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background-color: rgba(0, 0, 0, 0.5);
-            color: #fff;
+            background-color: rgba(0, 0, 0, 0.6); /* Fundo semi-transparente */
+            color: var(--text-color);
             border: none;
-            padding: 1em;
+            padding: 0.8em 1em; /* Ajuste de padding */
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 1.2em; /* Tamanho do ícone */
             z-index: 10;
+            border-radius: 50%; /* Botões redondos */
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+        .carousel-button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
         }
         .prev {
-            left: 10px;
+            left: 15px;
         }
         .next {
-            right: 10px;
+            right: 15px;
         }
+
+        /* --- Formulário de Contato --- */
+        .contact-form {
+            max-width: 600px; /* Aumentar um pouco a largura */
+            padding: 2em;
+            background: var(--card-bg-color); /* Fundo de card */
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin: 3em auto 2em auto; /* Centralizar e adicionar margem */
+            border: 2px solid var(--border-color); /* Borda sutil */
+            transition: border-color 0.3s ease; /* Transição na borda */
+        }
+        .contact-form:hover {
+             border-color: var(--primary-color); /* Borda azul no hover do form inteiro */
+        }
+
+        .contact-form h2 {
+            color: var(--text-color); /* Título branco */
+            font-size: 1.8em;
+            margin-bottom: 1em;
+            text-align: center;
+        }
+
+        .contact-form form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-form label {
+            margin-bottom: 0.5em;
+            color: var(--text-color-secondary); /* Label em cinza claro */
+            font-size: 0.9em;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            margin-bottom: 1.5em; /* Mais espaço abaixo dos inputs */
+            padding: 0.8em; /* Padding interno */
+            border: 1px solid var(--border-color); /* Borda sutil */
+            border-radius: 5px;
+            font-size: 1em;
+            background-color: var(--bg-color); /* Fundo preto */
+            color: var(--text-color); /* Texto branco */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            outline: none;
+            border-color: var(--primary-color); /* Borda azul no foco */
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Brilho sutil no foco */
+        }
+
+        .contact-form textarea {
+            min-height: 120px; /* Altura mínima para textarea */
+            resize: vertical; /* Permitir redimensionamento vertical */
+        }
+
+        .contact-form button {
+            align-self: center; /* Centralizar botão no form */
+            padding: 0.8em 2.5em; /* Mais padding horizontal */
+        }
+
+        /* --- Footer --- */
+        footer {
+            background: var(--card-bg-color); /* Fundo cinza escuro consistente */
+            /* Se preferir imagem:
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('URL_DA_IMAGEM_FOOTER.jpg') no-repeat center center;
+            background-size: cover;
+            */
+            color: var(--text-color-secondary);
+            text-align: center;
+            padding: 2em 0; /* Padding do footer */
+            margin-top: auto; /* Empurra o footer para baixo */
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+        }
+        footer p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        /* --- Botão Flutuante WhatsApp --- */
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 30px; /* Ajuste a posição vertical */
+            right: 30px; /* Ajuste a posição horizontal */
+            background-color: var(--whatsapp-color);
+            color: var(--text-color);
+            border-radius: 50%;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1000; /* Garantir que fique sobre outros elementos */
+            display: flex; /* Para centralizar o ícone */
+            align-items: center;
+            justify-content: center;
+            /* animation: pulse 1.5s infinite; */ /* Animação removida */
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1); /* Aumentar ligeiramente no hover */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .whatsapp-icon {
+            /* margin-top: 15px; */ /* Removido, flexbox centraliza */
+            width: 30px; /* Definir tamanho explícito */
+            height: 30px;
+        }
+
+        /* --- Media Queries (Responsividade) --- */
         @media (max-width: 768px) {
-            .services, .contact {
-                flex-direction: column;
-                align-items: center;
+            body {
+                font-size: 15px; /* Ajustar tamanho base da fonte */
             }
+
+            header {
+                padding: 6em 0; /* Reduzir padding do header */
+            }
+
+            section h2 {
+                font-size: 1.8em; /* Reduzir títulos */
+            }
+
+             .services {
+                grid-template-columns: 1fr; /* Uma coluna em telas menores */
+             }
+
+            .carousel-button {
+                padding: 0.6em 0.8em;
+                font-size: 1em;
+                width: 35px;
+                height: 35px;
+            }
+             .prev { left: 10px; }
+             .next { right: 10px; }
+
+            .contact-form {
+                width: 90%; /* Ocupar mais largura */
+                padding: 1.5em;
+            }
+             .contact-form h2 {
+                 font-size: 1.6em;
+             }
+
+            .whatsapp-float {
+                width: 60px;
+                height: 60px;
+                bottom: 120px;
+                right: 25px;
+            }
+             .whatsapp-icon {
+                 width: 30px;
+                 height: 30px;
+             }
         }
 
-.contact-form {
-    max-width: 500px; /* Define uma largura máxima menor */
-    padding: 1em; /* Reduz o padding */
-    background: black;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin: auto; /* Centraliza o formulário */
-    margin-bottom: 20px;
-    border: 4px solid transparent; /* Ajuste a largura da borda conforme necessário */
-    border-image: linear-gradient(90deg, transparent, blue, transparent) 1; /* Ajuste a largura da borda conforme necessário */
-    animation: moveBorder 2s linear infinite; /* Aplica a animação */
-}
-
-.contact-form h2 {
-    color: #007BFF;
-    font-size: 1.5em; /* Ajusta o tamanho do título */
-}
-
-.contact-form form {
-    display: flex;
-    flex-direction: column;
-}
-
-.contact-form label {
-    margin-bottom: 0.5em;
-    color: white;
-}
-
-.contact-form input, 
-.contact-form textarea {
-    margin-bottom: 1em;
-    padding: 0.5em; /* Reduz o padding */
-    border: 1px solid white;
-    border-radius: 5px;
-    font-size: 0.9em; /* Ajusta o tamanho da fonte */
-    background-color: black;
-    color: white;
-}
-
-.contact-form button {
-    background: blue;
-    color: #fff;
-    border: 1px solid white;
-    padding: 0.5em 1em; /* Reduz o padding */
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em; /* Ajusta o tamanho da fonte */
-    transition: background 0.3s, transform 0.3s;
-}
-
-.contact-form button:hover {
-    background: black;
-    transform: translateY(-2px);
-}
     </style>
 </head>
 <body>
     <header>
         <div class="container">
-        </div>
+            </div>
     </header>
 
     <main>
@@ -262,31 +399,31 @@
             </section>
 
             <section class="partners">
-                <h2>Sites criados por nós:</h2>
-                <p>Clique na imagem para ver o site!</p>
+                <h2>Sites Criados Por Nós</h2>
+                <p>Clique na imagem para visitar o site!</p>
                 <div class="carousel">
                     <div class="carousel-images" id="carousel-images">
-                        <a href="https://goscripts.online/Gardin" target="_blank">
-                            <img src="https://goscript.neocities.org/imagens.png/logo_converted_to_webp_no_bg.webp" alt="Parceiro 5" loading="lazy">
+                        <a href="https://goscripts.online/Gardin" target="_blank" aria-label="Visitar site Gardin">
+                            <img src="https://goscript.neocities.org/imagens.png/logo_converted_to_webp_no_bg.webp" alt="Logo Gardin" loading="lazy">
                         </a>
-                         <a href="https://goscripts.online/Gameplay" target="_blank">
-                            <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_185534_4100.jpg" alt="Parceiro 0" loading="lazy">
+                         <a href="https://goscripts.online/Gameplay" target="_blank" aria-label="Visitar site Gameplay">
+                            <img src="https://goscript.neocities.org/imagens.png/Compress_20241111_185534_4100.jpg" alt="Logo Gameplay" loading="lazy">
                         </a>
-                        <a href="https://uniaogesso.neocities.org/" target="_blank">
-                            <img src="https://uniaogesso.neocities.org/Imagem/IMG-20240831-WA0033.jpg" alt="Parceiro 1" loading="lazy">
+                        <a href="https://uniaogesso.neocities.org/" target="_blank" aria-label="Visitar site União Gesso">
+                            <img src="https://uniaogesso.neocities.org/Imagem/IMG-20240831-WA0033.jpg" alt="Logo União Gesso" loading="lazy">
                         </a>
-                        <a href="https://goscripts.online/Keskara" target="_blank">
-                            <img src="https://keskara.neocities.org/Fonto/Compress_20241114_002657_7840.jpg" alt="Parceiro 2" loading="lazy">
+                        <a href="https://goscripts.online/Keskara" target="_blank" aria-label="Visitar site Keskara">
+                            <img src="https://keskara.neocities.org/Fonto/Compress_20241114_002657_7840.jpg" alt="Logo Keskara" loading="lazy">
                         </a>
-                        <a href="https://gozgames.neocities.org/Jogos" target="_blank">
-                            <img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="Parceiro 3" loading="lazy">
+                        <a href="https://gozgames.neocities.org/Jogos" target="_blank" aria-label="Visitar site GozGames Jogos">
+                            <img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="Logo GozGames" loading="lazy">
                         </a>
-                        <a href="https://gozgames.neocities.org/Personalize" target="_blank">
-                            <img src="https://goscript.neocities.org/imagens.png/3cf6affd-15bc-4d03-9a72-95ef680ad308.jpg" alt="Parceiro 4" loading="lazy">
+                        <a href="https://gozgames.neocities.org/Personalize" target="_blank" aria-label="Visitar site GozGames Personalize">
+                            <img src="https://goscript.neocities.org/imagens.png/3cf6affd-15bc-4d03-9a72-95ef680ad308.jpg" alt="Página Personalize GozGames" loading="lazy">
                         </a>
                     </div>
-                    <button class="carousel-button prev" onclick="prevSlide()">&#10094;</button>
-                    <button class="carousel-button next" onclick="nextSlide()">&#10095;</button>
+                    <button class="carousel-button prev" onclick="prevSlide()" aria-label="Slide anterior">&#10094;</button>
+                    <button class="carousel-button next" onclick="nextSlide()" aria-label="Próximo slide">&#10095;</button>
                 </div>
             </section>
 
@@ -312,94 +449,124 @@
             <section class="contact">
                 <h2>Solicite um Orçamento</h2>
                 <p>Quer saber quanto custa criar um site sob medida para você? Clique no botão abaixo e entre em contato conosco pelo WhatsApp para um orçamento rápido e personalizado!</p>
-                <button onclick="contactUs()">Solicitar Orçamento</button>
+                <a href="https://wa.me/5519983198544?text=Ol%C3%A1%2C+gostaria+de+solicitar+um+or%C3%A7amento+para+cria%C3%A7%C3%A3o+de+site." target="_blank" class="button-link">Solicitar Orçamento via WhatsApp</a>
             </section>
 
             <section class="contact-info">
-                <h2>Contato</h2>
+                 <h2>Informações de Contato</h2>
                 <p>Telefone: (19) 99813-3764</p>
                 <p>E-mail: goscriptsbr@gmail.com</p>
                 <p>Endereço: Margarida Cavalhieri - Santa Terezinha 2, 98, Mogi Guaçu - SP</p>
             </section>
         </div>
     </main>
-    
+
     <section class="contact-form">
-    <h2>Contato via email:</h2>
-    <form id="contact-form" onsubmit="return sendEmail()">
-        <label for="nome">Nome:</label>
-        <input type="text" id="nome" name="nome" required>
-        
-        <label for="email">E-mail:</label>
-        <input type="email" id="email" name="email" required>
-        
-        <label for="mensagem">Mensagem:</label>
-        <textarea id="mensagem" name="mensagem" rows="4" required></textarea>
-        
-        <button type="submit">Enviar</button>
-    </form>
-</section>
+        <h2>Contato via E-mail</h2>
+        <form id="contact-form" onsubmit="return sendEmail()">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="email">E-mail:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="mensagem">Mensagem:</label>
+            <textarea id="mensagem" name="mensagem" rows="5" required></textarea>
+
+            <button type="submit">Enviar Mensagem</button>
+        </form>
+    </section>
 
     <footer>
-        <p>&copy; 2024 GoScript - Transformando Visões em Realidade Online</p>
+        <div class="container">
+             <p>&copy; 2024 GoScript - Transformando Visões em Realidade Online</p>
+        </div>
     </footer>
 
-    <!-- Botão Flutuante do WhatsApp -->
-    <a href="https://wa.me/5519988283178" class="whatsapp-float" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="Ícone do WhatsApp" class="whatsapp-icon" width="30px" height="30px">
+    <a href="https://wa.me/5519988283178?text=Ol%C3%A1%2C+vim+pelo+site+e+gostaria+de+mais+informa%C3%A7%C3%B5es." class="whatsapp-float" target="_blank" aria-label="Contato via WhatsApp">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="Ícone do WhatsApp" class="whatsapp-icon">
     </a>
 
     <script>
         let currentIndex = 0;
+        const intervalTime = 5000; // Tempo em milissegundos (5 segundos)
+        let autoSlideInterval;
+
+        function showSlide(index) {
+            const slidesContainer = document.getElementById('carousel-images');
+            const slides = slidesContainer.querySelectorAll('a');
+            const totalSlides = slides.length;
+
+            if (index >= totalSlides) {
+                currentIndex = 0;
+            } else if (index < 0) {
+                currentIndex = totalSlides - 1;
+            } else {
+                currentIndex = index;
+            }
+            slidesContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }
 
         function nextSlide() {
-            currentIndex++;
-            showSlide(currentIndex);
+            showSlide(currentIndex + 1);
         }
 
         function prevSlide() {
-            currentIndex--;
-            showSlide(currentIndex);
+            showSlide(currentIndex - 1);
+        }
+
+        function startAutoSlide() {
+             stopAutoSlide(); // Garante que não haja múltiplos intervalos rodando
+             autoSlideInterval = setInterval(nextSlide, intervalTime);
+        }
+
+        function stopAutoSlide() {
+            clearInterval(autoSlideInterval);
         }
 
         // Initialize the carousel
-        showSlide(currentIndex);
-        
-const intervalTime = 5000; // Tempo em milissegundos (5 segundos)
+        document.addEventListener('DOMContentLoaded', () => {
+            showSlide(currentIndex);
+            startAutoSlide();
 
-function showSlide(index) {
-    const slides = document.querySelectorAll('.carousel-images a');
-    const totalSlides = slides.length;
-    if (index >= totalSlides) currentIndex = 0;
-    if (index < 0) currentIndex = totalSlides - 1;
-    document.getElementById('carousel-images').style.transform = `translateX(-${currentIndex * 100}%)`;
-}
+            // Opcional: Pausar o carrossel quando o mouse estiver sobre ele
+            const carousel = document.querySelector('.carousel');
+            if (carousel) {
+                carousel.addEventListener('mouseenter', stopAutoSlide);
+                carousel.addEventListener('mouseleave', startAutoSlide);
+            }
+        });
 
-function nextSlide() {
-    currentIndex++;
-    showSlide(currentIndex);
-}
 
-// Initialize the carousel
-showSlide(currentIndex);
+        // Função para enviar e-mail via mailto:
+        function sendEmail() {
+            const nome = document.getElementById('nome').value;
+            const email = document.getElementById('email').value;
+            const mensagem = document.getElementById('mensagem').value;
 
-// Automatically advance the slide every 5 seconds
-setInterval(nextSlide, intervalTime);
+            if (!nome || !email || !mensagem) {
+                alert("Por favor, preencha todos os campos.");
+                return false; // Impede o envio se campos estiverem vazios
+            }
 
-function sendEmail() {
-        const nome = encodeURIComponent(document.getElementById('nome').value);
-        const email = encodeURIComponent(document.getElementById('email').value);
-        const mensagem = encodeURIComponent(document.getElementById('mensagem').value);
-        
-        const subject = `Contato de ${nome}`;
-        const body = `Nome: ${nome}%0AE-mail: ${email}%0AMensagem:%0A${mensagem}`;
-        const mailtoURL = `mailto:goscriptsbr@gmail.com?subject=${subject}&body=${body}`;
-        
-        window.location.href = mailtoURL;
-        
-        // Prevent form from submitting in the traditional way
-        return false;
-    }
+            const subject = encodeURIComponent(`Contato via Site - ${nome}`);
+            const body = encodeURIComponent(
+                `Nome: ${nome}\n` +
+                `E-mail: ${email}\n\n` +
+                `Mensagem:\n${mensagem}`
+            );
+            const mailtoURL = `mailto:goscriptsbr@gmail.com?subject=${subject}&body=${body}`;
+
+            // Tentar abrir o cliente de e-mail
+            window.location.href = mailtoURL;
+
+            // Opcional: Limpar o formulário ou mostrar mensagem de sucesso (limitado com mailto:)
+            // alert("Você será redirecionado para o seu aplicativo de e-mail. Por favor, envie a mensagem por lá.");
+            // document.getElementById('contact-form').reset(); // Limpa o formulário
+
+            // Previne o envio padrão do formulário HTML
+            return false;
+        }
     </script>
     <script src="//code.tidio.co/k4sni1crgozpl9g3mx06xmpufeh0c2qw.js" async></script>
 </body>
