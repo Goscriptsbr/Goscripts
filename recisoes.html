@@ -133,6 +133,12 @@
       display: flex;
       justify-content: space-between;
     }
+    small {
+        font-size: 0.85em;
+        color: #777;
+        margin-top: 5px;
+        display: block;
+    }
   </style>
 </head>
 <body>
@@ -147,15 +153,16 @@
 
     <label for="salario">Salário Bruto Mensal (R$)</label>
     <input type="number" id="salario" required min="0" step="0.01" />
+    <small>Informe o salário mensal habitual, já incluindo médias de horas extras e adicional noturno. Este valor será a base para o cálculo de verbas e descontos.</small>
 
-    <label for="admissao">Data de Admissão</label>
-    <input type="date" id="admissao" required />
+    <label for="dataAdmissao">Data de Admissão</label>
+    <input type="date" id="dataAdmissao" required />
 
-    <label for="demissao">Data de Demissão</label>
-    <input type="date" id="demissao" required />
+    <label for="dataDemissao">Data de Demissão</label>
+    <input type="date" id="dataDemissao" required />
 
-    <label for="tipo">Tipo de Rescisão</label>
-    <select id="tipo">
+    <label for="tipoRescisao">Tipo de Rescisão</label>
+    <select id="tipoRescisao">
       <option value="semJusta">Sem Justa Causa</option>
       <option value="pedido">Pedido de Demissão</option>
       <option value="comJusta">Com Justa Causa</option>
@@ -169,7 +176,7 @@
     </select>
 
     <div id="mesesFeriasVencidasContainer" style="display: none;">
-      <label for="mesesFeriasVencidas">Meses de Férias Vencidas (Ex: 12)</label>
+      <label for="mesesFeriasVencidas">Quantos períodos (12 meses) de férias vencidas? (Ex: 1)</label>
       <input type="number" id="mesesFeriasVencidas" min="0" value="0" />
     </div>
 
@@ -178,9 +185,12 @@
       <option value="nao" selected>Não</option>
       <option value="sim">Sim</option>
     </select>
+    <small>Se a rescisão for "Sem Justa Causa" ou "Acordo" e o aviso não for cumprido, ele será indenizado e acrescido ao cálculo.</small>
+
 
     <label for="saldoFgts">Saldo Atual do FGTS (R$)</label>
     <input type="number" id="saldoFgts" required min="0" step="0.01" value="0" />
+    <small>Este valor será a base para o cálculo da multa de 40% ou 20% do FGTS, dependendo do tipo de rescisão. Verbas de FGTS e sua multa são indenizatórias e não geram desconto de INSS ou IRRF.</small>
 
     <label for="tipoJornada">Tipo de Jornada de Trabalho</label>
     <select id="tipoJornada">
@@ -188,6 +198,7 @@
         <option value="12x36">Escala 12x36</option>
         <option value="alternada">Um dia sim, um dia não</option>
     </select>
+    <small>Para o cálculo estimado de horas noturnas e diárias.</small>
 
     <div id="jornadaPadraoInputs">
         <label>Horários da Jornada (Padrão)</label>
@@ -214,6 +225,20 @@
         </div>
     </div>
     
+    <div class="section-title" style="margin-top: 30px;">Benefícios e Outros Descontos</div>
+
+    <label for="valorMensalVT">Valor Mensal do Vale-Transporte (R$)</label>
+    <input type="number" id="valorMensalVT" min="0" step="0.01" value="0" />
+    <small>Informe o valor total do VT que a empresa pagaria mensalmente. O sistema calculará o desconto proporcional (limitado a 6% do salário proporcional).</small>
+
+    <label for="valorMensalVA">Valor Mensal do Vale-Alimentação/Refeição (R$)</label>
+    <input type="number" id="valorMensalVA" min="0" step="0.01" value="0" />
+    <small>Informe o valor total do VA/VR que a empresa pagaria mensalmente. O sistema calculará o desconto proporcional aos dias úteis.</small>
+
+    <label for="outrosDescontos">Outros Descontos (Adiantamentos, Empréstimos, etc.) (R$)</label>
+    <input type="number" id="outrosDescontos" min="0" step="0.01" value="0" />
+    <small>Valores que devem ser descontados do colaborador.</small>
+    
     <button type="submit">Calcular Rescisão</button>
     <button type="button" onclick="gerarPDF()">Gerar PDF</button>
   </form>
@@ -237,7 +262,7 @@
           mesesFeriasVencidasContainer.style.display = 'block';
         } else {
           mesesFeriasVencidasContainer.style.display = 'none';
-          document.getElementById('mesesFeriasVencidas').value = 0; // Reset value when hidden
+          document.getElementById('mesesFeriasVencidas').value = 0;
         }
       });
 
@@ -256,8 +281,7 @@
               fimAlmocoInput.removeAttribute('required');
           }
       });
-      // Trigger initial display state
-      tipoJornadaSelect.dispatchEvent(new Event('change'));
+      tipoJornadaSelect.dispatchEvent(new Event('change')); // Trigger initial display state
     });
 
     function diferencaHoras(inicio, fim) {
@@ -265,7 +289,7 @@
       const [hf, mf] = fim.split(':').map(Number);
       let minutosInicio = hi * 60 + mi;
       let minutosFim = hf * 60 + mf;
-      if (minutosFim < minutosInicio) minutosFim += 24 * 60; // Handles overnight shifts
+      if (minutosFim < minutosInicio) minutosFim += 24 * 60; // Lida com jornada que vira o dia
       return (minutosFim - minutosInicio) / 60;
     }
 
@@ -274,107 +298,177 @@
       const [hf, mf] = fim.split(':').map(Number);
       let inicioMin = hi * 60 + mi;
       let fimMin = hf * 60 + mf;
-      if (fimMin < inicioMin) fimMin += 24 * 60;
+      if (fimMin < inicioMin) fimMin += 24 * 60; // Lida com jornada que vira o dia
 
       let totalNoturno = 0;
-      const noturno1Inicio = 22 * 60; // 22:00
-      const noturno1Fim = 24 * 60;   // 24:00 (midnight)
-      const noturno2Inicio = 0 * 60; // 00:00
-      const noturno2Fim = 5 * 60;    // 05:00
+      // Período noturno CLT: 22:00 às 05:00
+      const noturnoInicio1 = 22 * 60; 
+      const noturnoFim1 = 24 * 60;   
+      const noturnoInicio2 = 0 * 60;   
+      const noturnoFim2 = 5 * 60;    
 
-      // Helper to calculate overlap
       function intersecao(aStart, aEnd, bStart, bEnd) {
         const start = Math.max(aStart, bStart);
         const end = Math.min(aEnd, bEnd);
         return Math.max(0, end - start);
       }
 
-      // Check for overlap on the first day
-      totalNoturno += intersecao(inicioMin, fimMin, noturno1Inicio, noturno1Fim);
-      totalNoturno += intersecao(inicioMin, fimMin, noturno2Inicio, noturno2Fim);
+      // Interseção com o período noturno do dia de início
+      totalNoturno += intersecao(inicioMin, Math.min(fimMin, 24 * 60), noturnoInicio1, noturnoFim1);
+      totalNoturno += intersecao(inicioMin, Math.min(fimMin, 24 * 60), noturnoInicio2, noturnoFim2);
 
-      // If the shift crosses midnight, check the next day's early morning hours
+      // Se a jornada passar para o dia seguinte, calcula a interseção com o período noturno do dia seguinte
       if (fimMin > 24 * 60) {
-        totalNoturno += intersecao(0, fimMin - 24 * 60, noturno2Inicio, noturno2Fim);
+        totalNoturno += intersecao(0, fimMin - 24 * 60, noturnoInicio2, noturnoFim2);
       }
-      return totalNoturno / 60;
+      return totalNoturno / 60; // Retorna em horas
     }
 
-    function calcularMesesProporcionais(admissao, demissao) {
-      let anos = demissao.getFullYear() - admissao.getFullYear();
-      let meses = demissao.getMonth() - admissao.getMonth();
-      let totalMeses = anos * 12 + meses;
-      if (demissao.getDate() >= 15) {
-        totalMeses++; // If hired on or after the 15th, count the current month
-      }
-      return totalMeses;
-    }
-
-    function calcularAvisoPrevioIndenizado(admissao, demissao, salario) {
-      const diffTime = Math.abs(demissao - admissao);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Total days worked
-      const anosTrabalhados = Math.floor(diffDays / 365); // Simplified year calculation
+    function calcularMesesFeriasProporcionais(admissao, demissao) {
+      // Esta função é usada para FÉRIAS PROPORCIONAIS (período aquisitivo)
+      // Ela calcula os meses inteiros de contrato + o último mês se trabalhado >= 15 dias
+      let meses = 0;
       
-      let diasAviso = 30; // Base days
-      if (anosTrabalhados > 0) {
-        diasAviso += Math.min(60, anosTrabalhados * 3); // +3 days per year, max 60 additional
+      // Calculate full months
+      meses = (demissao.getUTCFullYear() - admissao.getUTCFullYear()) * 12;
+      meses += (demissao.getUTCMonth() - admissao.getUTCMonth());
+      
+      // Check if the last month counts as an avo (15 days or more worked)
+      // If demission date is 15th or later of the month, that month counts
+      // If admission date is 15th or earlier, that month counts
+      if (demissao.getUTCDate() >= 15 && demissao.getUTCMonth() !== admissao.getUTCMonth() || 
+          (demissao.getUTCMonth() === admissao.getUTCMonth() && (demissao.getUTCDate() - admissao.getUTCDate() + 1) >= 15)) {
+          meses++;
       }
-      return (salario / 30) * diasAviso;
+      // Special case: if admission and demission are in the same month and less than 15 days, it shouldn't count.
+      if (meses > 0 && demissao.getUTCMonth() === admissao.getUTCMonth() && demissao.getUTCFullYear() === admissao.getUTCFullYear() && (demissao.getUTCDate() - admissao.getUTCDate() + 1) < 15) {
+          meses = 0; // If less than 15 days in the same month, no avo for proportional
+      }
+
+      return Math.max(0, meses); // Ensure it's not negative
     }
 
-    // --- Funções de Cálculo de INSS e IRRF (Tabelas de 2024 como base) ---
+
+    function calcularAvosDecimoTerceiro(admissao, demissao) {
+        let avos = 0;
+        const anoDemissao = demissao.getUTCFullYear();
+        
+        let mesInicioContagem = (admissao.getUTCFullYear() === anoDemissao) ? admissao.getUTCMonth() : 0; // Janeiro ou mês da admissão
+        
+        for (let mes = mesInicioContagem; mes <= demissao.getUTCMonth(); mes++) {
+            let inicioDoMes = new Date(anoDemissao, mes, 1);
+            let fimDoMes = new Date(anoDemissao, mes + 1, 0); // Último dia do mês
+            let diasTrabalhadosNoMes = 0;
+
+            if (mes === admissao.getUTCMonth() && anoDemissao === admissao.getUTCFullYear()) {
+                // Se é o mês de admissão no ano de demissão
+                diasTrabalhadosNoMes = Math.min(demissao.getUTCDate(), fimDoMes.getUTCDate()) - admissao.getUTCDate() + 1;
+            } else if (mes === demissao.getUTCMonth()) {
+                // Se é o mês de demissão (e não é o mesmo mês da admissão)
+                diasTrabalhadosNoMes = demissao.getUTCDate();
+            } else {
+                // Para meses completos entre a admissão e demissão no mesmo ano
+                diasTrabalhadosNoMes = fimDoMes.getUTCDate();
+            }
+            
+            if (diasTrabalhadosNoMes >= 15) {
+                avos++;
+            }
+        }
+        return Math.max(0, avos);
+    }
+
+    function calcularAvisoPrevioIndenizado(admissao, demissao, salarioBaseCalculo) {
+      const diffTime = Math.abs(demissao.getTime() - admissao.getTime()); // getTime() para milissegundos
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Total de dias de contrato
+      const anosTrabalhados = Math.floor(diffDays / 365.25); // Considera anos bissextos
+      
+      let diasAviso = 30; // 30 dias iniciais
+      // A cada ano completo de serviço, somam-se 3 dias ao aviso prévio, limitado a 60 dias adicionais.
+      if (anosTrabalhados > 0) {
+        diasAviso += Math.min(60, anosTrabalhados * 3); 
+      }
+      return (salarioBaseCalculo / 30) * diasAviso;
+    }
 
     function calcularINSS(baseCalculo) {
         let inss = 0;
-        if (baseCalculo <= 1412.00) {
-            inss = baseCalculo * 0.075;
-        } else if (baseCalculo <= 2666.44) {
-            inss = (1412.00 * 0.075) + ((baseCalculo - 1412.00) * 0.09);
-        } else if (baseCalculo <= 4000.03) {
-            inss = (1412.00 * 0.075) + ((2666.44 - 1412.00) * 0.09) + ((baseCalculo - 2666.44) * 0.12);
-        } else if (baseCalculo <= 7786.02) { // Teto do INSS
-            inss = (1412.00 * 0.075) + ((2666.44 - 1412.00) * 0.09) + ((4000.03 - 2666.44) * 0.12) + ((baseCalculo - 4000.03) * 0.14);
-        } else { // Acima do teto, pega o valor máximo do teto
-            inss = (1412.00 * 0.075) + ((2666.44 - 1412.00) * 0.09) + ((4000.03 - 2666.44) * 0.12) + ((7786.02 - 4000.03) * 0.14);
+        // Tabela INSS 2024 (usada para 2025 até nova portaria)
+        // Faixas e alíquotas progressivas
+        const faixas = [
+            { limite: 1412.00, aliquota: 0.075, deducao: 0.00 },
+            { limite: 2666.44, aliquota: 0.09, deducao: 105.90 }, 
+            { limite: 4000.03, aliquota: 0.12, deducao: 193.30 }, 
+            { limite: 7786.02, aliquota: 0.14, deducao: 333.30 } 
+        ];
+
+        if (baseCalculo <= 0) return 0;
+
+        for (let i = 0; i < faixas.length; i++) {
+            const faixa = faixas[i];
+            
+            if (baseCalculo <= faixa.limite) {
+                inss = (baseCalculo * faixa.aliquota) - faixa.deducao;
+                break;
+            }
+            // Se a base de cálculo for maior que o teto da última faixa, usa o teto
+            if (i === faixas.length - 1 && baseCalculo > faixa.limite) {
+                inss = (faixas[0].limite * faixas[0].aliquota) +
+                       ((faixas[1].limite - faixas[0].limite) * faixas[1].aliquota) +
+                       ((faixas[2].limite - faixas[1].limite) * faixas[2].aliquota) +
+                       ((faixas[3].limite - faixas[2].limite) * faixas[3].aliquota);
+                break;
+            }
         }
-        return inss;
+        return Math.max(0, inss);
     }
 
     function calcularIRRF(baseCalculoIRRF, inssDescontado) {
         let irrf = 0;
         let baseLiquida = baseCalculoIRRF - inssDescontado;
 
-        if (baseLiquida <= 2259.20) { // Faixa de isenção
-            irrf = 0;
-        } else if (baseLiquida <= 2826.65) {
-            irrf = (baseLiquida * 0.075) - 169.44;
-        } else if (baseLiquida <= 3751.05) {
-            irrf = (baseLiquida * 0.15) - 381.44;
-        } else if (baseLiquida <= 4664.68) {
-            irrf = (baseLiquida * 0.225) - 662.77;
-        } else {
-            irrf = (baseLiquida * 0.275) - 896.00;
+        // Tabela IRRF 2024 (usada para 2025 até nova portaria)
+        const faixasIRRF = [
+            { limite: 2259.20, aliquota: 0.00, deducao: 0.00 },
+            { limite: 2826.65, aliquota: 0.075, deducao: 169.44 },
+            { limite: 3751.05, aliquota: 0.15, deducao: 381.44 },
+            { limite: 4664.68, aliquota: 0.225, deducao: 662.77 },
+            { limite: Infinity, aliquota: 0.275, deducao: 896.00 }
+        ];
+
+        if (baseLiquida <= 0) return 0;
+
+        for (let i = 0; i < faixasIRRF.length; i++) {
+            const faixa = faixasIRRF[i];
+            if (baseLiquida <= faixa.limite) {
+                irrf = (baseLiquida * faixa.aliquota) - faixa.deducao;
+                break;
+            }
         }
-        return Math.max(0, irrf); // Garante que o IRRF não seja negativo
+        return Math.max(0, irrf);
     }
-
-    // --- Fim das Funções de Cálculo de INSS e IRRF ---
-
 
     document.getElementById('formRescisao').addEventListener('submit', function (event) {
       event.preventDefault();
 
       const nome = document.getElementById('nome').value;
       const cpf = document.getElementById('cpf').value;
-      const salario = parseFloat(document.getElementById('salario').value);
-      const admissao = new Date(document.getElementById('admissao').value + 'T00:00:00'); 
-      const demissao = new Date(document.getElementById('demissao').value + 'T00:00:00'); 
-      const tipo = document.getElementById('tipo').value;
+      const salarioBase = parseFloat(document.getElementById('salario').value); 
+      
+      // Garante que as datas sejam tratadas como UTC para evitar problemas de fuso horário
+      const admissao = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00Z'); 
+      const demissao = new Date(document.getElementById('dataDemissao').value + 'T00:00:00Z'); 
+      const tipoRescisao = document.getElementById('tipoRescisao').value;
       const feriasVencidasSimNao = document.getElementById('feriasVencidas').value;
       const mesesFeriasVencidas = parseInt(document.getElementById('mesesFeriasVencidas').value) || 0;
       const avisoPrevioCumprido = document.getElementById('avisoPrevio').value === 'sim';
       const saldoFgts = parseFloat(document.getElementById('saldoFgts').value); 
       const tipoJornada = document.getElementById('tipoJornada').value;
+
+      const valorMensalVT = parseFloat(document.getElementById('valorMensalVT').value) || 0;
+      const valorMensalVA = parseFloat(document.getElementById('valorMensalVA').value) || 0;
+      const outrosDescontos = parseFloat(document.getElementById('outrosDescontos').value) || 0;
+
 
       let totalHorasTrabalhadasDia = 0;
       let horasNoturnasDia = 0;
@@ -388,97 +482,124 @@
           horasNoturnasDia = calcularHorasNoturnas(inicioJornada, fimJornada);
       } else if (tipoJornada === '12x36') {
           totalHorasTrabalhadasDia = 12; 
-          horasNoturnasDia = 7; 
-      } else if (tipoJornada === 'alternada') {
+          horasNoturnasDia = 7; // Aproximadamente 7h noturnas em 12h de trabalho (22h às 5h)
+      } else if (tipoJornada === 'alternada') { 
           totalHorasTrabalhadasDia = 8; 
-          horasNoturnasDia = 0; 
+          horasNoturnasDia = 0; // Presumindo jornada diurna para simplificação.
       }
 
+      const remuneracaoParaVerbas = salarioBase; 
 
       // Saldo de Salário
-      const diasNoMesDemissao = new Date(demissao.getFullYear(), demissao.getMonth() + 1, 0).getDate();
-      const diaDemissao = demissao.getDate();
-      const saldoSalario = (salario / diasNoMesDemissao) * diaDemissao;
+      const diasNoMesDemissao = new Date(demissao.getUTCFullYear(), demissao.getUTCMonth() + 1, 0).getUTCDate(); 
+      const diaDemissao = demissao.getUTCDate(); 
+      const saldoSalario = (remuneracaoParaVerbas / diasNoMesDemissao) * diaDemissao; 
 
       // 13º Salário Proporcional
-      const mesesTrabalhadosNoAnoDemissao = demissao.getMonth() + 1; 
-      let decimoTerceiroProporcional = (salario / 12) * mesesTrabalhadosNoAnoDemissao;
-      if (admissao.getFullYear() === demissao.getFullYear() || (admissao.getFullYear() < demissao.getFullYear() && demissao.getMonth() === 0 && demissao.getDate() <= 14)) {
-          // Ajuste para 13º se a admissão for no ano da demissão ou se demissão for em janeiro antes do dia 15
-          decimoTerceiroProporcional = (salario / 12) * calcularMesesProporcionais(admissao, demissao);
-      } else {
-        // Se a admissão foi em ano anterior, o 13º proporcional é contado de janeiro até a demissão
-        decimoTerceiroProporcional = (salario / 12) * mesesTrabalhadosNoAnoDemissao;
-        if (demissao.getDate() < 15 && demissao.getMonth() > 0) { // Se demitido antes do dia 15 e não em janeiro, o mês atual não conta
-            decimoTerceiroProporcional = (salario / 12) * (mesesTrabalhadosNoAnoDemissao - 1);
-        }
-      }
+      const avosDecimoTerceiro = calcularAvosDecimoTerceiro(admissao, demissao);
+      const decimoTerceiroProporcional = (remuneracaoParaVerbas / 12) * avosDecimoTerceiro;
 
       // Férias Proporcionais + 1/3
-      // A contagem de meses de férias é por período aquisitivo, não por ano civil.
-      // Para simplificar na calculadora, usamos meses totais de contrato.
-      const mesesTotaisContrato = calcularMesesProporcionais(admissao, demissao);
-      const feriasProporcionais = (salario / 12) * mesesTotaisContrato;
+      const mesesFeriasProporcionais = calcularMesesFeriasProporcionais(admissao, demissao);
+      const feriasProporcionais = (remuneracaoParaVerbas / 12) * mesesFeriasProporcionais;
       const adicional1TercoFeriasProporcionais = feriasProporcionais / 3;
 
-      // Férias Vencidas + 1/3 (if applicable)
+      // Férias Vencidas + 1/3
       let valorFeriasVencidas = 0;
       let mesesFeriasVencidasDisplay = 'Não';
       if (feriasVencidasSimNao === 'sim' && mesesFeriasVencidas > 0) {
-        valorFeriasVencidas = (salario + (salario / 3)) * (mesesFeriasVencidas / 12); 
-        mesesFeriasVencidasDisplay = `${mesesFeriasVencidas} meses`;
+        valorFeriasVencidas = (remuneracaoParaVerbas + (remuneracaoParaVerbas / 3)) * mesesFeriasVencidas; 
+        mesesFeriasVencidasDisplay = `${mesesFeriasVencidas} período(s)`;
       }
 
       // Aviso Prévio Indenizado
       let avisoPrevioIndenizado = 0;
-      if (!avisoPrevioCumprido && (tipo === 'semJusta' || tipo === 'acordo')) {
-        avisoPrevioIndenizado = calcularAvisoPrevioIndenizado(admissao, demissao, salario);
+      if (!avisoPrevioCumprido && (tipoRescisao === 'semJusta' || tipoRescisao === 'acordo')) {
+        avisoPrevioIndenizado = calcularAvisoPrevioIndenizado(admissao, demissao, remuneracaoParaVerbas);
       }
 
       // Multa FGTS (baseada no saldo informado)
       let multaFGTS = 0;
-      if (tipo === 'semJusta') {
+      if (tipoRescisao === 'semJusta') {
         multaFGTS = saldoFgts * 0.4; // 40% do saldo do FGTS
-      } else if (tipo === 'acordo') {
+      } else if (tipoRescisao === 'acordo') {
         multaFGTS = saldoFgts * 0.2; // 20% do saldo do FGTS
       }
 
       // --- Cálculo de Verbas de INCIDÊNCIA (INSS e IRRF) ---
-      let baseINSS = 0;
-      let baseIRRF = 0;
-
-      // Verbas que incidem INSS e IRRF (regra geral)
-      if (tipo !== 'comJusta' && tipo !== 'pedido') { // Sem justa causa e Acordo geralmente incidem
-         baseINSS += saldoSalario;
-         baseINSS += decimoTerceiroProporcional; // 13º incide INSS e IRRF
-         baseIRRF += saldoSalario;
-      }
       
-      if (!avisoPrevioCumprido && (tipo === 'semJusta' || tipo === 'acordo')) {
-         baseINSS += avisoPrevioIndenizado; // Aviso prévio indenizado incide INSS
-         baseIRRF += avisoPrevioIndenizado; // Aviso prévio indenizado incide IRRF
-      }
-      // Férias (proporcionais e vencidas) + 1/3 NÃO incidem INSS nem IRRF.
-      // Multa FGTS NÃO incide INSS nem IRRF.
-
-      // Cálculo do INSS
+      // Base de cálculo do INSS (incide sobre Saldo de Salário e 13º Salário Proporcional)
+      const baseINSS = saldoSalario + decimoTerceiroProporcional;
       const valorINSS = calcularINSS(baseINSS);
 
-      // Cálculo do IRRF
-      const valorIRRF = calcularIRRF(baseIRRF, valorINSS); // A base do IRRF deduz o INSS
+      // 1. IRRF sobre o 13º Salário (tributação exclusiva na fonte)
+      const baseIRRF13 = decimoTerceiroProporcional;
+      const inss13Proporcional = calcularINSS(baseIRRF13); // Calcula o INSS apenas sobre o 13º para fins de dedução
+      const valorIRRF13 = calcularIRRF(baseIRRF13, inss13Proporcional);
+
+      // 2. IRRF sobre Saldo de Salário e Aviso Prévio Indenizado
+      const baseIRRFDemaisVerbas = saldoSalario + avisoPrevioIndenizado;
+      // Para fins de IRRF sobre demais verbas, o INSS dedutível é o INSS sobre o saldo de salário.
+      const inssSobreSaldoSalarioParaIRRF = calcularINSS(saldoSalario); 
+      const valorIRRFPrincipal = calcularIRRF(baseIRRFDemaisVerbas, inssSobreSaldoSalarioParaIRRF); 
+      
+      const valorIRRFTotal = valorIRRFPrincipal + valorIRRF13;
+
+
+      // --- Cálculo dos Descontos de VT e VA/VR proporcionais ---
+      
+      // Calcular dias úteis totais do mês da demissão (movido para aqui para ser acessível)
+      let diasUteisNoMes = 0;
+      const primeiroDiaMesDemissaoCalc = new Date(demissao.getUTCFullYear(), demissao.getUTCMonth(), 1);
+      const ultimoDiaMesDemissaoCalc = new Date(demissao.getUTCFullYear(), demissao.getUTCMonth() + 1, 0);
+
+      for (let d = primeiroDiaMesDemissaoCalc; d <= ultimoDiaMesDemissaoCalc; d.setUTCDate(d.getUTCDate() + 1)) {
+          const dayOfWeek = d.getUTCDay(); // 0 = Domingo, 6 = Sábado
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Se não for sábado nem domingo
+              diasUteisNoMes++;
+          }
+      }
+
+      // Desconto de VT
+      let descontoVTCalculado = 0;
+      if (valorMensalVT > 0) {
+        // Desconto de VT é limitado a 6% do salário proporcional do mês da rescisão
+        const limite6Porcento = (saldoSalario * 0.06);
+        descontoVTCalculado = Math.min(valorMensalVT, limite6Porcento);
+      }
+
+      // Desconto de VA/VR
+      let descontoVACalculado = 0;
+      if (valorMensalVA > 0) {
+        let diasUteisRestantes = 0;
+        // Percorre do dia seguinte à demissão até o final do mês para contar dias úteis não trabalhados
+        for (let d = new Date(demissao.getUTCFullYear(), demissao.getUTCMonth(), demissao.getUTCDate() + 1); 
+             d <= new Date(demissao.getUTCFullYear(), demissao.getUTCMonth() + 1, 0); 
+             d.setUTCDate(d.getUTCDate() + 1)) {
+            const dayOfWeek = d.getUTCDay(); // 0 = Domingo, 6 = Sábado
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
+                diasUteisRestantes++;
+            }
+        }
+        // Calcula o valor diário do VA com base nos dias úteis TOTAIS do mês
+        // E multiplica pelos dias úteis *não trabalhados* (restantes)
+        const valorDiarioVA = valorMensalVA / diasUteisNoMes; 
+        descontoVACalculado = valorDiarioVA * diasUteisRestantes;
+        descontoVACalculado = Math.max(0, descontoVACalculado);
+      }
+
 
       // --- Cálculo do Total Geral e Total Líquido ---
       let totalVerbasReceber = saldoSalario + decimoTerceiroProporcional + feriasProporcionais + adicional1TercoFeriasProporcionais + valorFeriasVencidas;
       
-      if (tipo === 'semJusta' || tipo === 'acordo') {
-        totalVerbasReceber += multaFGTS;
-      }
-      
-      if (!avisoPrevioCumprido && (tipo === 'semJusta' || tipo === 'acordo')) {
-        totalVerbasReceber += avisoPrevioIndenizado;
+      if (tipoRescisao === 'semJusta' || tipoRescisao === 'acordo') {
+        totalVerbasReceber += multaFGTS; 
+        if (!avisoPrevioCumprido) { 
+            totalVerbasReceber += avisoPrevioIndenizado;
+        }
       }
 
-      const totalDescontos = valorINSS + valorIRRF;
+      const totalDescontos = valorINSS + valorIRRFTotal + descontoVTCalculado + descontoVACalculado + outrosDescontos; 
       const totalLiquido = totalVerbasReceber - totalDescontos;
 
 
@@ -495,8 +616,8 @@
           <span class="resultado-value">${cpf}</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">Salário Bruto:</span>
-          <span class="resultado-value">R$ ${salario.toFixed(2)}</span>
+          <span class="resultado-label">Salário Bruto Mensal:</span>
+          <span class="resultado-value">R$ ${salarioBase.toFixed(2)}</span>
         </div>
         <div class="resultado-item">
           <span class="resultado-label">Data de Admissão:</span>
@@ -508,10 +629,10 @@
         </div>
         <div class="resultado-item">
           <span class="resultado-label">Tipo de Rescisão:</span>
-          <span class="resultado-value">${document.getElementById('tipo').selectedOptions[0].text}</span>
+          <span class="resultado-value">${document.getElementById('tipoRescisao').selectedOptions[0].text}</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">Saldo do FGTS Informado:</span>
+          <span class="resultado-label">Saldo do FGTS Informado (base para multa):</span>
           <span class="resultado-value">R$ ${saldoFgts.toFixed(2)}</span>
         </div>
 
@@ -521,11 +642,11 @@
           <span class="resultado-value">R$ ${saldoSalario.toFixed(2)}</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">13º Salário Proporcional (${mesesTrabalhadosNoAnoDemissao}/12 avos):</span>
+          <span class="resultado-label">13º Salário Proporcional (${avosDecimoTerceiro}/12 avos):</span>
           <span class="resultado-value">R$ ${decimoTerceiroProporcional.toFixed(2)}</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">Férias Proporcionais (${mesesTotaisContrato}/12 avos):</span>
+          <span class="resultado-label">Férias Proporcionais (${mesesFeriasProporcionais}/12 avos):</span>
           <span class="resultado-value">R$ ${feriasProporcionais.toFixed(2)}</span>
         </div>
         <div class="resultado-item">
@@ -533,7 +654,7 @@
           <span class="resultado-value">R$ ${adicional1TercoFeriasProporcionais.toFixed(2)}</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">Férias Vencidas ${mesesFeriasVencidasDisplay !== 'Não' ? `(${mesesFeriasVencidas} meses)` : ''}:</span>
+          <span class="resultado-label">Férias Vencidas ${mesesFeriasVencidasDisplay !== 'Não' ? `(${mesesFeriasVencidasDisplay})` : ''}:</span>
           <span class="resultado-value">R$ ${valorFeriasVencidas.toFixed(2)}</span>
         </div>
         <div class="resultado-item">
@@ -541,7 +662,7 @@
           <span class="resultado-value">R$ ${avisoPrevioIndenizado.toFixed(2)}</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">Multa FGTS:</span>
+          <span class="resultado-label">Multa FGTS (40% ou 20%):</span>
           <span class="resultado-value">R$ ${multaFGTS.toFixed(2)}</span>
         </div>
 
@@ -551,8 +672,24 @@
           <span class="resultado-value">R$ ${valorINSS.toFixed(2)}</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">Desconto IRRF:</span>
-          <span class="resultado-value">R$ ${valorIRRF.toFixed(2)}</span>
+          <span class="resultado-label">Desconto IRRF (Outras Verbas):</span>
+          <span class="resultado-value">R$ ${valorIRRFPrincipal.toFixed(2)}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="resultado-label">Desconto IRRF (13º Salário):</span>
+          <span class="resultado-value">R$ ${valorIRRF13.toFixed(2)}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="resultado-label">Desconto Vale-Transporte (proporcional):</span>
+          <span class="resultado-value">R$ ${descontoVTCalculado.toFixed(2)}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="resultado-label">Desconto Vale-Alimentação/Refeição (proporcional):</span>
+          <span class="resultado-value">R$ ${descontoVACalculado.toFixed(2)}</span>
+        </div>
+        <div class="resultado-item">
+          <span class="resultado-label">Outros Descontos Informados:</span>
+          <span class="resultado-value">R$ ${outrosDescontos.toFixed(2)}</span>
         </div>
         <div class="total-descontos">
           <span>Total de Descontos:</span>
@@ -560,26 +697,33 @@
         </div>
 
 
-        <div class="section-title">Jornada de Trabalho</div>
+        <div class="section-title">Jornada de Trabalho (Estimativa)</div>
         <div class="resultado-item">
-          <span class="resultado-label">Tipo de Jornada:</span>
+          <span class="resultado-label">Tipo de Jornada Selecionada:</span>
           <span class="resultado-value">${document.getElementById('tipoJornada').selectedOptions[0].text}</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">Horas Trabalhadas por Dia (média):</span>
+          <span class="resultado-label">Horas Trabalhadas por Dia (estimado):</span>
           <span class="resultado-value">${totalHorasTrabalhadasDia.toFixed(2)}h</span>
         </div>
         <div class="resultado-item">
-          <span class="resultado-label">Horas Noturnas por Dia (média):</span>
+          <span class="resultado-label">Horas Noturnas por Dia (estimado):</span>
           <span class="resultado-value">${horasNoturnasDia.toFixed(2)}h</span>
         </div>
 
         <div class="resultado-total">
-          <span>Total Líquido a Receber:</span>
+          <span>Total Líquido a Receber (pagamento da empresa):</span>
           <span>R$ ${totalLiquido.toFixed(2)}</span>
         </div>
         <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 20px;">
-          **Atenção:** Esta calculadora simula verbas rescisórias e descontos com base nas tabelas atuais do INSS e IRRF (reajustadas anualmente), e princípios gerais da CLT. Ela não substitui um cálculo oficial, que pode incluir deduções por dependentes, pensão alimentícia, adicionais específicos (insalubridade, periculosidade, horas extras habituais), e particularidades de Convenções Coletivas. Para um cálculo oficial e completo, consulte um profissional de RH, contador ou advogado trabalhista.
+          **Atenção:** Esta calculadora simula verbas rescisórias e descontos com base nas tabelas atuais do INSS e IRRF (reajustadas anualmente), e princípios gerais da CLT.
+          <ul>
+            <li>O INSS é calculado sobre as verbas salariais (como saldo de salário e 13º proporcional), mesmo que o período trabalhado no mês seja curto.</li>
+            <li>O IRRF é calculado sobre as verbas tributáveis (saldo de salário, 13º proporcional e aviso prévio indenizado), e só há desconto se o valor ultrapassar a faixa de isenção mensal.</li>
+            <li>O <b>Salário Bruto Mensal</b> deve ser informado já com as médias de horas extras e adicional noturno habituais.</li>
+            <li>Os valores mensais de VT e VA/VR devem ser informados para que o sistema estime os descontos proporcionais.</li>
+          </ul>
+          Ela não substitui um cálculo oficial, que pode incluir deduções por dependentes, pensão alimentícia, e particularidades de Convenções Coletivas. Para um cálculo oficial e completo, consulte um profissional de RH, contador ou advogado trabalhista.
         </p>
       `;
     });
@@ -627,9 +771,9 @@
         } else if (line.includes('Total de Descontos')) {
             doc.setFontSize(12);
             doc.setFont(undefined, 'bold');
-            doc.setTextColor(220, 53, 69); /* Red color for total discounts */
+            doc.setTextColor(220, 53, 69);
             doc.text(line.trim(), margin, y);
-            doc.setTextColor(0, 0, 0); /* Reset color */
+            doc.setTextColor(0, 0, 0);
             y += 7;
         }
         else {
@@ -648,10 +792,9 @@
           y = 15;
         }
       });
-      // Adiciona o aviso legal no PDF também
       doc.setFontSize(8);
       doc.setFont(undefined, 'italic');
-      doc.text("Atenção: Esta calculadora simula verbas rescisórias e descontos com base nas tabelas atuais do INSS e IRRF (reajustadas anualmente), e princípios gerais da CLT. Ela não substitui um cálculo oficial, que pode incluir deduções por dependentes, pensão alimentícia, adicionais específicos (insalubridade, periculosidade, horas extras habituais), e particularidades de Convenções Coletivas. Para um cálculo oficial e completo, consulte um profissional de RH, contador ou advogado trabalhista.", margin, y + 10, { maxWidth: 190, align: 'justify' });
+      doc.text("Atenção: Esta calculadora simula verbas rescisórias e descontos com base nas tabelas atuais do INSS e IRRF (reajustadas anualmente), e princípios gerais da CLT. O Salário Bruto Mensal deve ser informado já com as médias de horas extras e adicional noturno habituais. Os valores mensais de VT e VA/VR devem ser informados para que o sistema estime os descontos proporcionais. Ela não substitui um cálculo oficial, que pode incluir deduções por dependentes, pensão alimentícia, e particularidades de Convenções Coletivas. Para um cálculo oficial e completo, consulte um profissional de RH, contador ou advogado trabalhista.", margin, y + 10, { maxWidth: 190, align: 'justify' });
 
       doc.save('rescisao.pdf');
     }
