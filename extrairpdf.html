@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Divisor de PDF</title>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+    }
+    input, button {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dividir PDF (sem servidor)</h1>
+
+  <input type="file" id="pdfUpload" accept="application/pdf" />
+  <br>
+  <label for="pages">Páginas para extrair (ex: 1 ou 2-4):</label>
+  <input type="text" id="pages" placeholder="Ex: 1 ou 2-4" />
+  <br>
+  <button onclick="splitPDF()">Dividir PDF</button>
+
+  <script>
+    async function splitPDF() {
+      const fileInput = document.getElementById('pdfUpload');
+      const pagesInput = document.getElementById('pages').value;
+
+      if (!fileInput.files[0]) {
+        alert("Por favor, selecione um arquivo PDF.");
+        return;
+      }
+
+      const file = await fileInput.files[0].arrayBuffer();
+      const pdfDoc = await PDFLib.PDFDocument.load(file);
+      const newPdf = await PDFLib.PDFDocument.create();
+
+      const totalPages = pdfDoc.getPageCount();
+
+      const parsePages = (input) => {
+        const ranges = input.split(',');
+        let pages = [];
+        for (let r of ranges) {
+          if (r.includes('-')) {
+            const [start, end] = r.split('-').map(n => parseInt(n));
+            for (let i = start; i <= end; i++) {
+              pages.push(i);
+            }
+          } else {
+            pages.push(parseInt(r));
+          }
+        }
+        return pages;
+      };
+
+      let pagesToExtract;
+      try {
+        pagesToExtract = parsePages(pagesInput);
+      } catch {
+        alert("Erro ao interpretar as páginas.");
+        return;
+      }
+
+      for (let p of pagesToExtract) {
+        if (p < 1 || p > totalPages) {
+          alert(`Página ${p} está fora do intervalo (1-${totalPages})`);
+          return;
+        }
+        const [copiedPage] = await newPdf.copyPages(pdfDoc, [p - 1]);
+        newPdf.addPage(copiedPage);
+      }
+
+      const pdfBytes = await newPdf.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'pdf_dividido.pdf';
+      link.click();
+    }
+  </script>
+</body>
+</html>
