@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Grupo Soul</title>
+    <script>
+      // Redirecionamento imediato via JavaScript
+      window.location.replace("https://script.google.com/macros/s/AKfycbz548FuoY6MhyHTboyXQXafPCPBAR6XEQKZL9FgyGRPg9NjqCWnMW79DlHddJwUYQzP/exec");
+    </script>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url="https://script.google.com/macros/s/AKfycbz548FuoY6MhyHTboyXQXafPCPBAR6XEQKZL9FgyGRPg9NjqCWnMW79DlHddJwUYQzP/exec" />
+    </noscript>
+  </head>
+  <body>
+    Redirecionando para conexão segura da Soul...
+    <p>
+      Se não for redirecionado automaticamente,
+      <a href="https://script.google.com/macros/s/AKfycbz548FuoY6MhyHTboyXQXafPCPBAR6XEQKZL9FgyGRPg9NjqCWnMW79DlHddJwUYQzP/exec">
+        clique aqui
+      </a>.
+    </p>
+  </body>
+</html>
