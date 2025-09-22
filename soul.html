@@ -1,23 +1,64 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Grupo Soul</title>
-    <script>
-      // Redirecionamento imediato via JavaScript
-      window.location.replace("https://script.google.com/macros/s/AKfycbxXvDWzTy3Kaafnu6LRFMpijbbUfrjsGeG31Y5qmP9yEc7ciE_iZrv5aB_LogI4fHWN/exec");
-    </script>0
-    <noscript>
-      <meta http-equiv="refresh" content="0; url="https://script.google.com/macros/s/AKfycbxXvDWzTy3Kaafnu6LRFMpijbbUfrjsGeG31Y5qmP9yEc7ciE_iZrv5aB_LogI4fHWN/exec" />
-    </noscript>
-  </head>
-  <body>
-    Redirecionando para conexão segura da Soul...
-    <p>
-      Se não for redirecionado automaticamente,
-      <a href="https://script.google.com/macros/s/AKfycbxXvDWzTy3Kaafnu6LRFMpijbbUfrjsGeG31Y5qmP9yEc7ciE_iZrv5aB_LogI4fHWN/exec">
-        clique aqui
-      </a>.
-    </p>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Site Desativado</title>
+  <style>
+    :root{--bg:#0f1724;--card:#111827;--accent:#06b6d4;--muted:#9ca3af}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,var(--bg),#071026);
+      color:#e6eef6;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .card{
+      width:min(860px,92%);
+      background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+      border-radius:14px;
+      box-shadow:0 8px 30px rgba(2,6,23,0.6);
+      padding:34px;
+      text-align:center;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .logo{
+      display:inline-block;
+      width:72px;height:72px;border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),#60a5fa);
+      margin-bottom:18px;
+      box-shadow:0 6px 20px rgba(8,145,178,0.12);
+    }
+    h1{
+      margin:0 0 10px 0;
+      font-size:clamp(20px,4.5vw,36px);
+      letter-spacing:-0.02em;
+    }
+    p{margin:0 0 18px 0;color:var(--muted);font-size:15px}
+    .meta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+    .btn{appearance:none;border:0;padding:10px 16px;border-radius:10px;background:rgba(255,255,255,0.06);color:inherit;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#7c3aed);color:#042027}
+    .small{font-size:13px;color:var(--muted);margin-top:12px}
+    @media (max-width:420px){.card{padding:22px}}
+  </style>
+</head>
+<body>
+  <div class="card" role="main" aria-labelledby="title">
+    <div class="logo" aria-hidden="true"></div>
+    <h1 id="title">Esse site foi desativado</h1>
+    <p>Desculpe — o conteúdo que você procura não está disponível no momento.</p>
+
+    <div class="meta">
+      <button class="btn" onclick="history.back()">Voltar</button>
+      <a href="/" class="btn primary">Ir para a página inicial</a>
+    </div>
+
+    <div class="small">Se você for o administrador do site e deseja reativá-lo, verifique as configurações do servidor ou entre em contato com o suporte.</div>
+  </div>
+</body>
 </html>
