@@ -6,11 +6,11 @@
   <title>Truco Paulista Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* --- Configurações Globais e Variáveis CSS --- */
     :root {
-      --cor-fundo-mesa: #004d00; /* Verde escuro para o fundo */
+      --cor-fundo-mesa: #004d00;
       --cor-fundo-mesa-grad: linear-gradient(135deg, #003300, #006400);
       --cor-texto-principal: #f0f0f0;
       --cor-carta-fundo: #fff;
@@ -18,44 +18,44 @@
       --cor-carta-verso: linear-gradient(135deg, #555, #888);
       --cor-naipe-vermelho: #c00;
       --cor-naipe-preto: #111;
-      --cor-botao-primario: #ffc107; /* Amarelo Truco */
+      --cor-botao-primario: #ffc107;
       --cor-botao-primario-hover: #e0a800;
-      --cor-botao-sucesso: #28a745; /* Verde Aceitar */
+      --cor-botao-sucesso: #28a745;
       --cor-botao-sucesso-hover: #218838;
-      --cor-botao-perigo: #dc3545; /* Vermelho Recusar/Voltar */
+      --cor-botao-perigo: #dc3545;
       --cor-botao-perigo-hover: #c82333;
-      --cor-botao-info: #007bff; /* Azul Aumentar/Regras */
+      --cor-botao-info: #007bff;
       --cor-botao-info-hover: #0056b3;
-      --cor-botao-secundario: #6c757d; /* Cinza (Ex: Jogar Novamente) */
+      --cor-botao-secundario: #6c757d;
       --cor-botao-secundario-hover: #5a6268;
-      --cor-destaque: #ffeb3b; /* Amarelo brilhante para Vira/Manilha */
-      --cor-fundo-overlay-escuro: rgba(0, 0, 0, 0.65); /* Fundo escuro para mensagens/respostas */
+      --cor-destaque: #ffeb3b;
+      --cor-fundo-overlay-escuro: rgba(0, 0, 0, 0.65);
       --cor-borda-overlay: rgba(255, 255, 255, 0.15);
       --sombra-overlay: 0 3px 8px rgba(0,0,0,0.5);
       --sombra-carta: 2px 4px 8px rgba(0,0,0,0.4);
       --sombra-carta-hover: 4px 8px 12px rgba(0,0,0,0.5);
     }
-
     /* --- Estilos Gerais --- */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
     body {
       background-color: var(--cor-fundo-mesa);
-      /* Textura sutil de feltro */
       background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
       background-size: 5px 5px;
       color: var(--cor-texto-principal);
       font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
-      overflow: hidden; /* Previne barras de rolagem */
+      overflow: hidden;
       min-height: 100vh;
     }
-
-    /* --- ESTILOS DO MENU E REGRAS --- */
+   
+    html, body {
+  height: 100%;
+}
+    /* --- ESTILOS DO NOVO MENU --- */
     #menu-inicio, #regras-jogo {
         position: fixed;
         top: 0; left: 0;
@@ -69,62 +69,139 @@
         padding: 20px;
         text-align: center;
         color: var(--cor-texto-principal);
-        backdrop-filter: blur(3px); /* Efeito leve de desfoque no fundo (opcional) */
+        backdrop-filter: blur(3px);
+        position: relative;
     }
-
+    /* Estilos do Título */
     #menu-inicio h1 {
-        font-size: 3.5rem;
-        margin-bottom: 50px;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.6);
-        font-weight: 700;
+        font-family: 'Creepster', cursive;
+        font-size: 5rem;
+        margin-bottom: 30px;
+        color: var(--cor-destaque);
+        text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+        animation: pulso-titulo 2s ease-in-out infinite alternate;
     }
-
-    /* Botões gerais para Menu e Regras */
+    /* Animação do Título */
+    @keyframes pulso-titulo {
+      from { transform: scale(1); text-shadow: 4px 4px 8px rgba(0,0,0,0.8); }
+      to { transform: scale(1.05); text-shadow: 6px 6px 12px rgba(0,0,0,0.9); }
+    }
+          /* Estilos para os Botões (Novos) */
     .botao-menu {
-        padding: 18px 35px;
-        font-size: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        padding: 18px 45px;
+        font-size: 1.6rem;
         font-weight: bold;
         border: none;
-        border-radius: 10px;
+        border-radius: 12px;
         cursor: pointer;
-        transition: background-color 0.25s ease-out, transform 0.15s ease-out, box-shadow 0.2s ease;
-        box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-        margin: 12px;
-        min-width: 200px;
+        transition: transform 0.25s ease-out, box-shadow 0.25s ease, filter 0.25s ease;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+        filter: drop-shadow(0 0 5px rgba(0,0,0,0.2));
+        margin: 15px;
+        min-width: 250px;
         color: white;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 2px;
+        text-shadow: 1px 1px 2px black;
+        border: 2px solid rgba(255, 255, 255, 0.15); /* Borda mais sutil */
     }
-
-     .botao-menu:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 15px rgba(0,0,0,0.4);
-     }
-     .botao-menu:active {
+    .botao-menu::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.2) 100%);
+        transform: translateY(-100%);
+        transition: transform 0.5s ease-out;
+    }
+    .botao-menu:hover::before {
+        transform: translateY(0);
+    }
+    .botao-menu:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+        filter: drop-shadow(0 0 10px rgba(255,255,255,0.7)); /* Brilho branco */
+    }
+    .botao-menu:active {
         transform: scale(0.97);
-        box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-     }
-
-    #botao-jogar-menu { background-color: var(--cor-botao-sucesso); }
-    #botao-jogar-menu:hover { background-color: var(--cor-botao-sucesso-hover); }
-
-    #botao-regras-menu { background-color: var(--cor-botao-info); }
-    #botao-regras-menu:hover { background-color: var(--cor-botao-info-hover); }
-
-    #regras-jogo {
-        justify-content: flex-start;
-        overflow-y: auto;
-        text-align: left;
-        display: none; /* Começa escondido */
+        box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+        filter: drop-shadow(0 0 3px rgba(0,0,0,0.2));
     }
-
+    /* Estilos específicos para cada botão mantidos */
+    #botao-jogar-menu {
+        background-color: var(--cor-botao-sucesso);
+        border-color: var(--cor-botao-sucesso-hover); /* Borda da cor do hover */
+    }
+    #botao-jogar-menu:hover {
+        background-color: var(--cor-botao-sucesso-hover);
+        border-color: var(--cor-botao-sucesso);
+    }
+    #botao-regras-menu {
+        background-color: var(--cor-botao-info);
+        border-color: var(--cor-botao-info-hover); /* Borda da cor do hover */
+    }
+    #botao-regras-menu:hover {
+        background-color: var(--cor-botao-info-hover);
+        border-color: var(--cor-botao-info);
+    }
+    /* Efeito de Cartas de Fundo */
+    .fundo-carta {
+        position: absolute;
+        width: 100px;
+        height: 140px;
+        background: var(--cor-carta-verso);
+        border: 2px solid #222;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        opacity: 0.1;
+        z-index: -1;
+        animation: flutuar-carta 25s linear infinite;
+    }
+    .fundo-carta:nth-child(1) { top: 15%; left: 10%; transform: rotate(15deg); animation-delay: 0s; }
+    .fundo-carta:nth-child(2) { top: 60%; left: 85%; transform: rotate(-25deg); animation-delay: -5s; }
+    .fundo-carta:nth-child(3) { bottom: 5%; left: 30%; transform: rotate(5deg); animation-delay: -10s; }
+    .fundo-carta:nth-child(4) { top: 25%; right: 5%; transform: rotate(-10deg); animation-delay: -15s; }
+    @keyframes flutuar-carta {
+      0% { transform: translateY(0) rotate(var(--rotacao-inicial)); }
+      50% { transform: translateY(-20px) rotate(var(--rotacao-final)); }
+      100% { transform: translateY(0) rotate(var(--rotacao-inicial)); }
+    }
+    .fundo-carta:nth-child(1) { --rotacao-inicial: 15deg; --rotacao-final: 20deg; }
+    .fundo-carta:nth-child(2) { --rotacao-inicial: -25deg; --rotacao-final: -30deg; }
+    .fundo-carta:nth-child(3) { --rotacao-inicial: 5deg; --rotacao-final: 10deg; }
+    .fundo-carta:nth-child(4) { --rotacao-inicial: -10deg; --rotacao-final: -15deg; }
+    /* --- Estilos do Jogo e Regras --- */
+    #mesa, #regras-jogo {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      justify-content: space-between;
+      padding: 15px;
+      position: relative;
+    }
+    #regras-jogo {
+      justify-content: flex-start;
+      overflow-y: auto;
+      text-align: left;
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: var(--cor-fundo-mesa-grad);
+      padding: 20px;
+      backdrop-filter: blur(3px);
+      z-index: 100;
+    }
     #regras-jogo h2 {
         text-align: center;
         font-size: 2.2rem;
         margin-bottom: 25px;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
-
     #regras-jogo .regras-content {
         background-color: rgba(0, 0, 0, 0.4);
         padding: 20px 30px;
@@ -134,16 +211,13 @@
         margin-bottom: 25px;
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
-
     #regras-jogo p, #regras-jogo li { line-height: 1.7; margin-bottom: 12px; }
     #regras-jogo ul { padding-left: 25px; margin-bottom: 18px; }
     #regras-jogo strong { color: var(--cor-destaque); font-weight: 700; }
-
     #botao-voltar-menu {
        background-color: var(--cor-botao-perigo);
        margin-top: 20px;
        align-self: center;
-       /* A classe .botao-menu já está aplicada no HTML */
     }
     #botao-voltar-menu:hover { background-color: var(--cor-botao-perigo-hover); }
 
@@ -244,7 +318,6 @@
          filter: brightness(0.9); /* Leve escurecida */
     }
 
-
      /* Cartas reveladas da máquina no fim */
      #mao-maquina .carta.carta-revelada { /* Combinação das classes */
          opacity: 0.8;
@@ -301,7 +374,6 @@
     /* Ajuste da fonte dentro da carta jogada para caber */
     #jogada-maquina .carta .valor, #jogada-jogador .carta .valor { font-size: 2rem; }
     #jogada-maquina .carta .naipe, #jogada-jogador .carta .naipe { font-size: 1.6rem; }
-
 
     #info-centro {
         display: flex;
@@ -454,7 +526,6 @@
         margin-bottom: 0; /* Remove margem quando escondido */
      }
 
-
     /* Botão principal de pedir aposta */
     #botao-truco {
       padding: 10px 20px;
@@ -476,7 +547,6 @@
       order: 2; /* Mensagem (1), Botão Truco (2), Respostas (3), Jogar Novamente (4) */
     }
     #botao-truco:hover:not(:disabled) { background-color: var(--cor-botao-primario-hover); }
-
 
     /* Container dos botões de resposta com fundo */
     #resposta-truco {
@@ -559,11 +629,90 @@
      }
      #botao-jogar-novamente:hover { background-color: var(--cor-botao-secundario-hover); }
 
+/* --- NOVO ESTILO: Mão de Onze Modal (Card Flutuante) --- */
+#mao-onze-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    /* Deixamos o fundo transparente ou muito leve, o modal será o card */
+    background-color: rgba(0, 0, 0, 0.05); /* Escurece o mínimo, sem blur */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Alinha no topo */
+    padding-top: 15vh; /* Distância do topo para posicionar melhor */
+    z-index: 1000;
+    pointer-events: auto; /* Garante que o clique funciona */
+}
+
+#mao-onze-modal {
+    background: #2c3e50;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7), 0 0 0 5px rgba(255, 255, 255, 0.1); /* Sombra e borda de destaque */
+    border: 2px solid var(--cor-destaque); /* Borda amarela para destaque */
+    max-width: 90%;
+    width: 350px; /* Tornando o card um pouco menor */
+    animation: scale-in 0.3s ease-out;
+}
+
+@keyframes scale-in {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+#mao-onze-modal h2 {
+    font-size: 1.8rem; /* Um pouco menor */
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    color: var(--cor-destaque);
+}
+
+#mao-onze-modal p {
+    font-size: 1.05rem; /* Um pouco menor */
+    margin-bottom: 20px;
+}
+
+#mao-onze-botoes {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+#mao-onze-botoes button {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#botao-onze-jogar {
+    background-color: var(--cor-botao-sucesso);
+    color: white;
+}
+
+#botao-onze-jogar:hover { background-color: var(--cor-botao-sucesso-hover); }
+
+#botao-onze-correr {
+    background-color: var(--cor-botao-perigo);
+    color: white;
+}
+
+#botao-onze-correr:hover { background-color: var(--cor-botao-perigo-hover); }
+
   </style>
 </head>
 <body>
 
   <div id="menu-inicio">
+    <div class="fundo-carta"></div>
+    <div class="fundo-carta"></div>
+    <div class="fundo-carta"></div>
+    <div class="fundo-carta"></div>
     <h1>Truco Paulista</h1>
     <button id="botao-jogar-menu" class="botao-menu">Jogar</button>
     <button id="botao-regras-menu" class="botao-menu">Regras</button>
@@ -634,6 +783,17 @@
       </div>
       <div id="jogada-jogador"></div>
     </div>
+   
+    <div id="mao-onze-overlay" style="display: none;">
+    <div id="mao-onze-modal">
+        <h2>Mão de Onze!</h2>
+        <p>A mão vale 3 pontos. Você quer jogar ou correr?</p>
+        <div id="mao-onze-botoes">
+            <button id="botao-onze-jogar">Jogar</button>
+            <button id="botao-onze-correr">Correr</button>
+        </div>
+    </div>
+</div>
 
     <div class="mao" id="mao-jogador"></div> <div id="truco-controles">
         <div id="mensagem-truco"></div> <button id="botao-truco" onclick="pedirApostaJogador()" disabled>Truco!</button>
@@ -672,6 +832,8 @@
     let pontuacaoJogador = 0, pontuacaoMaquina = 0;
     let podeJogar = false, jogoEmAndamento = false;
     let vencedorDaMaoAnterior = 'jogador';
+   let elMaoOnzeOverlay, elBotaoOnzeJogar, elBotaoOnzeCorrer;
+  
 
     // --- Variáveis de Estado do Truco (Lógica 1) ---
     let nivelApostaAtual = 'NORMAL';
@@ -744,7 +906,6 @@
         }
     }
 
-
     // --- Lógica Principal (Baralho, Cartas, Força - Lógica 1) ---
     function criarBaralho() {
         baralho = [];
@@ -793,69 +954,78 @@
         renderizarMaos(); // Renderiza após distribuir
     }
 
-    // <<< MODIFICADO: renderizarMaos para usar classes visuais do Visual 2 >>>
+            // <<< MODIFICADO: renderizarMaos para usar classes visuais do Visual 2 e tratar Mão de Onze/Ferro >>>
     function renderizarMaos() {
         if (!elMaoJogador || !elMaoMaquina) return;
         elMaoJogador.innerHTML = '';
 
         // Determina se o jogador pode interagir com as cartas
-        const jogadorPodeJogarCarta = jogoEmAndamento && podeJogar && jogadorDaVez === 'jogador' && estadoTruco !== 'finalizado' && !estadoTruco.startsWith('pedido_');
+        const maoDeOnzeJogador = estadoTruco === 'mao_de_onze_jogador';
+        const maoDeFerro = estadoTruco === 'mao_de_ferro';
+       
+        // CORREÇÃO AQUI: Permite jogar carta se for o turno, NÃO houver aposta pendente E NÃO for Mão de Onze (que exige decisão antes)
+        const jogadorPodeJogarCarta = jogoEmAndamento && podeJogar && jogadorDaVez === 'jogador' &&
+                                      !estadoTruco.startsWith('pedido_') && estadoTruco !== 'finalizado' &&
+                                      !maoDeOnzeJogador;
+        // Na Mão de Ferro, 'maoDeFerro' é true, 'maoDeOnzeJogador' é false, então jogadorPodeJogarCarta será true se for a vez dele.
 
         maoJogador.forEach((carta, i) => {
-            const div = criarElementoCarta(carta); // Usa a nova função
+            // As cartas do jogador SÓ ficam escondidas na Mão de Ferro
+            const deveEsconder = maoDeFerro;
+            const div = criarElementoCarta(carta, deveEsconder);
+           
+            // Habilita a jogabilidade se for o turno normal/ferro do jogador
             if (jogadorPodeJogarCarta) {
-                div.classList.add('carta-jogavel'); // Adiciona classe para feedback visual (brilho, etc.)
-                div.onclick = () => jogadorJogaCarta(i); // Adiciona evento de clique
+                div.classList.add('carta-jogavel');
+                div.onclick = () => jogadorJogaCarta(i);
             } else {
-                // Se não pode jogar, remove a classe e o evento (garantia)
                 div.classList.remove('carta-jogavel');
                 div.onclick = null;
-                 // O CSS do Visual 2 já define cursor default e estilo para não jogável
             }
             elMaoJogador.appendChild(div);
         });
 
-        renderizarMaoMaquinaReal(); // Renderiza a mão da máquina (escondida ou revelada)
+        // A máquina também precisa mostrar cartas escondidas na Mão de Ferro
+        renderizarMaoMaquinaReal(false, maoDeFerro);
+
         atualizarIndicadorTurno(); // Atualiza qual mão deve brilhar
     }
 
+
     // <<< MODIFICADO: renderizarMaoMaquinaReal para usar Visual 2 >>>
-    function renderizarMaoMaquinaReal(revelar = false) {
-        if (!elMaoMaquina) return;
-        elMaoMaquina.innerHTML = '';
+  
+  
+    function renderizarMaoMaquinaReal(revelar = false, maoDeFerro = false) {
+    elMaoMaquina.innerHTML = ''; // Limpa a mão da máquina
 
-        if (revelar && maoMaquina.length > 0) {
-             // Mostra as cartas reais da máquina no fim da mão/jogo
-             maoMaquina.forEach(carta => {
-                 // O terceiro parâmetro 'true' ativa a classe .carta-revelada
-                elMaoMaquina.appendChild(criarElementoCarta(carta, false, true));
-            });
-        } else if (revelar && maoMaquina.length === 0) {
-             // Mensagem se não sobraram cartas (usa classe do Visual 2)
-             const msgSpan = document.createElement('span');
-             msgSpan.className = 'mensagem-sem-cartas';
-             msgSpan.textContent = '(Sem cartas restantes)';
-             elMaoMaquina.appendChild(msgSpan);
-        } else {
-             // Mostra cartas escondidas durante o jogo normal
-             const numCartasVisiveis = maoMaquina.length;
-             for(let i=0; i<numCartasVisiveis; i++){
-                 elMaoMaquina.appendChild(criarElementoCarta({}, true)); // Cria carta escondida
-             }
-
-             // Adiciona placeholders invisíveis para manter o layout se cartas foram jogadas
-             const cartasFaltantes = 3 - numCartasVisiveis;
-             for(let i = 0; i < cartasFaltantes; i++){
-                 const placeholder = document.createElement('div');
-                 // Estilo inline para simular espaço de uma carta invisível
-                 placeholder.style.minWidth = '80px';
-                 placeholder.style.minHeight = '120px';
-                 placeholder.style.visibility = 'hidden'; // Ocupa espaço mas é invisível
-                 placeholder.style.margin = '0 7.5px'; // Aproxima o gap do .mao
-                 elMaoMaquina.appendChild(placeholder);
-             }
+    // Mostra as cartas reais da máquina no fim da mão ou do jogo
+    if (revelar && maoMaquina.length > 0) {
+        maoMaquina.forEach(carta => {
+            const div = criarElementoCarta(carta, false, true);
+            elMaoMaquina.appendChild(div);
+        });
+    } else if (maoDeFerro) {
+        // Na Mão de Ferro, mostra as 3 cartas viradas para baixo
+        for (let i = 0; i < 3; i++) {
+            const div = criarElementoCarta({}, true); // O segundo parâmetro true significa carta virada
+            elMaoMaquina.appendChild(div);
+        }
+    } else {
+        // Mostra as cartas viradas para baixo durante o jogo normal
+        const numCartasVisiveis = maoMaquina.length;
+        for (let i = 0; i < numCartasVisiveis; i++) {
+            const div = criarElementoCarta({}, true);
+            elMaoMaquina.appendChild(div);
+        }
+        // Adiciona placeholders invisíveis para manter o alinhamento
+        const cartasFaltantes = 3 - numCartasVisiveis;
+        for (let i = 0; i < cartasFaltantes; i++) {
+            const placeholder = document.createElement('div');
+            placeholder.classList.add('placeholder-carta');
+            elMaoMaquina.appendChild(placeholder);
         }
     }
+}
 
     // --- Funções de Força e Comparação (Lógica 1 - Mantidas) ---
      function calcularForca(carta) {
@@ -884,8 +1054,7 @@
         return f1 > f2 ? 'c1' : 'c2';
     }
 
-    // --- Controle de Botões e Mensagens ---
-    // <<< MODIFICADO: atualizarBotoesTruco para usar Visual 2 >>>
+        // <<< MODIFICADO: atualizarBotoesTruco para usar Visual 2 >>>
     function atualizarBotoesTruco() {
         if (!elBotaoTruco || !elRespostaTruco || !elFimJogoControles || !elMensagemTruco) return;
 
@@ -910,14 +1079,16 @@
         }
         // Garante que a mensagem só aparece se tiver conteúdo (CSS :empty cuida)
 
-
         if (!jogoFinalizado) {
+            // --- NOVO: Verificação Mão de Onze / Mão de Ferro ---
+            const maoEspecial = pontuacaoJogador === 11 || pontuacaoMaquina === 11;
+           
             // Lógica para habilitar/desabilitar e texto do botão Truco
             const infoNivelAtual = NIVEIS_APOSTA[nivelApostaAtual];
             const proximoNivelChave = infoNivelAtual.proximo;
             let podePedir = false;
 
-            if (proximoNivelChave) {
+            if (proximoNivelChave && !maoEspecial) { // <--- Adicionado a verificação !maoEspecial para desabilitar o truco no 11
                 const infoProximoNivel = NIVEIS_APOSTA[proximoNivelChave];
                 elBotaoTruco.textContent = `${infoProximoNivel.nomeDisplay}!`; // Define o texto (Truco!, Seis!, etc.)
 
@@ -930,8 +1101,8 @@
                             (estadoTruco === 'normal' ||
                              (estadoTruco.startsWith('aceito_') && quemPediuUltimaAposta === 'maquina'));
             } else {
-                elBotaoTruco.textContent = 'Máximo!';
-                podePedir = false; // Não pode pedir no nível máximo
+                elBotaoTruco.textContent = maoEspecial ? 'Mão de Onze!' : 'Máximo!';
+                podePedir = false; // Não pode pedir no nível máximo ou na Mão de Onze
             }
 
             elBotaoTruco.disabled = !podePedir;
@@ -968,7 +1139,6 @@
             }, tempo);
         }
     }
-
 
     // --- Lógica de Jogada de Carta (Lógica 1 com adaptações visuais) ---
     function jogadorJogaCarta(indice) {
@@ -1436,7 +1606,6 @@
          }
     }
 
-
     // --- Finalização da Mão e Jogo ---
 
     // <<< MODIFICADO: finalizarMaoAposRecusa com Visual 2 >>>
@@ -1505,7 +1674,6 @@
         //     bolinha.classList.remove('preenchendo');
         // }, 500); // Tempo > duração da transição CSS
     }
-
 
     // <<< MODIFICADO: finalizarRodada com Visual 2 (chama atualizarBolinhaRodada) >>>
     function finalizarRodada() {
@@ -1676,15 +1844,24 @@
 
     // --- Controle de Turno e Placar ---
 
-    // <<< MODIFICADO: iniciarTurno com Visual 2 (chama renderizarMaos e atualizarIndicadorTurno) >>>
+            // <<< MODIFICADO: iniciarTurno com Visual 2 (chama renderizarMaos e atualizarIndicadorTurno) >>>
     function iniciarTurno() {
         // Chamado no início de cada rodada ou quando a vez troca após aposta
+       
+        // CORREÇÃO AQUI: 'jogoEmAnadamento' alterado para 'jogoEmAndamento'
         if (!jogoEmAndamento || estadoTruco === 'finalizado') {
             console.log("Início de turno bloqueado: jogo finalizado.");
             atualizarIndicadorTurno(); // Garante que não há brilho
             atualizarBotoesTruco();
             return;
         }
+
+        // CORREÇÃO: Limpa as cartas do centro da mesa no início de cada turno/rodada.
+        if(elJogadaJogador) elJogadaJogador.innerHTML = '';
+        if(elJogadaMaquina) elJogadaMaquina.innerHTML = '';
+        cartaJogadaCentroJogador = null;
+        cartaJogadaCentroMaquina = null;
+
         // Se está esperando resposta de aposta, não inicia turno de jogar carta
         if (estadoTruco.startsWith('pedido_')) {
             console.log("Início de turno bloqueado: aposta pendente -", estadoTruco);
@@ -1696,12 +1873,6 @@
         }
 
         console.log(`--- Rodada ${rodadaAtual}, Vez de ${jogadorDaVez}, Mão valendo ${pontosDaMaoAtual} ---`);
-
-        // Limpa cartas do centro (já feito em finalizarRodada, mas seguro garantir)
-        // if(elJogadaJogador) elJogadaJogador.innerHTML = '';
-        // if(elJogadaMaquina) elJogadaMaquina.innerHTML = '';
-        // cartaJogadaCentroJogador = null;
-        // cartaJogadaCentroMaquina = null;
 
         if (jogadorDaVez === 'maquina') {
             podeJogar = false; // Jogador não pode interagir
@@ -1725,7 +1896,7 @@
         } else { console.error("Elemento 'placar-final' não encontrado!") }
     }
 
-    // --- Função para iniciar nova MÃO (Lógica 1 com Adaptações Visuais) ---
+        // --- Função para iniciar nova MÃO (Lógica 1 com Adaptações Visuais) ---
     function iniciarPartida() {
       if (!jogoEmAndamento && estadoTruco === 'finalizado') {
             console.log("Jogo finalizado. Esperando 'Jogar Novamente'.");
@@ -1740,7 +1911,7 @@
 
       criarBaralho();
       embaralhar();
-      sortearManilha();
+      // sortearManilha() foi REMOVIDO daqui. Será chamado por verificarMaoDeOnze() ou depois dela.
       distribuirCartas(); // Já chama renderizarMaos
 
       rodadaAtual = 1;
@@ -1763,33 +1934,44 @@
       atualizarValorMaoDisplay();
       mostrarMensagemTruco('', 0); // Limpa mensagem
       if(elRespostaTruco) elRespostaTruco.innerHTML = ''; // Limpa respostas
-      // CSS :empty esconde as áreas vazias
 
       // Limpa bolinhas de rodada (remove classes de resultado)
       for (let i = 1; i <= 3; i++) {
           const bolinha = document.getElementById(`bolinha-rodada${i}`);
           if(bolinha) bolinha.className = 'bolinha'; // Reseta visual
       }
-
-      // Limpa área de cartas jogadas
-      if(elJogadaJogador) elJogadaJogador.innerHTML = '';
-      if(elJogadaMaquina) elJogadaMaquina.innerHTML = '';
+     
+        // Limpa cartas do centro
+    if(elJogadaJogador) elJogadaJogador.innerHTML = '';
+    if(elJogadaMaquina) elJogadaMaquina.innerHTML = '';
+    cartaJogadaCentroJogador = null;
+    cartaJogadaCentroMaquina = null;
+     
+      // Checa e trata o caso de Mão de Onze/Ferro
+      if (verificarMaoDeOnze()) {
+        // Se retornar true, o fluxo da Mão de Onze prossegue.
+        return;
+      }
+     
+      // Se NÃO FOR Mão de Onze/Ferro, sorteia a vira e continua normalmente
+      sortearManilha();
+      // Já limpou área de cartas jogadas (ou vai limpar ao jogar)
 
       mostrarPlacar();
-      podeJogar = false; // <<<< IMPORTANTE: Definir podeJogar ANTES de iniciarTurno
+      podeJogar = false;
       iniciarTurno(); // Começa o primeiro turno da mão
     }
 
     // --- Função Jogar Novamente (Lógica 1 com Adaptações Visuais) ---
     function jogarNovamente() {
-        console.log("==================== NOVO JOGO ====================");
-        pontuacaoJogador = 0;
-        pontuacaoMaquina = 0;
-        estadoTruco = 'normal';
-        jogoEmAndamento = true; // Marca como ativo
-        vencedorDaMaoAnterior = 'jogador'; // Jogador começa o novo jogo
-        iniciarPartida(); // Inicia a primeira mão do novo jogo
-    }
+    console.log("==================== NOVO JOGO ====================");
+    pontuacaoJogador = 0;
+    pontuacaoMaquina = 0;
+    estadoTruco = 'normal';
+    jogoEmAndamento = true;
+    vencedorDaMaoAnterior = 'jogador';
+    iniciarPartida();
+}
 
     // --- Função Revelar Cartas no Fim (usa renderizarMaoMaquinaReal) ---
     function revelarCartasMaquinaFimJogo() {
@@ -1823,6 +2005,31 @@
          elMensagemTruco=document.getElementById('mensagem-truco');
          elRespostaTruco=document.getElementById('resposta-truco');
          elFimJogoControles=document.getElementById('fim-jogo-controles');
+        
+         elMaoOnzeOverlay = document.getElementById('mao-onze-overlay');
+    elBotaoOnzeJogar = document.getElementById('botao-onze-jogar');
+    elBotaoOnzeCorrer = document.getElementById('botao-onze-correr');
+
+    elBotaoOnzeJogar.addEventListener('click', () => {
+        elMaoOnzeOverlay.style.display = 'none';
+        console.log("Jogador decidiu JOGAR a Mão de Onze.");
+        mostrarMensagemTruco("Você aceitou! A mão vale 3 pontos.", 3000);
+        // Reinicia a mão com as cartas já distribuídas
+        estadoTruco = 'normal'; // Reseta o estado para a mão poder ser jogada
+        sortearManilha();
+        renderizarMaos();
+        iniciarTurno();
+    });
+
+    elBotaoOnzeCorrer.addEventListener('click', () => {
+        elMaoOnzeOverlay.style.display = 'none';
+        console.log("Jogador decidiu CORRER a Mão de Onze.");
+        mostrarMensagemTruco("Você correu! A Máquina ganhou 1 ponto.", 4000);
+        pontuacaoMaquina += 1;
+        mostrarPlacar();
+        estadoTruco = 'normal'; // Reseta o estado
+        finalizarMaoAposRecusa(); // Reutilizamos a função de recusa
+    });
 
          // Validação básica dos elementos
          const elementosEssenciais = [ /* ... lista de elementos ... */ ]; // (Omitido para brevidade)
@@ -1861,6 +2068,82 @@
          atualizarIndicadorTurno(); // Garante que nenhum turno está ativo inicialmente
          if(elMensagemTruco) elMensagemTruco.textContent = ''; // Limpa e esconde msg inicial
     });
+   
+   // ... (dentro da sua tag <script>)
+function verificarMaoDeOnze() {
+    // Garante que a distribuição foi feita e o placar está em 11
+    if (pontuacaoJogador === 11 && pontuacaoMaquina === 11) {
+        // Mão de Ferro
+        console.log("Mão de Ferro! Ambos com 11 pontos.");
+        estadoTruco = 'mao_de_ferro';
+        pontosDaMaoAtual = 3;
+        mostrarMensagemTruco("MÃO DE FERRO! Joguem suas cartas no escuro.", 0);
+        sortearManilha(); // Sorteia a Vira
+        // Cartas já foram distribuídas, renderizarMaos irá mostrá-las viradas (graças à renderizarMaos)
+        renderizarMaos(); // Renderiza para atualizar visual do jogador (cartas viradas)
+        iniciarTurno();
+        return true;
+
+    } else if (pontuacaoJogador === 11) {
+        // Mão de Onze do jogador
+        console.log("Mão de Onze do Jogador. Aguardando decisão...");
+        estadoTruco = 'mao_de_onze_jogador';
+        pontosDaMaoAtual = 3;
+        atualizarValorMaoDisplay();
+       
+        sortearManilha(); // Sorteia a Vira AQUI (ANTES do modal)
+        // Cartas já foram distribuídas
+        renderizarMaos(); // Renderiza com as cartas do jogador visíveis E a vira no centro
+       
+        elMaoOnzeOverlay.style.display = 'flex';
+        return true;
+
+    } else if (pontuacaoMaquina === 11) {
+        // Mão de Onze da máquina
+        console.log("Mão de Onze da Máquina.");
+        estadoTruco = 'mao_de_onze_maquina';
+        pontosDaMaoAtual = 3;
+        atualizarValorMaoDisplay();
+        sortearManilha(); // Sorteia a Vira AQUI (ANTES da decisão da IA)
+        // Cartas já foram distribuídas
+        renderizarMaos(); // Renderiza com a vira no centro antes de o jogo começar
+        return maquinaDecideMaoOnze();
+    }
+
+    return false;
+}
+
+// ... dentro da sua tag <script>
+function maquinaDecideMaoOnze() {
+    // A máquina decide com base na força de sua mão
+    const forcas = maoMaquina.map(c => calcularForca(c));
+    const temManilha = forcas.some(f => f >= 997);
+    const fortes = forcas.filter(f => f >= VALOR_MAP['A']).length;
+
+    // Lógica simples:
+    // Se tiver uma manilha, uma carta forte, ou duas cartas razoáveis, ela joga.
+    const deveJogar = temManilha || fortes >= 1 || (forcas.filter(f => f >= VALOR_MAP['Q']).length >= 2);
+
+    if (deveJogar) {
+        console.log("Máquina decidiu JOGAR a Mão de Onze.");
+        mostrarMensagemTruco("Máquina decidiu jogar a Mão de Onze!", 3000);
+        // Reseta o estado para normal para a mão poder ser jogada
+        estadoTruco = 'normal';
+        // Reinicia a mão com as cartas já distribuídas
+        sortearManilha();
+        renderizarMaos();
+        iniciarTurno();
+    } else {
+        console.log("Máquina decidiu CORRER a Mão de Onze.");
+        mostrarMensagemTruco("Máquina correu a Mão de Onze! Você ganhou 1 ponto.", 4000);
+        pontuacaoJogador += 1;
+        mostrarPlacar();
+        estadoTruco = 'normal';
+        finalizarMaoAposRecusa(); // Reutilizamos a função de recusa
+    }
+    return true; // Retorna true para a função que a chamou
+}
+
 </script>
 </body>
 </html>
