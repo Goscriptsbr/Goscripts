@@ -3,220 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro do Torneio</title>
+    <title>Keskara eSports - Registro do Torneio</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+        /* --- ESTILOS GLOBAIS --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #1b1b1b;
-        color: #f0f0f0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        flex-direction: column;
-      }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #121212; /* Fundo Ultra Escuro */
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
 
-      header {
-        width: 100%;
-        max-width: 500px;
-        overflow: hidden;
-        border-radius: 10px;
-        margin-bottom: 1em;
-      }
+        /* --- CABEÇALHO / BANNER --- */
+        header {
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 1.5em;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); 
+        }
 
-      header img {
-        width: 100%;
-        height: auto;
-        display: block;
-        object-fit: cover;
-        border-radius: 10px;
-        transition: transform 0.3s ease;
-      }
+        header img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            border-radius: 10px;
+            filter: brightness(0.9);
+        }
 
-      header img:hover {
-        transform: scale(1.05); /* Efeito de zoom ao passar o mouse */
-      }
+        /* --- FORMULÁRIO PRINCIPAL --- */
+        .registration-form {
+            background-color: #1e1e1e; /* Fundo da seção Keskara */
+            padding: 2.5em;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin: 0 1em 2em;
+            /* Sombra futurista */
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 69, 0, 0.1);
+        }
 
-      .registration-form {
-        background-color: #282c34;
-        padding: 2em;
-        border-radius: 10px;
-        width: 100%;
-        max-width: 500px;
-        text-align: center;
-        margin: 0 1em;
-      }
+        .registration-form h2 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            color: #ff4500; /* Laranja Principal */
+            margin-bottom: 0.5em;
+            font-size: 2em;
+            letter-spacing: 1px;
+        }
 
-      .registration-form h2 {
-        color: #ff4500;
-        margin-bottom: 1em;
-        font-size: 1.8em;
-      }
+        p.description {
+            color: #d0d0d0;
+            margin-bottom: 2em;
+            font-size: 1.1em;
+        }
 
-      .form-group {
-        margin-bottom: 1.5em;
-        text-align: left;
-      }
+        /* --- CAMPOS DE INPUT E SELECT --- */
+        .form-group {
+            margin-bottom: 1.5em;
+            text-align: left;
+        }
 
-      .form-group label {
-        display: block;
-        margin-bottom: 0.5em;
-        font-size: 1.1em;
-      }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-size: 1em;
+            font-weight: 600;
+            color: #ff6347; /* Laranja Secundário */
+            text-transform: uppercase;
+        }
 
-      .form-group input, .form-group select {
-        width: 100%;
-        padding: 0.8em;
-        font-size: 1.1em;
-        border-radius: 5px;
-        border: 1px solid #555;
-        background-color: #3a3f47;
-        color: #f0f0f0;
-      }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 1em;
+            font-size: 1.1em;
+            border-radius: 8px;
+            border: 2px solid #ff4500; /* Borda de destaque */
+            background-color: #282c34;
+            color: #f0f0f0;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
 
-      .form-group select {
-        appearance: none;
-      }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #ff6347;
+            box-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
+        }
 
-      .submit-button, .back-button {
-        padding: 0.8em 1.5em;
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #fff;
-        background-color: #ff4500;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        width: 100%;
-        margin-bottom: 1em;
-      }
+        /* Removendo a aparência padrão do select para melhor controle visual */
+        .form-group select {
+            appearance: none;
+        }
+        
+        /* Adiciona um ícone de seta para o select */
+        .form-group.select-wrapper {
+            position: relative;
+        }
 
-      .submit-button:hover, .back-button:hover {
-        background-color: #ff6347;
-      }
+        .form-group.select-wrapper::after {
+            content: "\f0d7"; /* Código Font Awesome para seta para baixo */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            color: #ff4500;
+            pointer-events: none;
+            font-size: 1.2em;
+        }
+
+
+        /* --- BOTÕES --- */
+        .submit-button, .back-button {
+            padding: 1em 1.5em;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #fff;
+            border: none;
+            border-radius: 50px; /* Estilo pill */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 1em;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .submit-button {
+            background-color: #ff4500;
+            margin-top: 1.5em;
+        }
+
+        .submit-button:hover {
+            background-color: #ff6347;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+        }
+        
+        .back-button {
+            background-color: #3a3f47; 
+            color: #ff4500;
+            border: 2px solid #ff4500;
+            font-size: 1em;
+            padding: 0.8em 1.5em;
+        }
+
+        .back-button:hover {
+            background-color: #ff4500;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+        
+        .back-button i, .submit-button i {
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
-    <!-- Header com link de imagem -->
     <header>
-        <a href="https://goscripts.online/Keskara">
-            <img src="https://keskara.neocities.org/Jogo/Compress_20241114_023528_8936.jpg" alt="Logo do Keskara">
+        <a href="https://goscripts.com.br/Keskara">
+            <img src="https://keskara.neocities.org/Jogo/Compress_20241114_023528_8936.jpg" alt="Banner Registro Keskara eSports">
         </a>
     </header>
 
-    <!-- Formulário de Registro -->
     <div class="registration-form">
-        <button onclick="window.location.href='https://goscripts.online/Keskara'" class="back-button">Voltar ao Início</button>
-        <h2>Registro do Torneio</h2>
         
-        <!-- Seleção de Tipo de Torneio -->
-        <div class="form-group">
-            <label for="tournament-type">Selecione o Tipo de Torneio:</label>
-            <select id="tournament-type" onchange="updatePlayerFields()">
-                <option value="">Escolha o Tipo de Torneio</option>
-                <option value="1v1">1v1</option>
-                <option value="2v2">2v2</option>
-                <option value="3v3">3v3</option>
+        <button onclick="window.location.href='https://goscripts.com.br/Keskara'" class="back-button">
+            <i class="fas fa-chevron-left"></i> Voltar ao Site Principal
+        </button>
+        
+        <h2><i class="fas fa-trophy"></i> Registro do Torneio</h2>
+        
+        <p class="description">Selecione a modalidade e insira os dados de todos os jogadores da sua equipe para confirmar a inscrição no campeonato.</p>
+        
+        <div class="form-group select-wrapper">
+            <label for="tournament-type">Selecione a Modalidade:</label>
+            <select id="tournament-type" onchange="updatePlayerFields()" required>
+                <option value="" disabled selected>Escolha a Modalidade do Torneio</option>
+                <option value="1v1">1v1 (Um contra Um)</option>
+                <option value="2v2">2v2 (Dois contra Dois)</option>
+                <option value="3v3">3v3 (Três contra Três)</option>
             </select>
         </div>
 
         <form onsubmit="sendToWhatsApp(event)">
-            <!-- Campos de Jogadores -->
             <div id="player-fields"></div>
 
-            <button type="submit" class="submit-button">Registrar</button>
+            <button type="submit" class="submit-button">
+                 <i class="fab fa-whatsapp"></i> Registrar Equipe (via WhatsApp)
+            </button>
         </form>
     </div>
 
     <script>
+        // Função para atualizar os campos com base na modalidade
         function updatePlayerFields() {
             const tournamentType = document.getElementById("tournament-type").value;
             const playerFields = document.getElementById("player-fields");
+            playerFields.innerHTML = ""; // Limpa os campos anteriores
 
-            // Limpa os campos anteriores
-            playerFields.innerHTML = "";
-
-            // Define o número de jogadores com base no tipo de torneio
             let numPlayers;
             if (tournamentType === "1v1") numPlayers = 1;
             else if (tournamentType === "2v2") numPlayers = 2;
             else if (tournamentType === "3v3") numPlayers = 3;
+            else return; // Não faz nada se nada estiver selecionado
 
-            // Gera campos para cada jogador
+            // Lista de Ranks
+            const ranks = [
+                "Bronze 1", "Bronze 2", "Bronze 3",
+                "Prata 1", "Prata 2", "Prata 3",
+                "Ouro 1", "Ouro 2", "Ouro 3",
+                "Platina 1", "Platina 2", "Platina 3",
+                "Diamante 1", "Diamante 2", "Diamante 3",
+                "Campeão 1", "Campeão 2", "Campeão 3",
+                "Grande-Campeão 1", "Grande-Campeão 2", "Grande-Campeão 3",
+                "Supersonic Legend"
+            ];
+            
+            // Gerar opções de rank
+            let rankOptions = `<option value="" disabled selected>Selecione o Rank</option>`;
+            ranks.forEach(rank => {
+                rankOptions += `<option value="${rank}">${rank}</option>`;
+            });
+
+            // Geração de campos
             for (let i = 1; i <= numPlayers; i++) {
                 playerFields.innerHTML += `
+                    <h3 style="color:#ff6347; font-family:'Orbitron', sans-serif; font-size: 1.2em; margin-top: 1.5em; border-bottom: 1px solid #333; padding-bottom: 5px;">JOGADOR ${i}</h3>
+                    
                     <div class="form-group">
-                        <label for="epic-id-${i}">ID da Epic Games - Jogador ${i}:</label>
-                        <input type="text" id="epic-id-${i}" name="epic_id_${i}" required>
+                        <label for="epic-id-${i}">ID da Epic Games (Nickname):</label>
+                        <input type="text" id="epic-id-${i}" name="epic_id_${i}" required placeholder="Seu Nickname RL">
                     </div>
-                    <div class="form-group">
-                        <label for="rank-${i}">Rank - Jogador ${i}:</label>
+                    
+                    <div class="form-group select-wrapper">
+                        <label for="rank-${i}">Rank Atual:</label>
                         <select id="rank-${i}" name="rank_${i}" required>
-                            <option value="">Selecione o Rank</option>
-                            <option value="bronze 1">Bronze 1</option>
-                            <option value="bronze 2">Bronze 2</option>
-                            <option value="bronze 3">Bronze 3</option>
-                            <option value="prata 1">Prata 1</option>
-                            <option value="prata 2">Prata 2</option>
-                            <option value="prata 3">Prata 3</option>
-                            <option value="ouro 1">Ouro 1</option>
-                            <option value="ouro 2">Ouro 2</option>
-                            <option value="ouro 3">Ouro 3</option>
-                            <option value="platina 1">Platina 1</option>
-                            <option value="platina 2">Platina 2</option>
-                            <option value="platina 3">Platina 3</option>
-                            <option value="diamante 1">Diamante 1</option>
-                            <option value="diamante 2">Diamante 2</option>
-                            <option value="diamante 3">Diamante 3</option>
-                            <option value="campeão 1">Campeão 1</option>
-                            <option value="campeão 2">Campeão 2</option>
-                            <option value="campeão 3">Campeão 3</option>
-                            <option value="grande-campeão 1">Grande-Campeão 1</option>
-                            <option value="grande-campeão 2">Grande-Campeão 2</option>
-                            <option value="grande-campeão 3">Grande-Campeão 3</option>
-                            <option value="Supersonic legend">Supersonic legend</option>
+                            ${rankOptions}
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="platform-${i}">Plataforma - Jogador ${i}:</label>
+                    
+                    <div class="form-group select-wrapper">
+                        <label for="platform-${i}">Plataforma:</label>
                         <select id="platform-${i}" name="platform_${i}" required>
-                            <option value="">Selecione a Plataforma</option>
-                            <option value="pc">PC</option>
-                            <option value="ps4">PlayStation</option>
-                            <option value="xbox">Xbox</option>
-                            <option value="switch">Nintendo Switch</option>
+                            <option value="" disabled selected>Selecione a Plataforma</option>
+                            <option value="PC">PC</option>
+                            <option value="PlayStation">PlayStation</option>
+                            <option value="Xbox">Xbox</option>
+                            <option value="Nintendo Switch">Nintendo Switch</option>
                         </select>
                     </div>
                 `;
             }
         }
 
+        // Função para enviar os dados para o WhatsApp
         function sendToWhatsApp(event) {
             event.preventDefault();
 
             const tournamentType = document.getElementById("tournament-type").value;
-            let message = `Registro do Torneio: ${tournamentType}%0A`;
-
-            const numPlayers = tournamentType === "1v1" ? 1 : tournamentType === "2v2" ? 2 : 3;
-
-            for (let i = 1; i <= numPlayers; i++) {
-                const epicId = document.getElementById(`epic-id-${i}`).value;
-                const rank = document.getElementById(`rank-${i}`).value;
-                const platform = document.getElementById(`platform-${i}`).value;
-
-                message += `%0AJogador ${i}:%0AID da Epic Games: ${epicId}%0ARank: ${rank}%0APlataforma: ${platform}%0A`;
+            if (!tournamentType) {
+                 alert("Por favor, selecione primeiro a Modalidade do Torneio (1v1, 2v2 ou 3v3).");
+                 return;
             }
 
-            const whatsappUrl = `https://wa.me/5519988283178?text=${message}`;
+            let message = `*REGISTRO NO TORNEIO KESKARA*%0A%0A`;
+            message += `*MODALIDADE:* ${tournamentType}%0A%0A`;
+
+            const numPlayers = tournamentType === "1v1" ? 1 : tournamentType === "2v2" ? 2 : 3;
+            let allFieldsValid = true;
+
+            for (let i = 1; i <= numPlayers; i++) {
+                const epicIdInput = document.getElementById(`epic-id-${i}`);
+                const rankInput = document.getElementById(`rank-${i}`);
+                const platformInput = document.getElementById(`platform-${i}`);
+                
+                if (!epicIdInput || !rankInput || !platformInput) {
+                    allFieldsValid = false;
+                    break;
+                }
+                
+                const epicId = epicIdInput.value;
+                const rank = rankInput.value;
+                const platform = platformInput.value;
+
+                if (!epicId || !rank || !platform) {
+                    allFieldsValid = false;
+                    break;
+                }
+                
+                message += `*JOGADOR ${i}:*%0A`;
+                message += `  - ID Epic Games: ${epicId}%0A`;
+                message += `  - Rank: ${rank}%0A`;
+                message += `  - Plataforma: ${platform}%0A`;
+            }
+            
+            if (!allFieldsValid) {
+                alert("Por favor, preencha todos os campos obrigatórios antes de registrar.");
+                return;
+            }
+
+            message += `%0A_Confirmo que todos os dados acima estão corretos para o registro no torneio._`;
+
+            // O número do WhatsApp deve ser o do seu manager/organizador.
+            // Usei o número 5519988283178 que estava no seu código original.
+            const whatsappNumber = '5519988283178'; 
+            
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+            
             window.open(whatsappUrl, "_blank");
+            
+            alert("Quase lá! Sua ficha de registro será aberta no WhatsApp. Envie a mensagem para confirmar sua inscrição.");
         }
+        
+        // Inicializa os campos dos jogadores se houver um tipo de torneio pré-selecionado
+        document.addEventListener('DOMContentLoaded', updatePlayerFields);
     </script>
 </body>
 </html>
