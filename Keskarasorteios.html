@@ -3,141 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscrição no Sorteio</title>
+    <title>Keskara eSports - Inscrição no Sorteio</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+        /* Paleta de Cores (Referência) */
+        /* #ff4500 (Laranja Principal) */
+        /* #121212 (Fundo Ultra Escuro) */
+        /* #1e1e1e (Fundo do Formulário) */
+        /* #f0f0f0 (Texto Claro) */
 
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #1b1b1b;
-        color: #f0f0f0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        flex-direction: column;
-      }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      header {
-        width: 100%;
-        max-width: 500px;
-        overflow: hidden;
-        border-radius: 10px;
-        margin-bottom: 1em;
-      }
+        body {
+            font-family: 'Poppins', sans-serif; /* Fonte do site */
+            background-color: #121212; 
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
 
-      header img {
-        width: 100%;
-        height: auto;
-        display: block;
-        object-fit: cover;
-        border-radius: 10px;
-        transition: transform 0.3s ease;
-      }
+        /* --- Cabeçalho e Imagem --- */
+        header {
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 1.5em;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Sombra para destacar */
+        }
 
-      header img:hover {
-        transform: scale(1.05); /* Efeito de zoom ao passar o mouse */
-      }
+        header img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            border-radius: 10px;
+            filter: brightness(0.9);
+        }
 
-      .registration-form {
-        background-color: #282c34;
-        padding: 2em;
-        border-radius: 10px;
-        width: 100%;
-        max-width: 500px;
-        text-align: center;
-        margin: 0 1em;
-      }
+        /* --- Formulário Principal --- */
+        .registration-form {
+            background-color: #1e1e1e; /* Fundo da seção, igual ao site */
+            padding: 2.5em;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin: 0 1em;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 69, 0, 0.1);
+        }
 
-      .registration-form h2 {
-        color: #ff4500;
-        margin-bottom: 1em;
-        font-size: 1.8em;
-      }
+        .registration-form h2 {
+            font-family: 'Orbitron', sans-serif; /* Fonte do título */
+            text-transform: uppercase;
+            color: #ff4500;
+            margin-bottom: 0.5em;
+            font-size: 2em;
+            letter-spacing: 1px;
+        }
+        
+        .registration-form p.description {
+            color: #d0d0d0;
+            margin-bottom: 2em;
+            font-size: 1.1em;
+        }
 
-      .form-group {
-        margin-bottom: 1.5em;
-        text-align: left;
-      }
+        /* --- Campos do Formulário --- */
+        .form-group {
+            margin-bottom: 1.5em;
+            text-align: left;
+        }
 
-      .form-group label {
-        display: block;
-        margin-bottom: 0.5em;
-        font-size: 1.1em;
-      }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-size: 1em;
+            font-weight: 600;
+            color: #ff6347;
+            text-transform: uppercase;
+        }
 
-      .form-group input, .form-group select {
-        width: 100%;
-        padding: 0.8em;
-        font-size: 1.1em;
-        border-radius: 5px;
-        border: 1px solid #555;
-        background-color: #3a3f47;
-        color: #f0f0f0;
-      }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 1em;
+            font-size: 1.1em;
+            border-radius: 8px; /* Mais arredondado */
+            border: 2px solid #ff4500; /* Borda de destaque */
+            background-color: #282c34;
+            color: #f0f0f0;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
 
-      .submit-button, .back-button {
-        padding: 0.8em 1.5em;
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #fff;
-        background-color: #ff4500;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        width: 100%;
-        margin-bottom: 1em;
-      }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #ff6347;
+            box-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
+        }
 
-      .submit-button:hover, .back-button:hover {
-        background-color: #ff6347;
-      }
+        /* --- Botões --- */
+        .submit-button, .back-button {
+            padding: 1em 1.5em;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #fff;
+            border: none;
+            border-radius: 50px; /* Estilo pill do site principal */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 1em;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Botão Enviar */
+        .submit-button {
+            background-color: #ff4500;
+            margin-top: 1.5em;
+        }
+
+        .submit-button:hover {
+            background-color: #ff6347;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Botão Voltar (Estilo secundário) */
+        .back-button {
+            background-color: #3a3f47; /* Cor de fundo mais discreta */
+            color: #ff4500;
+            border: 2px solid #ff4500;
+            font-size: 1em;
+            padding: 0.8em 1.5em;
+        }
+
+        .back-button:hover {
+            background-color: #ff4500;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        
+        .back-button i, .submit-button i {
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
-    <!-- Header com link de imagem -->
     <header>
-        <a href="https://goscripts.online/Keskara">
-            <img src="https://keskara.neocities.org/Jogo/Compress_20241114_023546_6027.jpg" alt="Logo do Keskara">
+        <a href="https://goscripts.com.br/Keskara">
+            <img src="https://keskara.neocities.org/Jogo/Compress_20241114_023546_6027.jpg" alt="Banner Sorteio Keskara eSports">
         </a>
     </header>
 
-    <!-- Formulário de Inscrição no Sorteio -->
     <div class="registration-form">
-        <button onclick="window.location.href='https://goscripts.online/Keskara'" class="back-button">Voltar ao Início</button>
-        <h2>Inscrição no Sorteio</h2>
+        
+        <button onclick="window.location.href='https://goscripts.com.br/Keskara'" class="back-button">
+            <i class="fas fa-chevron-left"></i> Voltar ao Site Principal
+        </button>
+        
+        <h2><i class="fas fa-gift"></i> Sorteio Exclusivo Keskara</h2>
+        
+        <p class="description">Preencha seus dados para garantir sua vaga e concorrer aos prêmios anunciados em nossa comunidade.</p>
         
         <form onsubmit="sendToWhatsApp(event)">
-            <!-- Campo Nome -->
             <div class="form-group">
                 <label for="name">Nome Completo:</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" required placeholder="Seu nome">
             </div>
 
-            <!-- Campo ID da Epic Games -->
             <div class="form-group">
-                <label for="epic-id">ID da Epic Games:</label>
-                <input type="text" id="epic-id" name="epic_id" required>
+                <label for="epic-id">ID da Epic Games (Nickname):</label>
+                <input type="text" id="epic-id" name="epic_id" required placeholder="Ex: PlayerRL#1234">
             </div>
 
-            <!-- Campo Plataforma -->
             <div class="form-group">
                 <label for="platform">Plataforma:</label>
                 <select id="platform" name="platform" required>
-                    <option value="">Selecione a Plataforma</option>
-                    <option value="pc">PC</option>
-                    <option value="ps4">PlayStation</option>
-                    <option value="xbox">Xbox</option>
-                    <option value="switch">Nintendo Switch</option>
+                    <option value="" disabled selected>Selecione sua Plataforma de Jogo</option>
+                    <option value="PC">PC</option>
+                    <option value="PlayStation">PlayStation</option>
+                    <option value="Xbox">Xbox</option>
+                    <option value="Nintendo Switch">Nintendo Switch</option>
+                    <option value="Outra">Outra</option>
                 </select>
             </div>
 
-            <button type="submit" class="submit-button">Participar do Sorteio</button>
+            <button type="submit" class="submit-button">
+                <i class="fab fa-whatsapp"></i> Enviar Inscrição (via WhatsApp)
+            </button>
         </form>
     </div>
 
@@ -149,13 +216,23 @@
             const epicId = document.getElementById("epic-id").value;
             const platform = document.getElementById("platform").value;
 
-            let message = `Inscrição no Sorteio:%0A`;
-            message += `Nome: ${name}%0A`;
-            message += `ID da Epic Games: ${epicId}%0A`;
-            message += `Plataforma: ${platform}%0A`;
+            // Formatação da mensagem para o WhatsApp
+            let message = `*INSCRIÇÃO NO SORTEIO KESKARA*%0A%0A`;
+            message += `*Nome:* ${name}%0A`;
+            message += `*ID da Epic Games:* ${epicId}%0A`;
+            message += `*Plataforma:* ${platform}%0A%0A`;
+            message += `_Confirmo que li as regras no Discord/WhatsApp._`;
 
-            const whatsappUrl = `https://wa.me/5519998133764?text=${message}`;
+            // Número do Keskara (Usei o número padrão 5519998133764 do seu código anterior)
+            const whatsappNumber = '5519998133764'; 
+            
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+            
+            // Abre o WhatsApp em uma nova aba
             window.open(whatsappUrl, "_blank");
+            
+            // Opcional: Feedback ao usuário após envio
+            alert("Sua inscrição está sendo finalizada! Por favor, envie a mensagem no WhatsApp para confirmar sua participação.");
         }
     </script>
 </body>
