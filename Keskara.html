@@ -3,94 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keskara eSports - App Oficial</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    <title>Keskara eSports - Acesso</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
+            margin: 0;
+            padding: 0;
             background-color: #121212;
-            color: #f0f0f0;
-            font-family: 'Poppins', sans-serif;
-            height: 100vh;
+            color: #fff;
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            height: 100vh;
             text-align: center;
-            overflow: hidden;
-            background-image: url('https://keskara.neocities.org/Fonto/Compress_20241114_002657_7840.jpg'); /* Sua imagem de fundo */
+            background-image: url('https://keskara.neocities.org/Fonto/Compress_20241114_002657_7840.jpg');
             background-size: cover;
             background-position: center;
         }
-        /* Camada escura sobre a imagem para ler o texto */
         .overlay {
+            background: rgba(0, 0, 0, 0.85);
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
             z-index: 1;
         }
         .content {
-            position: relative;
             z-index: 2;
             padding: 20px;
-            max-width: 600px;
         }
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3em;
-            color: #ff4500;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 20px rgba(255, 69, 0, 0.6);
-        }
-        p {
-            font-size: 1.2em;
-            color: #ccc;
-            margin-bottom: 40px;
-        }
-        .btn-enter {
-            display: inline-block;
+        h1 { margin-bottom: 10px; color: #ff4500; text-transform: uppercase; }
+        p { color: #ccc; margin-bottom: 30px; }
+        
+        .btn-start {
             background-color: #ff4500;
             color: white;
-            padding: 18px 40px;
+            padding: 15px 30px;
+            text-decoration: none;
             font-size: 1.2em;
             font-weight: bold;
-            text-decoration: none;
             border-radius: 50px;
-            font-family: 'Orbitron', sans-serif;
-            box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+            transition: transform 0.2s;
+            display: inline-block;
         }
-        .btn-enter:hover {
-            transform: scale(1.05);
-            background-color: #ff6347;
-            box-shadow: 0 0 30px rgba(255, 69, 0, 0.8);
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 0.8em;
-            color: #555;
-        }
+        .btn-start:hover { transform: scale(1.05); background-color: #ff6347; }
     </style>
 </head>
 <body>
-
     <div class="overlay"></div>
-
     <div class="content">
         <h1>Keskara eSports</h1>
-        <p>Acompanhe rankings, participe de torneios e gerencie seus pontos no clube.</p>
+        <p>Sistema de Ranking e Torneios</p>
         
-        <a href="https://script.google.com/macros/s/AKfycbzs6XTIbg1974ZOLUYGBE1jmEIbKvSXKkCzkV79hfcdrVtQDjDaWGHuVcr3pVEf8p0K/exec" class="btn-enter">
-            ACESSAR SISTEMA ➜
+        <a href="https://script.google.com/macros/s/AKfycbzs6XTIbg1974ZOLUYGBE1jmEIbKvSXKkCzkV79hfcdrVtQDjDaWGHuVcr3pVEf8p0K/exec" class="btn-start">
+            ACESSAR AGORA ➜
         </a>
-
-        <div class="footer">
-            © 2025 Keskara eSports
-        </div>
     </div>
-
 </body>
 </html>
