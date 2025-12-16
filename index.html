@@ -200,36 +200,46 @@
 
         .card p { font-size: 0.95rem; color: var(--text-muted); }
 
-        /* --- 6. Portfólio (Carousel Melhorado) --- */
         .carousel-wrapper {
-            position: relative;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border: 1px solid var(--border);
-            aspect-ratio: 16/9;
-            max-height: 600px;
-        }
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        border: 1px solid var(--border);
+        /* Reduzi um pouco a altura máxima para logos não ficarem perdidas */
+        height: 400px; 
+        background: var(--card-bg); /* Fundo padrão caso a imagem não carregue */
+    }
 
-        .carousel-images {
-            display: flex;
-            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-            height: 100%;
-        }
+    .carousel-images {
+        display: flex;
+        transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        height: 100%;
+    }
 
-        .carousel-images a {
-            min-width: 100%;
-            height: 100%;
-            position: relative;
-        }
+    .carousel-images a {
+        min-width: 100%;
+        height: 100%;
+        position: relative;
+        display: flex;       /* Centraliza a imagem */
+        align-items: center; /* Centraliza verticalmente */
+        justify-content: center; /* Centraliza horizontalmente */
+        background-color: #181b21; /* Cor de fundo para combinar com o site */
+    }
 
-        .carousel-images img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-        }
+    .carousel-images img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* O SEGREDO: Não estica a imagem */
+        padding: 40px;      /* Espaço ao redor da imagem */
+        opacity: 0.9;
+        transition: transform 0.3s, opacity 0.3s;
+    }
+    
+    .carousel-images a:hover img { 
+        opacity: 1; 
+        transform: scale(1.05); /* Efeito suave de zoom ao passar o mouse */
+    }
         
         .carousel-images a:hover img { opacity: 1; }
 
@@ -512,7 +522,7 @@
     <footer>
         <div class="container">
             <span class="footer-logo">GoScripts.</span>
-            <p class="footer-text">&copy; 2024 GoScripts Soluções Digitais. Todos os direitos reservados.</p>
+            <p class="footer-text">&copy; 2025 GoScripts Soluções Digitais. Todos os direitos reservados.</p>
         </div>
     </footer>
 
