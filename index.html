@@ -3,570 +3,569 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoScripts - Criação de Sites Profissionais</title>
+    <title>GoScripts - Soluções Digitais</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- Variáveis CSS --- */
+        /* --- 1. Variáveis e Reset --- */
         :root {
-            --primary-color: #007BFF; /* Azul principal */
-            --primary-color-darker: #0056b3; /* Azul mais escuro para hover */
-            --bg-color: #000000; /* Fundo principal (preto) */
-            --card-bg-color: #1a1a1a; /* Fundo dos cards (cinza escuro) */
-            --text-color: #ffffff; /* Cor do texto principal (branco) */
-            --text-color-secondary: #cccccc; /* Cor do texto secundário (cinza claro) */
-            --border-color: #333333; /* Cor da borda sutil */
-            --whatsapp-color: #25d366; /* Verde WhatsApp */
-            --font-stack: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Pilha de fontes */
+            --primary: #3b82f6; /* Azul Vibrante */
+            --primary-hover: #2563eb;
+            --accent: #60a5fa; /* Azul Claro para detalhes */
+            --dark-bg: #0f1115; /* Cinza quase preto (mais elegante que #000) */
+            --card-bg: #181b21;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #2d3748;
+            --whatsapp: #25d366;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* --- Reset Básico e Globais --- */
-        *,
-        *::before,
-        *::after {
+        * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-        }
-
-        html, body {
-            height: 100%;
+            scroll-behavior: smooth;
         }
 
         body {
-            display: flex;
-            flex-direction: column;
-            font-family: var(--font-stack);
-            color: var(--text-color-secondary); /* Usar cinza claro para parágrafos */
-            background-color: var(--bg-color);
-            line-height: 1.7; /* Aumentar um pouco o espaçamento entre linhas */
-            font-size: 16px; /* Base de tamanho de fonte */
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
 
-        /* --- Container Principal --- */
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* --- 2. Elementos de Layout --- */
         .container {
             width: 90%;
-            max-width: 1100px; /* Limite máximo para telas grandes */
-            margin-left: auto;
-            margin-right: auto;
-            padding-left: 15px;
-            padding-right: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
         }
 
-        /* --- Header --- */
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        section { padding: 5rem 0; }
+
+        /* --- 3. Navbar --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 17, 21, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover { color: var(--primary); }
+
+        /* --- 4. Hero Section (Cabeçalho) --- */
         header {
-            /* Adiciona um overlay escuro para melhor contraste do texto */
-            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://gozgames.neocities.org/1745943001077.jpg') no-repeat center center;
-            background-size: cover;
-            color: var(--text-color);
-            padding: 8em 0; /* Padding reduzido */
+            height: 100vh;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        /* Remover regras de imagem e p dentro do header se não houver conteúdo visível */
-
-        /* --- Main Content --- */
-        main {
-            flex: 1;
-            padding-top: 3em; /* Espaçamento acima do conteúdo principal */
-            padding-bottom: 3em; /* Espaçamento abaixo */
+            position: relative;
+            /* Imagem com overlay gradiente escuro */
+            background: linear-gradient(rgba(15, 17, 21, 0.8), rgba(15, 17, 21, 0.95)), 
+                        url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
         }
 
-        /* --- Seções --- */
-        section {
-            padding: 3em 0; /* Espaçamento vertical entre seções */
-            /* border-bottom: 1px solid var(--border-color); */ /* Removida borda inferior */
-            margin-bottom: 2em; /* Adicionado espaçamento inferior */
-        }
-        section:last-of-type {
-             margin-bottom: 0; /* Remover margem da última seção antes do form/footer */
+        .hero-content h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
         }
 
-        section h2 {
-            font-size: 2.2em; /* Tamanho do título */
-            color: var(--primary-color);
-            margin-bottom: 1em; /* Espaçamento abaixo do título */
-            text-align: center; /* Centralizar títulos das seções */
-            font-weight: 700; /* Peso da fonte para títulos */
+        .hero-content span { color: var(--primary); }
+
+        .hero-content p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 2.5rem auto;
         }
 
-        section p {
-             color: var(--text-color-secondary); /* Cor de parágrafo padrão */
-             margin-bottom: 1.5em;
-             max-width: 750px; /* Limitar largura de parágrafos para melhor leitura */
-             margin-left: auto;
-             margin-right: auto;
-             text-align: center; /* Centralizar parágrafos introdutórios */
-        }
-        section p:last-of-type {
-            margin-bottom: 0;
-        }
-
-        /* --- Cards (Serviços, Contato Info) --- */
-        .services, .contact {
-            display: grid; /* Usar Grid para melhor controle */
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Layout responsivo */
-            gap: 2em; /* Espaçamento entre os cards */
-            text-align: left; /* Alinhar texto dos cards à esquerda */
-        }
-         .contact {
-            display: block; /* Seção de contato com botão é diferente */
-            text-align: center;
-         }
-
-        .service, .contact-info {
-            background: var(--card-bg-color);
-            border-radius: 8px; /* Bordas levemente arredondadas */
-            padding: 2em;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-            border: 2px solid var(--border-color); /* Borda sutil inicial */
-        }
-
-        .service:hover, .contact-info:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            border-color: var(--primary-color); /* Borda azul no hover */
-        }
-
-        .service h2, .contact-info h2 { /* Estilo para H2 dentro dos cards */
-             font-size: 1.5em;
-             color: var(--text-color); /* Título do card em branco */
-             margin-bottom: 0.8em;
-             text-align: left; /* Alinhar à esquerda */
-        }
-         .service p, .contact-info p {
-             color: var(--text-color-secondary);
-             text-align: left; /* Alinhar à esquerda */
-             margin-bottom: 0.5em; /* Menor espaçamento em parágrafos de card */
-             max-width: none; /* Remover limite de largura dentro dos cards */
-         }
-
-        /* --- Botões --- */
-        button, .button-link { /* Adicionar classe .button-link se usar <a> como botão */
-            display: inline-block; /* Permitir margin/padding */
-            background: var(--primary-color);
-            color: var(--text-color);
-            border: none; /* Remover borda */
-            padding: 0.8em 1.8em; /* Padding ajustado */
-            border-radius: 5px;
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            border: none;
             cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold; /* Texto do botão em negrito */
-            text-decoration: none; /* Remover sublinhado se for link */
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            margin-top: 1em; /* Espaçamento acima do botão */
         }
 
-        button:hover, .button-link:hover {
-            background: var(--primary-color-darker); /* Escurecer no hover */
-            transform: translateY(-2px);
+        .btn:hover {
+            transform: translateY(-3px);
+            background: var(--primary-hover);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6);
         }
 
-        /* --- Carrossel --- */
-        .partners h2 {
-            margin-bottom: 0.5em; /* Menos espaço abaixo do título do carrossel */
+        /* --- 5. Serviços (Cards Modernos) --- */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
         }
-         .partners p {
-            margin-bottom: 2em; /* Mais espaço abaixo do texto introdutório */
-         }
 
-        .carousel {
+        .card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            transition: var(--transition);
             position: relative;
             overflow: hidden;
-            margin-bottom: 2em;
-            border-radius: 8px; /* Arredondar cantos do carrossel */
         }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .card i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .card p { font-size: 0.95rem; color: var(--text-muted); }
+
+        /* --- 6. Portfólio (Carousel Melhorado) --- */
+        .carousel-wrapper {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            aspect-ratio: 16/9;
+            max-height: 600px;
+        }
+
         .carousel-images {
             display: flex;
-            transition: transform 0.5s ease-in-out; /* Transição mais suave */
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            height: 100%;
         }
+
         .carousel-images a {
-            flex: 0 0 100%; /* Garante que cada item ocupe 100% */
             min-width: 100%;
+            height: 100%;
+            position: relative;
         }
+
         .carousel-images img {
             width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover; /* Garante que a imagem cubra a área */
-            aspect-ratio: 16 / 9; /* Proporção comum, ajuste se necessário */
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+            transition: opacity 0.3s;
         }
-        .carousel-button {
+        
+        .carousel-images a:hover img { opacity: 1; }
+
+        .nav-btn {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background-color: rgba(0, 0, 0, 0.6); /* Fundo semi-transparente */
-            color: var(--text-color);
+            background: rgba(0,0,0,0.7);
+            color: #fff;
             border: none;
-            padding: 0.8em 1em; /* Ajuste de padding */
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 1.2em; /* Tamanho do ícone */
             z-index: 10;
-            border-radius: 50%; /* Botões redondos */
-            width: 40px;
-            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background-color 0.3s ease;
+            transition: var(--transition);
         }
-        .carousel-button:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-        .prev {
-            left: 15px;
-        }
-        .next {
-            right: 15px;
+        .nav-btn:hover { background: var(--primary); }
+        .prev { left: 20px; }
+        .next { right: 20px; }
+
+        /* --- 7. Contato e Formulário --- */
+        .contact-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
         }
 
-        /* --- Formulário de Contato --- */
-        .contact-form {
-            max-width: 600px; /* Aumentar um pouco a largura */
-            padding: 2em;
-            background: var(--card-bg-color); /* Fundo de card */
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            margin: 3em auto 2em auto; /* Centralizar e adicionar margem */
-            border: 2px solid var(--border-color); /* Borda sutil */
-            transition: border-color 0.3s ease; /* Transição na borda */
-        }
-        .contact-form:hover {
-             border-color: var(--primary-color); /* Borda azul no hover do form inteiro */
-        }
-
-        .contact-form h2 {
-            color: var(--text-color); /* Título branco */
-            font-size: 1.8em;
-            margin-bottom: 1em;
-            text-align: center;
-        }
-
-        .contact-form form {
+        .contact-info-box {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.2rem;
         }
 
-        .contact-form label {
-            margin-bottom: 0.5em;
-            color: var(--text-color-secondary); /* Label em cinza claro */
-            font-size: 0.9em;
+        .form-box {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
         }
 
-        .contact-form input,
-        .contact-form textarea {
-            margin-bottom: 1.5em; /* Mais espaço abaixo dos inputs */
-            padding: 0.8em; /* Padding interno */
-            border: 1px solid var(--border-color); /* Borda sutil */
-            border-radius: 5px;
-            font-size: 1em;
-            background-color: var(--bg-color); /* Fundo preto */
-            color: var(--text-color); /* Texto branco */
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        .form-group { margin-bottom: 1.5rem; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
         }
 
-        .contact-form input:focus,
-        .contact-form textarea:focus {
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
             outline: none;
-            border-color: var(--primary-color); /* Borda azul no foco */
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Brilho sutil no foco */
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
 
-        .contact-form textarea {
-            min-height: 120px; /* Altura mínima para textarea */
-            resize: vertical; /* Permitir redimensionamento vertical */
-        }
+        textarea.form-input { resize: vertical; min-height: 120px; }
 
-        .contact-form button {
-            align-self: center; /* Centralizar botão no form */
-            padding: 0.8em 2.5em; /* Mais padding horizontal */
-        }
-
-        /* --- Footer --- */
+        /* --- 8. Footer --- */
         footer {
-            background: var(--card-bg-color); /* Fundo cinza escuro consistente */
-            /* Se preferir imagem:
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('URL_DA_IMAGEM_FOOTER.jpg') no-repeat center center;
-            background-size: cover;
-            */
-            color: var(--text-color-secondary);
+            background: #050608;
+            padding: 4rem 0 2rem;
+            border-top: 1px solid var(--border);
             text-align: center;
-            padding: 2em 0; /* Padding do footer */
-            margin-top: auto; /* Empurra o footer para baixo */
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
         }
-        footer p {
-            margin: 0;
-            font-size: 0.9em;
-        }
+        
+        .footer-logo { font-weight: 800; font-size: 1.5rem; color: #fff; margin-bottom: 1rem; display: block;}
+        .footer-text { color: var(--text-muted); font-size: 0.9rem; }
 
-        /* --- Botão Flutuante WhatsApp --- */
+        /* --- 9. WhatsApp Float --- */
         .whatsapp-float {
             position: fixed;
+            bottom: 30px;
+            right: 30px;
             width: 60px;
             height: 60px;
-            bottom: 30px; /* Ajuste a posição vertical */
-            right: 30px; /* Ajuste a posição horizontal */
-            background-color: var(--whatsapp-color);
-            color: var(--text-color);
+            background: var(--whatsapp);
+            color: #fff;
             border-radius: 50%;
-            text-align: center;
-            font-size: 30px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            z-index: 1000; /* Garantir que fique sobre outros elementos */
-            display: flex; /* Para centralizar o ícone */
+            display: flex;
             align-items: center;
             justify-content: center;
-            /* animation: pulse 1.5s infinite; */ /* Animação removida */
+            font-size: 32px;
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+            z-index: 2000;
+            transition: var(--transition);
         }
 
         .whatsapp-float:hover {
-            transform: scale(1.1); /* Aumentar ligeiramente no hover */
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            transform: scale(1.1) rotate(10deg);
         }
 
-        .whatsapp-icon {
-            /* margin-top: 15px; */ /* Removido, flexbox centraliza */
-            width: 30px; /* Definir tamanho explícito */
-            height: 30px;
-        }
-
-        /* --- Media Queries (Responsividade) --- */
+        /* --- Mobile --- */
         @media (max-width: 768px) {
-            body {
-                font-size: 15px; /* Ajustar tamanho base da fonte */
-            }
-
-            header {
-                padding: 6em 0; /* Reduzir padding do header */
-            }
-
-            section h2 {
-                font-size: 1.8em; /* Reduzir títulos */
-            }
-
-             .services {
-                grid-template-columns: 1fr; /* Uma coluna em telas menores */
-             }
-
-            .carousel-button {
-                padding: 0.6em 0.8em;
-                font-size: 1em;
-                width: 35px;
-                height: 35px;
-            }
-             .prev { left: 10px; }
-             .next { right: 10px; }
-
-            .contact-form {
-                width: 90%; /* Ocupar mais largura */
-                padding: 1.5em;
-            }
-             .contact-form h2 {
-                 font-size: 1.6em;
-             }
-
-            .whatsapp-float {
-                width: 60px;
-                height: 60px;
-                bottom: 120px;
-                right: 25px;
-            }
-             .whatsapp-icon {
-                 width: 30px;
-                 height: 30px;
-             }
+            .navbar { padding: 1rem; }
+            .nav-links { display: none; } /* Simples hide para exemplo, ideal seria menu hambúrguer */
+            .hero-content h1 { font-size: 2.5rem; }
+            .contact-layout { grid-template-columns: 1fr; }
         }
-
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            </div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">GoScripts<span style="color:white">.</span></div>
+            <ul class="nav-links">
+                <li><a href="#home">Início</a></li>
+                <li><a href="#services">Serviços</a></li>
+                <li><a href="#portfolio">Portfólio</a></li>
+                <li><a href="#contact">Contato</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header id="home">
+        <div class="container hero-content">
+            <h1>Websites que vendem <br><span>24 horas por dia</span></h1>
+            <p>Transformamos sua visão em uma ferramenta poderosa de negócios. Design moderno, sem mensalidades e totalmente seu.</p>
+            <a href="#contact" class="btn">Solicitar Orçamento Grátis</a>
+        </div>
     </header>
 
     <main>
-        <div class="container">
-            <section class="about">
-                <h2>Sobre Nós</h2>
-                <p>Na GoScript, somos especialistas em criar sites personalizados que atendem às suas necessidades e superam suas expectativas. Nossa equipe é dedicada a proporcionar uma experiência única e eficaz para o seu negócio, isso tudo sem mensalidade alguma.</p>
-                <p>Pague uma unica vez o site com preços muito abaixos do nossos concorrentes, nosso site não cobra nenhuma mensalidade, nem de domínio e nem de hospedagem.</p>
-            </section>
+        <section class="container">
+            <div class="section-title">
+                <h2>Por que escolher a GoScripts?</h2>
+                <p>Esqueça aluguéis de sites. Aqui você paga uma única vez e o site é seu.</p>
+            </div>
+            
+            <div class="services-grid" id="services">
+                <div class="card">
+                    <i class="fas fa-hand-holding-dollar"></i>
+                    <h3>Sem Mensalidades</h3>
+                    <p>Diferente das agências tradicionais, não cobramos aluguel. O código é seu para sempre com pagamento único.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-paint-brush"></i>
+                    <h3>Design Personalizado</h3>
+                    <p>Layouts exclusivos pensados na identidade da sua marca, fugindo do genérico e atraindo clientes.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>100% Responsivo</h3>
+                    <p>Seu site perfeito em qualquer tela: Computadores, Tablets e Celulares, sem quebrar o layout.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-rocket"></i>
+                    <h3>Otimizado (SEO)</h3>
+                    <p>Estrutura leve e código limpo para que o Google encontre sua empresa mais facilmente.</p>
+                </div>
+            </div>
+        </section>
 
-            <section class="partners">
-                <h2>Sites Criados Por Nós</h2>
-                <p>Clique na imagem para visitar o site!</p>
-                <div class="carousel">
+        <section id="portfolio">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Nosso Portfólio</h2>
+                    <p>Veja alguns projetos que já entregamos.</p>
+                </div>
+
+                <div class="carousel-wrapper">
                     <div class="carousel-images" id="carousel-images">
-                        <a href="http://gruposoul.online/" target="_blank" aria-label="Visitar site Gardin">
-                            <img src="https://gozgames.neocities.org/Logo%20horizontal%20-%20fundo%20azul.png" alt="Logo Soul" loading="lazy">
+                        <a href="http://gruposoul.online/" target="_blank">
+                            <img src="https://gozgames.neocities.org/Logo%20horizontal%20-%20fundo%20azul.png" alt="Grupo Soul">
                         </a>
-                         <a href="https://gruposoulbr.com/" target="_blank" aria-label="Visitar site Gameplay">
-                            <img src="https://gozgames.neocities.org/Si%CC%81mbolo%20-%20fundo%20azul.png" alt="Logo Soul" loading="lazy">
+                        <a href="https://gruposoulbr.com/" target="_blank">
+                            <img src="https://gozgames.neocities.org/Si%CC%81mbolo%20-%20fundo%20azul.png" alt="Grupo Soul BR">
                         </a>
-                        <a href="https://uniaogesso.neocities.org/" target="_blank" aria-label="Visitar site União Gesso">
-                            <img src="https://uniaogesso.neocities.org/Imagem/IMG-20240831-WA0033.jpg" alt="Logo União Gesso" loading="lazy">
+                        <a href="https://uniaogesso.neocities.org/" target="_blank">
+                            <img src="https://uniaogesso.neocities.org/Imagem/IMG-20240831-WA0033.jpg" alt="União Gesso">
                         </a>
-                        <a href="https://goscripts.com.br/Keskara" target="_blank" aria-label="Visitar site Keskara">
-                            <img src="https://keskara.neocities.org/Fonto/Compress_20241114_002657_7840.jpg" alt="Logo Keskara" loading="lazy">
-                        </a>
-                        <a href="https://gozgames.neocities.org/Jogos" target="_blank" aria-label="Visitar site GozGames Jogos">
-                            <img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="Logo GozGames" loading="lazy">
-                        </a>
-                        <a href="https://gozgames.neocities.org/Personalize" target="_blank" aria-label="Visitar site GozGames Personalize">
-                            <img src="https://goscript.neocities.org/imagens.png/3cf6affd-15bc-4d03-9a72-95ef680ad308.jpg" alt="Página Personalize GozGames" loading="lazy">
+                        <a href="https://gozgames.neocities.org/Jogos" target="_blank">
+                            <img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="GozGames">
                         </a>
                     </div>
-                    <button class="carousel-button prev" onclick="prevSlide()" aria-label="Slide anterior">&#10094;</button>
-                    <button class="carousel-button next" onclick="nextSlide()" aria-label="Próximo slide">&#10095;</button>
+                    <button class="nav-btn prev" onclick="moveSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <button class="nav-btn next" onclick="moveSlide(1)"><i class="fas fa-chevron-right"></i></button>
                 </div>
-            </section>
+                <p style="text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                    <i class="fas fa-mouse-pointer"></i> Clique na imagem para visitar o site
+                </p>
+            </div>
+        </section>
 
-            <section class="services">
-                <div class="service">
-                    <h2>Criação de Sites Personalizados</h2>
-                    <p>Transformamos sua visão em realidade com um design que reflete a identidade da sua marca.</p>
+        <section id="contact" style="background: linear-gradient(to top, #050608, var(--dark-bg));">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Vamos Conversar?</h2>
+                    <p>Seu projeto começa agora. Entre em contato para um orçamento rápido.</p>
                 </div>
-                <div class="service">
-                    <h2>Desenvolvimento Responsivo</h2>
-                    <p>Sites que funcionam perfeitamente em todos os dispositivos, de desktops a smartphones.</p>
-                </div>
-                <div class="service">
-                    <h2>Otimização para SEO</h2>
-                    <p>Melhore sua visibilidade online com técnicas de SEO que garantem um bom posicionamento nos motores de busca.</p>
-                </div>
-                <div class="service">
-                    <h2>Manutenção e Suporte</h2>
-                    <p>Oferecemos suporte contínuo para garantir que seu site esteja sempre atualizado e funcionando corretamente.</p>
-                </div>
-            </section>
 
-            <section class="contact">
-                <h2>Solicite um Orçamento</h2>
-                <p>Quer saber quanto custa criar um site sob medida para você? Clique no botão abaixo e entre em contato conosco pelo WhatsApp para um orçamento rápido e personalizado!</p>
-                <a href="https://wa.me/5519983198544?text=Ol%C3%A1%2C+gostaria+de+solicitar+um+or%C3%A7amento+para+cria%C3%A7%C3%A3o+de+site." target="_blank" class="button-link">Solicitar Orçamento via WhatsApp</a>
-            </section>
+                <div class="contact-layout">
+                    <div>
+                        <div class="contact-info-box">
+                            <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
+                            <div>
+                                <h4>WhatsApp</h4>
+                                <p style="color:var(--text-muted)">(19) 99813-3764</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-box">
+                            <div class="contact-icon"><i class="far fa-envelope"></i></div>
+                            <div>
+                                <h4>E-mail</h4>
+                                <p style="color:var(--text-muted)">goscriptsbr@gmail.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-box">
+                            <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <div>
+                                <h4>Endereço</h4>
+                                <p style="color:var(--text-muted)">Mogi Guaçu - SP</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 2rem; text-align: center; padding: 2rem; border: 1px dashed var(--border); border-radius: 16px;">
+                            <h3 style="margin-bottom: 1rem;">Prefere atendimento imediato?</h3>
+                            <a href="https://wa.me/5519983198544?text=Olá,%20gostaria%20de%20um%20orçamento%20de%20site." 
+                               class="btn" style="background: var(--whatsapp); width: 100%;">
+                                <i class="fab fa-whatsapp"></i> Chamar no WhatsApp
+                            </a>
+                        </div>
+                    </div>
 
-            <section class="contact-info">
-                 <h2>Informações de Contato</h2>
-                <p>Telefone: (19) 99813-3764</p>
-                <p>E-mail: goscriptsbr@gmail.com</p>
-                <p>Endereço: Margarida Cavalhieri - Santa Terezinha 2, 98, Mogi Guaçu - SP</p>
-            </section>
-        </div>
+                    <div class="form-box">
+                        <form id="contact-form" onsubmit="return sendEmail(event)">
+                            <div class="form-group">
+                                <label for="nome">Seu Nome</label>
+                                <input type="text" id="nome" class="form-input" placeholder="Ex: João Silva" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Seu E-mail</label>
+                                <input type="email" id="email" class="form-input" placeholder="joao@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mensagem">Como podemos ajudar?</label>
+                                <textarea id="mensagem" class="form-input" placeholder="Gostaria de um site para minha empresa..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn" style="width: 100%;">Enviar Mensagem</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
-
-    <section class="contact-form">
-        <h2>Contato via E-mail</h2>
-        <form id="contact-form" onsubmit="return sendEmail()">
-            <label for="nome">Nome:</label>
-            <input type="text" id="nome" name="nome" required>
-
-            <label for="email">E-mail:</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="mensagem">Mensagem:</label>
-            <textarea id="mensagem" name="mensagem" rows="5" required></textarea>
-
-            <button type="submit">Enviar Mensagem</button>
-        </form>
-    </section>
 
     <footer>
         <div class="container">
-             <p>&copy; 2024 GoScript - Transformando Visões em Realidade Online</p>
+            <span class="footer-logo">GoScripts.</span>
+            <p class="footer-text">&copy; 2024 GoScripts Soluções Digitais. Todos os direitos reservados.</p>
         </div>
     </footer>
 
-    <a href="https://wa.me/5519988283178?text=Ol%C3%A1%2C+vim+pelo+site+e+gostaria+de+mais+informa%C3%A7%C3%B5es." class="whatsapp-float" target="_blank" aria-label="Contato via WhatsApp">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="Ícone do WhatsApp" class="whatsapp-icon">
+    <a href="https://wa.me/5519988283178?text=Ol%C3%A1%2C+vim+pelo+site+e+gostaria+de+mais+informa%C3%A7%C3%B5es." class="whatsapp-float" target="_blank" aria-label="WhatsApp">
+        <i class="fab fa-whatsapp"></i>
     </a>
 
     <script>
+        // Carrossel Lógica Simples e Eficiente
         let currentIndex = 0;
-        const intervalTime = 5000; // Tempo em milissegundos (5 segundos)
+        const slidesContainer = document.getElementById('carousel-images');
+        const slides = slidesContainer.querySelectorAll('a');
+        const totalSlides = slides.length;
         let autoSlideInterval;
 
-        function showSlide(index) {
-            const slidesContainer = document.getElementById('carousel-images');
-            const slides = slidesContainer.querySelectorAll('a');
-            const totalSlides = slides.length;
-
-            if (index >= totalSlides) {
-                currentIndex = 0;
-            } else if (index < 0) {
-                currentIndex = totalSlides - 1;
-            } else {
-                currentIndex = index;
-            }
+        function updateCarousel() {
             slidesContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
         }
 
-        function nextSlide() {
-            showSlide(currentIndex + 1);
-        }
-
-        function prevSlide() {
-            showSlide(currentIndex - 1);
+        function moveSlide(direction) {
+            currentIndex += direction;
+            if (currentIndex >= totalSlides) currentIndex = 0;
+            if (currentIndex < 0) currentIndex = totalSlides - 1;
+            updateCarousel();
+            resetTimer();
         }
 
         function startAutoSlide() {
-             stopAutoSlide(); // Garante que não haja múltiplos intervalos rodando
-             autoSlideInterval = setInterval(nextSlide, intervalTime);
+            autoSlideInterval = setInterval(() => moveSlide(1), 5000);
         }
 
-        function stopAutoSlide() {
+        function resetTimer() {
             clearInterval(autoSlideInterval);
+            startAutoSlide();
         }
 
-        // Initialize the carousel
-        document.addEventListener('DOMContentLoaded', () => {
-            showSlide(currentIndex);
-            startAutoSlide();
-
-            // Opcional: Pausar o carrossel quando o mouse estiver sobre ele
-            const carousel = document.querySelector('.carousel');
-            if (carousel) {
-                carousel.addEventListener('mouseenter', stopAutoSlide);
-                carousel.addEventListener('mouseleave', startAutoSlide);
-            }
-        });
-
-
-        // Função para enviar e-mail via mailto:
-        function sendEmail() {
+        // Envio de E-mail (Mantendo lógica original mailto)
+        function sendEmail(e) {
+            e.preventDefault();
             const nome = document.getElementById('nome').value;
             const email = document.getElementById('email').value;
             const mensagem = document.getElementById('mensagem').value;
 
-            if (!nome || !email || !mensagem) {
-                alert("Por favor, preencha todos os campos.");
-                return false; // Impede o envio se campos estiverem vazios
-            }
-
-            const subject = encodeURIComponent(`Contato via Site - ${nome}`);
-            const body = encodeURIComponent(
-                `Nome: ${nome}\n` +
-                `E-mail: ${email}\n\n` +
-                `Mensagem:\n${mensagem}`
-            );
-            const mailtoURL = `mailto:goscriptsbr@gmail.com?subject=${subject}&body=${body}`;
-
-            // Tentar abrir o cliente de e-mail
-            window.location.href = mailtoURL;
-
-            // Opcional: Limpar o formulário ou mostrar mensagem de sucesso (limitado com mailto:)
-            // alert("Você será redirecionado para o seu aplicativo de e-mail. Por favor, envie a mensagem por lá.");
-            // document.getElementById('contact-form').reset(); // Limpa o formulário
-
-            // Previne o envio padrão do formulário HTML
-            return false;
+            const subject = encodeURIComponent(`Contato Site - ${nome}`);
+            const body = encodeURIComponent(`Nome: ${nome}\nEmail: ${email}\n\n${mensagem}`);
+            
+            window.location.href = `mailto:goscriptsbr@gmail.com?subject=${subject}&body=${body}`;
         }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            startAutoSlide();
+        });
     </script>
     <script src="//code.tidio.co/k4sni1crgozpl9g3mx06xmpufeh0c2qw.js" async></script>
 </body>
