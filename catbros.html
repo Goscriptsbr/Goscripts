@@ -8,23 +8,31 @@
 <style>
   body {
     margin: 0; padding: 0; background-color: #0f0f1b;
-    display: flex; flex-direction: column; align-items: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     touch-action: none; overflow: hidden;
   }
+
+  /* De volta ao visual de "Caixa de Jogo" bem definida */
+  #gameWrapper {
+      display: flex; flex-direction: column; align-items: center; position: relative;
+  }
+
   #gameContainer { 
     position: relative; width: 360px; height: 620px; 
-    overflow: hidden; margin-top: 10px; border-radius: 12px; 
+    overflow: hidden; border-radius: 12px; 
     box-shadow: 0 15px 30px rgba(0,0,0,0.8); border: 4px solid #222; 
     transition: background 0.5s; 
   }
+  
   canvas { display: block; }
   
   /* --- HUD & MINIMAPA --- */
-  #ui { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; flex-direction: column; z-index: 10; }
+  #ui { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; flex-direction: column; z-index: 10; pointer-events: none;}
   #topStats { display: flex; justify-content: space-between; color: white; font-weight: 900; text-shadow: 2px 2px 0px #000; font-size: 20px; }
   
-  #minimapContainer { position: relative; margin-top: 15px; height: 8px; background: rgba(0,0,0,0.6); border-radius: 4px; border: 2px solid #2c3e50; box-shadow: inset 0 0 5px #000; }
+  #minimapContainer { position: relative; margin-top: 15px; height: 8px; background: rgba(0,0,0,0.6); border-radius: 4px; border: 2px solid #2c3e50; box-shadow: inset 0 0 5px #000; pointer-events: none;}
   #minimapCat { position: absolute; top: -8px; left: 0%; font-size: 20px; transition: left 0.1s linear; z-index: 2; }
   #minimapFlag { position: absolute; top: -8px; right: -5px; font-size: 18px; z-index: 1; }
 
@@ -59,66 +67,72 @@
   .shake-anim { animation: shake 0.3s ease-in-out; }
   @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 
-  /* --- CONTROLES MOBILE GIGANTES --- */
-  #controls { width: 360px; display: flex; justify-content: space-between; margin-top: 15px; padding: 0 5px; box-sizing: border-box; }
-  .btn-group { display: flex; gap: 25px; }
-  .btn { width: 90px; height: 90px; background: linear-gradient(#f1c40f, #f39c12); border: none; border-radius: 50%; color: white; font-size: 40px; box-shadow: 0 8px 0 #d35400, 0 12px 15px rgba(0,0,0,0.3); user-select: none; outline: none; transition: transform 0.05s; display: flex; align-items: center; justify-content: center; touch-action: none; }
+  /* CONTROLES VOLTARAM A FICAR DEBAIXO DA CAIXA (Mas subiram um pouquinho) */
+  #controls { 
+      width: 360px; display: flex; justify-content: space-between; 
+      margin-top: -30px; /* Isso faz eles invadirem um pouco a tela, ficando mais altos */
+      padding: 0 5px; box-sizing: border-box; z-index: 25; pointer-events: none;
+  }
+  .btn-group { display: flex; gap: 25px; pointer-events: auto; }
+  .btn { width: 90px; height: 90px; background: linear-gradient(#f1c40f, #f39c12); border: none; border-radius: 50%; color: white; font-size: 40px; box-shadow: 0 8px 0 #d35400, 0 12px 15px rgba(0,0,0,0.5); user-select: none; outline: none; transition: transform 0.05s; display: flex; align-items: center; justify-content: center; touch-action: none; }
   .btn:active { transform: translateY(8px); box-shadow: 0 0px 0 #d35400; }
-  .btn-jump { background: linear-gradient(#e74c3c, #c0392b); box-shadow: 0 8px 0 #922b21; width: 105px; height: 90px; border-radius: 25px; font-weight: bold; font-size: 22px; }
+  .btn-jump { background: linear-gradient(#e74c3c, #c0392b); box-shadow: 0 8px 0 #922b21; width: 105px; height: 90px; border-radius: 25px; font-weight: bold; font-size: 22px; pointer-events: auto;}
   .btn-jump:active { box-shadow: 0 0px 0 #922b21; }
 </style>
 </head>
 <body>
 
-<div id="gameContainer">
-  <div id="ui">
-    <div id="topStats">
-      <span id="livesDisplay"></span>
-      <span id="levelDisplay"></span>
-      <span id="scoreDisplay"></span>
+<div id="gameWrapper">
+    <div id="gameContainer">
+      <div id="ui">
+        <div id="topStats">
+          <span id="livesDisplay"></span>
+          <span id="levelDisplay"></span>
+          <span id="scoreDisplay"></span>
+        </div>
+        <div id="minimapContainer" style="display:none;">
+          <div id="minimapCat"><i class="fa-solid fa-cat" style="color: #f1c40f; text-shadow: 0 0 5px #000;"></i></div>
+          <div id="minimapFlag"><i class="fa-solid fa-flag" style="color: #2ecc71; text-shadow: 0 0 5px #000;"></i></div>
+        </div>
+      </div>
+      <div id="message"></div>
+
+      <div id="menuScreen" class="overlay">
+        <div class="game-title">SUPER<br>GATO BROS</div>
+        <button class="menu-btn" id="btnNewGame"><i class="fa-solid fa-gamepad"></i> Novo Jogo</button>
+        <button class="menu-btn btn-continue" id="btnContinue" style="display:none;"><i class="fa-solid fa-play"></i> Continuar</button>
+      </div>
+
+      <div id="shopScreen" class="overlay" style="display:none;">
+        <div class="shop-panel">
+          <h2 class="shop-title"><i class="fa-solid fa-store"></i> LOJA DO GATO</h2>
+          
+          <button class="menu-btn btn-next" id="btnNextPhase">Próxima Fase <i class="fa-solid fa-arrow-right"></i></button>
+
+          <p style="color:#bdc3c7; margin-bottom:0px; font-size: 14px; text-transform: uppercase; font-weight: bold;">Suas Moedas:</p>
+          <div class="shop-coins"><span id="shopCoinsVal">0</span> <i class="fa-solid fa-coins"></i></div>
+          
+          <button class="menu-btn btn-buy" onclick="buyItem('life', 50)"><i class="fa-solid fa-heart" style="color: #e74c3c;"></i> +1 Vida Extra (50 <i class="fa-solid fa-coins" style="font-size: 14px; width:auto"></i>)</button>
+          <button class="menu-btn btn-buy" id="btnBuyDoubleJump" onclick="buyItem('doubleJump', 120)"><i class="fa-solid fa-angles-up" style="color: #3498db;"></i> Pulo Duplo (120 <i class="fa-solid fa-coins" style="font-size: 14px; width:auto"></i>)</button>
+          <button class="menu-btn btn-buy" id="btnBuyNinja" onclick="buyItem('ninja', 200)"><i class="fa-solid fa-user-ninja" style="color: #8e44ad;"></i> Gato Ninja (200 <i class="fa-solid fa-coins" style="font-size: 14px; width:auto"></i>)</button>
+          <button class="menu-btn btn-buy" id="btnBuyRobot" onclick="buyItem('robot', 300)"><i class="fa-solid fa-robot" style="color: #95a5a6;"></i> Gato Robô (300 <i class="fa-solid fa-coins" style="font-size: 14px; width:auto"></i>)</button>
+          
+          <div class="scroll-indicator"><i class="fa-solid fa-angles-down"></i> ↓ Role para ver mais ↓ <i class="fa-solid fa-angles-down"></i></div>
+          
+          <div id="shopError"></div>
+        </div>
+      </div>
+
+      <canvas id="gameCanvas" width="360" height="620"></canvas>
     </div>
-    <div id="minimapContainer" style="display:none;">
-      <div id="minimapCat"><i class="fa-solid fa-cat" style="color: #f1c40f; text-shadow: 0 0 5px #000;"></i></div>
-      <div id="minimapFlag"><i class="fa-solid fa-flag" style="color: #2ecc71; text-shadow: 0 0 5px #000;"></i></div>
+
+    <div id="controls">
+      <div class="btn-group">
+        <button class="btn" id="btnLeft"><i class="fa-solid fa-caret-left"></i></button>
+        <button class="btn" id="btnRight"><i class="fa-solid fa-caret-right"></i></button>
+      </div>
+      <button class="btn btn-jump" id="btnJump">PULAR</button>
     </div>
-  </div>
-  <div id="message"></div>
-
-  <div id="menuScreen" class="overlay">
-    <div class="game-title">SUPER<br>GATO BROS</div>
-    <button class="menu-btn" id="btnNewGame"><i class="fa-solid fa-gamepad"></i> Novo Jogo</button>
-    <button class="menu-btn btn-continue" id="btnContinue" style="display:none;"><i class="fa-solid fa-play"></i> Continuar</button>
-  </div>
-
-  <div id="shopScreen" class="overlay" style="display:none;">
-    <div class="shop-panel">
-      <h2 class="shop-title"><i class="fa-solid fa-store"></i> LOJA DO GATO</h2>
-      
-      <button class="menu-btn btn-next" id="btnNextPhase">Próxima Fase <i class="fa-solid fa-arrow-right"></i></button>
-
-      <p style="color:#bdc3c7; margin-bottom:0px; font-size: 14px; text-transform: uppercase; font-weight: bold;">Suas Moedas:</p>
-      <div class="shop-coins"><span id="shopCoinsVal">0</span> <i class="fa-solid fa-coins"></i></div>
-      
-      <button class="menu-btn btn-buy" onclick="buyItem('life', 50)"><i class="fa-solid fa-heart" style="color: #e74c3c;"></i> +1 Vida Extra (50 <i class="fa-solid fa-coins" style="font-size: 14px; width:auto"></i>)</button>
-      <button class="menu-btn btn-buy" id="btnBuyDoubleJump" onclick="buyItem('doubleJump', 120)"><i class="fa-solid fa-angles-up" style="color: #3498db;"></i> Pulo Duplo (120 <i class="fa-solid fa-coins" style="font-size: 14px; width:auto"></i>)</button>
-      <button class="menu-btn btn-buy" id="btnBuyNinja" onclick="buyItem('ninja', 200)"><i class="fa-solid fa-user-ninja" style="color: #8e44ad;"></i> Gato Ninja (200 <i class="fa-solid fa-coins" style="font-size: 14px; width:auto"></i>)</button>
-      <button class="menu-btn btn-buy" id="btnBuyRobot" onclick="buyItem('robot', 300)"><i class="fa-solid fa-robot" style="color: #95a5a6;"></i> Gato Robô (300 <i class="fa-solid fa-coins" style="font-size: 14px; width:auto"></i>)</button>
-      
-      <div class="scroll-indicator"><i class="fa-solid fa-angles-down"></i> ↓ Role para ver mais ↓ <i class="fa-solid fa-angles-down"></i></div>
-      
-      <div id="shopError"></div>
-    </div>
-  </div>
-
-  <canvas id="gameCanvas" width="360" height="620"></canvas>
-</div>
-
-<div id="controls">
-  <div class="btn-group">
-    <button class="btn" id="btnLeft"><i class="fa-solid fa-caret-left"></i></button>
-    <button class="btn" id="btnRight"><i class="fa-solid fa-caret-right"></i></button>
-  </div>
-  <button class="btn btn-jump" id="btnJump">PULAR</button>
 </div>
 
 <script>
@@ -138,6 +152,11 @@ const ACCEL = 0.3;
 const FRICTION = 0.85;      
 const FLIGHT_SPEED = -3.5;  
 
+// SISTEMA DE DUPLO CLIQUE (Bola de Pelo)
+let lastDirKeyTime = 0;
+let lastDirKey = '';
+let hairballs = [];
+
 // --- DADOS DAS 10 FASES ---
 const levels = [
   // FASE 1
@@ -148,12 +167,12 @@ const levels = [
       {x: 400, y: 460, w: 150, h: 20, type: 0}, {x: 700, y: 380, w: 150, h: 20, type: 0}, {x: 1700, y: 460, w: 100, h: 20, type: 0},
       {x: 2300, y: 0, w: 80, h: 250, type: 0}, {x: 2300, y: 480, w: 80, h: 80, type: 0} 
     ],
-    blocks: [ {x: 250, y: 400, w: 40, h: 40, type: 2}, {x: 500, y: 300, w: 40, h: 40, type: 2}, {x: 900, y: 400, w: 40, h: 40, type: 1}, {x: 1800, y: 300, w: 40, h: 40, type: 6} ], 
+    blocks: [ {x: 250, y: 400, w: 40, h: 40, type: 10}, /* 10 = Interrogação com Bola de Pelo */ {x: 500, y: 300, w: 40, h: 40, type: 2}, {x: 900, y: 400, w: 40, h: 40, type: 1}, {x: 1800, y: 300, w: 40, h: 40, type: 6} ], 
     coins: [ {x: 450, y: 420, w: 20, h: 20}, {x: 750, y: 340, w: 20, h: 20}, {x: 1400, y: 520, w: 20, h: 20}, {x: 2330, y: 410, w: 20, h: 20} ], 
     items: [], enemies: [ {x: 600, y: 525, w: 35, h: 35, vx: 1, vy: 0, startX: 550, endX: 800, type: 'ground'} ], spikes: [], firebars: [], water: [],
     goal: {x: 2800, y: 310, w: 40, h: 250} 
   },
-  // FASE 2
+  // FASE 2 (COM NOVOS TIJOLOS)
   {
     id: 2, width: 3500,
     platforms: [ 
@@ -163,7 +182,8 @@ const levels = [
       {x: 800, y: 320, w: 200, h: 20, type: 0}, {x: 1500, y: 280, w: 150, h: 20, type: 0}, {x: 2100, y: 430, w: 100, h: 150, type: 0},
       {x: 2400, y: 360, w: 80, h: 20, type: 0}, {x: 2550, y: 460, w: 80, h: 20, type: 0} 
     ],
-    blocks: [ {x: 850, y: 160, w: 40, h: 40, type: 2}, {x: 1400, y: 440, w: 40, h: 40, type: 6}, {x: 1550, y: 130, w: 40, h: 40, type: 3} ], 
+    blocks: [ {x: 850, y: 160, w: 40, h: 40, type: 2}, {x: 1400, y: 440, w: 40, h: 40, type: 6}, {x: 1550, y: 130, w: 40, h: 40, type: 3}, 
+              {x: 1100, y: 420, w: 40, h: 40, type: 8}, {x: 1140, y: 420, w: 40, h: 40, type: 9}, {x: 1180, y: 420, w: 40, h: 40, type: 8} ], 
     coins: [ {x: 490, y: 360, w: 20, h: 20}, {x: 640, y: 280, w: 20, h: 20} ], items: [], 
     enemies: [ {x: 900, y: 525, w: 35, h: 35, vx: 1.5, vy: 0, startX: 850, endX: 1100, type: 'ground'}, {x: 1550, y: 525, w: 35, h: 35, vx: 1, vy: 0, startX: 1500, endX: 1650, type: 'ground'} ],
     spikes: [ {x: 1100, y: 530, w: 100, h: 30} ],
@@ -284,7 +304,7 @@ const levels = [
     ], 
     water: [], goal: {x: 3300, y: 310, w: 40, h: 250}
   },
-  // FASE 9 (ÁGUA EXTENDIDA ATÉ O FIM)
+  // FASE 9 
   {
     id: 9, width: 3500,
     platforms: [ 
@@ -312,7 +332,7 @@ const levels = [
         {x: 300, y: 100, w: 2600, h: 30, flip: true}   
     ], 
     firebars: [], 
-    water: [{x: 0, y: 0, w: 3500, h: 620}], // <-- Água até o final
+    water: [{x: 0, y: 0, w: 3500, h: 620}], 
     goal: {x: 3100, y: 210, w: 40, h: 250}
   },
   // FASE 10
@@ -446,9 +466,8 @@ document.getElementById('btnNextPhase').onclick = () => {
 
 function loadLevel(index) {
   currentLevelData = JSON.parse(JSON.stringify(levels[index])); 
-  // NOVA VARIÁVEL NA CAPA: ENERGIA (flyEnergy) equivalente a 2 segundos (120 frames)
-  player = { x: 50, y: currentLevelData.platforms[0].y - 50, w: 24, h: 36, vx: 0, vy: 0, onGround: false, hasCape: player?.hasCape || false, flyEnergy: 120, facingRight: true, inWater: false };
-  camera.x = 0; currentLevelIndex = index; state = 'playing'; invincibleTime = 0; particles = [];
+  player = { x: 50, y: currentLevelData.platforms[0].y - 50, w: 24, h: 36, vx: 0, vy: 0, onGround: false, hasCape: player?.hasCape || false, hasHairball: player?.hasHairball || false, flyEnergy: 120, facingRight: true, inWater: false };
+  camera.x = 0; currentLevelIndex = index; state = 'playing'; invincibleTime = 0; particles = []; hairballs = [];
   keys.left = false; keys.right = false; keys.jump = false; keys.jumpHeld = false; doubleJumpUsed = false;
   
   let isNight = index < 3 || index === 6 || index === 8 || index === 9;
@@ -493,7 +512,7 @@ function initGame() {
     camera.x = 0; currentLevelIndex = 0; state = 'menu';
     document.getElementById('minimapContainer').style.display = 'none';
     
-    stars = []; clouds = []; decorations = [];
+    stars = []; clouds = []; decorations = []; hairballs = [];
     
     lastTime = 0;
     if(animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -524,6 +543,14 @@ function spawnDust(x, y, amount, color = 'rgba(236, 240, 241, 0.6)') {
 
 function spawnFire(x, y) {
     particles.push({ x: x + (Math.random()*10 - 5), y: y + (Math.random()*10 - 5), vx: (Math.random() - 0.5), vy: (Math.random() - 0.5), life: 1.0, size: Math.random() * 4 + 2, color: Math.random() > 0.5 ? '#e74c3c' : '#f1c40f' });
+}
+
+// LOGICA DE ATIRAR BOLA DE PELO
+function shootHairball(directionRight) {
+    if(!player.hasHairball) return;
+    let spawnX = directionRight ? player.x + player.w : player.x - 10;
+    hairballs.push({ x: spawnX, y: player.y + 10, w: 10, h: 10, vx: directionRight ? 6 : -6, vy: 0, life: 60 });
+    spawnDust(spawnX, player.y + 10, 3, '#bdc3c7'); // Efeito na boca
 }
 
 // --- LÓGICA (UPDATE) ---
@@ -582,7 +609,7 @@ function update(dt) {
   let wasOnGround = player.onGround;
 
   if (player.onGround || player.inWater) {
-      player.flyEnergy = 120; // Volta a ter 2 segundos de voo
+      player.flyEnergy = 120; // 2 segundos de voo
   }
 
   if (player.inWater) {
@@ -661,16 +688,53 @@ function update(dt) {
           player.y = p.y - player.h; player.vy = 0; player.onGround = true;
         } else if (player.vy < 0) { 
           player.y = p.y + p.h; player.vy = 0; 
-          if (p.type === 1) { 
+          // Interação Bate embaixo do Bloco
+          if (p.type === 1 || p.type === 8) { // Bloco normal vermelho ou Tijolo quebravel
               currentLevelData.blocks.splice(currentLevelData.blocks.indexOf(p), 1); 
               score += 5; spawnDust(p.x, p.y-20, 10); updateUI(); 
           } 
           else if (p.type === 2) { p.type = 4; spawnItem(p.x, p.y, 'coin'); } 
           else if (p.type === 3) { p.type = 4; spawnItem(p.x, p.y, 'life'); } 
           else if (p.type === 6) { p.type = 4; spawnItem(p.x, p.y, 'cape'); } 
+          else if (p.type === 9 || p.type === 10) { p.type = 4; spawnItem(p.x, p.y, 'hairball'); } // NOVO ITEM BOLA DE PELO
         }
       }
     }
+  }
+
+  // Lógica das Bolas de Pelo atiradas
+  for (let i = hairballs.length - 1; i >= 0; i--) {
+      let hb = hairballs[i];
+      hb.x += hb.vx * dt;
+      hb.vy += GRAVITY * dt;
+      hb.y += hb.vy * dt;
+      hb.life -= dt;
+
+      // Quica no chão
+      for (let p of allPlatforms) {
+          if (hb.vy > 0 && isColliding(hb, p)) {
+              hb.y = p.y - hb.h;
+              hb.vy = -5; // Força do quique
+          }
+      }
+
+      // Colisão com Inimigos
+      let hit = false;
+      for (let j = currentLevelData.enemies.length - 1; j >= 0; j--) {
+          let enemy = currentLevelData.enemies[j];
+          if (enemy.type !== 'boss' && isColliding(hb, enemy)) {
+              currentLevelData.enemies.splice(j, 1);
+              score += 50; updateUI();
+              spawnDust(enemy.x, enemy.y, 15, '#fff');
+              hit = true;
+              break;
+          }
+      }
+
+      if (hit || hb.life <= 0 || hb.x < camera.x || hb.x > camera.x + canvas.width) {
+          spawnDust(hb.x, hb.y, 5, '#bdc3c7');
+          hairballs.splice(i, 1);
+      }
   }
 
   if(!wasOnGround && player.onGround && !player.inWater) spawnDust(player.x, player.y, 5);
@@ -682,7 +746,6 @@ function update(dt) {
   if (player.y > canvas.height) { loseLife(); return; }
 
   currentLevelData.enemies.forEach((enemy, index) => {
-    
     if (enemy.type === 'ray') {
         enemy.x += enemy.vx * dt;
         if (enemy.x > enemy.endX || enemy.x < enemy.startX) enemy.vx *= -1;
@@ -753,9 +816,12 @@ function update(dt) {
           if (item.type === 'life') lives += 1;
           else if (item.type === 'cape') { 
               player.hasCape = true;
-              player.flyEnergy = 120; // 2 segundos iniciais
+              player.flyEnergy = 120; 
               unlocks.currentCharacter = 'normal'; 
               updateShopUI();
+          }
+          else if (item.type === 'hairball') { // PEGAR PODER BOLA DE PELO
+              player.hasHairball = true;
           }
           item.active = false; updateUI(); currentLevelData.items.splice(i, 1);
           spawnDust(player.x, player.y, 10, '#3498db');
@@ -802,8 +868,9 @@ function update(dt) {
 }
 
 function takeDamage() {
-    if (player.hasCape) { 
+    if (player.hasCape || player.hasHairball) { // Perde o poder atual
         player.hasCape = false; 
+        player.hasHairball = false;
         invincibleTime = 60; 
         spawnDust(player.x, player.y, 15, '#f1c40f'); 
     } 
@@ -819,6 +886,7 @@ function loseLife() {
         document.getElementById('minimapContainer').style.display = 'none';
         unlocks = { hasDoubleJump: false, unlockedNinja: false, unlockedRobot: false, currentCharacter: 'normal' };
         player.hasCape = false;
+        player.hasHairball = false;
         
         showMessage("GAME OVER <i class='fa-solid fa-skull' style='color:#e74c3c'></i><br><span style='font-size:16px'>Você perdeu seus poderes!<br>Toque para o Menu</span>"); 
         deleteSaveGame(); 
@@ -981,16 +1049,48 @@ function draw() {
   });
 
   currentLevelData.blocks.forEach(b => {
-    if (b.type === 1) { 
-        ctx.fillStyle = '#c0392b'; ctx.fillRect(b.x, b.y, b.w, b.h);
-        ctx.fillStyle = '#e74c3c'; ctx.fillRect(b.x, b.y, b.w, 4); 
-        ctx.fillStyle = '#922b21'; ctx.fillRect(b.x, b.y + b.h - 4, b.w, 4); 
-        ctx.fillRect(b.x + b.w - 4, b.y, 4, b.h); 
-        ctx.fillStyle = '#641e16';
-        ctx.fillRect(b.x, b.y + 18, b.w, 3);
-        ctx.fillRect(b.x + 18, b.y, 3, 18);
-        ctx.fillRect(b.x + 10, b.y + 20, 3, 20);
-        ctx.fillRect(b.x + 30, b.y + 20, 3, 20);
+    if (b.type === 1 || b.type === 8 || b.type === 9 || b.type === 10) { 
+        if (b.type === 8 || b.type === 9) {
+            ctx.fillStyle = '#d35400'; ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.fillStyle = '#e67e22'; ctx.fillRect(b.x, b.y, b.w, 4); 
+            ctx.fillStyle = '#a04000'; ctx.fillRect(b.x, b.y + b.h - 4, b.w, 4); 
+            ctx.fillRect(b.x + b.w - 4, b.y, 4, b.h);
+            ctx.fillStyle = '#873600';
+            ctx.fillRect(b.x, b.y + 18, b.w, 2);
+            ctx.fillRect(b.x + 18, b.y, 2, 18);
+            ctx.fillRect(b.x + 10, b.y + 20, 2, 20);
+            ctx.fillRect(b.x + 30, b.y + 20, 2, 20);
+        } else {
+            ctx.fillStyle = '#c0392b'; ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.fillStyle = '#e74c3c'; ctx.fillRect(b.x, b.y, b.w, 4); 
+            ctx.fillStyle = '#922b21'; ctx.fillRect(b.x, b.y + b.h - 4, b.w, 4); 
+            ctx.fillRect(b.x + b.w - 4, b.y, 4, b.h); 
+            ctx.fillStyle = '#641e16';
+            ctx.fillRect(b.x, b.y + 18, b.w, 3);
+            ctx.fillRect(b.x + 18, b.y, 3, 18);
+            ctx.fillRect(b.x + 10, b.y + 20, 3, 20);
+            ctx.fillRect(b.x + 30, b.y + 20, 3, 20);
+        }
+        
+        if (b.type === 10) {
+            let pulse = Math.sin(Date.now() / 150) * 15;
+            ctx.fillStyle = `#e69c00`; ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.fillStyle = '#fce08b'; ctx.fillRect(b.x, b.y, b.w, 4); ctx.fillRect(b.x, b.y, 4, b.h);
+            ctx.fillStyle = '#b85c00'; ctx.fillRect(b.x, b.y + b.h - 4, b.w, 4); ctx.fillRect(b.x + b.w - 4, b.y, 4, b.h);
+            ctx.fillStyle = '#8a3800'; 
+            ctx.fillRect(b.x + 4, b.y + 4, 4, 4); ctx.fillRect(b.x + b.w - 8, b.y + 4, 4, 4);
+            ctx.fillRect(b.x + 4, b.y + b.h - 8, 4, 4); ctx.fillRect(b.x + b.w - 8, b.y + b.h - 8, 4, 4);
+            
+            ctx.save();
+            ctx.translate(b.x + b.w/2, b.y + b.h/2);
+            let scale = 1 + Math.sin(Date.now() / 200) * 0.1;
+            ctx.scale(scale, scale);
+            ctx.fillStyle = '#b85c00'; ctx.font = '900 24px "Arial", sans-serif'; 
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText("?", 2, 2); 
+            ctx.fillStyle = '#fff'; ctx.fillText("?", 0, 0);
+            ctx.restore();
+        }
     } 
     else if (b.type === 2 || b.type === 3 || b.type === 6) { 
         let pulse = Math.sin(Date.now() / 150) * 15;
@@ -1044,6 +1144,15 @@ function draw() {
           ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(0, -5, 3, 0, Math.PI*2); ctx.fill();
           ctx.restore();
       }
+      else if (i.type === 'hairball') { 
+          ctx.fillStyle = '#7f8c8d'; ctx.beginPath(); ctx.arc(i.x+10, i.y+10, 8, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = '#34495e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(i.x+10, i.y+10, 5, 0, Math.PI); ctx.stroke();
+      }
+  });
+
+  hairballs.forEach(hb => {
+      ctx.fillStyle = '#95a5a6'; ctx.beginPath(); ctx.arc(hb.x+5, hb.y+5, 5, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 1; ctx.stroke();
   });
 
   currentLevelData.coins.forEach(c => drawCoin(c.x, c.y, c.x));
@@ -1301,7 +1410,20 @@ function gameLoop(time) {
 
 const bindBtn = (id, key) => {
   const btn = document.getElementById(id);
-  const press = (e) => { if(e.cancelable) e.preventDefault(); keys[key] = true; };
+  const press = (e) => { 
+      if(e.cancelable) e.preventDefault(); 
+      keys[key] = true; 
+      
+      // SISTEMA DE DUPLO CLIQUE (Bola de Pelo)
+      if(key === 'left' || key === 'right') {
+          let now = Date.now();
+          if(now - lastDirKeyTime < 300 && lastDirKey === key) {
+              shootHairball(key === 'right');
+          }
+          lastDirKeyTime = now;
+          lastDirKey = key;
+      }
+  };
   const release = (e) => { if(e.cancelable) e.preventDefault(); keys[key] = false; if(key === 'jump') keys.jumpHeld = false; };
   btn.addEventListener('touchstart', press, {passive: false}); btn.addEventListener('mousedown', press);
   btn.addEventListener('touchend', release, {passive: false}); btn.addEventListener('mouseup', release);
@@ -1309,7 +1431,19 @@ const bindBtn = (id, key) => {
 bindBtn('btnLeft', 'left'); bindBtn('btnRight', 'right'); bindBtn('btnJump', 'jump');
 
 window.addEventListener('keydown', (e) => {
-  if(e.key === 'ArrowLeft') keys.left = true; if(e.key === 'ArrowRight') keys.right = true; if(e.key === 'ArrowUp' || e.key === ' ') keys.jump = true;
+  if(e.key === 'ArrowLeft') {
+      keys.left = true;
+      let now = Date.now();
+      if(now - lastDirKeyTime < 300 && lastDirKey === 'left') shootHairball(false);
+      lastDirKeyTime = now; lastDirKey = 'left';
+  } 
+  if(e.key === 'ArrowRight') {
+      keys.right = true;
+      let now = Date.now();
+      if(now - lastDirKeyTime < 300 && lastDirKey === 'right') shootHairball(true);
+      lastDirKeyTime = now; lastDirKey = 'right';
+  } 
+  if(e.key === 'ArrowUp' || e.key === ' ') keys.jump = true;
 });
 window.addEventListener('keyup', (e) => {
   if(e.key === 'ArrowLeft') keys.left = false; if(e.key === 'ArrowRight') keys.right = false; if(e.key === 'ArrowUp' || e.key === ' ') { keys.jump = false; keys.jumpHeld = false; }
