@@ -15,13 +15,14 @@
         :root {
             --primary: #3b82f6; 
             --primary-hover: #2563eb;
+            --secondary: #8b5cf6;
             --dark-bg: #0d1117; 
-            --card-bg: #161b22; 
+            --card-bg: rgba(22, 27, 34, 0.6); 
             --text-main: #f0f6fc;
             --text-muted: #8b949e;
             --border: rgba(240, 246, 252, 0.1); 
             --whatsapp: #25d366;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         html {
@@ -57,6 +58,7 @@
         .section-title {
             text-align: center;
             margin-bottom: 3.5rem;
+            position: relative;
         }
 
         .section-title h2 {
@@ -75,13 +77,13 @@
             font-size: 1.1rem;
         }
 
-        section { padding: 6rem 0; }
+        section { padding: 6rem 0; position: relative; }
 
-        /* Scroll Reveal Animation Classes */
+        /* Scroll Reveal Animation */
         .reveal {
             opacity: 0;
-            transform: translateY(40px);
-            transition: all 1s ease;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
         }
         .reveal.active {
             opacity: 1;
@@ -94,11 +96,18 @@
             top: 0;
             left: 0;
             width: 100%;
-            background: rgba(13, 17, 23, 0.8);
-            backdrop-filter: blur(12px);
+            background: rgba(13, 17, 23, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             z-index: 1000;
             border-bottom: 1px solid var(--border);
-            padding: 1rem 0;
+            padding: 1.2rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 0.8rem 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
         .nav-container {
@@ -113,7 +122,14 @@
             color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo i {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .nav-links {
@@ -125,12 +141,25 @@
             font-size: 0.95rem;
             font-weight: 500;
             color: var(--text-muted);
-            transition: var(--transition);
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--primary);
+            transition: width 0.3s ease;
         }
 
         .nav-links a:hover { color: #fff; }
+        .nav-links a:hover::after { width: 100%; }
 
-        /* --- 4. Hero Section com Efeito Scroll --- */
+        /* --- 4. Hero Section --- */
         header {
             height: 100vh;
             min-height: 600px;
@@ -139,53 +168,52 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            overflow: hidden; /* Importante: impede que o zoom vaze a tela */
+            overflow: hidden;
         }
 
-        /* Container da imagem de fundo separada para manipular via JS */
         .hero-bg-container {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             z-index: -2;
         }
 
         .hero-bg-img {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: cover;
-            /* Esta imagem será controlada pelo JavaScript */
             transform-origin: center center; 
-            will-change: transform, opacity; /* Otimização de performance */
+            will-change: transform, opacity;
         }
 
-        /* Gradiente Overlay para garantir leitura do texto */
         .hero-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(13, 17, 23, 0.6), var(--dark-bg));
+            background: linear-gradient(180deg, rgba(13, 17, 23, 0.4) 0%, var(--dark-bg) 100%);
             z-index: -1;
         }
 
-        .hero-content {
-            z-index: 2;
-            position: relative;
-        }
+        .hero-content { z-index: 2; position: relative; }
 
         .hero-content h1 {
-            font-size: clamp(2.8rem, 6vw, 5rem);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 1.5rem;
             text-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        .hero-content span { 
-            background: linear-gradient(to right, #60a5fa, #a78bfa);
+        /* Efeito de Gradiente Animado no Texto */
+        .hero-content span.gradient-text { 
+            background: linear-gradient(270deg, #3b82f6, #a78bfa, #3b82f6);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: gradientMove 4s ease infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .hero-content p {
@@ -193,8 +221,20 @@
             color: #d0d7de;
             max-width: 750px;
             margin: 0 auto 3rem auto;
+            min-height: 60px; /* Evita pulo na tela durante a digitação */
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1.2em;
+            background-color: var(--primary);
+            vertical-align: middle;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
 
         .btn {
             display: inline-flex;
@@ -203,53 +243,87 @@
             background: var(--primary);
             color: #fff;
             padding: 1rem 2.5rem;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
             font-size: 1rem;
             transition: var(--transition);
             box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
             border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .btn:hover::before { left: 100%; }
         .btn:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             background: var(--primary-hover);
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
         }
 
-        /* --- 5. Serviços --- */
+        /* --- 5. Serviços (Efeito Glass e Glow) --- */
         .services-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
+            position: relative;
         }
 
         .card {
             background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 2.5rem;
-            border-radius: 12px;
+            border-radius: 16px;
             border: 1px solid var(--border);
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .card:hover {
-            transform: translateY(-8px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.7);
+            transform: translateY(-10px);
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 15px 40px -10px rgba(59, 130, 246, 0.2);
         }
+
+        .card:hover::before { opacity: 1; }
 
         .card i {
             font-size: 1.8rem;
-            color: #fff;
+            color: var(--primary);
             margin-bottom: 1.5rem;
             background: rgba(59, 130, 246, 0.1);
-            width: 55px;
-            height: 55px;
+            width: 60px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+
+        .card:hover i {
+            background: var(--primary);
+            color: #fff;
+            transform: scale(1.1) rotate(5deg);
         }
 
         .card h3 { font-size: 1.35rem; margin-bottom: 0.75rem; color: var(--text-main); }
@@ -258,16 +332,17 @@
         /* --- 6. Portfólio --- */
         .carousel-wrapper {
             position: relative;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
             border: 1px solid var(--border);
-            height: 450px; 
+            height: 500px; 
             background: #0d1117; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
         .carousel-images {
             display: flex;
-            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             height: 100%;
         }
 
@@ -278,6 +353,7 @@
             align-items: center;
             justify-content: center;
             background: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
+            position: relative;
         }
 
         .carousel-images img {
@@ -285,24 +361,36 @@
             height: 100%;
             object-fit: contain;
             padding: 40px;
-            opacity: 0.9;
+            opacity: 0.8;
+            transition: var(--transition);
         }
         
-        .carousel-images a:hover img { transform: scale(1.05); opacity: 1; }
+        .carousel-images a:hover img { 
+            transform: scale(1.08); 
+            opacity: 1; 
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.1));
+        }
 
         .nav-btn {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(13, 17, 23, 0.8);
+            background: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(5px);
             color: #fff;
             border: 1px solid var(--border);
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
             cursor: pointer;
             z-index: 10;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
         }
+        .nav-btn:hover { background: var(--primary); border-color: var(--primary); }
         .prev { left: 20px; }
         .next { right: 20px; }
 
@@ -311,48 +399,68 @@
             display: grid;
             grid-template-columns: 1fr 1.2fr;
             gap: 4rem;
+            align-items: start;
         }
 
         .contact-info-box {
             background: var(--card-bg);
+            backdrop-filter: blur(10px);
             padding: 1.5rem;
             border-radius: 12px;
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
             border: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 1.2rem;
+            transition: var(--transition);
         }
         
+        .contact-info-box:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateX(10px);
+        }
+
         .contact-icon {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             background: rgba(59, 130, 246, 0.1);
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--primary);
+            font-size: 1.2rem;
         }
 
         .form-box {
             background: var(--card-bg);
+            backdrop-filter: blur(10px);
             padding: 3rem;
             border-radius: 16px;
             border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
         .form-input {
             width: 100%;
-            padding: 1rem;
-            background: #0d1117;
+            padding: 1rem 1.2rem;
+            background: rgba(13, 17, 23, 0.8);
             border: 1px solid var(--border);
             border-radius: 8px;
             color: #fff;
             margin-bottom: 1.5rem;
+            font-family: inherit;
+            transition: var(--transition);
         }
 
-        textarea.form-input { resize: vertical; min-height: 140px; }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+            background: #0d1117;
+        }
+
+        textarea.form-input { resize: vertical; min-height: 150px; }
 
         footer {
             background: #010409;
@@ -362,41 +470,53 @@
             color: var(--text-muted);
         }
 
-        /* --- 8. Botão WhatsApp (ESQUERDA) --- */
+        /* --- 8. Botão WhatsApp --- */
         .whatsapp-float {
             position: fixed;
             bottom: 30px;
-            left: 30px; /* Mantido na esquerda para não cobrir o chat */
-            width: 60px;
-            height: 60px;
+            left: 30px;
+            width: 65px;
+            height: 65px;
             background: var(--whatsapp);
             color: #fff;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            font-size: 35px;
+            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.4);
             z-index: 2000;
             transition: var(--transition);
+            animation: float 3s ease-in-out infinite;
         }
 
-        .whatsapp-float:hover { transform: scale(1.1) rotate(10deg); }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .whatsapp-float:hover { 
+            transform: scale(1.1) rotate(10deg); 
+            animation-play-state: paused;
+        }
 
         @media (max-width: 768px) {
             .navbar { padding: 1rem; }
             .nav-links { display: none; } 
-            .hero-content h1 { font-size: 2.5rem; }
-            .contact-layout { grid-template-columns: 1fr; }
-            .whatsapp-float { bottom: 20px; left: 20px; }
+            .hero-content h1 { font-size: 2.2rem; }
+            .contact-layout { grid-template-columns: 1fr; gap: 2rem;}
+            .whatsapp-float { bottom: 20px; left: 20px; width: 55px; height: 55px; font-size: 28px;}
+            .form-box { padding: 2rem 1.5rem; }
+            .carousel-wrapper { height: 350px; }
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
+    <nav class="navbar" id="navbar">
         <div class="container nav-container">
-            <div class="logo"><i class="fas fa-terminal" style="color:var(--primary)"></i> GoScripts</div>
+            <div class="logo"><i class="fas fa-terminal"></i> GoScripts</div>
             <ul class="nav-links">
                 <li><a href="#home">Início</a></li>
                 <li><a href="#services">Serviços</a></li>
@@ -414,9 +534,9 @@
         <div class="hero-overlay"></div>
 
         <div class="container hero-content">
-            <div class="reveal active">
-                <h1>Sistemas e sites empresariais<br><span>Melhor preço do mercado</span></h1>
-                <p>Somos a Goscript, transformando suas ideias em sites incríveis</p>
+            <div class="reveal">
+                <h1>Sistemas e sites empresariais<br><span class="gradient-text">Melhor preço do mercado</span></h1>
+                <p><span id="typewriter"></span><span class="typing-cursor"></span></p>
                 <a href="#contact" class="btn">
                     Solicitar Orçamento <i class="fas fa-arrow-right" style="margin-left:8px"></i>
                 </a>
@@ -425,44 +545,44 @@
     </header>
 
     <main>
-        <section class="container reveal">
-            <div class="section-title">
+        <section class="container">
+            <div class="section-title reveal">
                 <h2>Por que escolher a GoScripts?</h2>
-                <p>Esqueça aluguéis de sites. Aqui você paga uma única vez.</p>
+                <p>Esqueça aluguéis de sites. Aqui você paga uma única vez e o código é seu.</p>
             </div>
             
             <div class="services-grid" id="services">
-                <div class="card">
+                <div class="card reveal">
                     <i class="fas fa-hand-holding-dollar"></i>
                     <h3>Sem Mensalidades</h3>
-                    <p>Diferente das agências tradicionais, não cobramos mensal. O site/sistema será seu.</p>
+                    <p>Diferente das agências tradicionais, não cobramos mensalidade para manter seu site. O projeto é 100% seu.</p>
                 </div>
-                <div class="card">
+                <div class="card reveal" style="transition-delay: 0.1s;">
                     <i class="fas fa-paint-brush"></i>
-                    <h3>Design Personalizado</h3>
-                    <p>Layouts exclusivos pensados na identidade da sua marca.</p>
+                    <h3>Design Premium</h3>
+                    <p>Layouts exclusivos e modernos pensados na identidade da sua marca para converter mais clientes.</p>
                 </div>
-                <div class="card">
+                <div class="card reveal" style="transition-delay: 0.2s;">
                     <i class="fas fa-mobile-alt"></i>
                     <h3>100% Responsivo</h3>
-                    <p>Seu site perfeito em qualquer tela: Computadores e Celulares.</p>
+                    <p>Seu site perfeito e fluido em qualquer tela: Computadores, Tablets e Celulares.</p>
                 </div>
-                <div class="card">
+                <div class="card reveal" style="transition-delay: 0.3s;">
                     <i class="fas fa-rocket"></i>
                     <h3>SEO Otimizado</h3>
-                    <p>Estrutura leve para que o Google encontre sua empresa.</p>
+                    <p>Estrutura de código leve e moderna para que o Google encontre sua empresa rapidamente.</p>
                 </div>
             </div>
         </section>
 
-        <section id="portfolio" class="reveal">
+        <section id="portfolio">
             <div class="container">
-                <div class="section-title">
+                <div class="section-title reveal">
                     <h2>Nosso Portfólio</h2>
-                    <p>Projetos recentes entregues.</p>
+                    <p>Projetos recentes entregues com excelência.</p>
                 </div>
 
-                <div class="carousel-wrapper">
+                <div class="carousel-wrapper reveal">
                     <div class="carousel-images" id="carousel-images">
                         <a href="http://gruposoul.online/" target="_blank">
                             <img src="https://gozgames.neocities.org/Logo%20horizontal%20-%20fundo%20azul.png" alt="Grupo Soul">
@@ -473,7 +593,7 @@
                         <a href="https://uniaogesso.neocities.org/" target="_blank">
                             <img src="https://uniaogesso.neocities.org/Imagem/IMG-20240831-WA0033.jpg" alt="União Gesso">
                         </a>
-                        <a href="https://gozgames.neocities.org/Jogos" target="_blank">
+                        <a href="https://goscripts.com.br/games" target="_blank">
                             <img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="GozGames">
                         </a>
                     </div>
@@ -483,15 +603,15 @@
             </div>
         </section>
 
-        <section id="contact" class="reveal" style="background: linear-gradient(to top, #010409, var(--dark-bg));">
+        <section id="contact" style="background: linear-gradient(to top, #010409, var(--dark-bg));">
             <div class="container">
-                <div class="section-title">
+                <div class="section-title reveal">
                     <h2>Vamos Conversar?</h2>
-                    <p>Seu projeto começa agora.</p>
+                    <p>Transforme sua ideia em realidade hoje mesmo.</p>
                 </div>
 
                 <div class="contact-layout">
-                    <div>
+                    <div class="reveal">
                         <div class="contact-info-box">
                             <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
                             <div>
@@ -507,20 +627,21 @@
                             </div>
                         </div>
                         
-                        <div style="margin-top: 2rem; padding: 2rem; border: 1px dashed var(--border); border-radius: 12px; text-align: center;">
+                        <div style="margin-top: 2rem; padding: 2.5rem; border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 16px; text-align: center; background: rgba(59, 130, 246, 0.05);">
                             <h3 style="margin-bottom: 1rem; color: #fff;">Prefere atendimento imediato?</h3>
-                            <a href="https://wa.me/5519983198544" class="btn" style="background: var(--whatsapp); width: 100%; border: none;">
+                            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Nossa equipe está online agora para tirar suas dúvidas.</p>
+                            <a href="https://wa.me/5519983198544" class="btn" style="background: var(--whatsapp); width: 100%; border: none; box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2);">
                                 <i class="fab fa-whatsapp"></i> Chamar no WhatsApp
                             </a>
                         </div>
                     </div>
 
-                    <div class="form-box">
+                    <div class="form-box reveal" style="transition-delay: 0.2s;">
                         <form id="contact-form" onsubmit="return sendEmail(event)">
-                            <input type="text" id="nome" class="form-input" placeholder="Seu Nome" required>
-                            <input type="email" id="email" class="form-input" placeholder="Seu E-mail" required>
-                            <textarea id="mensagem" class="form-input" placeholder="Como podemos ajudar?" required></textarea>
-                            <button type="submit" class="btn" style="width: 100%; justify-content: center;">Enviar</button>
+                            <input type="text" id="nome" class="form-input" placeholder="Seu Nome Completo" required>
+                            <input type="email" id="email" class="form-input" placeholder="Seu melhor E-mail" required>
+                            <textarea id="mensagem" class="form-input" placeholder="Conte um pouco sobre o seu projeto..." required></textarea>
+                            <button type="submit" class="btn" style="width: 100%; justify-content: center;">Enviar Mensagem <i class="fas fa-paper-plane"></i></button>
                         </form>
                     </div>
                 </div>
@@ -530,8 +651,8 @@
 
     <footer>
         <div class="container">
-            <span style="font-weight: 800; color:#fff; display:block; margin-bottom:10px;">GoScripts.</span>
-            <p>&copy; 2025 GoScripts Soluções Digitais.</p>
+            <span style="font-size: 1.5rem; font-weight: 800; color:#fff; display:block; margin-bottom:10px; letter-spacing: -0.5px;"><i class="fas fa-terminal" style="color:var(--primary)"></i> GoScripts.</span>
+            <p>&copy; 2025 GoScripts Soluções Digitais. Todos os direitos reservados.</p>
         </div>
     </footer>
 
@@ -540,48 +661,65 @@
     </a>
 
     <script>
-        // --- 1. LÓGICA DO ZOOM & FADE NO SCROLL (Hero Effect) ---
-        const heroImg = document.getElementById('heroBg');
-        
-        window.addEventListener('scroll', function() {
-            // Pega a posição do scroll vertical
-            let scrollPosition = window.scrollY;
-            
-            // Só aplica o efeito se estivermos no topo da página (performance)
-            if (scrollPosition < 900) {
-                // Fator de escala: Começa em 1 (100%) e aumenta muito lentamente
-                // Dividir por 2500 suaviza a velocidade do zoom
-                let scaleValue = 1 + (scrollPosition / 2000);
-                
-                // Opacidade: Começa em 1 e diminui conforme desce
-                // Dividir por 700 define quão rápido ela some
-                let opacityValue = 1 - (scrollPosition / 700);
-                
-                // Garante que a opacidade não fique negativa
-                if (opacityValue < 0) opacityValue = 0;
+        // --- 1. Navbar Scroll Effect ---
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
 
-                // Aplica os estilos na imagem
+        // --- 2. LÓGICA DO ZOOM & FADE NO SCROLL (Hero Effect) ---
+        const heroImg = document.getElementById('heroBg');
+        window.addEventListener('scroll', function() {
+            let scrollPosition = window.scrollY;
+            if (scrollPosition < 900) {
+                let scaleValue = 1 + (scrollPosition / 2500);
+                let opacityValue = 1 - (scrollPosition / 700);
+                if (opacityValue < 0) opacityValue = 0;
                 heroImg.style.transform = `scale(${scaleValue})`;
                 heroImg.style.opacity = opacityValue;
             }
         });
 
-        // --- 2. Scroll Reveal (Aparição dos elementos) ---
-        window.addEventListener('scroll', reveal);
-        function reveal() {
-            var reveals = document.querySelectorAll('.reveal');
-            for (var i = 0; i < reveals.length; i++) {
-                var windowheight = window.innerHeight;
-                var revealtop = reveals[i].getBoundingClientRect().top;
-                var revealpoint = 150;
-                if (revealtop < windowheight - revealpoint) {
-                    reveals[i].classList.add('active');
-                }
+        // --- 3. Máquina de Escrever (Typing Effect) ---
+        const textToType = "Somos a GoScripts, transformando suas ideias em sites e sistemas incríveis.";
+        const typeWriterElement = document.getElementById('typewriter');
+        let typeIndex = 0;
+
+        function typeWriter() {
+            if (typeIndex < textToType.length) {
+                typeWriterElement.innerHTML += textToType.charAt(typeIndex);
+                typeIndex++;
+                setTimeout(typeWriter, 40); // Velocidade da digitação
             }
         }
-        reveal(); // Chama uma vez no carregamento
+        // Inicia após um pequeno delay
+        setTimeout(typeWriter, 500);
 
-        // --- 3. Carrossel ---
+        // --- 4. Intersection Observer (Substitui o antigo Reveal por performance) ---
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // Para de observar após animar (melhora performance)
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach((el) => {
+            observer.observe(el);
+        });
+
+        // --- 5. Carrossel ---
         let currentIndex = 0;
         const slidesContainer = document.getElementById('carousel-images');
         const slides = slidesContainer.querySelectorAll('a');
@@ -596,12 +734,15 @@
             if (currentIndex >= totalSlides) currentIndex = 0;
             if (currentIndex < 0) currentIndex = totalSlides - 1;
             updateCarousel();
+            resetInterval();
+        }
+        function resetInterval() {
             clearInterval(autoSlideInterval);
             autoSlideInterval = setInterval(() => moveSlide(1), 5000);
         }
-        autoSlideInterval = setInterval(() => moveSlide(1), 5000);
+        resetInterval();
 
-        // --- 4. Envio de Email ---
+        // --- 6. Envio de Email ---
         function sendEmail(e) {
             e.preventDefault();
             const nome = document.getElementById('nome').value;
