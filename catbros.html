@@ -76,6 +76,8 @@
   .btn:active { transform: translateY(8px); box-shadow: 0 0px 0 #d35400; }
   .btn-jump { background: linear-gradient(#e74c3c, #c0392b); box-shadow: 0 8px 0 #922b21; width: 105px; height: 90px; border-radius: 25px; font-weight: bold; font-size: 22px; pointer-events: auto;}
   .btn-jump:active { box-shadow: 0 0px 0 #922b21; }
+  #activePowers { display: flex; gap: 6px; margin-top: 8px; justify-content: center; pointer-events: none;}
+.power-icon { background: rgba(0,0,0,0.7); border: 1px solid #f1c40f; border-radius: 8px; padding: 4px 8px; color: white; font-weight: bold; font-size: 11px; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px #000; text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -88,6 +90,7 @@
           <span id="levelDisplay"></span>
           <span id="scoreDisplay"></span>
         </div>
+        <div id="activePowers"></div>
         <div id="minimapContainer" style="display:none;">
           <div id="minimapCat"><i class="fa-solid fa-cat" style="color: #f1c40f; text-shadow: 0 0 5px #000;"></i></div>
           <div id="minimapFlag"><i class="fa-solid fa-flag" style="color: #2ecc71; text-shadow: 0 0 5px #000;"></i></div>
@@ -99,6 +102,15 @@
         <div class="game-title">SUPER<br>GATO BROS</div>
         <button class="menu-btn" id="btnNewGame"><i class="fa-solid fa-gamepad"></i> Novo Jogo</button>
         <button class="menu-btn btn-continue" id="btnContinue" style="display:none;"><i class="fa-solid fa-play"></i> Continuar</button>
+      </div>
+      
+            <div id="tutorialScreen" class="overlay" style="display:none; z-index: 50;">
+        <div class="shop-panel">
+          <h2 class="shop-title" id="tutorialTitle">NOVO PODER!</h2>
+          <div id="tutorialIcon" style="font-size: 55px; margin: 20px 0; text-shadow: 0 10px 15px rgba(0,0,0,0.5);"></div>
+          <p id="tutorialText" style="color: white; font-size: 18px; line-height: 1.5; margin-bottom: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);"></p>
+          <button class="menu-btn btn-next" id="btnCloseTutorial">ENTENDI!</button>
+        </div>
       </div>
 
       <div id="shopScreen" class="overlay" style="display:none;">
@@ -431,9 +443,12 @@ function buyItem(itemType, price) {
     if (score >= price) {
         if (itemType === 'doubleJump' && unlocks.hasDoubleJump) { showShopError("Você já possui esta habilidade!"); return; }
         
-        score -= price;
+                score -= price;
         if (itemType === 'life') lives++;
-        if (itemType === 'doubleJump') unlocks.hasDoubleJump = true;
+        if (itemType === 'doubleJump') { 
+            unlocks.hasDoubleJump = true; 
+            if (!unlocks.seenDoubleJump) showTutorial('doubleJump'); // Ativa tutorial do pulo
+        }
         if (itemType === 'ninja') { unlocks.unlockedNinja = true; unlocks.currentCharacter = 'ninja'; }
         if (itemType === 'robot') { unlocks.unlockedRobot = true; unlocks.currentCharacter = 'robot'; }
 
@@ -498,6 +513,48 @@ function loadLevel(index) {
   document.getElementById('message').style.display = 'none'; updateUI();
 }
 
+// --- SISTEMA DE TUTORIAIS ---
+let previousState = '';
+
+function showTutorial(type) {
+    previousState = state; // Salva se estávamos jogando ou na loja
+    state = 'tutorial';    // Pausa o jogo
+    
+    // Solta os botões para o gato não sair andando sozinho depois
+    keys.left = false; keys.right = false; keys.jump = false; keys.jumpHeld = false; 
+
+    const titleObj = document.getElementById('tutorialTitle');
+    const iconObj = document.getElementById('tutorialIcon');
+    const textObj = document.getElementById('tutorialText');
+
+    if (type === 'cape') {
+        titleObj.innerHTML = "CAPA MÁGICA!";
+        iconObj.innerHTML = '<i class="fa-solid fa-shirt" style="color:#f1c40f;"></i>';
+        textObj.innerHTML = "Segure o botão <b>PULAR</b> no ar para planar!<br><br><span style='font-size:14px; color:#bdc3c7'>Sua energia recarrega ao tocar no chão.</span>";
+        unlocks.seenCape = true;
+    } else if (type === 'hairball') {
+        titleObj.innerHTML = "BOLA DE PELO!";
+        iconObj.innerHTML = '<i class="fa-solid fa-circle-dot" style="color:#bdc3c7;"></i>';
+        textObj.innerHTML = "Toque <b>DUAS VEZES RÁPIDO</b> nos botões de andar (<i class='fa-solid fa-caret-left'></i> ou <i class='fa-solid fa-caret-right'></i>) para atirar nos inimigos!";
+        unlocks.seenHairball = true;
+    } else if (type === 'doubleJump') {
+        titleObj.innerHTML = "PULO DUPLO!";
+        iconObj.innerHTML = '<i class="fa-solid fa-angles-up" style="color:#3498db;"></i>';
+        textObj.innerHTML = "Toque em <b>PULAR</b> novamente enquanto estiver no ar para alcançar lugares mais altos!";
+        unlocks.seenDoubleJump = true;
+    }
+
+    saveGame(); // Salva para não mostrar de novo
+    document.getElementById('tutorialScreen').style.display = 'flex';
+}
+
+document.getElementById('btnCloseTutorial').onclick = () => {
+    document.getElementById('tutorialScreen').style.display = 'none';
+    state = previousState; 
+    lastTime = 0; // Previne que o jogo dê um pulo brusco no tempo após pausar
+};
+
+
 function initGame() {
     let save = getSavedGame();
     if(save) {
@@ -516,7 +573,19 @@ function updateUI() {
   document.getElementById('livesDisplay').innerHTML = `<i class="fa-solid fa-heart" style="color:#e74c3c"></i> ${lives}`;
   document.getElementById('levelDisplay').innerText = `Fase ${currentLevelIndex + 1}/${levels.length}`;
   document.getElementById('scoreDisplay').innerHTML = `<i class="fa-solid fa-coins" style="color:#f1c40f"></i> ${score}`;
+
+  // Novo sistema de HUD de poderes:
+  let powersHTML = '';
+  if (typeof player !== 'undefined' && player) {
+      if (player.hasCape) powersHTML += `<div class="power-icon"><i class="fa-solid fa-shirt" style="color:#f1c40f;"></i> Capa</div>`;
+      if (player.hasHairball) powersHTML += `<div class="power-icon"><i class="fa-solid fa-circle-dot" style="color:#bdc3c7;"></i> Pelo</div>`;
+  }
+  if (typeof unlocks !== 'undefined' && unlocks.hasDoubleJump) {
+      powersHTML += `<div class="power-icon"><i class="fa-solid fa-angles-up" style="color:#3498db;"></i> Pulo 2x</div>`;
+  }
+  document.getElementById('activePowers').innerHTML = powersHTML;
 }
+
 
 function showMessage(msg) { const el = document.getElementById('message'); el.innerHTML = msg; el.style.display = 'block'; }
 function isColliding(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
@@ -709,10 +778,16 @@ function update(dt) {
       }
       item.x += item.vx * dt;
       for (let p of allPlatforms) { if (item.vy > 0 && isColliding(item, p) && item.y + item.h - (item.vy * dt) <= p.y + 10) { item.y = p.y - item.h; item.vy = 0; } }
-      if (isColliding(player, item)) {
+            if (isColliding(player, item)) {
           if (item.type === 'life') lives += 1;
-          else if (item.type === 'cape') { player.hasCape = true; player.flyEnergy = 120; unlocks.currentCharacter = 'normal'; updateShopUI(); }
-          else if (item.type === 'hairball') { player.hasHairball = true; }
+          else if (item.type === 'cape') { 
+              player.hasCape = true; player.flyEnergy = 120; unlocks.currentCharacter = 'normal'; updateShopUI(); 
+              if (!unlocks.seenCape) showTutorial('cape'); // Ativa tutorial da capa
+          }
+          else if (item.type === 'hairball') { 
+              player.hasHairball = true; 
+              if (!unlocks.seenHairball) showTutorial('hairball'); // Ativa tutorial do pelo
+          }
           item.active = false; updateUI(); currentLevelData.items.splice(i, 1);
           spawnDust(player.x, player.y, 10, '#3498db');
       } else if (item.y > canvas.height) { currentLevelData.items.splice(i, 1); }
@@ -1029,9 +1104,27 @@ function draw() {
       if(i.type === 'coin') { drawCoin(i.x - 10, i.y - 10, i.x); } 
       else if (i.type === 'life') { ctx.font = '900 24px "Font Awesome 6 Free"'; ctx.fillStyle = '#e74c3c'; ctx.fillText("\uf004", i.x, i.y+20); }
       else if (i.type === 'cape') { 
-          ctx.save(); ctx.translate(i.x + 10, i.y + 10); ctx.fillStyle = '#f1c40f'; 
-          ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(6, -2); ctx.lineTo(8, 8); ctx.lineTo(0, 5); ctx.lineTo(-8, 8); ctx.lineTo(-6, -2); ctx.closePath(); ctx.fill();
-          ctx.strokeStyle = '#d35400'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(0, -5, 3, 0, Math.PI*2); ctx.fill(); ctx.restore();
+          ctx.save(); 
+          ctx.translate(i.x + 10, i.y + 10); 
+          
+          // Efeito de pulsar e aumentar o tamanho
+          let scale = 1.3 + Math.sin(Date.now() / 150) * 0.15; 
+          ctx.scale(scale, scale);
+          
+          // Brilho dourado no item
+          ctx.shadowColor = '#f1c40f'; 
+          ctx.shadowBlur = 12;
+
+          ctx.fillStyle = '#f1c40f'; 
+          ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(8, -2); ctx.lineTo(10, 10); ctx.lineTo(0, 7); ctx.lineTo(-10, 10); ctx.lineTo(-8, -2); ctx.closePath(); ctx.fill();
+          
+          ctx.shadowBlur = 0; // Desliga o brilho pra não borrar a linha
+          ctx.strokeStyle = '#d35400'; ctx.lineWidth = 1.5; ctx.stroke(); 
+          
+          // Jóia e reflexo de luz
+          ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(0, -5, 3.5, 0, Math.PI*2); ctx.fill(); 
+          ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-1, -6, 1.5, 0, Math.PI*2); ctx.fill(); 
+          ctx.restore();
       }
       else if (i.type === 'hairball') { 
           ctx.fillStyle = '#7f8c8d'; ctx.beginPath(); ctx.arc(i.x+10, i.y+10, 8, 0, Math.PI*2); ctx.fill();
@@ -1175,18 +1268,33 @@ function draw() {
           
           if(!player.onGround && !player.inWater) ctx.scale(0.9, 1.1); 
           if(Math.abs(player.vx) > 1) ctx.rotate(player.vx * 0.02); 
-          
+
+          let isIdle = Math.abs(player.vx) < 0.5 && player.onGround && !keys.left && !keys.right;
+
+          // Vira o contexto INTEIRO (gato e capa) se estiver andando para a esquerda ANTES de desenhar
+          if (!isIdle && !player.facingRight) {
+              ctx.scale(-1, 1);
+          }
+
           if(player.hasCape) {
-              ctx.fillStyle = '#f1c40f'; 
-              ctx.beginPath(); 
+              ctx.fillStyle = '#f1c40f';
+              ctx.strokeStyle = '#d35400';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
               let capeFlutter = Math.sin(Date.now()/50)*5;
-              if(Math.abs(player.vx) < 0.5 && player.onGround) {
-                  ctx.moveTo(-8, -5); ctx.lineTo(-12, 12); ctx.lineTo(12, 12); ctx.lineTo(8, -5);
+
+              if(isIdle) {
+                  // Capa parada (caindo pelas costas)
+                  ctx.moveTo(-8, -5); ctx.lineTo(-14, 14); ctx.lineTo(14, 14); ctx.lineTo(8, -5);
               } else {
-                  if(!player.facingRight) { ctx.moveTo(5, -10); ctx.lineTo(18 + capeFlutter, 10); ctx.lineTo(5, 10); }
-                  else { ctx.moveTo(-5, -10); ctx.lineTo(-18 - capeFlutter, 10); ctx.lineTo(-5, 10); }
+                  // Capa de lado (voando para trás com o vento)
+                  ctx.moveTo(-2, -5); // Ponto no pescoço
+                  ctx.lineTo(-20 - capeFlutter, 6); // Ponta tremulando no vento
+                  ctx.lineTo(-10, 14); // Borda inferior
+                  ctx.lineTo(4, 2); // Voltando pro corpo
               }
               ctx.fill();
+              ctx.stroke();
           }
 
           let catColor = '#e67e22'; let pawColor = '#d35400';
@@ -1196,7 +1304,7 @@ function draw() {
 
           ctx.fillStyle = catColor;
 
-          if(Math.abs(player.vx) < 0.5 && player.onGround && !keys.left && !keys.right) {
+          if(isIdle) {
               let idleTail = Math.sin(Date.now() / 200) * 3;
               ctx.strokeStyle = catColor; ctx.lineWidth = 3; 
               ctx.beginPath(); ctx.moveTo(8, 5); ctx.quadraticCurveTo(15 + idleTail, 0, 12 + idleTail, -10); ctx.stroke();
@@ -1221,7 +1329,6 @@ function draw() {
               if (unlocks.currentCharacter !== 'robot') { ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(0, -2, 1.5, 0, Math.PI*2); ctx.fill(); }
           } 
           else {
-              if(!player.facingRight) ctx.scale(-1, 1); 
               let walk1 = player.onGround ? Math.sin(Date.now() / 60) * 5 : 0; 
               let walk2 = player.onGround ? Math.cos(Date.now() / 60) * 5 : 0; 
               if(player.inWater) { walk1 = Math.sin(Date.now() / 150)*6; walk2 = Math.cos(Date.now() / 150)*6; }
