@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoScripts Games - O seu portal de diversão</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- 1. Tema Gamer (Variáveis) --- */
+        :root {
+            --primary: #8b5cf6; /* Roxo Gamer */
+            --secondary: #ec4899; /* Rosa Neon */
+            --dark-bg: #09090b; 
+            --card-bg: #18181b; 
+            --text-main: #fafafa;
+            --text-muted: #a1a1aa;
+            --border: rgba(255, 255, 255, 0.05); 
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        .container { width: 90%; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+
+        /* --- 2. Navbar --- */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+            padding: 1.2rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 0.8rem 0;
+            box-shadow: 0 4px 30px rgba(139, 92, 246, 0.15);
+        }
+
+        .nav-container { display: flex; justify-content: space-between; align-items: center; }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- 3. Hero Section (Topo) --- */
+        header {
+            padding: 150px 0 100px;
+            text-align: center;
+            position: relative;
+            background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, var(--dark-bg) 70%);
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 2rem auto;
+        }
+
+        /* --- 4. Grade de Jogos (A MÁGICA ACONTECE AQUI) --- */
+        .games-section { padding: 4rem 0 8rem; }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header h2 i { color: var(--primary); }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2.5rem;
+        }
+
+        /* O Cartão do Jogo */
+        .game-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            group: hover;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Imagem do Jogo com Efeito Zoom */
+        .game-img-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9; /* Proporção widescreen */
+            overflow: hidden;
+        }
+
+        .game-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .game-card:hover .game-img-wrapper img {
+            transform: scale(1.1); /* Dá o zoom na imagem */
+        }
+
+        /* Overlay Escuro com Botão Play que aparece no Hover */
+        .play-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(3px);
+        }
+
+        .game-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-btn-icon {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: #fff;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transform: scale(0.5);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding-left: 5px; /* Centraliza o ícone de play visualmente */
+        }
+
+        .game-card:hover .play-btn-icon {
+            transform: scale(1); /* Faz o botão de play pular na tela */
+        }
+
+        /* Informações do Jogo */
+        .game-info {
+            padding: 1.5rem;
+            background: linear-gradient(to top, var(--card-bg) 80%, transparent);
+        }
+
+        .game-info h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .game-category {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            background: rgba(139, 92, 246, 0.2);
+            color: #d8b4fe;
+            border-radius: 20px;
+        }
+
+        /* Animação de Scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        footer { text-align: center; padding: 2rem; color: var(--text-muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo"><i class="fas fa-gamepad" style="color: var(--primary);"></i> GoScripts <span>Games</span></div>
+        </div>
+    </nav>
+
+    <header id="home">
+        <div class="container hero-content reveal active">
+            <h1>Escolha seu próximo <br><span style="color: var(--primary);">Desafio</span></h1>
+            <p>Os melhores jogos selecionados pela GoScripts. Clique, jogue e divirta-se sem limites.</p>
+        </div>
+    </header>
+
+    <main>
+        <section class="games-section container">
+            
+            <div class="section-header reveal">
+                <h2><i class="fas fa-fire"></i> Em Destaque</h2>
+            </div>
+
+            <div class="games-grid">
+                
+                <a href="https://goscripts.com.br/catbros" target="_blank" class="game-card reveal">
+                    <div class="game-img-wrapper">
+                        <img src="https://gozgames.neocities.org/1000289133.png" alt="GozGames">
+                        <div class="play-overlay">
+                            <div class="play-btn-icon"><i class="fas fa-play"></i></div>
+                        </div>
+                    </div>
+                    <div class="game-info">
+                        <h3>Cat Bros</h3>
+                        <span class="game-category">Aventura / Plataforma</span>
+                    </div>
+                </a>
+                <a href="https://goscripts.com.br/truco" target="_blank" class="game-card reveal" style="transition-delay: 0.1s;">
+                    <div class="game-img-wrapper">
+                        <img src="https://gozgames.neocities.org/1000289135.png" alt="Jogo 2">
+                        <div class="play-overlay"><div class="play-btn-icon"><i class="fas fa-play"></i></div></div>
+                    </div>
+                    <div class="game-info">
+                        <h3>Truco Paulista</h3>
+                        <span class="game-category">Jogos de carta</span>
+                    </div>
+                </a>
+
+                <a href="https://goscripts.com.br/cobrinha" target="_blank" class="game-card reveal" style="transition-delay: 0.2s;">
+                    <div class="game-img-wrapper">
+                        <img src="https://gozgames.neocities.org/1000289137.png" alt="Jogo 3">
+                        <div class="play-overlay"><div class="play-btn-icon"><i class="fas fa-play"></i></div></div>
+                    </div>
+                    <div class="game-info">
+                        <h3>Modern Snake</h3>
+                        <span class="game-category">Arcade</span>
+                    </div>
+                </a>
+
+                <a href="https://keskara.neocities.org/Jogo/Jogos" target="_blank" class="game-card reveal" style="transition-delay: 0.3s;">
+                    <div class="game-img-wrapper">
+                        <img src="https://gozgames.neocities.org/1774746583645.png" alt="Jogo 4">
+                        <div class="play-overlay"><div class="play-btn-icon"><i class="fas fa-play"></i></div></div>
+                    </div>
+                    <div class="game-info">
+                        <h3>Space Z</h3>
+                        <span class="game-category">Arcade</span>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 GoScripts Games. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer para animar a entrada dos jogos na tela
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); 
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach((el) => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
