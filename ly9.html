@@ -3,115 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nosso Time - Rocket League</title>
+    <title>Lyrics9Team (LY9) - Rocket League</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* Paleta de Cores Moderna - Estilo eSports / Rocket League */
         :root {
-            --primary: #0088ff;
-            --secondary: #ff5500;
-            --bg: #0f172a;
-            --surface: #1e293b;
+            --primary: #0ea5e9; /* Azul Neon */
+            --primary-hover: #0284c7;
+            --secondary: #f97316; /* Laranja Rocket League */
+            --bg: #0b0f19; /* Fundo bem escuro */
+            --surface: #1e293b; /* Fundo dos cards */
+            --surface-hover: #334155;
             --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); }
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
 
-        /* Navbar & Hamburger */
-        nav { background-color: var(--surface); padding: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); }
-        .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
-        .menu-icon { display: none; font-size: 2rem; cursor: pointer; color: var(--text); background: none; border: none; }
-        .nav-links { display: flex; gap: 1rem; }
-        .nav-links a, .nav-links button { color: var(--text); text-decoration: none; cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0.5rem 1rem; }
-        .nav-links a:hover, .nav-links button:hover { color: var(--primary); }
+        /* Navbar & Logo */
+        nav { 
+            background-color: rgba(30, 41, 59, 0.95); 
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid var(--primary);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
         
+        .brand { display: flex; align-items: center; gap: 15px; }
+        .logo-img { height: 50px; width: auto; border-radius: 8px; }
+        .logo-text { font-size: 1.5rem; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 1px;}
+        .logo-text span { color: var(--primary); }
+
+        .menu-icon { display: none; font-size: 2rem; cursor: pointer; color: var(--text); background: none; border: none; }
+        
+        .nav-links { display: flex; gap: 1rem; align-items: center; }
+        .nav-links button { 
+            color: var(--text); 
+            cursor: pointer; 
+            background: none; 
+            border: none; 
+            font-size: 1rem; 
+            padding: 0.5rem 1rem; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+        }
+        .nav-links button:hover { color: var(--primary); background-color: rgba(14, 165, 233, 0.1); }
+        #navLoginBtn { background-color: var(--primary); color: white; }
+        #navLoginBtn:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
+
         /* Mobile Menu */
         @media (max-width: 768px) {
             .menu-icon { display: block; }
-            .nav-links { display: none; flex-direction: column; position: absolute; top: 60px; left: 0; right: 0; background-color: var(--surface); padding: 1rem; text-align: center; z-index: 10; }
+            .nav-links { 
+                display: none; flex-direction: column; position: absolute; 
+                top: 80px; left: 0; right: 0; background-color: var(--surface); 
+                padding: 1rem; text-align: center; border-bottom: 2px solid var(--primary);
+            }
             .nav-links.active { display: flex; }
         }
 
         /* Layout Geral */
-        main { padding: 2rem; max-width: 1000px; margin: 0 auto; }
-        section { display: none; margin-bottom: 2rem; }
+        main { padding: 3rem 2rem; max-width: 1100px; margin: 0 auto; min-height: 80vh; }
+        section { display: none; animation: fadeIn 0.4s ease-in-out; }
         section.active { display: block; }
-        h1, h2 { margin-bottom: 1rem; color: var(--secondary); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Formulários e Cards */
-        .card { background-color: var(--surface); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; }
-        input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; background: var(--bg); border: 1px solid #334155; color: white; border-radius: 4px; }
-        button.btn { background-color: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
-        button.btn:hover { background-color: #0066cc; }
-        button.btn-danger { background-color: #ef4444; margin-top: 0.5rem; }
+        h1 { margin-bottom: 1.5rem; color: var(--text); font-size: 2.5rem; font-weight: 800; border-left: 5px solid var(--primary); padding-left: 15px; }
+        h2 { margin-bottom: 1rem; color: var(--primary); }
+        
+        /* Textos Customizáveis */
+        .about-text { background-color: var(--surface); padding: 2rem; border-radius: 12px; border: 1px solid #334155; font-size: 1.1rem; color: var(--text-muted); }
 
-        /* Badge Admin */
-        .admin-only { display: none; border: 1px dashed var(--secondary); padding: 1rem; margin-top: 1rem; }
-        .team-list { margin-top: 1rem; padding-left: 1rem; }
-        .team-item { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+        /* Formulários e Cards */
+        .card { 
+            background-color: var(--surface); 
+            padding: 2rem; 
+            border-radius: 12px; 
+            margin-bottom: 1.5rem; 
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease;
+        }
+        .card:hover { transform: translateY(-3px); border-color: var(--primary); }
+        
+        input { 
+            width: 100%; padding: 1rem; margin-bottom: 1.2rem; 
+            background: #0f172a; border: 1px solid #334155; 
+            color: white; border-radius: 8px; font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
+        
+        button.btn { 
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover)); 
+            color: white; border: none; padding: 1rem 1.5rem; 
+            border-radius: 8px; cursor: pointer; font-weight: bold; 
+            width: 100%; font-size: 1rem; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        button.btn:hover { box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); transform: translateY(-2px); }
+        
+        button.btn-danger { background: var(--danger); margin-top: 1rem; font-size: 0.9rem; }
+        button.btn-danger:hover { background: #dc2626; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+
+        /* Badge Admin e Torneios */
+        .admin-only { display: none; border: 2px dashed var(--secondary); background: rgba(249, 115, 22, 0.05); }
+        .tournament-meta { display: flex; gap: 15px; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.95rem; }
+        .tournament-meta span { background: #0f172a; padding: 5px 10px; border-radius: 6px; border: 1px solid #334155; }
+        
+        .team-list { margin-top: 1.5rem; padding: 1rem; background: #0f172a; border-radius: 8px; }
+        .team-item { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; border-bottom: 1px solid #334155; }
+        .team-item:last-child { border-bottom: none; }
+        .team-name { font-weight: bold; color: var(--secondary); }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo">RL Team</div>
+        <div class="brand">
+            <img src="https://gozgames.neocities.org/project_20220727_1751022-01%20(1)%20(2).png" alt="Logo LY9" class="logo-img">
+            <div class="logo-text">Lyrics9<span>Team</span></div>
+        </div>
         <button class="menu-icon" onclick="toggleMenu()">☰</button>
         <div class="nav-links" id="navLinks">
             <button onclick="showSection('home')">Quem Somos</button>
             <button onclick="showSection('tournaments')">Torneios</button>
             <button id="navLoginBtn" onclick="showSection('auth')">Entrar / Cadastrar</button>
-            <button id="navLogoutBtn" onclick="logout()" style="display: none; color: var(--secondary);">Sair</button>
+            <button id="navLogoutBtn" onclick="logout()" style="display: none; color: var(--danger);">Sair da Conta</button>
         </div>
     </nav>
 
     <main>
         <section id="home" class="active">
-            <h1>Quem Somos</h1>
-            <p>Bem-vindo ao site oficial do nosso time de Rocket League! Aqui você encontra informações sobre nossa equipe e pode se inscrever nos nossos campeonatos comunitários. Faça login com sua conta Epic para participar.</p>
+            <h1>Sobre a LY9</h1>
+            <div class="about-text">
+                <p>Nós somos a <strong>Lyrics9Team (LY9)</strong>. Aqui você pode escrever a história do seu time, quando ele foi fundado, quais são os maiores objetivos de vocês no Rocket League e quem são os fundadores ou jogadores principais.</p>
+                <br>
+                <p>Organizamos campeonatos comunitários para fortalecer a cena competitiva. Crie sua conta, monte seu time e venha disputar nossos torneios!</p>
+                </div>
         </section>
 
         <section id="auth">
-            <div class="card" style="max-width: 400px; margin: 0 auto;">
-                <h2 id="authTitle">Entrar</h2>
+            <div class="card" style="max-width: 450px; margin: 0 auto;">
+                <h2 id="authTitle" style="text-align: center; margin-bottom: 1.5rem; font-size: 2rem;">Acessar Portal</h2>
                 <form id="authForm" onsubmit="handleAuth(event)">
-                    <input type="email" id="email" placeholder="E-mail" required>
-                    <input type="password" id="password" placeholder="Senha" required>
-                    <input type="text" id="epic" placeholder="Epic Games ID (Apenas Cadastro)">
+                    <input type="email" id="email" placeholder="Seu E-mail" required>
+                    <input type="password" id="password" placeholder="Sua Senha" required>
+                    <input type="text" id="epic" placeholder="Sua Epic Games ID (Ex: JogadorPro123)">
                     <button type="submit" class="btn" id="authBtn">Entrar</button>
                 </form>
-                <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
-                    <a href="#" onclick="toggleAuthMode()" style="color: var(--primary);">Alternar para Cadastrar/Entrar</a>
+                <p style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem;">
+                    Não tem conta? <a href="#" onclick="toggleAuthMode()" style="color: var(--primary); text-decoration: none; font-weight: bold;">Alternar para Cadastro</a>
                 </p>
-                <p id="authMessage" style="color: yellow; margin-top: 10px; text-align: center;"></p>
+                <p id="authMessage" style="color: var(--secondary); margin-top: 15px; text-align: center; font-weight: bold;"></p>
             </div>
         </section>
 
         <section id="tournaments">
-            <h1>Torneios Abertos</h1>
+            <h1>Campeonatos LY9</h1>
             
             <div id="adminPanel" class="card admin-only">
-                <h3 style="color: var(--secondary);">🛠️ Painel Admin: Criar Torneio</h3>
-                <form onsubmit="createTournament(event)" style="margin-top: 1rem;">
-                    <input type="text" id="tourName" placeholder="Nome do Torneio" required>
+                <h3 style="color: var(--secondary); margin-bottom: 1rem;">⚙️ Painel de Controle (Apenas Admin)</h3>
+                <form onsubmit="createTournament(event)" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="text" id="tourName" placeholder="Nome do Campeonato" required style="grid-column: span 2;">
                     <input type="text" id="tourPrize" placeholder="Premiação (Ex: R$ 500)" required>
-                    <input type="number" id="tourSlots" placeholder="Vagas (Ex: 16)" required>
-                    <button type="submit" class="btn">Criar Torneio</button>
+                    <input type="number" id="tourSlots" placeholder="Total de Vagas (Ex: 16)" required>
+                    <button type="submit" class="btn" style="grid-column: span 2; background: var(--secondary);">Criar Campeonato</button>
                 </form>
             </div>
 
             <div id="tournamentsList">
-                <p>Carregando torneios...</p>
+                <p style="color: var(--text-muted);">Buscando competições ativas na base de dados...</p>
             </div>
         </section>
     </main>
 
     <script>
         // ==========================================
-        // 1. CONFIGURAÇÃO DO SUPABASE (COLOQUE SUAS CHAVES AQUI)
+        // 1. CONFIGURAÇÃO DO SUPABASE
         // ==========================================
         const supabaseUrl = 'https://qpdrvvjkokqrzzjjialy.supabase.co';
         const supabaseKey = 'sb_publishable_rT-zGqAU4aruy6C03vgrCw_qFpqfeDV';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // CORREÇÃO DO ERRO "already declared": Verifica se já existe antes de criar
+        if (!window.appSupabase) {
+            window.appSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        }
+        const supabase = window.appSupabase;
 
         // Estado Global
         let currentUser = null;
@@ -135,12 +221,19 @@
 
         function toggleAuthMode() {
             isSignup = !isSignup;
-            document.getElementById('authTitle').innerText = isSignup ? 'Cadastrar' : 'Entrar';
-            document.getElementById('authBtn').innerText = isSignup ? 'Criar Conta' : 'Entrar';
+            document.getElementById('authTitle').innerText = isSignup ? 'Criar Conta' : 'Acessar Portal';
+            document.getElementById('authBtn').innerText = isSignup ? 'Cadastrar' : 'Entrar';
             document.getElementById('epic').style.display = isSignup ? 'block' : 'none';
             document.getElementById('epic').required = isSignup;
+            
+            // Atualiza o texto do link inferior
+            const linkTag = document.querySelector('#auth p a');
+            if(linkTag) {
+                linkTag.innerText = isSignup ? 'Já tenho conta. Fazer Login' : 'Ainda não tem conta? Cadastrar';
+            }
         }
-        // Esconde input da Epic no login padrão
+        
+        // Esconde input da Epic no login padrão assim que a página carrega
         document.getElementById('epic').style.display = 'none';
 
         function updateUI() {
@@ -166,7 +259,7 @@
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                 currentUser = session.user;
-                // Busca o perfil (incluindo o Role - Jogador ou Admin)
+                // Busca o perfil para saber se é admin
                 const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
                 userProfile = data;
                 updateUI();
@@ -180,27 +273,40 @@
             const epic = document.getElementById('epic').value;
             const msgBox = document.getElementById('authMessage');
 
-            msgBox.innerText = "Aguarde...";
+            msgBox.style.color = "var(--primary)";
+            msgBox.innerText = "Processando...";
 
             try {
                 if (isSignup) {
                     const { error } = await supabase.auth.signUp({
                         email: email,
                         password: password,
-                        options: { data: { epic_id: epic } } // Passa a Epic pro trigger do SQL
+                        options: { data: { epic_id: epic } }
                     });
                     if (error) throw error;
-                    msgBox.innerText = "Cadastro realizado! Faça login.";
-                    toggleAuthMode();
+                    msgBox.style.color = "#22c55e"; // verde
+                    msgBox.innerText = "Cadastro realizado! Você já pode fazer login.";
+                    toggleAuthMode(); // Volta pra tela de login
                 } else {
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    msgBox.innerText = "Login efetuado com sucesso!";
+                    msgBox.style.color = "#22c55e";
+                    msgBox.innerText = "Conectado com sucesso!";
                     await checkSession();
-                    setTimeout(() => showSection('home'), 1000);
+                    setTimeout(() => {
+                        showSection('home');
+                        msgBox.innerText = "";
+                        document.getElementById('authForm').reset();
+                    }, 1000);
                 }
             } catch (error) {
-                msgBox.innerText = "Erro: " + error.message;
+                msgBox.style.color = "var(--danger)";
+                // Traduz erro comum
+                if(error.message.includes("Invalid login")) {
+                    msgBox.innerText = "Erro: E-mail ou senha incorretos.";
+                } else {
+                    msgBox.innerText = "Erro: " + error.message;
+                }
             }
         }
 
@@ -217,9 +323,8 @@
         // ==========================================
         async function loadTournaments() {
             const listDiv = document.getElementById('tournamentsList');
-            listDiv.innerHTML = '<p>Carregando...</p>';
+            listDiv.innerHTML = '<p style="color: var(--text-muted);">Carregando chaveamentos...</p>';
 
-            // Busca Torneios e os Times vinculados a eles
             const { data: tournaments, error } = await supabase
                 .from('tournaments')
                 .select(`
@@ -229,12 +334,12 @@
                 .order('created_at', { ascending: false });
 
             if (error) {
-                listDiv.innerHTML = '<p>Erro ao carregar torneios.</p>';
+                listDiv.innerHTML = '<p style="color: var(--danger);">Erro ao carregar os torneios. Tente novamente mais tarde.</p>';
                 return;
             }
 
             if (tournaments.length === 0) {
-                listDiv.innerHTML = '<p>Nenhum torneio ativo no momento.</p>';
+                listDiv.innerHTML = '<p style="color: var(--text-muted);">Nenhum torneio ativo no momento. Fique ligado no Discord da LY9!</p>';
                 return;
             }
 
@@ -243,50 +348,51 @@
                 const isAdmin = userProfile && userProfile.role === 'admin';
                 const inscritos = t.teams ? t.teams.length : 0;
                 const isFull = inscritos >= t.slots;
+                const statusColor = t.is_open ? '#22c55e' : 'var(--danger)';
 
                 let html = `
                     <div class="card">
-                        <h2>${t.name} ${!t.is_open ? '(Fechado)' : ''}</h2>
-                        <p><strong>Premiação:</strong> ${t.prize}</p>
-                        <p><strong>Vagas:</strong> ${inscritos} / ${t.slots}</p>
+                        <h2>🏆 ${t.name}</h2>
+                        <div class="tournament-meta">
+                            <span><strong>Status:</strong> <span style="color:${statusColor}">${t.is_open ? 'Inscrições Abertas' : 'Fechado'}</span></span>
+                            <span><strong>Premiação:</strong> 💰 ${t.prize}</span>
+                            <span><strong>Vagas:</strong> 👥 ${inscritos} / ${t.slots}</span>
+                        </div>
                 `;
 
-                // Lista de Times (Admins veem botão de deletar qualquer um)
                 if (inscritos > 0) {
-                    html += `<div class="team-list"><strong>Times Inscritos:</strong><br>`;
+                    html += `<div class="team-list"><strong style="color: var(--primary);">Times Inscritos (${inscritos}):</strong><br>`;
                     t.teams.forEach(team => {
                         const epicName = team.profiles ? team.profiles.epic_id : 'Desconhecido';
                         html += `<div class="team-item">
-                            <span>🛡️ ${team.name} (Capitão: ${epicName})</span>`;
+                            <div><span class="team-name">🛡️ ${team.name}</span> <span style="color: var(--text-muted); font-size: 0.9rem;">(Capitão: ${epicName})</span></div>`;
                         
-                        // Permite deletar se for Admin OU se for o próprio criador do time
+                        // Permite deletar se for Admin OU se for o próprio criador
                         if (isAdmin || (currentUser && currentUser.id === team.captain_id)) {
-                             html += `<button onclick="deleteTeam('${team.id}')" style="color:red; background:none; border:none; cursor:pointer;">❌ Remover</button>`;
+                             html += `<button onclick="deleteTeam('${team.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight: bold;">Remover</button>`;
                         }
                         html += `</div>`;
                     });
                     html += `</div>`;
                 }
 
-                // Formulário de Inscrição (Apenas para jogadores logados se houver vaga)
                 if (currentUser && t.is_open) {
                     if (!isFull) {
                         html += `
-                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #334155;">
-                                <input type="text" id="teamName_${t.id}" placeholder="Nome do seu Time" style="margin-bottom:0.5rem;">
-                                <button class="btn" onclick="registerTeam('${t.id}')">Inscrever Time</button>
+                            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #334155; display: flex; gap: 10px;">
+                                <input type="text" id="teamName_${t.id}" placeholder="Nome do seu Time" style="margin-bottom:0; flex: 1;">
+                                <button class="btn" onclick="registerTeam('${t.id}')" style="width: auto;">Inscrever Time</button>
                             </div>
                         `;
                     } else {
-                        html += `<p style="color: #ef4444; margin-top: 1rem;">Vagas Esgotadas!</p>`;
+                        html += `<p style="color: var(--danger); margin-top: 1.5rem; font-weight: bold;">⚠️ Vagas Esgotadas!</p>`;
                     }
                 } else if (!currentUser) {
-                    html += `<p style="color: #94a3b8; margin-top: 1rem;"><em>Faça login para se inscrever.</em></p>`;
+                    html += `<p style="color: var(--secondary); margin-top: 1.5rem; border-left: 3px solid var(--secondary); padding-left: 10px;"><em>Faça login no portal para inscrever seu time.</em></p>`;
                 }
 
-                // Opções de Admin no card do torneio (Deletar torneio)
                 if (isAdmin) {
-                    html += `<button class="btn btn-danger" onclick="deleteTournament('${t.id}')">Apagar Torneio Inteiro</button>`;
+                    html += `<button class="btn btn-danger" onclick="deleteTournament('${t.id}')" style="margin-top: 2rem;">Apagar Torneio e Todos os Times</button>`;
                 }
 
                 html += `</div>`;
@@ -302,9 +408,10 @@
 
             const { error } = await supabase.from('tournaments').insert([{ name, prize, slots }]);
             if (!error) {
-                alert("Torneio criado!");
+                alert("Torneio criado com sucesso!");
                 document.getElementById('tourName').value = '';
                 document.getElementById('tourPrize').value = '';
+                document.getElementById('tourSlots').value = '';
                 loadTournaments();
             } else {
                 alert("Erro ao criar: " + error.message);
@@ -312,7 +419,7 @@
         }
 
         async function deleteTournament(id) {
-            if(confirm("Tem certeza que deseja apagar o torneio e todos os times inscritos?")) {
+            if(confirm("ATENÇÃO ADMIN: Tem certeza que deseja apagar este torneio e excluir todos os times inscritos nele?")) {
                 await supabase.from('tournaments').delete().eq('id', id);
                 loadTournaments();
             }
@@ -320,7 +427,7 @@
 
         async function registerTeam(tournamentId) {
             const teamName = document.getElementById(`teamName_${tournamentId}`).value;
-            if(!teamName) return alert("Digite o nome do time!");
+            if(!teamName) return alert("Digite o nome do time antes de se inscrever!");
 
             const { error } = await supabase.from('teams').insert([{
                 tournament_id: tournamentId,
@@ -329,7 +436,7 @@
             }]);
 
             if (!error) {
-                alert("Time inscrito com sucesso!");
+                alert("Time inscrito com sucesso! Boa sorte no campeonato!");
                 loadTournaments();
             } else {
                 alert("Erro ao inscrever: " + error.message);
@@ -337,13 +444,13 @@
         }
 
         async function deleteTeam(teamId) {
-            if(confirm("Tem certeza que deseja remover este time?")) {
+            if(confirm("Tem certeza que deseja remover este time da competição?")) {
                 const { error } = await supabase.from('teams').delete().eq('id', teamId);
                 if (!error) loadTournaments();
             }
         }
 
-        // Inicia checando se já está logado
+        // Inicia o app checando a sessão
         checkSession();
 
     </script>
