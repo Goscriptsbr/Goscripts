@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lyrics9Team (LY9) - Rocket League</title>
+    
+    <link rel="icon" href="data:,">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         /* Paleta de Cores Moderna - Estilo eSports / Rocket League */
         :root {
@@ -148,7 +152,7 @@
                 <p>Nós somos a <strong>Lyrics9Team (LY9)</strong>. Aqui você pode escrever a história do seu time, quando ele foi fundado, quais são os maiores objetivos de vocês no Rocket League e quem são os fundadores ou jogadores principais.</p>
                 <br>
                 <p>Organizamos campeonatos comunitários para fortalecer a cena competitiva. Crie sua conta, monte seu time e venha disputar nossos torneios!</p>
-                </div>
+            </div>
         </section>
 
         <section id="auth">
@@ -190,19 +194,15 @@
         // ==========================================
         // 1. CONFIGURAÇÃO DO SUPABASE
         // ==========================================
-        const supabaseUrl = 'https://qpdrvvjkokqrzzjjialy.supabase.co';
-        const supabaseKey = 'sb_publishable_rT-zGqAU4aruy6C03vgrCw_qFpqfeDV';
-        
-        // CORREÇÃO DO ERRO "already declared": Verifica se já existe antes de criar
-        if (!window.appSupabase) {
-            window.appSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-        }
-        const supabase = window.appSupabase;
+        // Usando VAR em vez de CONST para evitar o erro do Live Server
+        var supabaseUrl = 'https://qpdrvvjkokqrzzjjialy.supabase.co';
+        var supabaseKey = 'sb_publishable_rT-zGqAU4aruy6C03vgrCw_qFpqfeDV';
+        var supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Estado Global
-        let currentUser = null;
-        let userProfile = null;
-        let isSignup = false;
+        // Estado Global (Usando VAR)
+        var currentUser = null;
+        var userProfile = null;
+        var isSignup = false;
 
         // ==========================================
         // 2. FUNÇÕES DE INTERFACE (UI)
@@ -212,9 +212,11 @@
         }
 
         function showSection(sectionId) {
-            document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('section').forEach(function(sec) {
+                sec.classList.remove('active');
+            });
             document.getElementById(sectionId).classList.add('active');
-            document.getElementById('navLinks').classList.remove('active'); // fecha menu no mobile
+            document.getElementById('navLinks').classList.remove('active');
             
             if(sectionId === 'tournaments') loadTournaments();
         }
@@ -226,14 +228,12 @@
             document.getElementById('epic').style.display = isSignup ? 'block' : 'none';
             document.getElementById('epic').required = isSignup;
             
-            // Atualiza o texto do link inferior
-            const linkTag = document.querySelector('#auth p a');
+            var linkTag = document.querySelector('#auth p a');
             if(linkTag) {
                 linkTag.innerText = isSignup ? 'Já tenho conta. Fazer Login' : 'Ainda não tem conta? Cadastrar';
             }
         }
         
-        // Esconde input da Epic no login padrão assim que a página carrega
         document.getElementById('epic').style.display = 'none';
 
         function updateUI() {
@@ -241,7 +241,6 @@
                 document.getElementById('navLoginBtn').style.display = 'none';
                 document.getElementById('navLogoutBtn').style.display = 'block';
                 
-                // Mostra painel de admin se for admin
                 if(userProfile && userProfile.role === 'admin') {
                     document.getElementById('adminPanel').style.display = 'block';
                 }
@@ -256,13 +255,16 @@
         // 3. AUTENTICAÇÃO
         // ==========================================
         async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                currentUser = session.user;
-                // Busca o perfil para saber se é admin
-                const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
-                userProfile = data;
-                updateUI();
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    currentUser = session.user;
+                    const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+                    userProfile = data;
+                    updateUI();
+                }
+            } catch (err) {
+                console.error("Erro ao checar sessão:", err);
             }
         }
 
@@ -284,9 +286,9 @@
                         options: { data: { epic_id: epic } }
                     });
                     if (error) throw error;
-                    msgBox.style.color = "#22c55e"; // verde
+                    msgBox.style.color = "#22c55e"; 
                     msgBox.innerText = "Cadastro realizado! Você já pode fazer login.";
-                    toggleAuthMode(); // Volta pra tela de login
+                    toggleAuthMode(); 
                 } else {
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
@@ -301,7 +303,6 @@
                 }
             } catch (error) {
                 msgBox.style.color = "var(--danger)";
-                // Traduz erro comum
                 if(error.message.includes("Invalid login")) {
                     msgBox.innerText = "Erro: E-mail ou senha incorretos.";
                 } else {
@@ -367,7 +368,6 @@
                         html += `<div class="team-item">
                             <div><span class="team-name">🛡️ ${team.name}</span> <span style="color: var(--text-muted); font-size: 0.9rem;">(Capitão: ${epicName})</span></div>`;
                         
-                        // Permite deletar se for Admin OU se for o próprio criador
                         if (isAdmin || (currentUser && currentUser.id === team.captain_id)) {
                              html += `<button onclick="deleteTeam('${team.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight: bold;">Remover</button>`;
                         }
