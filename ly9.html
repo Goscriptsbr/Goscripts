@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* Variáveis de Cores (Dark Mode Padrão) */
+        /* Variáveis de Cores (Dark Mode) */
         :root {
             --primary: #0ea5e9; 
             --primary-hover: #0284c7;
@@ -34,61 +34,98 @@
             --border: #e2e8f0;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         body { background-color: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
 
-        /* Partículas de Fundo (Ranks) */
+        /* Efeito de Gradiente nos Títulos */
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        /* Partículas de Fundo Corrigidas */
         #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
-        .particle { position: absolute; top: -100px; width: 70px; height: auto; object-fit: contain; opacity: 0.15; animation: fall linear infinite; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+        .particle { 
+            position: absolute; top: -100px; width: 60px; height: auto; object-fit: contain; 
+            opacity: 0.15; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); 
+        }
         @keyframes fall {
             0% { transform: translateY(-50px) rotate(-15deg); opacity: 0; }
             10% { opacity: 0.15; }
             90% { opacity: 0.15; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+            100% { transform: translateY(calc(100vh + 100px)) rotate(360deg); opacity: 0; }
         }
 
-        /* Navbar */
-        nav { background-color: rgba(var(--surface), 0.95); backdrop-filter: blur(10px); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        /* Navbar Moderna */
+        nav { 
+            background-color: rgba(var(--surface), 0.90); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; 
+            box-shadow: 0 4px 30px rgba(0,0,0,0.15); 
+        }
         .brand { display: flex; align-items: center; gap: 15px; }
-        .logo-img { height: 40px; width: auto; border-radius: 8px; }
+        .logo-img { height: 45px; width: auto; border-radius: 8px; }
         .logo-text { font-size: 1.5rem; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 1px;}
         .logo-text span { color: var(--primary); }
         
-        .nav-links { display: flex; gap: 1rem; align-items: center; }
-        .nav-links button { color: var(--text); cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0.5rem 1rem; font-weight: 600; border-radius: 6px; }
-        .nav-links button:hover { color: var(--primary); background-color: rgba(14, 165, 233, 0.1); }
-        .theme-btn { font-size: 1.5rem; padding: 0.2rem 0.5rem !important; }
-        #navLoginBtn { background-color: var(--primary); color: white; }
-        #navLoginBtn:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
-        .menu-icon { display: none; font-size: 2rem; cursor: pointer; color: var(--text); background: none; border: none; }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-links button { 
+            color: var(--text); cursor: pointer; background: none; border: none; 
+            font-size: 1rem; padding: 0.5rem 0.5rem; font-weight: 600; position: relative;
+        }
+        
+        /* Efeito de sublinhado no menu PC */
+        .nav-links button:not(.btn):not(.theme-btn)::after {
+            content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 50%;
+            background-color: var(--primary); transition: all 0.3s ease; transform: translateX(-50%);
+        }
+        .nav-links button:not(.btn):not(.theme-btn):hover::after { width: 100%; }
+        .nav-links button:not(.btn):hover { color: var(--primary); }
+        
+        .theme-btn { font-size: 1.5rem; padding: 0.2rem !important; transition: transform 0.3s ease; }
+        .theme-btn:hover { transform: rotate(20deg); }
+        
+        #navLoginBtn { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; padding: 0.6rem 1.5rem; border-radius: 8px; }
+        #navLoginBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); }
+        
+        .menu-icon { display: none; font-size: 2rem; cursor: pointer; color: var(--text); background: none; border: none; transition: transform 0.3s ease; }
 
+        /* Menu Mobile Deslizante */
         @media (max-width: 768px) {
             .menu-icon { display: block; }
-            .nav-links { display: none; flex-direction: column; position: absolute; top: 75px; left: 0; right: 0; background-color: var(--surface); padding: 1rem; text-align: center; border-bottom: 2px solid var(--primary); }
-            .nav-links.active { display: flex; }
+            .nav-links { 
+                position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; 
+                background-color: var(--surface); padding: 0; text-align: center; 
+                max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.2); gap: 0;
+            }
+            .nav-links.active { max-height: 400px; opacity: 1; padding: 1.5rem; border-bottom: 2px solid var(--primary); gap: 1.5rem; }
+            .nav-links button:not(.btn):not(.theme-btn)::after { display: none; }
         }
 
         /* Layout & Componentes */
         main { padding: 3rem 2rem; max-width: 1100px; margin: 0 auto; min-height: 80vh; }
-        section { display: none; animation: fadeIn 0.4s ease-in-out; }
+        section { display: none; animation: slideUp 0.5s ease forwards; opacity: 0; transform: translateY(20px); }
         section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
         
         h1 { margin-bottom: 1.5rem; font-size: 2.2rem; font-weight: 800; border-left: 5px solid var(--primary); padding-left: 15px; }
         h2 { margin-bottom: 1rem; color: var(--primary); }
         
-        .about-text { background-color: var(--surface); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); font-size: 1.1rem; color: var(--text-muted); }
+        .about-text { background-color: var(--surface); padding: 2.5rem; border-radius: 12px; border: 1px solid var(--border); font-size: 1.1rem; color: var(--text-muted); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 
-        .card { background-color: var(--surface); padding: 2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s ease; }
-        .card:hover { border-color: var(--primary); }
+        .card { background-color: var(--surface); padding: 2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+        .card:hover { border-color: var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.1); transform: translateY(-3px); }
         
-        input, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 1rem; }
-        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
+        input, select { width: 100%; padding: 0.9rem; margin-bottom: 1rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 1rem; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2); }
         
         .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: var(--text); font-weight: 500; }
         .checkbox-group input[type="checkbox"] { width: auto; margin: 0; width: 20px; height: 20px; accent-color: var(--secondary); cursor: pointer; }
 
-        button.btn { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        button.btn { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; padding: 0.9rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; }
         button.btn:hover { box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); transform: translateY(-2px); }
         button.btn-danger { background: var(--danger); }
         button.btn-danger:hover { background: #dc2626; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
@@ -107,9 +144,10 @@
         .team-item:last-child { border-bottom: none; }
         
         /* Modal de Edição */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: var(--surface); padding: 2rem; border-radius: 12px; width: 100%; max-width: 600px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { background: var(--surface); padding: 2rem; border-radius: 12px; width: 100%; max-width: 600px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
     </style>
 </head>
 <body>
@@ -121,30 +159,37 @@
             <img src="https://gozgames.neocities.org/project_20220727_1751022-01%20(1)%20(2).png" alt="Logo LY9" class="logo-img">
             <div class="logo-text">Lyrics9<span>Team</span></div>
         </div>
-        <button class="menu-icon" onclick="toggleMenu()">☰</button>
+        <button class="menu-icon" id="menuToggleBtn" onclick="toggleMenu()">☰</button>
         <div class="nav-links" id="navLinks">
             <button onclick="showSection('home')">Quem Somos</button>
             <button onclick="showSection('tournaments')">Torneios</button>
             <button id="navPanelBtn" class="admin-only" onclick="showSection('adminPanelTab')" style="color: var(--secondary);">Painel Admin</button>
             <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">☀️</button>
-            <button id="navLoginBtn" onclick="showSection('auth')">Acessar</button>
+            <button id="navLoginBtn" onclick="showSection('auth')">Acessar Portal</button>
             <button id="navLogoutBtn" onclick="logout()" style="display: none; color: var(--danger);">Sair</button>
         </div>
     </nav>
 
     <main>
         <section id="home" class="active">
-            <h1>A Revolução do eSports</h1>
-            <div class="card">
-                <p>A <strong>Lyrics9Team (LY9)</strong> é mais do que um time, é uma comunidade competitiva de Rocket League. Aqui, organizamos campeonatos de alto nível.</p>
+            <h1><span class="gradient-text">A Revolução do eSports</span></h1>
+            <div class="about-text">
+                <p style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text);">
+                    A <strong>Lyrics9Team (LY9)</strong> nasceu em 2020 com um propósito claro: aproximar e fortalecer a comunidade de Rocket League.
+                </p>
+                <p>
+                    Com muita paixão e esforço, formamos uma grande equipe focada no cenário competitivo. Hoje, não somos apenas um time, mas uma plataforma completa onde organizamos torneios épicos, sorteios exclusivos e criamos um espaço para que novos talentos possam brilhar.
+                </p>
                 <br>
-                <p>Crie sua conta, junte-se a uma equipe ou crie a sua, e prove o seu valor nas arenas virtuais. Prepare seus aéreos!</p>
+                <p>
+                    Crie sua conta, monte seu esquadrão, participe de nossos eventos e prove o seu valor nas arenas virtuais. Prepare seus aéreos e venha fazer história com a LY9!
+                </p>
             </div>
         </section>
 
         <section id="auth">
             <div class="card" style="max-width: 450px; margin: 0 auto;">
-                <h2 id="authTitle" style="text-align: center; margin-bottom: 1.5rem; font-size: 2rem;">Acessar Portal</h2>
+                <h2 id="authTitle" style="text-align: center; margin-bottom: 1.5rem; font-size: 2rem;" class="gradient-text">Acessar Portal</h2>
                 <form id="authForm" onsubmit="handleAuth(event)">
                     <input type="email" id="email" placeholder="Seu E-mail" required>
                     <input type="password" id="password" placeholder="Sua Senha" required>
@@ -152,14 +197,14 @@
                     <button type="submit" class="btn" id="authBtn">Entrar</button>
                 </form>
                 <p style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem;">
-                    Não tem conta? <a href="#" onclick="toggleAuthMode()" style="color: var(--primary); font-weight: bold;">Cadastrar-se</a>
+                    Não tem conta? <a href="#" onclick="toggleAuthMode()" style="color: var(--primary); font-weight: bold; text-decoration: none;">Cadastrar-se</a>
                 </p>
                 <p id="authMessage" style="color: var(--secondary); margin-top: 15px; text-align: center; font-weight: bold;"></p>
             </div>
         </section>
 
         <section id="adminPanelTab">
-            <h1>Gerenciamento de Jogadores</h1>
+            <h1><span class="gradient-text">Gerenciamento de Jogadores</span></h1>
             <div class="card">
                 <p style="margin-bottom: 1rem;">Controle total sobre os membros cadastrados na plataforma.</p>
                 <div id="usersListContent">Carregando jogadores...</div>
@@ -167,14 +212,14 @@
         </section>
 
         <section id="tournaments">
-            <h1>Circuito de Campeonatos</h1>
+            <h1><span class="gradient-text">Circuito de Campeonatos</span></h1>
             
             <div id="adminTourBuilder" class="card admin-only">
                 <h3 style="color: var(--secondary); margin-bottom: 1rem;">⚙️ Criar Campeonato Oficial</h3>
                 <form onsubmit="createTournament(event)">
                     <input type="text" id="tourName" placeholder="Nome do Campeonato" required>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
                         <input type="date" id="tourDate" required title="Data do Torneio">
                         <select id="tourFormat" required>
                             <option value="" disabled selected>Formato</option>
@@ -197,7 +242,7 @@
 
                     <h4 style="margin: 15px 0 10px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 10px;">Configuração de Premiações</h4>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
                         <div>
                             <label class="checkbox-group"><input type="checkbox" id="hasP1" onchange="togglePrizeInput('hasP1', 'prize1')"> 1º Lugar</label>
                             <input type="number" step="0.01" id="prize1" placeholder="Valor R$" style="display:none;">
@@ -224,7 +269,7 @@
 
     <div class="modal-overlay" id="editModal">
         <div class="modal-content">
-            <h2 style="margin-bottom: 15px;">Editar Campeonato</h2>
+            <h2 style="margin-bottom: 15px;" class="gradient-text">Editar Campeonato</h2>
             <form id="editForm" onsubmit="saveTournamentEdit(event)">
                 <input type="hidden" id="editId">
                 <input type="text" id="editName" placeholder="Nome" required>
@@ -281,16 +326,12 @@
             document.getElementById('themeIcon').innerText = target === 'dark' ? '☀️' : '🌙';
         }
 
-        // Array fixo de imagens para todo o site
+        // Array fixo das 4 imagens pedidas
         const siteImages = [
             'https://gozgames.neocities.org/project_20220727_1751022-01%20(1)%20(2).png',
             'https://gozgames.neocities.org/299-2991775_hoops-division-ivdiamond-ii-rocket-league-diamond-rank.png',
             'https://gozgames.neocities.org/i-made-high-resolution-icons-for-the-newer-ranks-v0-jbdk0snuhws61.png',
-            'https://gozgames.neocities.org/sJj9dmEg.png',
-            'https://gozgames.neocities.org/hnzGXlpg.png',
-            'https://gozgames.neocities.org/h5oscwB.png',
-            'https://gozgames.neocities.org/10019681620613887.png',
-            'https://gozgames.neocities.org/1100879119_preview_Silver%201%20Tier.png'
+            'https://gozgames.neocities.org/sJj9dmEg.png'
         ];
 
         function spawnParticles() {
@@ -300,11 +341,16 @@
                 el.src = siteImages[Math.floor(Math.random() * siteImages.length)];
                 el.className = 'particle';
                 el.style.left = Math.random() * 100 + 'vw';
-                el.style.animationDuration = (Math.random() * 8 + 12) + 's'; // Animação entre 12 e 20s
+                
+                // Define a animação e o tempo
+                const duration = Math.random() * 8 + 12; // 12 a 20 segundos
+                el.style.animation = `fall ${duration}s linear forwards`;
                 
                 container.appendChild(el);
-                setTimeout(() => el.remove(), 20000); // Remove depois de 20s para não pesar a RAM
-            }, 1200);
+                
+                // Remove assim que a animação CSS termina naturalmente (corrige o bug de sumir do nada)
+                el.addEventListener('animationend', () => el.remove());
+            }, 1500);
         }
 
         initTheme();
@@ -313,12 +359,21 @@
         // ==========================================
         // NAVEGAÇÃO E UI
         // ==========================================
-        function toggleMenu() { document.getElementById('navLinks').classList.toggle('active'); }
+        function toggleMenu() { 
+            const nav = document.getElementById('navLinks');
+            const btn = document.getElementById('menuToggleBtn');
+            nav.classList.toggle('active'); 
+            btn.innerText = nav.classList.contains('active') ? '✕' : '☰';
+            btn.style.transform = nav.classList.contains('active') ? 'rotate(90deg)' : 'rotate(0deg)';
+        }
 
         function showSection(sectionId) {
             document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
-            document.getElementById('navLinks').classList.remove('active');
+            
+            // Fecha menu no mobile após clique
+            const nav = document.getElementById('navLinks');
+            if(nav.classList.contains('active')) toggleMenu();
             
             if(sectionId === 'tournaments') loadTournaments();
             if(sectionId === 'adminPanelTab') loadUsersList();
@@ -405,9 +460,9 @@
             data.forEach(user => {
                 const isAdmin = user.role === 'admin';
                 html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:1rem; background:var(--bg); border-radius:8px; margin-bottom:10px; border:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:1rem; background:var(--bg); border-radius:8px; margin-bottom:10px; border:1px solid var(--border); flex-wrap:wrap; gap:10px;">
                     <div>
-                        <strong>🎮 ${user.epic_id || 'Sem Epic'}</strong> 
+                        <strong style="color: var(--primary);">🎮 ${user.epic_id || 'Sem Epic'}</strong> 
                         <span style="font-size:0.8rem; padding:3px 8px; border-radius:4px; margin-left:10px; background:${isAdmin?'var(--secondary)':'var(--border)'}; color:${isAdmin?'white':'var(--text)'};">${isAdmin?'Admin':'Jogador'}</span>
                     </div>
                     <div style="display:flex; gap:10px;">
@@ -454,7 +509,7 @@
                 .order('created_at', { ascending: false });
 
             if (error) { listDiv.innerHTML = '<p style="color:var(--danger)">Erro de conexão.</p>'; return; }
-            if (tournaments.length === 0) { listDiv.innerHTML = '<p>Nenhum torneio ativo.</p>'; return; }
+            if (tournaments.length === 0) { listDiv.innerHTML = '<p>Nenhum torneio ativo no momento.</p>'; return; }
 
             listDiv.innerHTML = '';
             tournaments.forEach(t => {
@@ -479,11 +534,11 @@
                 let html = `
                     <div class="card">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
-                            <h2>🏆 ${t.name}</h2>
+                            <h2 style="margin: 0 0 10px 0;">🏆 ${t.name}</h2>
                             ${isAdmin ? `
-                                <div style="display:flex; gap:5px;">
+                                <div style="display:flex; gap:5px; margin-bottom: 10px;">
                                     <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="openEditModal('${t.id}', '${t.name}', '${t.tournament_date}', ${t.entry_fee})">✏️ Editar</button>
-                                    <button class="btn ${t.is_open ? 'btn-danger' : 'btn-success'}" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="toggleTournamentStatus('${t.id}', ${t.is_open})">${t.is_open ? '🔒 Fechar Inscrições' : '🔓 Abrir Inscrições'}</button>
+                                    <button class="btn ${t.is_open ? 'btn-danger' : 'btn-success'}" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="toggleTournamentStatus('${t.id}', ${t.is_open})">${t.is_open ? '🔒 Fechar' : '🔓 Abrir'}</button>
                                 </div>
                             ` : ''}
                         </div>
@@ -493,7 +548,7 @@
                             <span>💵 Inscrição: ${feeText}</span>
                             <span>🎮 Formato: ${t.format}v${t.format}</span>
                             <span>👥 Times: ${slotText}</span>
-                            <span><strong>Status:</strong> <span style="color:${statusOpen ? 'var(--success)' : 'var(--danger)'}; background:transparent; border:none; padding:0;">${statusOpen ? 'Aberto' : (limitReached ? 'Lotação Máxima' : 'Fechado pelo Admin')}</span></span>
+                            <span><strong>Status:</strong> <span style="color:${statusOpen ? 'var(--success)' : 'var(--danger)'}; background:transparent; border:none; padding:0;">${statusOpen ? 'Aberto' : (limitReached ? 'Lotação Máxima' : 'Fechado')}</span></span>
                         </div>
                         ${prizesHtml}
                 `;
@@ -509,8 +564,8 @@
                         html += `
                         <div class="team-item">
                             <div>
-                                <span style="font-weight:bold; color:var(--primary); font-size:1.1rem;">🛡️ ${team.name}</span>
-                                <div style="color:var(--text-muted); font-size:0.9rem;">👥 Jogadores (${membersCount}/${t.format}): ${epicNames}</div>
+                                <span style="font-weight:bold; color:var(--text); font-size:1.1rem;">🛡️ ${team.name}</span>
+                                <div style="color:var(--text-muted); font-size:0.9rem;">👥 Jogadores (${membersCount}/${t.format}): <span style="color: var(--primary);">${epicNames}</span></div>
                             </div>
                             <div style="display:flex; gap: 5px;">`;
                         
@@ -538,7 +593,7 @@
                     html += `<p style="color: var(--secondary); margin-top: 1.5rem;"><em>Faça login para criar ou entrar em um time.</em></p>`;
                 }
 
-                if (isAdmin) html += `<button class="btn btn-danger" onclick="deleteTournament('${t.id}')" style="margin-top: 1.5rem;">🚨 Apagar Campeonato Todo</button>`;
+                if (isAdmin) html += `<button class="btn btn-danger" onclick="deleteTournament('${t.id}')" style="margin-top: 1.5rem; width: 100%;">🚨 Apagar Campeonato Todo</button>`;
                 html += `</div>`;
                 listDiv.innerHTML += html;
             });
@@ -573,7 +628,6 @@
             } else alert("Erro: " + error.message);
         }
 
-        // --- Funções de Edição (Admin) ---
         function openEditModal(id, name, date, fee) {
             document.getElementById('editId').value = id;
             document.getElementById('editName').value = name;
