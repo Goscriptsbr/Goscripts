@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lyrics9Team (LY9) - Rocket League</title>
+    <title>Lyrics9Team (LY9) - Rocket League eSports</title>
     
     <link rel="icon" href="data:,">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* Variáveis de Cores (Dark Mode Padrão) */
         :root {
             --primary: #0ea5e9; 
             --primary-hover: #0284c7;
@@ -20,76 +21,98 @@
             --text-muted: #94a3b8;
             --danger: #ef4444;
             --success: #22c55e;
+            --border: #334155;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        /* Variáveis Light Mode */
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
 
-        nav { background-color: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+
+        /* Partículas de Fundo */
+        #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
+        .particle { position: absolute; top: -50px; font-size: 1.5rem; opacity: 0.15; animation: fall linear infinite; }
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.2; }
+            90% { opacity: 0.2; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Navbar */
+        nav { background-color: rgba(var(--surface), 0.95); backdrop-filter: blur(10px); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .brand { display: flex; align-items: center; gap: 15px; }
-        .logo-img { height: 50px; width: auto; border-radius: 8px; }
+        .logo-img { height: 40px; width: auto; border-radius: 8px; }
         .logo-text { font-size: 1.5rem; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 1px;}
         .logo-text span { color: var(--primary); }
-        .menu-icon { display: none; font-size: 2rem; cursor: pointer; color: var(--text); background: none; border: none; }
         
         .nav-links { display: flex; gap: 1rem; align-items: center; }
-        .nav-links button { color: var(--text); cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0.5rem 1rem; font-weight: 600; transition: all 0.3s ease; border-radius: 6px; }
+        .nav-links button { color: var(--text); cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0.5rem 1rem; font-weight: 600; border-radius: 6px; }
         .nav-links button:hover { color: var(--primary); background-color: rgba(14, 165, 233, 0.1); }
+        .theme-btn { font-size: 1.5rem; padding: 0.2rem 0.5rem !important; }
         #navLoginBtn { background-color: var(--primary); color: white; }
         #navLoginBtn:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
+        .menu-icon { display: none; font-size: 2rem; cursor: pointer; color: var(--text); background: none; border: none; }
 
         @media (max-width: 768px) {
             .menu-icon { display: block; }
-            .nav-links { display: none; flex-direction: column; position: absolute; top: 80px; left: 0; right: 0; background-color: var(--surface); padding: 1rem; text-align: center; border-bottom: 2px solid var(--primary); }
+            .nav-links { display: none; flex-direction: column; position: absolute; top: 75px; left: 0; right: 0; background-color: var(--surface); padding: 1rem; text-align: center; border-bottom: 2px solid var(--primary); }
             .nav-links.active { display: flex; }
         }
 
+        /* Layout & Componentes */
         main { padding: 3rem 2rem; max-width: 1100px; margin: 0 auto; min-height: 80vh; }
         section { display: none; animation: fadeIn 0.4s ease-in-out; }
         section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        h1 { margin-bottom: 1.5rem; color: var(--text); font-size: 2.5rem; font-weight: 800; border-left: 5px solid var(--primary); padding-left: 15px; }
+        h1 { margin-bottom: 1.5rem; font-size: 2.2rem; font-weight: 800; border-left: 5px solid var(--primary); padding-left: 15px; }
         h2 { margin-bottom: 1rem; color: var(--primary); }
         
-        .about-text { background-color: var(--surface); padding: 2rem; border-radius: 12px; border: 1px solid #334155; font-size: 1.1rem; color: var(--text-muted); }
-
-        .card { background-color: var(--surface); padding: 2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s ease; }
+        .card { background-color: var(--surface); padding: 2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s ease; }
         .card:hover { border-color: var(--primary); }
         
-        input, select { width: 100%; padding: 1rem; margin-bottom: 1.2rem; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s; }
+        input, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 1rem; }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
         
-        button.btn { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; padding: 1rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: var(--text); font-weight: 500; }
+        .checkbox-group input[type="checkbox"] { width: auto; margin: 0; width: 20px; height: 20px; accent-color: var(--secondary); cursor: pointer; }
+
+        button.btn { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
         button.btn:hover { box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); transform: translateY(-2px); }
         button.btn-danger { background: var(--danger); }
         button.btn-danger:hover { background: #dc2626; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
         button.btn-success { background: var(--success); }
         button.btn-success:hover { background: #16a34a; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
+        button.btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+        button.btn-outline:hover { border-color: var(--primary); color: var(--primary); transform: none; box-shadow: none;}
 
         .admin-only { display: none; border: 2px dashed var(--secondary); background: rgba(249, 115, 22, 0.05); }
-        .tournament-meta { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.95rem; }
-        .tournament-meta span { background: #0f172a; padding: 5px 10px; border-radius: 6px; border: 1px solid #334155; }
-        .prizes-box { margin-top: 10px; background: rgba(249, 115, 22, 0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--secondary); color: white; font-weight: bold; }
+        .tournament-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.95rem; }
+        .tournament-meta span { background: var(--bg); padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); font-weight: 500; }
+        .prizes-box { margin-top: 10px; background: rgba(249, 115, 22, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--secondary); color: var(--text); font-weight: bold; display: flex; gap: 15px; flex-wrap: wrap; }
         
-        .team-list { margin-top: 1.5rem; padding: 1rem; background: #0f172a; border-radius: 8px; }
-        .team-item { display: flex; flex-direction: column; gap: 10px; padding: 1rem; border-bottom: 1px solid #334155; }
+        .team-list { margin-top: 1.5rem; padding: 1rem; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
+        .team-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
         .team-item:last-child { border-bottom: none; }
-        .team-header { display: flex; justify-content: space-between; align-items: center; }
-        .team-name { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
-        .team-players { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; }
-
-        /* Estilos do Painel de Jogadores */
-        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #0f172a; border-radius: 8px; margin-bottom: 10px; border: 1px solid #334155; }
-        .user-info { flex: 1; }
-        .user-role-badge { font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-left: 10px; }
-        .badge-admin { background: var(--secondary); color: white; }
-        .badge-jogador { background: #334155; color: white; }
-        .user-actions { display: flex; gap: 10px; }
-        .user-actions button { padding: 0.5rem 1rem; font-size: 0.8rem; width: auto; }
+        
+        /* Modal de Edição */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--surface); padding: 2rem; border-radius: 12px; width: 100%; max-width: 600px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; }
     </style>
 </head>
 <body>
+
+    <div id="particles"></div>
 
     <nav>
         <div class="brand">
@@ -100,17 +123,20 @@
         <div class="nav-links" id="navLinks">
             <button onclick="showSection('home')">Quem Somos</button>
             <button onclick="showSection('tournaments')">Torneios</button>
-            <button id="navPanelBtn" class="admin-only" onclick="showSection('adminPanelTab')" style="display: none; color: var(--secondary);">Painel Admin</button>
-            <button id="navLoginBtn" onclick="showSection('auth')">Entrar / Cadastrar</button>
-            <button id="navLogoutBtn" onclick="logout()" style="display: none; color: var(--danger);">Sair da Conta</button>
+            <button id="navPanelBtn" class="admin-only" onclick="showSection('adminPanelTab')" style="color: var(--secondary);">Painel Admin</button>
+            <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">☀️</button>
+            <button id="navLoginBtn" onclick="showSection('auth')">Acessar</button>
+            <button id="navLogoutBtn" onclick="logout()" style="display: none; color: var(--danger);">Sair</button>
         </div>
     </nav>
 
     <main>
         <section id="home" class="active">
-            <h1>Sobre a LY9</h1>
-            <div class="about-text">
-                <p>Nós somos a <strong>Lyrics9Team (LY9)</strong>. Insira sua história aqui.</p>
+            <h1>A Revolução do eSports</h1>
+            <div class="card">
+                <p>A <strong>Lyrics9Team (LY9)</strong> é mais do que um time, é uma comunidade competitiva de Rocket League. Aqui, organizamos campeonatos de alto nível.</p>
+                <br>
+                <p>Crie sua conta, junte-se a uma equipe ou crie a sua, e prove o seu valor nas arenas virtuais. Prepare seus aéreos!</p>
             </div>
         </section>
 
@@ -124,7 +150,7 @@
                     <button type="submit" class="btn" id="authBtn">Entrar</button>
                 </form>
                 <p style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem;">
-                    Não tem conta? <a href="#" onclick="toggleAuthMode()" style="color: var(--primary); text-decoration: none; font-weight: bold;">Alternar para Cadastro</a>
+                    Não tem conta? <a href="#" onclick="toggleAuthMode()" style="color: var(--primary); font-weight: bold;">Cadastrar-se</a>
                 </p>
                 <p id="authMessage" style="color: var(--secondary); margin-top: 15px; text-align: center; font-weight: bold;"></p>
             </div>
@@ -133,48 +159,89 @@
         <section id="adminPanelTab">
             <h1>Gerenciamento de Jogadores</h1>
             <div class="card">
-                <p style="margin-bottom: 1rem; color: var(--text-muted);">Aqui você pode promover jogadores a administradores ou banir/excluir contas do sistema.</p>
+                <p style="margin-bottom: 1rem;">Controle total sobre os membros cadastrados na plataforma.</p>
                 <div id="usersListContent">Carregando jogadores...</div>
             </div>
         </section>
 
         <section id="tournaments">
-            <h1>Campeonatos LY9</h1>
+            <h1>Circuito de Campeonatos</h1>
             
             <div id="adminTourBuilder" class="card admin-only">
-                <h3 style="color: var(--secondary); margin-bottom: 1rem;">⚙️ Criar Novo Campeonato</h3>
+                <h3 style="color: var(--secondary); margin-bottom: 1rem;">⚙️ Criar Campeonato Oficial</h3>
                 <form onsubmit="createTournament(event)">
                     <input type="text" id="tourName" placeholder="Nome do Campeonato" required>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <select id="tourFormat" required>
-                            <option value="" disabled selected>Formato do Time</option>
-                            <option value="1">1v1 (1 Jogador por time)</option>
-                            <option value="2">2v2 (2 Jogadores por time)</option>
-                            <option value="3">3v3 (3 Jogadores por time)</option>
-                            <option value="4">4v4 (4 Jogadores por time)</option>
-                        </select>
-                        <input type="number" id="tourSlots" placeholder="Máx de Times (Deixe 0 para Ilimitado)" required>
-                    </div>
-
-                    <h4 style="margin: 10px 0; color: var(--text-muted);">Premiações (Deixe 0 se não houver)</h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                        <input type="number" step="0.01" id="prize1" placeholder="R$ 1º Lugar" required>
-                        <input type="number" step="0.01" id="prize2" placeholder="R$ 2º Lugar" required>
-                        <input type="number" step="0.01" id="prize3" placeholder="R$ 3º Lugar" required>
+                        <input type="date" id="tourDate" required title="Data do Torneio">
+                        <select id="tourFormat" required>
+                            <option value="" disabled selected>Formato</option>
+                            <option value="1">1v1</option>
+                            <option value="2">2v2</option>
+                            <option value="3">3v3</option>
+                            <option value="4">4v4</option>
+                        </select>
+                        <select id="tourSlots" required>
+                            <option value="" disabled selected>Máx. Times</option>
+                            <option value="0">Ilimitado</option>
+                            <option value="4">4 Times</option>
+                            <option value="8">8 Times</option>
+                            <option value="16">16 Times</option>
+                            <option value="32">32 Times</option>
+                        </select>
                     </div>
 
-                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 10px;">Publicar Campeonato</button>
+                    <input type="number" step="0.01" id="tourFee" placeholder="Taxa de Inscrição (R$) - Deixe 0 se for Grátis" required>
+
+                    <h4 style="margin: 15px 0 10px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 10px;">Configuração de Premiações</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="checkbox-group"><input type="checkbox" id="hasP1" onchange="togglePrizeInput('hasP1', 'prize1')"> 1º Lugar</label>
+                            <input type="number" step="0.01" id="prize1" placeholder="Valor R$" style="display:none;">
+                        </div>
+                        <div>
+                            <label class="checkbox-group"><input type="checkbox" id="hasP2" onchange="togglePrizeInput('hasP2', 'prize2')"> 2º Lugar</label>
+                            <input type="number" step="0.01" id="prize2" placeholder="Valor R$" style="display:none;">
+                        </div>
+                        <div>
+                            <label class="checkbox-group"><input type="checkbox" id="hasP3" onchange="togglePrizeInput('hasP3', 'prize3')"> 3º Lugar</label>
+                            <input type="number" step="0.01" id="prize3" placeholder="Valor R$" style="display:none;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 15px;">Publicar Campeonato</button>
                 </form>
             </div>
 
             <div id="tournamentsList">
-                <p style="color: var(--text-muted);">Buscando competições...</p>
+                <p>Buscando competições...</p>
             </div>
         </section>
     </main>
 
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 15px;">Editar Campeonato</h2>
+            <form id="editForm" onsubmit="saveTournamentEdit(event)">
+                <input type="hidden" id="editId">
+                <input type="text" id="editName" placeholder="Nome" required>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="date" id="editDate" required>
+                    <input type="number" step="0.01" id="editFee" placeholder="Taxa (R$)" required>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                    <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        // ==========================================
+        // CONFIGURAÇÕES E UTILITÁRIOS
+        // ==========================================
         var supabaseUrl = 'https://qpdrvvjkokqrzzjjialy.supabase.co';
         var supabaseKey = 'sb_publishable_rT-zGqAU4aruy6C03vgrCw_qFpqfeDV';
         var supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -183,19 +250,62 @@
         var userProfile = null;
         var isSignup = false;
 
-        // Utilitário para formatar moeda (R$)
         function formatarMoeda(valor) {
-            if (!valor || valor <= 0) return null;
+            if (valor == null || valor === "") return "R$ 0,00";
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
         }
 
+        function formatarData(dataISO) {
+            if(!dataISO) return "Data não definida";
+            const d = new Date(dataISO);
+            d.setMinutes(d.getMinutes() + d.getTimezoneOffset()); // Ajuste de fuso
+            return d.toLocaleDateString('pt-BR');
+        }
+
+        // ==========================================
+        // EFEITOS VISUAIS (TEMA & PARTÍCULAS)
+        // ==========================================
+        function initTheme() {
+            const savedTheme = localStorage.getItem('ly9-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('ly9-theme', target);
+            document.getElementById('themeIcon').innerText = target === 'dark' ? '☀️' : '🌙';
+        }
+
+        function spawnParticles() {
+            const container = document.getElementById('particles');
+            const icons = ['⚽', '🚗', '🏎️', '🏆', '🚀', '🔥', '🛡️'];
+            setInterval(() => {
+                const el = document.createElement('div');
+                el.innerText = icons[Math.floor(Math.random() * icons.length)];
+                el.className = 'particle';
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.animationDuration = (Math.random() * 10 + 10) + 's'; // 10 a 20s caindo devagar
+                container.appendChild(el);
+                setTimeout(() => el.remove(), 20000); // Remove depois pra não pesar
+            }, 1000);
+        }
+
+        // Inicializa Efeitos
+        initTheme();
+        spawnParticles();
+
+        // ==========================================
+        // NAVEGAÇÃO E UI
+        // ==========================================
         function toggleMenu() { document.getElementById('navLinks').classList.toggle('active'); }
 
         function showSection(sectionId) {
-            document.querySelectorAll('section').forEach(function(sec) { sec.classList.remove('active'); });
+            document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             document.getElementById('navLinks').classList.remove('active');
-            
             if(sectionId === 'tournaments') loadTournaments();
             if(sectionId === 'adminPanelTab') loadUsersList();
         }
@@ -206,10 +316,7 @@
             document.getElementById('authBtn').innerText = isSignup ? 'Cadastrar' : 'Entrar';
             document.getElementById('epic').style.display = isSignup ? 'block' : 'none';
             document.getElementById('epic').required = isSignup;
-            var linkTag = document.querySelector('#auth p a');
-            if(linkTag) linkTag.innerText = isSignup ? 'Já tenho conta. Fazer Login' : 'Ainda não tem conta? Cadastrar';
         }
-        document.getElementById('epic').style.display = 'none';
 
         function updateUI() {
             var adminElems = document.querySelectorAll('.admin-only');
@@ -228,6 +335,9 @@
             }
         }
 
+        // ==========================================
+        // AUTENTICAÇÃO E SESSÃO
+        // ==========================================
         async function checkSession() {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
@@ -248,7 +358,7 @@
 
             try {
                 if (isSignup) {
-                    const { error } = await supabase.auth.signUp({ email: email, password: password, options: { data: { epic_id: epic } } });
+                    const { error } = await supabase.auth.signUp({ email, password, options: { data: { epic_id: epic } } });
                     if (error) throw error;
                     msgBox.style.color = "var(--success)"; msgBox.innerText = "Cadastro realizado! Faça login.";
                     toggleAuthMode(); 
@@ -265,41 +375,32 @@
             }
         }
 
-        async function logout() {
-            await supabase.auth.signOut();
-            currentUser = null; userProfile = null;
-            updateUI(); showSection('home');
-        }
+        async function logout() { await supabase.auth.signOut(); currentUser = null; userProfile = null; updateUI(); showSection('home'); }
 
         // ==========================================
-        // PAINEL DE JOGADORES (ADMIN)
+        // PAINEL DE USUÁRIOS
         // ==========================================
         async function loadUsersList() {
             if(!userProfile || userProfile.role !== 'admin') return;
             const div = document.getElementById('usersListContent');
             div.innerHTML = "Carregando...";
-
             const { data, error } = await supabase.from('profiles').select('*').order('created_at', {ascending: false});
             if(error) { div.innerHTML = "Erro ao carregar."; return; }
 
             let html = '';
             data.forEach(user => {
                 const isAdmin = user.role === 'admin';
-                const badgeClass = isAdmin ? 'badge-admin' : 'badge-jogador';
-                const roleText = isAdmin ? 'Admin' : 'Jogador';
-                
                 html += `
-                <div class="user-row">
-                    <div class="user-info">
-                        <strong>🎮 ${user.epic_id || 'Sem Epic ID'}</strong> 
-                        <span class="user-role-badge ${badgeClass}">${roleText}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:1rem; background:var(--bg); border-radius:8px; margin-bottom:10px; border:1px solid var(--border);">
+                    <div>
+                        <strong>🎮 ${user.epic_id || 'Sem Epic'}</strong> 
+                        <span style="font-size:0.8rem; padding:3px 8px; border-radius:4px; margin-left:10px; background:${isAdmin?'var(--secondary)':'var(--border)'}; color:${isAdmin?'white':'var(--text)'};">${isAdmin?'Admin':'Jogador'}</span>
                     </div>
-                    <div class="user-actions">
-                        ${isAdmin 
-                            ? `<button class="btn" style="background:#334155" onclick="changeRole('${user.id}', 'jogador')">⬇️ Rebaixar para Jogador</button>` 
-                            : `<button class="btn" style="background:var(--secondary)" onclick="changeRole('${user.id}', 'admin')">⭐ Promover a Admin</button>`
-                        }
-                        <button class="btn btn-danger" onclick="deleteUser('${user.id}', '${user.epic_id}')">🗑️ Excluir</button>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="changeRole('${user.id}', '${isAdmin?'jogador':'admin'}')">
+                            ${isAdmin ? '⬇️ Rebaixar' : '⭐ Promover'}
+                        </button>
+                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="deleteUser('${user.id}', '${user.epic_id}')">🗑️ Excluir</button>
                     </div>
                 </div>`;
             });
@@ -307,64 +408,79 @@
         }
 
         async function changeRole(userId, newRole) {
-            if(confirm(`Tem certeza que deseja mudar o cargo deste usuário para ${newRole.toUpperCase()}?`)) {
+            if(confirm(`Mudar cargo para ${newRole.toUpperCase()}?`)) {
                 await supabase.from('profiles').update({role: newRole}).eq('id', userId);
                 loadUsersList();
             }
         }
 
         async function deleteUser(userId, epicId) {
-            if(confirm(`PERIGO: Deseja excluir permanentemente o jogador ${epicId}? Ele perderá acesso ao site e será removido de todos os times.`)) {
-                // Chama a função segura que criamos no SQL
+            if(confirm(`PERIGO: Excluir permanentemente o jogador ${epicId}?`)) {
                 const { error } = await supabase.rpc('admin_delete_user', { target_user_id: userId });
-                if(error) alert("Erro: " + error.message);
-                else loadUsersList();
+                if(error) alert("Erro: " + error.message); else loadUsersList();
             }
         }
 
         // ==========================================
-        // SISTEMA DE TORNEIOS E TIMES
+        // TORNEIOS E TIMES
         // ==========================================
+        function togglePrizeInput(chkId, inputId) {
+            const input = document.getElementById(inputId);
+            if(document.getElementById(chkId).checked) { input.style.display = 'block'; input.required = true; } 
+            else { input.style.display = 'none'; input.value = ''; input.required = false; }
+        }
+
         async function loadTournaments() {
             const listDiv = document.getElementById('tournamentsList');
-            listDiv.innerHTML = '<p style="color: var(--text-muted);">Carregando chaveamentos...</p>';
+            listDiv.innerHTML = '<p>Carregando chaves...</p>';
 
             const { data: tournaments, error } = await supabase
                 .from('tournaments')
-                .select(`
-                    id, name, format, slots, is_open, prize_1st, prize_2nd, prize_3rd,
-                    teams ( id, name, captain_id, team_members ( user_id, profiles(epic_id) ) )
-                `)
+                .select(`id, name, format, slots, is_open, tournament_date, entry_fee, has_prize_1, has_prize_2, has_prize_3, prize_1st, prize_2nd, prize_3rd, teams ( id, name, captain_id, team_members ( user_id, profiles(epic_id) ) )`)
                 .order('created_at', { ascending: false });
 
-            if (error) { listDiv.innerHTML = '<p style="color: var(--danger);">Erro ao carregar os torneios.</p>'; return; }
-            if (tournaments.length === 0) { listDiv.innerHTML = '<p style="color: var(--text-muted);">Nenhum torneio ativo.</p>'; return; }
+            if (error) { listDiv.innerHTML = '<p style="color:var(--danger)">Erro de conexão.</p>'; return; }
+            if (tournaments.length === 0) { listDiv.innerHTML = '<p>Nenhum torneio ativo.</p>'; return; }
 
             listDiv.innerHTML = '';
             tournaments.forEach(t => {
                 const isAdmin = userProfile && userProfile.role === 'admin';
                 const inscritos = t.teams ? t.teams.length : 0;
-                const isFull = t.slots > 0 && inscritos >= t.slots;
-                const slotText = t.slots === 0 ? 'Ilimitadas' : `${inscritos} / ${t.slots}`;
                 
-                // Formatação de Prêmios
+                // LÓGICA DE AUTO FECHAR SE BATER VAGA
+                const limitReached = t.slots > 0 && inscritos >= t.slots;
+                const statusOpen = t.is_open && !limitReached; // Só é visualmente aberto se não bateu limite
+                
+                const slotText = t.slots === 0 ? `${inscritos} (Ilimitado)` : `${inscritos} / ${t.slots}`;
+                const feeText = t.entry_fee > 0 ? formatarMoeda(t.entry_fee) : "GRÁTIS";
+                
                 let prizesHtml = '';
-                const p1 = formatarMoeda(t.prize_1st), p2 = formatarMoeda(t.prize_2nd), p3 = formatarMoeda(t.prize_3rd);
-                if(p1 || p2 || p3) {
+                if(t.has_prize_1 || t.has_prize_2 || t.has_prize_3) {
                     prizesHtml = `<div class="prizes-box">`;
-                    if(p1) prizesHtml += `🥇 1º Lugar: ${p1} &nbsp;&nbsp;`;
-                    if(p2) prizesHtml += `🥈 2º Lugar: ${p2} &nbsp;&nbsp;`;
-                    if(p3) prizesHtml += `🥉 3º Lugar: ${p3}`;
+                    if(t.has_prize_1) prizesHtml += `<span>🥇 ${formatarMoeda(t.prize_1st)}</span>`;
+                    if(t.has_prize_2) prizesHtml += `<span>🥈 ${formatarMoeda(t.prize_2nd)}</span>`;
+                    if(t.has_prize_3) prizesHtml += `<span>🥉 ${formatarMoeda(t.prize_3rd)}</span>`;
                     prizesHtml += `</div>`;
                 }
 
                 let html = `
                     <div class="card">
-                        <h2>🏆 ${t.name}</h2>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
+                            <h2>🏆 ${t.name}</h2>
+                            ${isAdmin ? `
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="openEditModal('${t.id}', '${t.name}', '${t.tournament_date}', ${t.entry_fee})">✏️ Editar</button>
+                                    <button class="btn ${t.is_open ? 'btn-danger' : 'btn-success'}" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="toggleTournamentStatus('${t.id}', ${t.is_open})">${t.is_open ? '🔒 Fechar Inscrições' : '🔓 Abrir Inscrições'}</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
                         <div class="tournament-meta">
-                            <span><strong>Formato:</strong> ${t.format}v${t.format}</span>
-                            <span><strong>Times Inscritos:</strong> ${slotText}</span>
-                            <span><strong>Status:</strong> <span style="color:${t.is_open ? 'var(--success)' : 'var(--danger)'}">${t.is_open ? 'Aberto' : 'Fechado'}</span></span>
+                            <span>📅 Data: ${formatarData(t.tournament_date)}</span>
+                            <span>💵 Inscrição: ${feeText}</span>
+                            <span>🎮 Formato: ${t.format}v${t.format}</span>
+                            <span>👥 Times: ${slotText}</span>
+                            <span><strong>Status:</strong> <span style="color:${statusOpen ? 'var(--success)' : 'var(--danger)'}; background:transparent; border:none; padding:0;">${statusOpen ? 'Aberto' : (limitReached ? 'Lotação Máxima' : 'Fechado pelo Admin')}</span></span>
                         </div>
                         ${prizesHtml}
                 `;
@@ -375,52 +491,41 @@
                         const members = team.team_members || [];
                         const membersCount = members.length;
                         const epicNames = members.map(m => m.profiles ? m.profiles.epic_id : 'Desconhecido').join(', ');
-                        
-                        // Verifica se o usuário atual está neste time específico
                         const isMember = currentUser ? members.some(m => m.user_id === currentUser.id) : false;
 
                         html += `
                         <div class="team-item">
-                            <div class="team-header">
-                                <div>
-                                    <span class="team-name">🛡️ ${team.name}</span>
-                                    <div class="team-players">👥 Jogadores (${membersCount}/${t.format}): ${epicNames}</div>
-                                </div>
-                                <div style="display:flex; gap: 5px;">`;
+                            <div>
+                                <span style="font-weight:bold; color:var(--primary); font-size:1.1rem;">🛡️ ${team.name}</span>
+                                <div style="color:var(--text-muted); font-size:0.9rem;">👥 Jogadores (${membersCount}/${t.format}): ${epicNames}</div>
+                            </div>
+                            <div style="display:flex; gap: 5px;">`;
                         
-                        // Lógica de Entrar/Sair do time
                         if(currentUser) {
-                            if(isMember) {
-                                html += `<button class="btn btn-danger" style="width:auto; padding: 0.4rem 1rem;" onclick="leaveTeam('${team.id}')">Sair do Time</button>`;
-                            } else if (membersCount < t.format && t.is_open) {
-                                html += `<button class="btn btn-success" style="width:auto; padding: 0.4rem 1rem;" onclick="joinTeam('${team.id}')">Entrar no Time</button>`;
-                            }
+                            if(isMember) html += `<button class="btn btn-outline" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="leaveTeam('${team.id}')">Sair do Time</button>`;
+                            else if (membersCount < t.format && statusOpen) html += `<button class="btn btn-success" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="joinTeam('${team.id}')">Entrar no Time</button>`;
                         }
 
                         if (isAdmin || (currentUser && currentUser.id === team.captain_id)) {
-                             html += `<button class="btn btn-danger" style="width:auto; padding: 0.4rem 1rem;" onclick="deleteTeam('${team.id}')">Apagar Time</button>`;
+                             html += `<button class="btn btn-danger" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="deleteTeam('${team.id}')">Apagar Time</button>`;
                         }
-                        html += `</div></div></div>`;
+                        html += `</div></div>`;
                     });
                     html += `</div>`;
                 }
 
-                if (currentUser && t.is_open) {
-                    if (!isFull) {
-                        html += `
-                            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #334155; display: flex; gap: 10px;">
-                                <input type="text" id="teamName_${t.id}" placeholder="Nome para Criar um Novo Time" style="margin-bottom:0; flex: 1;">
-                                <button class="btn" onclick="registerTeam('${t.id}')" style="width: auto;">Criar Time</button>
-                            </div>
-                        `;
-                    } else {
-                        html += `<p style="color: var(--danger); margin-top: 1.5rem; font-weight: bold;">⚠️ Limite Máximo de Times Atingido!</p>`;
-                    }
+                if (currentUser && statusOpen) {
+                    html += `
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-wrap:wrap;">
+                            <input type="text" id="teamName_${t.id}" placeholder="Nome para Criar um Novo Time" style="margin-bottom:0; flex: 1; min-width:200px;">
+                            <button class="btn" onclick="registerTeam('${t.id}')" style="width: auto;">Criar Time</button>
+                        </div>
+                    `;
                 } else if (!currentUser) {
-                    html += `<p style="color: var(--secondary); margin-top: 1.5rem; border-left: 3px solid var(--secondary); padding-left: 10px;"><em>Faça login para criar ou entrar em um time.</em></p>`;
+                    html += `<p style="color: var(--secondary); margin-top: 1.5rem;"><em>Faça login para criar ou entrar em um time.</em></p>`;
                 }
 
-                if (isAdmin) html += `<button class="btn btn-danger" onclick="deleteTournament('${t.id}')" style="margin-top: 1.5rem;">Apagar Campeonato Todo</button>`;
+                if (isAdmin) html += `<button class="btn btn-danger" onclick="deleteTournament('${t.id}')" style="margin-top: 1.5rem;">🚨 Apagar Campeonato Todo</button>`;
                 html += `</div>`;
                 listDiv.innerHTML += html;
             });
@@ -429,25 +534,63 @@
         async function createTournament(e) {
             e.preventDefault();
             const name = document.getElementById('tourName').value;
+            const tDate = document.getElementById('tourDate').value;
             const format = parseInt(document.getElementById('tourFormat').value);
             const slots = parseInt(document.getElementById('tourSlots').value);
+            const fee = parseFloat(document.getElementById('tourFee').value) || 0;
+            
+            const hasP1 = document.getElementById('hasP1').checked;
+            const hasP2 = document.getElementById('hasP2').checked;
+            const hasP3 = document.getElementById('hasP3').checked;
             const prize1 = parseFloat(document.getElementById('prize1').value) || 0;
             const prize2 = parseFloat(document.getElementById('prize2').value) || 0;
             const prize3 = parseFloat(document.getElementById('prize3').value) || 0;
 
             const { error } = await supabase.from('tournaments').insert([{ 
-                name, format, slots, prize_1st: prize1, prize_2nd: prize2, prize_3rd: prize3 
+                name, tournament_date: tDate, format, slots, entry_fee: fee,
+                has_prize_1: hasP1, has_prize_2: hasP2, has_prize_3: hasP3,
+                prize_1st: prize1, prize_2nd: prize2, prize_3rd: prize3 
             }]);
 
             if (!error) {
-                alert("Campeonato criado com sucesso!");
+                alert("Campeonato publicado com sucesso!");
                 e.target.reset();
+                ['prize1', 'prize2', 'prize3'].forEach(id => document.getElementById(id).style.display = 'none');
                 loadTournaments();
-            } else alert("Erro ao criar: " + error.message);
+            } else alert("Erro: " + error.message);
+        }
+
+        // --- Funções de Edição (Admin) ---
+        function openEditModal(id, name, date, fee) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editDate').value = date && date !== 'null' ? date : '';
+            document.getElementById('editFee').value = fee;
+            document.getElementById('editModal').classList.add('active');
+        }
+        function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+
+        async function saveTournamentEdit(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('editName').value;
+            const date = document.getElementById('editDate').value;
+            const fee = parseFloat(document.getElementById('editFee').value) || 0;
+
+            const { error } = await supabase.from('tournaments').update({ name, tournament_date: date, entry_fee: fee }).eq('id', id);
+            if(!error) { alert("Atualizado!"); closeEditModal(); loadTournaments(); }
+            else alert("Erro: " + error.message);
+        }
+
+        async function toggleTournamentStatus(id, currentStatus) {
+            if(confirm(`Deseja ${currentStatus ? 'FECHAR' : 'ABRIR'} as inscrições deste torneio manualmente?`)) {
+                await supabase.from('tournaments').update({ is_open: !currentStatus }).eq('id', id);
+                loadTournaments();
+            }
         }
 
         async function deleteTournament(id) {
-            if(confirm("ATENÇÃO ADMIN: Apagar este campeonato excluirá todos os times inscritos!")) {
+            if(confirm("ATENÇÃO: Apagar excluirá o torneio e todos os times nele!")) {
                 await supabase.from('tournaments').delete().eq('id', id);
                 loadTournaments();
             }
@@ -455,48 +598,33 @@
 
         async function registerTeam(tournamentId) {
             const teamName = document.getElementById(`teamName_${tournamentId}`).value;
-            if(!teamName) return alert("Digite um nome para o time!");
-
-            // 1. Cria o Time
-            const { data, error } = await supabase.from('teams').insert([{
-                tournament_id: tournamentId, name: teamName, captain_id: currentUser.id
-            }]).select().single();
-
-            if (error) { alert("Erro ao criar time: " + error.message); return; }
-
-            // 2. Coloca o capitão dentro do time automaticamente
+            if(!teamName) return alert("Digite um nome!");
+            const { data, error } = await supabase.from('teams').insert([{ tournament_id: tournamentId, name: teamName, captain_id: currentUser.id }]).select().single();
+            if (error) { alert("Erro ao criar: " + error.message); return; }
             await joinTeam(data.id, true);
         }
 
         async function joinTeam(teamId, isCreator = false) {
-            const { error } = await supabase.from('team_members').insert([{
-                team_id: teamId, user_id: currentUser.id
-            }]);
-
-            if (!error) {
-                if(!isCreator) alert("Você entrou no time com sucesso!");
-                loadTournaments();
-            } else {
-                alert(error.message.includes('duplicate key') ? "Você já está neste time!" : "Erro ao entrar: " + error.message);
-            }
+            const { error } = await supabase.from('team_members').insert([{ team_id: teamId, user_id: currentUser.id }]);
+            if (!error) { if(!isCreator) alert("Você entrou no time!"); loadTournaments(); } 
+            else alert(error.message.includes('duplicate key') ? "Você já está no time!" : "Erro: " + error.message);
         }
 
         async function leaveTeam(teamId) {
-            if(confirm("Deseja sair deste time?")) {
+            if(confirm("Deseja sair do time?")) {
                 const { error } = await supabase.from('team_members').delete().match({ team_id: teamId, user_id: currentUser.id });
                 if (!error) loadTournaments();
             }
         }
 
         async function deleteTeam(teamId) {
-            if(confirm("Apagar o time expulsará todos os jogadores dele. Confirmar?")) {
+            if(confirm("Confirmar a exclusão do time?")) {
                 const { error } = await supabase.from('teams').delete().eq('id', teamId);
                 if (!error) loadTournaments();
             }
         }
 
         checkSession();
-
     </script>
 </body>
 </html>
