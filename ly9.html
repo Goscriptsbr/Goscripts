@@ -37,7 +37,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
         body { background-color: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
 
-        /* Partículas de Fundo (Agora configurado para Imagens) */
+        /* Partículas de Fundo (Ranks) */
         #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
         .particle { position: absolute; top: -100px; width: 70px; height: auto; object-fit: contain; opacity: 0.15; animation: fall linear infinite; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
         @keyframes fall {
@@ -251,9 +251,6 @@
         var currentUser = null;
         var userProfile = null;
         var isSignup = false;
-        
-        // NOVO: Controle de tela ativa para mudar os ícones do fundo
-        var activeSectionId = 'home';
 
         function formatarMoeda(valor) {
             if (valor == null || valor === "") return "R$ 0,00";
@@ -268,7 +265,7 @@
         }
 
         // ==========================================
-        // EFEITOS VISUAIS (TEMA & PARTÍCULAS DE IMAGENS)
+        // EFEITOS VISUAIS (TEMA & PARTÍCULAS FIXAS)
         // ==========================================
         function initTheme() {
             const savedTheme = localStorage.getItem('ly9-theme') || 'dark';
@@ -284,36 +281,25 @@
             document.getElementById('themeIcon').innerText = target === 'dark' ? '☀️' : '🌙';
         }
 
-        // Array 1: Imagens gerais (Foguetes, Carros, Bolas)
-        const homeImages = [
-            'https://gozgames.neocities.org/15-155783_rocket-league-china-logo.png',
+        // Array fixo de imagens para todo o site
+        const siteImages = [
             'https://gozgames.neocities.org/project_20220727_1751022-01%20(1)%20(2).png',
-            'https://gozgames.neocities.org/dko80lw-bbc30565-80f7-443c-841b-aac87ee0e197.png',
-            'https://gozgames.neocities.org/03-parallax-center-BALL.png',
-            'https://gozgames.neocities.org/13-137390_rocket-league-car-png-voiture-rocket-league-octane.png'
-        ];
-
-        // Array 2: Imagens de Ranks (Para a aba de Torneios)
-        const tournamentImages = [
-            'https://gozgames.neocities.org/i-made-high-resolution-icons-for-the-newer-ranks-v0-jbdk0snuhws61.png',
             'https://gozgames.neocities.org/299-2991775_hoops-division-ivdiamond-ii-rocket-league-diamond-rank.png',
+            'https://gozgames.neocities.org/i-made-high-resolution-icons-for-the-newer-ranks-v0-jbdk0snuhws61.png',
             'https://gozgames.neocities.org/sJj9dmEg.png'
         ];
 
         function spawnParticles() {
             const container = document.getElementById('particles');
             setInterval(() => {
-                // Checa em qual aba o usuário está para puxar as imagens certas
-                const imageArray = (activeSectionId === 'tournaments') ? tournamentImages : homeImages;
-                
                 const el = document.createElement('img');
-                el.src = imageArray[Math.floor(Math.random() * imageArray.length)];
+                el.src = siteImages[Math.floor(Math.random() * siteImages.length)];
                 el.className = 'particle';
                 el.style.left = Math.random() * 100 + 'vw';
                 el.style.animationDuration = (Math.random() * 8 + 12) + 's'; // Animação entre 12 e 20s
                 
                 container.appendChild(el);
-                setTimeout(() => el.remove(), 20000); // Remove depois de 20s para não bugar o PC
+                setTimeout(() => el.remove(), 20000); // Remove depois de 20s para não pesar a RAM
             }, 1200);
         }
 
@@ -326,7 +312,6 @@
         function toggleMenu() { document.getElementById('navLinks').classList.toggle('active'); }
 
         function showSection(sectionId) {
-            activeSectionId = sectionId; // Atualiza a variável que diz onde o usuário está
             document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             document.getElementById('navLinks').classList.remove('active');
