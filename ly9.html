@@ -37,13 +37,13 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
         body { background-color: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
 
-        /* Partículas de Fundo */
+        /* Partículas de Fundo (Agora configurado para Imagens) */
         #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
-        .particle { position: absolute; top: -50px; font-size: 1.5rem; opacity: 0.15; animation: fall linear infinite; }
+        .particle { position: absolute; top: -100px; width: 70px; height: auto; object-fit: contain; opacity: 0.15; animation: fall linear infinite; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
         @keyframes fall {
-            0% { transform: translateY(-50px) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.2; }
-            90% { opacity: 0.2; }
+            0% { transform: translateY(-50px) rotate(-15deg); opacity: 0; }
+            10% { opacity: 0.15; }
+            90% { opacity: 0.15; }
             100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
         }
 
@@ -77,6 +77,8 @@
         h1 { margin-bottom: 1.5rem; font-size: 2.2rem; font-weight: 800; border-left: 5px solid var(--primary); padding-left: 15px; }
         h2 { margin-bottom: 1rem; color: var(--primary); }
         
+        .about-text { background-color: var(--surface); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); font-size: 1.1rem; color: var(--text-muted); }
+
         .card { background-color: var(--surface); padding: 2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s ease; }
         .card:hover { border-color: var(--primary); }
         
@@ -249,6 +251,9 @@
         var currentUser = null;
         var userProfile = null;
         var isSignup = false;
+        
+        // NOVO: Controle de tela ativa para mudar os ícones do fundo
+        var activeSectionId = 'home';
 
         function formatarMoeda(valor) {
             if (valor == null || valor === "") return "R$ 0,00";
@@ -258,12 +263,12 @@
         function formatarData(dataISO) {
             if(!dataISO) return "Data não definida";
             const d = new Date(dataISO);
-            d.setMinutes(d.getMinutes() + d.getTimezoneOffset()); // Ajuste de fuso
+            d.setMinutes(d.getMinutes() + d.getTimezoneOffset()); 
             return d.toLocaleDateString('pt-BR');
         }
 
         // ==========================================
-        // EFEITOS VISUAIS (TEMA & PARTÍCULAS)
+        // EFEITOS VISUAIS (TEMA & PARTÍCULAS DE IMAGENS)
         // ==========================================
         function initTheme() {
             const savedTheme = localStorage.getItem('ly9-theme') || 'dark';
@@ -279,21 +284,39 @@
             document.getElementById('themeIcon').innerText = target === 'dark' ? '☀️' : '🌙';
         }
 
+        // Array 1: Imagens gerais (Foguetes, Carros, Bolas)
+        const homeImages = [
+            'https://gozgames.neocities.org/15-155783_rocket-league-china-logo.png',
+            'https://gozgames.neocities.org/project_20220727_1751022-01%20(1)%20(2).png',
+            'https://gozgames.neocities.org/dko80lw-bbc30565-80f7-443c-841b-aac87ee0e197.png',
+            'https://gozgames.neocities.org/03-parallax-center-BALL.png',
+            'https://gozgames.neocities.org/13-137390_rocket-league-car-png-voiture-rocket-league-octane.png'
+        ];
+
+        // Array 2: Imagens de Ranks (Para a aba de Torneios)
+        const tournamentImages = [
+            'https://gozgames.neocities.org/i-made-high-resolution-icons-for-the-newer-ranks-v0-jbdk0snuhws61.png',
+            'https://gozgames.neocities.org/299-2991775_hoops-division-ivdiamond-ii-rocket-league-diamond-rank.png',
+            'https://gozgames.neocities.org/sJj9dmEg.png'
+        ];
+
         function spawnParticles() {
             const container = document.getElementById('particles');
-            const icons = ['⚽', '🚗', '🏎️', '🏆', '🚀', '🔥', '🛡️'];
             setInterval(() => {
-                const el = document.createElement('div');
-                el.innerText = icons[Math.floor(Math.random() * icons.length)];
+                // Checa em qual aba o usuário está para puxar as imagens certas
+                const imageArray = (activeSectionId === 'tournaments') ? tournamentImages : homeImages;
+                
+                const el = document.createElement('img');
+                el.src = imageArray[Math.floor(Math.random() * imageArray.length)];
                 el.className = 'particle';
                 el.style.left = Math.random() * 100 + 'vw';
-                el.style.animationDuration = (Math.random() * 10 + 10) + 's'; // 10 a 20s caindo devagar
+                el.style.animationDuration = (Math.random() * 8 + 12) + 's'; // Animação entre 12 e 20s
+                
                 container.appendChild(el);
-                setTimeout(() => el.remove(), 20000); // Remove depois pra não pesar
-            }, 1000);
+                setTimeout(() => el.remove(), 20000); // Remove depois de 20s para não bugar o PC
+            }, 1200);
         }
 
-        // Inicializa Efeitos
         initTheme();
         spawnParticles();
 
@@ -303,9 +326,11 @@
         function toggleMenu() { document.getElementById('navLinks').classList.toggle('active'); }
 
         function showSection(sectionId) {
+            activeSectionId = sectionId; // Atualiza a variável que diz onde o usuário está
             document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
             document.getElementById('navLinks').classList.remove('active');
+            
             if(sectionId === 'tournaments') loadTournaments();
             if(sectionId === 'adminPanelTab') loadUsersList();
         }
@@ -447,9 +472,8 @@
                 const isAdmin = userProfile && userProfile.role === 'admin';
                 const inscritos = t.teams ? t.teams.length : 0;
                 
-                // LÓGICA DE AUTO FECHAR SE BATER VAGA
                 const limitReached = t.slots > 0 && inscritos >= t.slots;
-                const statusOpen = t.is_open && !limitReached; // Só é visualmente aberto se não bateu limite
+                const statusOpen = t.is_open && !limitReached; 
                 
                 const slotText = t.slots === 0 ? `${inscritos} (Ilimitado)` : `${inscritos} / ${t.slots}`;
                 const feeText = t.entry_fee > 0 ? formatarMoeda(t.entry_fee) : "GRÁTIS";
