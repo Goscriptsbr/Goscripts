@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
     
     <style>
+        /* Variáveis de Cores (Dark Mode) */
         :root {
             --primary: #0ea5e9; 
             --primary-hover: #0284c7;
@@ -26,6 +27,7 @@
             --border: #334155;
         }
 
+        /* Variáveis Light Mode */
         [data-theme="light"] {
             --bg: #f8fafc;
             --surface: #ffffff;
@@ -38,7 +40,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         body { background-color: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
 
-        .gradient-text { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
 
         #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
         .particle { position: absolute; top: -100px; width: 60px; height: auto; object-fit: contain; opacity: 0.15; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
@@ -49,14 +56,21 @@
             100% { transform: translateY(calc(100vh + 100px)) rotate(360deg); opacity: 0; }
         }
 
-        nav { background-color: rgba(var(--surface), 0.90); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 30px rgba(0,0,0,0.15); }
+        /* Navbar Moderna */
+        nav { 
+            background-color: rgba(var(--surface), 0.90); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; 
+            box-shadow: 0 4px 30px rgba(0,0,0,0.15); 
+        }
         .brand { display: flex; align-items: center; gap: 15px; }
         .logo-img { height: 45px; width: auto; border-radius: 8px; }
         .logo-text { font-size: 1.5rem; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 1px;}
         .logo-text span { color: var(--primary); }
         
-        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;}
+        .nav-links { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;}
         .nav-links button { color: var(--text); cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0.5rem 0.5rem; font-weight: 600; position: relative; }
+        
         .nav-links button.nav-item::after { content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 50%; background-color: var(--primary); transition: all 0.3s ease; transform: translateX(-50%); }
         .nav-links button.nav-item:hover::after { width: 100%; }
         .nav-links button.nav-item:hover { color: var(--primary); }
@@ -71,9 +85,14 @@
         
         .menu-icon { display: none; font-size: 1.8rem; cursor: pointer; color: var(--text); background: none; border: none; transition: transform 0.3s ease; }
 
-        @media (max-width: 900px) {
+        @media (max-width: 950px) {
             .menu-icon { display: block; }
-            .nav-links { position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; background-color: var(--surface); padding: 0; text-align: center; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.2); gap: 0; }
+            .nav-links { 
+                position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; 
+                background-color: var(--surface); padding: 0; text-align: center; 
+                max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.2); gap: 0;
+            }
             .nav-links.active { max-height: 600px; opacity: 1; padding: 1.5rem; border-bottom: 2px solid var(--primary); gap: 1rem; }
             .nav-links button.nav-item::after { display: none; }
             .nav-links button.nav-item.active-tab { color: var(--primary); background: rgba(14, 165, 233, 0.1); border-radius: 6px;}
@@ -139,13 +158,15 @@
         .rank-card img { max-width: 80px; margin-bottom: 10px; }
         .image-preview { max-width: 100%; height: 200px; object-fit: contain; border-radius: 8px; display: none; margin-top: 10px; border: 2px dashed var(--primary); }
 
-        /* Lista de Jogadores e Tags (Amigos/Equipe) */
         .player-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; border-bottom: 1px solid var(--border); background: var(--bg); border-radius: 6px; margin-bottom: 5px; }
-        .tag-player { display: inline-flex; align-items: center; background: var(--primary); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; gap: 5px; margin: 5px; }
-        .tag-remove { cursor: pointer; color: white; font-weight: bold; background: rgba(0,0,0,0.2); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-        .tag-remove:hover { background: rgba(0,0,0,0.5); }
         .btn-star { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: var(--border); transition: color 0.3s; }
         .btn-star.favorited { color: #fbbf24; }
+        
+        /* Modal de Edição de Torneio */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { background: var(--surface); padding: 2rem; border-radius: 12px; width: 100%; max-width: 600px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
     </style>
 </head>
 <body>
@@ -229,28 +250,30 @@
 
             <div class="card fade-in-element">
                 <h2><i class="fa-solid fa-camera-retro"></i> Solicitar Pontos (Prints da Partida)</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1rem;">Selecione a imagem, diga quantos pontos você fez e adicione os amigos que jogaram com você na mesma partida para que eles recebam os pontos também!</p>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Selecione a imagem, coloque os SEUS pontos, e adicione os amigos abaixo para colocar os pontos deles também!</p>
                 
                 <form onsubmit="submitPointRequest(event)">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                        <div>
-                            <label style="color: var(--text); font-weight: bold; display:block; margin-bottom: 5px;">Imagem / Print:</label>
-                            <input type="file" id="pointImage" accept="image/*" required onchange="previewAndCompressImage(event)">
-                        </div>
-                        <div>
-                            <label style="color: var(--text); font-weight: bold; display:block; margin-bottom: 5px;">Quantos pontos a equipe fez?</label>
-                            <input type="number" id="requestedPoints" placeholder="Ex: 10" required min="1">
-                        </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: var(--text); font-weight: bold; display:block; margin-bottom: 5px;">Imagem / Print (Até 3MB):</label>
+                        <input type="file" id="pointImage" accept="image/*" required onchange="previewAndCompressImage(event)">
                     </div>
                     <img id="imagePreview" class="image-preview">
                     <input type="hidden" id="compressedImageBase64">
 
-                    <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
-                        <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-user-group"></i> Quem jogou com você?</h3>
-                        
-                        <div id="selectedTeammatesContainer" style="min-height: 40px; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; margin-bottom: 15px; border: 1px dashed var(--primary);">
-                            <span style="color: var(--text-muted); font-size: 0.9rem;">Ninguém adicionado. Os pontos irão apenas para você.</span>
+                    <div style="margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--primary);">
+                        <h3 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-user"></i> Meus Pontos</h3>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <strong style="flex:1;"><i class="fa-solid fa-gamepad"></i> <span id="myEpicDisplay">...</span></strong>
+                            <input type="number" id="myRequestedPoints" placeholder="Pts" required min="1" style="width:100px; margin:0; text-align:center;">
                         </div>
+                    </div>
+
+                    <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+                        <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-user-group"></i> Pontos da Equipe (Opcional)</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px;">Adicione quem jogou com você e a pontuação deles.</p>
+                        
+                        <div id="selectedTeammatesContainer" style="margin-bottom: 15px;">
+                            </div>
 
                         <input type="text" id="searchUserInput" placeholder="Pesquisar por Epic ID ou ver Amigos Favoritos..." onkeyup="filterUserList()">
                         <div id="availableUsersList" style="max-height: 200px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">
@@ -289,7 +312,7 @@
             
             <div class="card fade-in-element">
                 <h2 style="color: var(--secondary);"><i class="fa-solid fa-clipboard-check"></i> Análise de Prints (Pontos)</h2>
-                <p style="margin-bottom: 1rem;">Aprove prints para somar pontos na tabela de classificação dos jogadores que estavam na partida.</p>
+                <p style="margin-bottom: 1rem;">Confira os pontos solicitados por cada jogador na partida.</p>
                 <div id="pendingRequestsList">Carregando solicitações...</div>
             </div>
 
@@ -317,7 +340,7 @@
                         <div><label class="checkbox-group"><input type="checkbox" id="hasP2" onchange="togglePrizeInput('hasP2', 'prize2')"> 2º Lugar</label><input type="text" class="money-mask" id="prize2" style="display:none;"></div>
                         <div><label class="checkbox-group"><input type="checkbox" id="hasP3" onchange="togglePrizeInput('hasP3', 'prize3')"> 3º Lugar</label><input type="text" class="money-mask" id="prize3" style="display:none;"></div>
                     </div>
-                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 15px;"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 15px;"><i class="fa-solid fa-paper-plane"></i> Publicar Campeonato</button>
                 </form>
             </div>
             <div id="tournamentsList"><p><i class="fa-solid fa-circle-notch fa-spin"></i> Buscando competições...</p></div>
@@ -344,7 +367,7 @@
 
     <script>
         // ==========================================
-        // CONFIGURAÇÕES, UTILITÁRIOS E EFEITOS
+        // CONFIGURAÇÕES E UTILITÁRIOS
         // ==========================================
         var supabaseUrl = 'https://qpdrvvjkokqrzzjjialy.supabase.co';
         var supabaseKey = 'sb_publishable_rT-zGqAU4aruy6C03vgrCw_qFpqfeDV';
@@ -355,10 +378,9 @@
         var userProfile = null;
         var isSignup = false;
 
-        // Estado Global de Jogadores para o formulário de Pontos
         var allUsersCache = [];
         var myFriendsCache = [];
-        var selectedTeammates = []; // Array de objetos {id, epic_id}
+        var selectedTeammates = []; // Array: {id, epic_id, points(input)}
 
         document.querySelectorAll('.money-mask').forEach(input => {
             input.addEventListener('input', function(e) {
@@ -372,10 +394,7 @@
         function desformatarMoeda(v) { if(!v) return 0; return parseFloat(v.replace("R$ ", "").replace(/\./g, "").replace(",", ".")); }
         function formatarMoedaShow(v) { if (v == null || v <= 0) return "R$ 0,00"; return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v); }
         function formatarData(d) { if(!d) return "S/N"; const dt = new Date(d); dt.setMinutes(dt.getMinutes() + dt.getTimezoneOffset()); return dt.toLocaleDateString('pt-BR'); }
-        function checkScrollElements() {
-            const h = window.innerHeight;
-            document.querySelectorAll('.fade-in-element').forEach(el => { if (el.getBoundingClientRect().top < h - 50) el.classList.add('visible'); });
-        }
+        function checkScrollElements() { const h = window.innerHeight; document.querySelectorAll('.fade-in-element').forEach(el => { if (el.getBoundingClientRect().top < h - 50) el.classList.add('visible'); }); }
         window.addEventListener('scroll', checkScrollElements);
 
         function initTheme() {
@@ -399,9 +418,6 @@
         }
         initTheme(); spawnParticles();
 
-        // ==========================================
-        // NAVEGAÇÃO E AUTENTICAÇÃO
-        // ==========================================
         function toggleMenu() { 
             const nav = document.getElementById('navLinks'); const btn = document.getElementById('menuToggleBtn');
             nav.classList.toggle('active'); btn.innerHTML = nav.classList.contains('active') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
@@ -418,7 +434,12 @@
             
             if(sectionId === 'tournaments') loadTournaments();
             if(sectionId === 'adminPanelTab') { loadUsersList(); loadPendingRequests(); }
-            if(sectionId === 'playerArea') { loadTracker(); loadMyRequests(); fetchUsersForTeammates(); }
+            if(sectionId === 'playerArea') { 
+                loadTracker(); 
+                loadMyRequests(); 
+                fetchUsersForTeammates();
+                if(userProfile) document.getElementById('myEpicDisplay').innerText = userProfile.epic_id;
+            }
             if(sectionId === 'leaderboard') loadLeaderboard();
             setTimeout(checkScrollElements, 100);
         }
@@ -468,15 +489,13 @@
         async function logout() { await supabase.auth.signOut(); currentUser = null; userProfile = null; updateUI(); showSection('home'); }
 
         // ==========================================
-        // ÁREA DO JOGADOR: AMIGOS E COMPANHEIROS
+        // ÁREA DO JOGADOR: AMIGOS E PONTOS
         // ==========================================
         async function fetchUsersForTeammates() {
             if(!currentUser) return;
-            // Busca todos os usuários
             const { data: users } = await supabase.from('profiles').select('id, epic_id').neq('id', currentUser.id);
             allUsersCache = users || [];
             
-            // Busca os amigos do cara logado
             const { data: friends } = await supabase.from('friendships').select('friend_id').eq('user_id', currentUser.id);
             myFriendsCache = friends ? friends.map(f => f.friend_id) : [];
             
@@ -487,45 +506,33 @@
             const listDiv = document.getElementById('availableUsersList');
             let html = '';
             
-            // Ordena os amigos para aparecerem primeiro
             const sortedUsers = allUsersCache.sort((a, b) => {
-                const aFav = myFriendsCache.includes(a.id);
-                const bFav = myFriendsCache.includes(b.id);
-                if(aFav && !bFav) return -1;
-                if(!aFav && bFav) return 1;
-                return 0;
+                const aFav = myFriendsCache.includes(a.id), bFav = myFriendsCache.includes(b.id);
+                if(aFav && !bFav) return -1; if(!aFav && bFav) return 1; return 0;
             });
 
             sortedUsers.forEach(user => {
                 const epic = user.epic_id ? user.epic_id.toLowerCase() : '';
                 if(filterText && !epic.includes(filterText.toLowerCase())) return;
-                
-                // Se já estiver na seleção da partida, esconde da lista
                 if(selectedTeammates.some(tm => tm.id === user.id)) return;
 
                 const isFav = myFriendsCache.includes(user.id);
                 html += `
                 <div class="player-row">
                     <div>
-                        <button type="button" class="btn-star ${isFav ? 'favorited' : ''}" onclick="toggleFriend('${user.id}', event)">
-                            <i class="fa-solid fa-star"></i>
-                        </button>
+                        <button type="button" class="btn-star ${isFav ? 'favorited' : ''}" onclick="toggleFriend('${user.id}', event)"><i class="fa-solid fa-star"></i></button>
                         <span style="color:var(--text); font-weight:bold; margin-left:5px;">${user.epic_id || 'Sem Nome'}</span>
                     </div>
-                    <button type="button" class="btn btn-outline" style="padding:0.2rem 0.8rem; font-size:0.8rem; width:auto;" onclick="addTeammate('${user.id}', '${user.epic_id}')">
-                        <i class="fa-solid fa-plus"></i> Adicionar
-                    </button>
+                    <button type="button" class="btn btn-outline" style="padding:0.2rem 0.8rem; font-size:0.8rem; width:auto;" onclick="addTeammate('${user.id}', '${user.epic_id}')"><i class="fa-solid fa-plus"></i> Adicionar</button>
                 </div>`;
             });
             listDiv.innerHTML = html || '<p style="text-align:center; color:var(--text-muted);">Nenhum jogador encontrado.</p>';
         }
 
-        function filterUserList() {
-            renderAvailableUsers(document.getElementById('searchUserInput').value);
-        }
+        function filterUserList() { renderAvailableUsers(document.getElementById('searchUserInput').value); }
 
         async function toggleFriend(friendId, event) {
-            event.preventDefault(); // Impede enviar o formulário
+            event.preventDefault(); 
             const isFav = myFriendsCache.includes(friendId);
             if(isFav) {
                 await supabase.from('friendships').delete().match({user_id: currentUser.id, friend_id: friendId});
@@ -552,16 +559,17 @@
         function renderSelectedTeammates() {
             const container = document.getElementById('selectedTeammatesContainer');
             if(selectedTeammates.length === 0) {
-                container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem;">Ninguém adicionado. Os pontos irão apenas para você.</span>';
+                container.innerHTML = '';
                 return;
             }
             
             let html = '';
             selectedTeammates.forEach(tm => {
                 html += `
-                <div class="tag-player">
-                    <i class="fa-solid fa-gamepad"></i> ${tm.epic_id}
-                    <div class="tag-remove" onclick="removeTeammate('${tm.id}')"><i class="fa-solid fa-xmark"></i></div>
+                <div style="display:flex; align-items:center; gap:10px; background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:5px;">
+                    <i class="fa-solid fa-gamepad" style="color:var(--text-muted);"></i> <span style="flex:1; font-weight:bold;">${tm.epic_id}</span>
+                    <input type="number" id="tm_pts_${tm.id}" placeholder="Pts" required min="1" style="width:90px; margin:0; text-align:center;">
+                    <button type="button" class="btn btn-danger" style="width:auto; padding:0.6rem;" onclick="removeTeammate('${tm.id}')" title="Remover"><i class="fa-solid fa-xmark"></i></button>
                 </div>`;
             });
             container.innerHTML = html;
@@ -571,9 +579,7 @@
         // ÁREA DO JOGADOR: TRACKER API E ENVIO DE PRINTS
         // ==========================================
         async function loadTracker() {
-            if(!userProfile || !userProfile.epic_id) {
-                document.getElementById('trackerContent').innerHTML = "<p>Nenhuma Epic ID vinculada a sua conta.</p>"; return;
-            }
+            if(!userProfile || !userProfile.epic_id) { document.getElementById('trackerContent').innerHTML = "<p>Nenhuma Epic ID vinculada.</p>"; return; }
             document.getElementById('trackerEpicName').innerText = userProfile.epic_id;
             try {
                 const response = await fetch(`https://public-api.tracker.gg/v2/rocket-league/standard/profile/epic/${encodeURIComponent(userProfile.epic_id)}`, { headers: { 'TRN-Api-Key': trackerApiKey } });
@@ -622,21 +628,30 @@
             e.preventDefault();
             const btn = document.getElementById('btnSubmitPoint');
             const imgBase64 = document.getElementById('compressedImageBase64').value;
-            const requestedPoints = parseInt(document.getElementById('requestedPoints').value);
             
             if(!imgBase64) return alert("Por favor, selecione a imagem.");
-            if(isNaN(requestedPoints) || requestedPoints <= 0) return alert("Digite os pontos.");
             
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'; btn.disabled = true;
+            // Reúne todos os pontos
+            const myPts = parseInt(document.getElementById('myRequestedPoints').value);
+            if(isNaN(myPts) || myPts <= 0) return alert("Digite os seus pontos.");
 
-            // Extrai só os IDs dos companheiros
-            const teammatesIDs = selectedTeammates.map(tm => tm.id);
+            let pointsData = [{ id: currentUser.id, epic_id: userProfile.epic_id, points: myPts }];
+            let hasError = false;
+
+            selectedTeammates.forEach(tm => {
+                const tmPts = parseInt(document.getElementById(`tm_pts_${tm.id}`).value);
+                if(isNaN(tmPts) || tmPts <= 0) hasError = true;
+                pointsData.push({ id: tm.id, epic_id: tm.epic_id, points: tmPts });
+            });
+
+            if(hasError) return alert("Por favor, digite os pontos de todos os amigos que você adicionou na lista.");
+
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'; btn.disabled = true;
 
             const { error } = await supabase.from('point_requests').insert([{ 
                 user_id: currentUser.id, 
                 screenshot_url: imgBase64,
-                requested_points: requestedPoints,
-                teammates: teammatesIDs
+                points_data: pointsData
             }]);
             
             btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Enviar para o Admin'; btn.disabled = false;
@@ -645,8 +660,8 @@
                 alert("Solicitação enviada com sucesso! Aguarde o Admin aprovar.");
                 document.getElementById('imagePreview').style.display = 'none';
                 document.getElementById('pointImage').value = '';
-                document.getElementById('requestedPoints').value = '';
-                selectedTeammates = []; // Limpa selecao
+                document.getElementById('myRequestedPoints').value = '';
+                selectedTeammates = []; 
                 renderSelectedTeammates();
                 renderAvailableUsers();
                 loadMyRequests();
@@ -663,14 +678,21 @@
             let html = '';
             data.forEach(req => {
                 const colors = { 'pendente': 'var(--text-muted)', 'aprovado': 'var(--success)', 'recusado': 'var(--danger)' };
-                const extraPlayers = req.teammates && req.teammates.length > 0 ? `+ ${req.teammates.length} parceiros` : 'Solo';
+                
+                let details = '';
+                if(req.points_data && req.points_data.length > 0) {
+                    req.points_data.forEach(pd => {
+                        details += `<span style="display:inline-block; margin-right:10px; background:rgba(0,0,0,0.2); padding:3px 8px; border-radius:4px; font-size:0.85rem;">${pd.epic_id}: <strong>${pd.points} Pts</strong></span>`;
+                    });
+                }
+
                 html += `
                 <div style="background:var(--bg); border:1px solid var(--border); padding:1rem; border-radius:8px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                         <span><i class="fa-regular fa-calendar"></i> ${formatarData(req.requested_at)}</span>
                         <strong style="color:${colors[req.status]}; text-transform:uppercase;">${req.status}</strong>
                     </div>
-                    <div style="color:var(--primary); font-weight:bold;"><i class="fa-solid fa-star"></i> Solicitado: ${req.requested_points} Pts (${extraPlayers})</div>
+                    <div style="color:var(--primary);">${details}</div>
                     ${req.status === 'recusado' ? `<p style="color:var(--danger); font-size:0.9rem; margin-top:5px;"><strong>Motivo da Recusa:</strong> ${req.admin_feedback}</p>` : ''}
                 </div>`;
             });
@@ -678,7 +700,7 @@
         }
 
         // ==========================================
-        // TABELA DE CLASSIFICAÇÃO (LEADERBOARD)
+        // LEADERBOARD (CLASSIFICAÇÃO GERAL)
         // ==========================================
         async function loadLeaderboard() {
             const tbody = document.getElementById('leaderboardBody');
@@ -706,86 +728,76 @@
         }
 
         // ==========================================
-        // PAINEL ADMIN: APROVAÇÃO DE PONTOS
+        // PAINEL ADMIN: APROVAÇÃO E USUÁRIOS
         // ==========================================
         async function loadPendingRequests() {
             if(!userProfile || userProfile.role !== 'admin') return;
             const div = document.getElementById('pendingRequestsList');
             div.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando prints...';
             
-            // Busca as requests e faz JOIN pra pegar o nome de quem mandou
-            const { data, error } = await supabase.from('point_requests').select(`id, screenshot_url, requested_at, requested_points, teammates, user_id, profiles(epic_id)`).eq('status', 'pendente').order('requested_at', {ascending: true});
+            const { data, error } = await supabase.from('point_requests').select(`id, screenshot_url, requested_at, points_data, user_id, profiles(epic_id)`).eq('status', 'pendente').order('requested_at', {ascending: true});
             if(error) { div.innerHTML = "Erro ao carregar."; return; }
             if(data.length === 0) { div.innerHTML = "<p>Nenhuma solicitação pendente.</p>"; return; }
 
-            // Para exibir os nomes dos parceiros, vamos precisar buscar todos os profiles
-            const { data: allProfiles } = await supabase.from('profiles').select('id, epic_id');
-            const profileMap = {};
-            if(allProfiles) allProfiles.forEach(p => profileMap[p.id] = p.epic_id);
-
             let html = '';
             data.forEach(req => {
-                // Monta a string com os nomes dos parceiros
-                let teammatesNames = '';
-                if(req.teammates && req.teammates.length > 0) {
-                    const names = req.teammates.map(id => profileMap[id] || 'Desconhecido');
-                    teammatesNames = `<div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;"><i class="fa-solid fa-users"></i> + Jogou com: ${names.join(', ')}</div>`;
-                }
+                let ptsHtml = '';
+                const pointsArr = req.points_data || [];
+                
+                pointsArr.forEach(pd => {
+                    ptsHtml += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:4px; margin-bottom:5px;">
+                        <span><i class="fa-solid fa-gamepad"></i> ${pd.epic_id}</span>
+                        <input type="number" id="admin_pts_${req.id}_${pd.id}" value="${pd.points}" style="width:80px; margin:0; padding:5px; text-align:center; font-weight:bold;" data-userid="${pd.id}">
+                    </div>`;
+                });
 
                 html += `
                 <div style="background:var(--bg); border:1px solid var(--border); padding:1rem; border-radius:8px; margin-bottom:15px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap:wrap; gap:10px;">
-                        <strong style="color:var(--primary); font-size:1.1rem;"><i class="fa-solid fa-gamepad"></i> ${req.profiles?.epic_id}</strong>
-                        <span style="color:var(--text-muted); font-size:0.8rem;">Enviado: ${formatarData(req.requested_at)}</span>
-                    </div>
-                    ${teammatesNames}
-                    
-                    <img src="${req.screenshot_url}" style="max-width:100%; max-height:250px; border-radius:8px; border:2px dashed var(--secondary); cursor:pointer;" onclick="window.open('${req.screenshot_url}')" title="Clique para ampliar">
-                    
-                    <div style="margin-top: 15px; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                        <div style="flex:1; min-width:150px;">
-                            <label style="font-size:0.8rem; color:var(--text-muted);">Confirme os pontos a liberar:</label>
-                            <input type="number" id="points_${req.id}" value="${req.requested_points}" style="margin-bottom:0; font-weight:bold; color:var(--success);">
-                        </div>
-                        <button class="btn btn-success" style="width:auto; padding:0.8rem;" onclick="approveRequest('${req.id}', '${req.user_id}', '${req.teammates || []}')"><i class="fa-solid fa-check-double"></i> Aprovar Pontos</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <strong style="color:var(--text-muted); font-size:0.8rem;">Enviado por: ${req.profiles?.epic_id} | ${formatarData(req.requested_at)}</strong>
                     </div>
                     
-                    <div style="margin-top: 10px; display:flex; gap:10px; flex-wrap:wrap;">
-                        <input type="text" id="feedback_${req.id}" placeholder="Motivo da Recusa (Apenas se for recusar)" style="margin-bottom:0; flex:1;">
-                        <button class="btn btn-danger" style="width:auto; padding:0.8rem;" onclick="rejectRequest('${req.id}')"><i class="fa-solid fa-ban"></i> Recusar</button>
+                    <img src="${req.screenshot_url}" style="width:100%; height:auto; max-height:300px; object-fit:cover; border-radius:8px; border:2px dashed var(--secondary); cursor:pointer; margin-bottom:15px;" onclick="window.open('${req.screenshot_url}')" title="Clique para ampliar">
+                    
+                    <div style="margin-bottom:15px;">
+                        <h4 style="margin-bottom:5px; color:var(--primary);">Ajuste/Confirme os pontos:</h4>
+                        ${ptsHtml}
+                    </div>
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-success" style="flex:1;" onclick="approveRequest('${req.id}')"><i class="fa-solid fa-check-double"></i> Aprovar Pontos</button>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <input type="text" id="feedback_${req.id}" placeholder="Motivo da Recusa" style="margin-bottom:0; flex:1;">
+                        <button class="btn btn-danger" style="width:auto;" onclick="rejectRequest('${req.id}')"><i class="fa-solid fa-ban"></i> Recusar</button>
                     </div>
                 </div>`;
             });
             div.innerHTML = html;
         }
 
-        async function approveRequest(requestId, mainUserId, teammatesStr) {
-            const pointsInput = document.getElementById(`points_${requestId}`).value;
-            const points = parseInt(pointsInput);
-            if(isNaN(points) || points <= 0) return alert("Pontos inválidos.");
-
-            // Pega o array de IDs (Quem mandou + Quem tava na party)
-            let usersToGivePoints = [mainUserId];
-            if(teammatesStr && teammatesStr !== "null" && teammatesStr !== "") {
-                const tmArray = teammatesStr.split(',');
-                usersToGivePoints = usersToGivePoints.concat(tmArray);
-            }
-
-            // 1. Atualiza status
-            await supabase.from('point_requests').update({status: 'aprovado'}).eq('id', requestId);
+        async function approveRequest(requestId) {
+            // Busca todos os inputs de pontos referentes a esta request
+            const inputs = document.querySelectorAll(`input[id^="admin_pts_${requestId}_"]`);
             
-            // 2. Dá os pontos pra cada um que tava na partida
-            for(let uid of usersToGivePoints) {
-                if(!uid) continue;
+            // Loop distribuindo os pontos no Leaderboard
+            for(let input of inputs) {
+                const uid = input.getAttribute('data-userid');
+                const pts = parseInt(input.value);
+                if(isNaN(pts) || pts <= 0) continue;
+
                 let { data: lbData } = await supabase.from('leaderboard').select('total_points').eq('user_id', uid).single();
                 if(lbData) {
-                    await supabase.from('leaderboard').update({total_points: lbData.total_points + points}).eq('user_id', uid);
+                    await supabase.from('leaderboard').update({total_points: lbData.total_points + pts}).eq('user_id', uid);
                 } else {
-                    await supabase.from('leaderboard').insert([{user_id: uid, total_points: points}]);
+                    await supabase.from('leaderboard').insert([{user_id: uid, total_points: pts}]);
                 }
             }
 
-            alert("Pontos atribuídos com sucesso a toda a equipe!");
+            // Marca como aprovado
+            await supabase.from('point_requests').update({status: 'aprovado'}).eq('id', requestId);
+            alert("Pontos distribuídos com sucesso a todos os jogadores!");
             loadPendingRequests();
         }
 
@@ -796,7 +808,6 @@
             alert("Print recusado."); loadPendingRequests();
         }
 
-        // Restante - Load Users/Torneios... (Mesmo do anterior mas sem quebrar os novos botões)
         async function loadUsersList() {
             const div = document.getElementById('usersListContent');
             const { data, error } = await supabase.from('profiles').select('*').order('created_at', {ascending: false});
@@ -820,10 +831,137 @@
         async function changeRole(userId, newRole) { if(confirm(`Mudar cargo?`)) { await supabase.from('profiles').update({role: newRole}).eq('id', userId); loadUsersList(); } }
         async function deleteUser(userId, epicId) { if(confirm(`Excluir ${epicId}?`)) { await supabase.rpc('admin_delete_user', { target_user_id: userId }); loadUsersList(); } }
         
-        // Torneios CRUD (Mantido 100% igual à requisição anterior para continuar funcionando a criação de 1v1, 2v2 etc)
+        // ==========================================
+        // TORNEIOS (Restaurado)
+        // ==========================================
         function togglePrizeInput(chkId, inputId) { const input = document.getElementById(inputId); if(document.getElementById(chkId).checked) { input.style.display = 'block'; input.required = true; } else { input.style.display = 'none'; input.value = ''; input.required = false; } }
-        async function loadTournaments() { /* Mesmo código funcionando do anterior */ }
-        async function createTournament(e) { /* Mesmo código funcionando do anterior */ }
+        
+        async function loadTournaments() {
+            const listDiv = document.getElementById('tournamentsList');
+            listDiv.innerHTML = '<p><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando chaves...</p>';
+            const { data: tournaments, error } = await supabase.from('tournaments').select(`id, name, format, slots, is_open, tournament_date, entry_fee, has_prize_1, has_prize_2, has_prize_3, prize_1st, prize_2nd, prize_3rd, teams ( id, name, captain_id, team_members ( user_id, profiles(epic_id) ) )`).order('created_at', { ascending: false });
+            if (error) { listDiv.innerHTML = '<p style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Erro de conexão.</p>'; return; }
+            if (tournaments.length === 0) { listDiv.innerHTML = '<p><i class="fa-solid fa-calendar-xmark"></i> Nenhum torneio ativo no momento.</p>'; return; }
+
+            listDiv.innerHTML = '';
+            tournaments.forEach(t => {
+                const isAdmin = userProfile && userProfile.role === 'admin';
+                const inscritos = t.teams ? t.teams.length : 0;
+                const limitReached = t.slots > 0 && inscritos >= t.slots;
+                const statusOpen = t.is_open && !limitReached; 
+                const slotText = t.slots === 0 ? `${inscritos} (Ilimitado)` : `${inscritos} / ${t.slots}`;
+                const feeText = t.entry_fee > 0 ? formatarMoedaShow(t.entry_fee) : "GRÁTIS";
+                
+                let prizesHtml = '';
+                if(t.has_prize_1 || t.has_prize_2 || t.has_prize_3) {
+                    prizesHtml = `<div class="prizes-box">`;
+                    if(t.has_prize_1) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#fbbf24;"></i> ${formatarMoedaShow(t.prize_1st)}</span>`;
+                    if(t.has_prize_2) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#94a3b8;"></i> ${formatarMoedaShow(t.prize_2nd)}</span>`;
+                    if(t.has_prize_3) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#b45309;"></i> ${formatarMoedaShow(t.prize_3rd)}</span>`;
+                    prizesHtml += `</div>`;
+                }
+
+                let html = `
+                    <div class="card fade-in-element visible">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
+                            <h2 style="margin: 0 0 10px 0;"><i class="fa-solid fa-trophy"></i> ${t.name}</h2>
+                            ${isAdmin ? `
+                                <div style="display:flex; gap:5px; margin-bottom: 10px;">
+                                    <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="openEditModal('${t.id}', '${t.name}', '${t.tournament_date}', ${t.entry_fee})"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
+                                    <button class="btn ${t.is_open ? 'btn-danger' : 'btn-success'}" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="toggleTournamentStatus('${t.id}', ${t.is_open})"><i class="fa-solid ${t.is_open ? 'fa-lock' : 'fa-lock-open'}"></i> ${t.is_open ? 'Fechar' : 'Abrir'}</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="tournament-meta">
+                            <span><i class="fa-regular fa-calendar-days"></i> ${formatarData(t.tournament_date)}</span>
+                            <span><i class="fa-solid fa-sack-dollar"></i> ${feeText}</span>
+                            <span><i class="fa-solid fa-gamepad"></i> ${t.format}v${t.format}</span>
+                            <span><i class="fa-solid fa-users"></i> ${slotText}</span>
+                            <span><strong>Status:</strong> <span style="color:${statusOpen ? 'var(--success)' : 'var(--danger)'}; background:transparent; border:none; padding:0;">${statusOpen ? '<i class="fa-solid fa-circle-check"></i> Aberto' : (limitReached ? '<i class="fa-solid fa-ban"></i> Lotação Máxima' : '<i class="fa-solid fa-lock"></i> Fechado')}</span></span>
+                        </div>
+                        ${prizesHtml}
+                `;
+
+                if (inscritos > 0) {
+                    html += `<div class="team-list"><strong style="color: var(--primary);"><i class="fa-solid fa-list-ol"></i> Roster de Equipes:</strong><br>`;
+                    t.teams.forEach(team => {
+                        const members = team.team_members || [];
+                        const epicNames = members.map(m => m.profiles ? m.profiles.epic_id : 'Desconhecido').join(', ');
+                        const isMember = currentUser ? members.some(m => m.user_id === currentUser.id) : false;
+
+                        html += `
+                        <div class="team-item">
+                            <div>
+                                <span style="font-weight:bold; color:var(--text); font-size:1.1rem;"><i class="fa-solid fa-shield-halved"></i> ${team.name}</span>
+                                <div style="color:var(--text-muted); font-size:0.9rem;"><i class="fa-solid fa-user-group"></i> (${members.length}/${t.format}): <span style="color: var(--primary);">${epicNames}</span></div>
+                            </div>
+                            <div style="display:flex; gap: 5px;">`;
+                        
+                        if(currentUser) {
+                            if(isMember) html += `<button class="btn btn-outline" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="leaveTeam('${team.id}')"><i class="fa-solid fa-person-walking-arrow-right"></i> Sair</button>`;
+                            else if (members.length < t.format && statusOpen) html += `<button class="btn btn-success" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="joinTeam('${team.id}')"><i class="fa-solid fa-right-to-bracket"></i> Entrar</button>`;
+                        }
+                        if (isAdmin || (currentUser && currentUser.id === team.captain_id)) {
+                             html += `<button class="btn btn-danger" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="deleteTeam('${team.id}')"><i class="fa-solid fa-trash"></i> Apagar</button>`;
+                        }
+                        html += `</div></div>`;
+                    });
+                    html += `</div>`;
+                }
+
+                if (currentUser && statusOpen) {
+                    html += `<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-wrap:wrap;"><input type="text" id="teamName_${t.id}" placeholder="Nome para Criar um Novo Time" style="margin-bottom:0; flex: 1; min-width:200px;"><button class="btn" onclick="registerTeam('${t.id}')" style="width: auto;"><i class="fa-solid fa-plus"></i> Criar Time</button></div>`;
+                } else if (!currentUser) {
+                    html += `<p style="color: var(--secondary); margin-top: 1.5rem;"><i class="fa-solid fa-circle-info"></i> <em>Faça login para criar ou entrar em um time.</em></p>`;
+                }
+                if (isAdmin) html += `<button class="btn btn-danger" onclick="deleteTournament('${t.id}')" style="margin-top: 1.5rem; width: 100%;"><i class="fa-solid fa-triangle-exclamation"></i> Apagar Campeonato Todo</button>`;
+                html += `</div>`; listDiv.innerHTML += html;
+            });
+        }
+
+        async function createTournament(e) {
+            e.preventDefault();
+            const name = document.getElementById('tourName').value;
+            const tDate = document.getElementById('tourDate').value;
+            const format = parseInt(document.getElementById('tourFormat').value);
+            const slots = parseInt(document.getElementById('tourSlots').value);
+            const fee = desformatarMoeda(document.getElementById('tourFee').value);
+            const hasP1 = document.getElementById('hasP1').checked, hasP2 = document.getElementById('hasP2').checked, hasP3 = document.getElementById('hasP3').checked;
+            const prize1 = desformatarMoeda(document.getElementById('prize1').value), prize2 = desformatarMoeda(document.getElementById('prize2').value), prize3 = desformatarMoeda(document.getElementById('prize3').value);
+
+            const { error } = await supabase.from('tournaments').insert([{ name, tournament_date: tDate, format, slots, entry_fee: fee, has_prize_1: hasP1, has_prize_2: hasP2, has_prize_3: hasP3, prize_1st: prize1, prize_2nd: prize2, prize_3rd: prize3 }]);
+            if (!error) { alert("Campeonato publicado com sucesso!"); e.target.reset(); ['prize1', 'prize2', 'prize3'].forEach(id => document.getElementById(id).style.display = 'none'); loadTournaments(); } else alert("Erro: " + error.message);
+        }
+
+        function openEditModal(id, name, date, fee) { document.getElementById('editId').value = id; document.getElementById('editName').value = name; document.getElementById('editDate').value = date && date !== 'null' ? date : ''; document.getElementById('editFee').value = formatarMoedaShow(fee); document.getElementById('editModal').classList.add('active'); }
+        function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+
+        async function saveTournamentEdit(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value, name = document.getElementById('editName').value, date = document.getElementById('editDate').value, fee = desformatarMoeda(document.getElementById('editFee').value);
+            const { error } = await supabase.from('tournaments').update({ name, tournament_date: date, entry_fee: fee }).eq('id', id);
+            if(!error) { alert("Atualizado!"); closeEditModal(); loadTournaments(); } else alert("Erro: " + error.message);
+        }
+
+        async function toggleTournamentStatus(id, currentStatus) { if(confirm(`Deseja ${currentStatus ? 'FECHAR' : 'ABRIR'} as inscrições?`)) { await supabase.from('tournaments').update({ is_open: !currentStatus }).eq('id', id); loadTournaments(); } }
+        async function deleteTournament(id) { if(confirm("ATENÇÃO: Apagar excluirá o torneio e todos os times nele!")) { await supabase.from('tournaments').delete().eq('id', id); loadTournaments(); } }
+
+        async function registerTeam(tournamentId) {
+            const teamName = document.getElementById(`teamName_${tournamentId}`).value;
+            if(!teamName) return alert("Digite um nome!");
+            const { data, error } = await supabase.from('teams').insert([{ tournament_id: tournamentId, name: teamName, captain_id: currentUser.id }]).select().single();
+            if (error) { alert("Erro ao criar: " + error.message); return; }
+            await joinTeam(data.id, true);
+        }
+
+        async function joinTeam(teamId, isCreator = false) {
+            const { error } = await supabase.from('team_members').insert([{ team_id: teamId, user_id: currentUser.id }]);
+            if (!error) { if(!isCreator) alert("Você entrou no time!"); loadTournaments(); } 
+            else alert(error.message.includes('duplicate key') ? "Você já está no time!" : "Erro: " + error.message);
+        }
+
+        async function leaveTeam(teamId) { if(confirm("Deseja sair do time?")) { await supabase.from('team_members').delete().match({ team_id: teamId, user_id: currentUser.id }); loadTournaments(); } }
+        async function deleteTeam(teamId) { if(confirm("Confirmar a exclusão do time?")) { await supabase.from('teams').delete().eq('id', teamId); loadTournaments(); } }
 
         checkSession();
     </script>
