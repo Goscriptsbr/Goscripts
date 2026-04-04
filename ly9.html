@@ -469,23 +469,58 @@
 
         async function handleAuth(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value, password = document.getElementById('password').value, epic = document.getElementById('epic').value;
-            const msgBox = document.getElementById('authMessage'); msgBox.style.color = "var(--primary)"; msgBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processando...';
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const epic = document.getElementById('epic').value;
+            const msgBox = document.getElementById('authMessage'); 
+            
+            msgBox.style.color = "var(--primary)"; 
+            msgBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processando...';
+            
             try {
                 if (isSignup) {
-                    const { error } = await supabase.auth.signUp({ email, password, options: { data: { epic_id: epic } } });
+                    // CÓDIGO NOVO DE CADASTRO (COM REDIRECIONAMENTO DE E-MAIL)
+                    const { error } = await supabase.auth.signUp({ 
+                        email, 
+                        password, 
+                        options: { 
+                            data: { epic_id: epic },
+                            emailRedirectTo: 'https://goscriptsbr.github.io/Goscripts/confirm.html'
+                        } 
+                    });
+                    
                     if (error) throw error;
-                    msgBox.style.color = "var(--success)"; msgBox.innerHTML = "<i class='fa-solid fa-check'></i> Cadastro realizado! Faça login.";
-                    toggleAuthMode(); 
+                    
+                    msgBox.style.color = "var(--secondary)"; 
+                    msgBox.innerHTML = "<i class='fa-solid fa-envelope-circle-check'></i> Quase lá! Enviamos um link de confirmação para o seu e-mail. Verifique a caixa de entrada e o Spam.";
+                    
+                    // Limpa o formulário para evitar cliques duplos
+                    document.getElementById('authForm').reset();
+                    
                 } else {
+                    // CÓDIGO NORMAL DE LOGIN MANTIDO
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    msgBox.style.color = "var(--success)"; msgBox.innerHTML = "<i class='fa-solid fa-check'></i> Conectado!";
-                    await checkSession(); setTimeout(() => { showSection('home'); msgBox.innerText = ""; document.getElementById('authForm').reset(); }, 1000);
+                    
+                    msgBox.style.color = "var(--success)"; 
+                    msgBox.innerHTML = "<i class='fa-solid fa-check'></i> Conectado!";
+                    await checkSession(); 
+                    setTimeout(() => { 
+                        showSection('home'); 
+                        msgBox.innerText = ""; 
+                        document.getElementById('authForm').reset(); 
+                    }, 1000);
                 }
-            } catch (error) { msgBox.style.color = "var(--danger)"; msgBox.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> " + error.message; }
+            } catch (error) { 
+                msgBox.style.color = "var(--danger)"; 
+                // Traduz mensagem de credenciais inválidas para pt-BR
+                if(error.message.includes("Invalid login")) {
+                    msgBox.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Erro: E-mail ou senha incorretos.";
+                } else {
+                    msgBox.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> " + error.message; 
+                }
+            }
         }
-
         async function logout() { await supabase.auth.signOut(); currentUser = null; userProfile = null; updateUI(); showSection('home'); }
 
         // ==========================================
