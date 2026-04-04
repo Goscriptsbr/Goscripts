@@ -7,7 +7,6 @@
     
     <link rel="icon" href="data:,">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -39,7 +38,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         body { background-color: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
 
-        /* Efeito de Gradiente nos Títulos */
         .gradient-text {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
@@ -47,12 +45,8 @@
             display: inline-block;
         }
 
-        /* Partículas de Fundo */
         #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
-        .particle { 
-            position: absolute; top: -100px; width: 60px; height: auto; object-fit: contain; 
-            opacity: 0.15; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); 
-        }
+        .particle { position: absolute; top: -100px; width: 60px; height: auto; object-fit: contain; opacity: 0.15; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
         @keyframes fall {
             0% { transform: translateY(-50px) rotate(-15deg); opacity: 0; }
             10% { opacity: 0.15; }
@@ -60,7 +54,7 @@
             100% { transform: translateY(calc(100vh + 100px)) rotate(360deg); opacity: 0; }
         }
 
-        /* Navbar Moderna */
+        /* Navbar */
         nav { 
             background-color: rgba(var(--surface), 0.90); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; 
@@ -73,12 +67,8 @@
         .logo-text span { color: var(--primary); }
         
         .nav-links { display: flex; gap: 1.5rem; align-items: center; }
-        .nav-links button { 
-            color: var(--text); cursor: pointer; background: none; border: none; 
-            font-size: 1rem; padding: 0.5rem 0.5rem; font-weight: 600; position: relative;
-        }
+        .nav-links button { color: var(--text); cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0.5rem 0.5rem; font-weight: 600; position: relative; }
         
-        /* Efeito de aba ativa no menu PC */
         .nav-links button.nav-item::after {
             content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 50%;
             background-color: var(--primary); transition: all 0.3s ease; transform: translateX(-50%);
@@ -96,7 +86,6 @@
         
         .menu-icon { display: none; font-size: 1.8rem; cursor: pointer; color: var(--text); background: none; border: none; transition: transform 0.3s ease; }
 
-        /* Menu Mobile Deslizante */
         @media (max-width: 768px) {
             .menu-icon { display: block; }
             .nav-links { 
@@ -105,23 +94,11 @@
                 max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease;
                 box-shadow: 0 10px 20px rgba(0,0,0,0.2); gap: 0;
             }
-            .nav-links.active { max-height: 450px; opacity: 1; padding: 1.5rem; border-bottom: 2px solid var(--primary); gap: 1.5rem; }
+            .nav-links.active { max-height: 500px; opacity: 1; padding: 1.5rem; border-bottom: 2px solid var(--primary); gap: 1.5rem; }
             .nav-links button.nav-item::after { display: none; }
             .nav-links button.nav-item.active-tab { color: var(--primary); background: rgba(14, 165, 233, 0.1); border-radius: 6px;}
         }
 
-        /* Botões de Redes Sociais */
-        .social-btn {
-            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 0.8rem 1.5rem; border-radius: 8px; text-decoration: none;
-            font-weight: bold; color: white; transition: all 0.3s ease; font-size: 1rem; flex: 1; min-width: 200px;
-        }
-        .btn-whatsapp { background: #25D366; }
-        .btn-whatsapp:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(37,211,102,0.4); }
-        .btn-insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
-        .btn-insta:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(220,39,67,0.4); }
-
-        /* Layout & Componentes Gerais */
         main { padding: 3rem 2rem; max-width: 1100px; margin: 0 auto; min-height: 80vh; }
         section { display: none; animation: slideUp 0.5s ease forwards; opacity: 0; transform: translateY(20px); }
         section.active { display: block; }
@@ -130,6 +107,10 @@
         h1 { margin-bottom: 1.5rem; font-size: 2.2rem; font-weight: 800; border-left: 5px solid var(--primary); padding-left: 15px; }
         h2 { margin-bottom: 1rem; color: var(--primary); }
         
+        /* Elementos que surgem ao rolar (Fade In Scroll) */
+        .fade-in-element { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .fade-in-element.visible { opacity: 1; transform: translateY(0); }
+
         .about-text { background-color: var(--surface); padding: 2.5rem; border-radius: 12px; border: 1px solid var(--border); font-size: 1.1rem; color: var(--text-muted); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 
         .card { background-color: var(--surface); padding: 2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
@@ -164,6 +145,14 @@
         .modal-overlay.active { display: flex; opacity: 1; }
         .modal-content { background: var(--surface); padding: 2rem; border-radius: 12px; width: 100%; max-width: 600px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease; }
         .modal-overlay.active .modal-content { transform: scale(1); }
+
+        /* Cards da Aba Comunidade */
+        .community-card {
+            background: var(--surface); border: 1px solid var(--border); padding: 2rem; border-radius: 12px;
+            text-align: center; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .community-card:hover { transform: translateY(-5px); border-color: var(--secondary); box-shadow: 0 10px 30px rgba(249, 115, 22, 0.1); }
+        .community-icon { font-size: 3rem; color: var(--secondary); margin-bottom: 1rem; }
     </style>
 </head>
 <body>
@@ -181,6 +170,7 @@
         <div class="nav-links" id="navLinks">
             <button class="nav-item active-tab" id="btn-home" onclick="showSection('home')">Quem Somos</button>
             <button class="nav-item" id="btn-tournaments" onclick="showSection('tournaments')">Torneios</button>
+            <button class="nav-item" id="btn-community" onclick="showSection('community')">Comunidade</button>
             <button class="nav-item admin-only" id="btn-adminPanelTab" onclick="showSection('adminPanelTab')" style="color: var(--secondary);">Painel Admin</button>
             <button class="theme-btn" onclick="toggleTheme()" id="themeIcon"><i class="fa-solid fa-sun"></i></button>
             <button id="navLoginBtn" onclick="showSection('auth')"><i class="fa-solid fa-right-to-bracket"></i> Acessar Portal</button>
@@ -191,7 +181,7 @@
     <main>
         <section id="home" class="active">
             <h1><span class="gradient-text">A Revolução do eSports</span></h1>
-            <div class="about-text">
+            <div class="about-text fade-in-element">
                 <p style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text);">
                     A <strong>Lyrics9Team (LY9)</strong> nasceu em 2020 com a ideia central de aproximar a comunidade de Rocket League.
                 </p>
@@ -202,21 +192,36 @@
                 <p>
                     Crie sua conta, monte seu esquadrão, participe de nossos eventos e prove o seu valor nas arenas virtuais. Prepare seus aéreos e venha fazer história com a LY9!
                 </p>
+            </div>
+        </section>
 
-                <div style="display: flex; gap: 15px; margin-top: 2rem; flex-wrap: wrap;">
-                    <a href="https://chat.whatsapp.com/CZd291BdrHwIWcp9mvmLJl?mode=gi_t" target="_blank" class="social-btn btn-whatsapp">
-                        <i class="fa-brands fa-whatsapp" style="font-size: 1.3rem;"></i> Comunidade no WhatsApp
-                    </a>
-                    
-                    <a href="#" target="_blank" class="social-btn btn-insta">
-                        <i class="fa-brands fa-instagram" style="font-size: 1.3rem;"></i> Nosso Instagram
-                    </a>
-                </div>
+        <section id="community">
+            <h1><span class="gradient-text">Nossas Redes Sociais</span></h1>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Fique por dentro de todos os anúncios de torneios, interaja com outros jogadores e acompanhe nossos sorteios.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                
+                <a href="https://chat.whatsapp.com/CZd291BdrHwIWcp9mvmLJl?mode=gi_t" target="_blank" style="text-decoration: none;">
+                    <div class="community-card fade-in-element">
+                        <i class="fa-brands fa-whatsapp community-icon"></i>
+                        <h3 style="color: var(--text); margin-bottom: 10px;">Grupo do WhatsApp</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Entre no nosso grupo oficial para bater papo, achar parceiros de time e receber avisos em primeira mão.</p>
+                    </div>
+                </a>
+
+                <a href="#" target="_blank" style="text-decoration: none;">
+                    <div class="community-card fade-in-element" style="transition-delay: 0.1s;">
+                        <i class="fa-brands fa-instagram community-icon"></i>
+                        <h3 style="color: var(--text); margin-bottom: 10px;">Instagram Oficial</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Siga-nos para ver os melhores momentos dos campeonatos, memes e resultados finais.</p>
+                    </div>
+                </a>
+
             </div>
         </section>
 
         <section id="auth">
-            <div class="card" style="max-width: 450px; margin: 0 auto;">
+            <div class="card fade-in-element" style="max-width: 450px; margin: 0 auto;">
                 <h2 id="authTitle" style="text-align: center; margin-bottom: 1.5rem; font-size: 2rem;" class="gradient-text">Acessar Portal</h2>
                 <form id="authForm" onsubmit="handleAuth(event)">
                     <input type="email" id="email" placeholder="Seu E-mail" required>
@@ -233,7 +238,7 @@
 
         <section id="adminPanelTab">
             <h1><span class="gradient-text">Gerenciamento de Jogadores</span></h1>
-            <div class="card">
+            <div class="card fade-in-element">
                 <p style="margin-bottom: 1rem;"><i class="fa-solid fa-users-gear"></i> Controle total sobre os membros cadastrados na plataforma.</p>
                 <div id="usersListContent">Carregando jogadores...</div>
             </div>
@@ -242,7 +247,7 @@
         <section id="tournaments">
             <h1><span class="gradient-text">Circuito de Campeonatos</span></h1>
             
-            <div id="adminTourBuilder" class="card admin-only">
+            <div id="adminTourBuilder" class="card admin-only fade-in-element">
                 <h3 style="color: var(--secondary); margin-bottom: 1rem;"><i class="fa-solid fa-gear"></i> Criar Campeonato Oficial</h3>
                 <form onsubmit="createTournament(event)">
                     <input type="text" id="tourName" placeholder="Nome do Campeonato" required>
@@ -266,22 +271,22 @@
                         </select>
                     </div>
 
-                    <input type="number" step="0.01" id="tourFee" placeholder="Taxa de Inscrição (R$) - Deixe 0 se for Grátis" required>
+                    <input type="text" class="money-mask" id="tourFee" placeholder="Taxa de Inscrição (Deixe R$ 0,00 se for Grátis)" required>
 
                     <h4 style="margin: 15px 0 10px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 10px;"><i class="fa-solid fa-trophy"></i> Configuração de Premiações</h4>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
                         <div>
                             <label class="checkbox-group"><input type="checkbox" id="hasP1" onchange="togglePrizeInput('hasP1', 'prize1')"> 1º Lugar</label>
-                            <input type="number" step="0.01" id="prize1" placeholder="Valor R$" style="display:none;">
+                            <input type="text" class="money-mask" id="prize1" placeholder="R$ 0,00" style="display:none;">
                         </div>
                         <div>
                             <label class="checkbox-group"><input type="checkbox" id="hasP2" onchange="togglePrizeInput('hasP2', 'prize2')"> 2º Lugar</label>
-                            <input type="number" step="0.01" id="prize2" placeholder="Valor R$" style="display:none;">
+                            <input type="text" class="money-mask" id="prize2" placeholder="R$ 0,00" style="display:none;">
                         </div>
                         <div>
                             <label class="checkbox-group"><input type="checkbox" id="hasP3" onchange="togglePrizeInput('hasP3', 'prize3')"> 3º Lugar</label>
-                            <input type="number" step="0.01" id="prize3" placeholder="Valor R$" style="display:none;">
+                            <input type="text" class="money-mask" id="prize3" placeholder="R$ 0,00" style="display:none;">
                         </div>
                     </div>
 
@@ -303,7 +308,7 @@
                 <input type="text" id="editName" placeholder="Nome" required>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <input type="date" id="editDate" required>
-                    <input type="number" step="0.01" id="editFee" placeholder="Taxa (R$)" required>
+                    <input type="text" class="money-mask" id="editFee" placeholder="Taxa (R$)" required>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
@@ -325,8 +330,25 @@
         var userProfile = null;
         var isSignup = false;
 
-        function formatarMoeda(valor) {
-            if (valor == null || valor === "") return "R$ 0,00";
+        // Máscara de Moeda (Digitação em tempo real)
+        document.querySelectorAll('.money-mask').forEach(input => {
+            input.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é número
+                if(value === "") { e.target.value = ""; return; }
+                value = (parseInt(value) / 100).toFixed(2); // Divide por 100 para criar as casas decimais
+                e.target.value = "R$ " + value.replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            });
+        });
+
+        // Converte a string "R$ 1.500,00" de volta para número (1500.00) para salvar no banco
+        function desformatarMoeda(valorString) {
+            if(!valorString) return 0;
+            return parseFloat(valorString.replace("R$ ", "").replace(/\./g, "").replace(",", "."));
+        }
+
+        // Formata do banco (1500.00) para mostrar na tela "R$ 1.500,00"
+        function formatarMoedaShow(valor) {
+            if (valor == null || valor <= 0) return "R$ 0,00";
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
         }
 
@@ -336,6 +358,19 @@
             d.setMinutes(d.getMinutes() + d.getTimezoneOffset()); 
             return d.toLocaleDateString('pt-BR');
         }
+
+        // Efeito de surgimento ao rolar a página (Fade In)
+        function checkScrollElements() {
+            const elements = document.querySelectorAll('.fade-in-element');
+            const windowHeight = window.innerHeight;
+            elements.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 50) {
+                    el.classList.add('visible');
+                }
+            });
+        }
+        window.addEventListener('scroll', checkScrollElements);
 
         // ==========================================
         // EFEITOS VISUAIS E TEMA
@@ -354,7 +389,6 @@
             document.getElementById('themeIcon').innerHTML = target === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         }
 
-        // Array fixo das 4 imagens pedidas
         const siteImages = [
             'https://gozgames.neocities.org/project_20220727_1751022-01%20(1)%20(2).png',
             'https://gozgames.neocities.org/299-2991775_hoops-division-ivdiamond-ii-rocket-league-diamond-rank.png',
@@ -369,10 +403,8 @@
                 el.src = siteImages[Math.floor(Math.random() * siteImages.length)];
                 el.className = 'particle';
                 el.style.left = Math.random() * 100 + 'vw';
-                
-                const duration = Math.random() * 8 + 12; // 12 a 20 segundos
+                const duration = Math.random() * 8 + 12;
                 el.style.animation = `fall ${duration}s linear forwards`;
-                
                 container.appendChild(el);
                 el.addEventListener('animationend', () => el.remove());
             }, 1500);
@@ -392,22 +424,25 @@
         }
 
         function showSection(sectionId) {
-            // Mostra apenas a seção selecionada
-            document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('section').forEach(sec => {
+                sec.classList.remove('active');
+                // Reseta a animação de scroll quando muda de aba
+                sec.querySelectorAll('.fade-in-element').forEach(el => el.classList.remove('visible'));
+            });
             document.getElementById(sectionId).classList.add('active');
             
-            // Marca a aba no menu como ATIVA
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active-tab'));
             const activeBtn = document.getElementById('btn-' + sectionId);
             if(activeBtn) activeBtn.classList.add('active-tab');
             else if(sectionId === 'auth') document.getElementById('btn-home').classList.remove('active-tab');
 
-            // Fecha o menu mobile se estiver aberto
             const nav = document.getElementById('navLinks');
             if(nav.classList.contains('active')) toggleMenu();
             
             if(sectionId === 'tournaments') loadTournaments();
             if(sectionId === 'adminPanelTab') loadUsersList();
+            
+            setTimeout(checkScrollElements, 100); // Roda a verificação de scroll ao trocar de aba
         }
 
         function toggleAuthMode() {
@@ -446,6 +481,7 @@
                 userProfile = data;
                 updateUI();
             }
+            setTimeout(checkScrollElements, 200);
         }
 
         async function handleAuth(e) {
@@ -491,7 +527,7 @@
             data.forEach(user => {
                 const isAdmin = user.role === 'admin';
                 html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:1rem; background:var(--bg); border-radius:8px; margin-bottom:10px; border:1px solid var(--border); flex-wrap:wrap; gap:10px;">
+                <div class="fade-in-element visible" style="display:flex; justify-content:space-between; align-items:center; padding:1rem; background:var(--bg); border-radius:8px; margin-bottom:10px; border:1px solid var(--border); flex-wrap:wrap; gap:10px;">
                     <div>
                         <strong style="color: var(--primary);"><i class="fa-solid fa-gamepad"></i> ${user.epic_id || 'Sem Epic'}</strong> 
                         <span style="font-size:0.8rem; padding:3px 8px; border-radius:4px; margin-left:10px; background:${isAdmin?'var(--secondary)':'var(--border)'}; color:${isAdmin?'white':'var(--text)'};"><i class="fa-solid ${isAdmin?'fa-user-tie':'fa-user'}"></i> ${isAdmin?'Admin':'Jogador'}</span>
@@ -500,7 +536,7 @@
                         <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="changeRole('${user.id}', '${isAdmin?'jogador':'admin'}')">
                             ${isAdmin ? '<i class="fa-solid fa-arrow-down"></i> Rebaixar' : '<i class="fa-solid fa-star"></i> Promover'}
                         </button>
-                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="deleteUser('${user.id}', '${user.epic_id}')"><i class="fa-solid fa-trash"></i> Excluir</button>
+                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="deleteUser('${user.id}', '${user.epic_id}')"><i class="fa-solid fa-user-xmark"></i> Excluir</button>
                     </div>
                 </div>`;
             });
@@ -551,19 +587,19 @@
                 const statusOpen = t.is_open && !limitReached; 
                 
                 const slotText = t.slots === 0 ? `${inscritos} (Ilimitado)` : `${inscritos} / ${t.slots}`;
-                const feeText = t.entry_fee > 0 ? formatarMoeda(t.entry_fee) : "GRÁTIS";
+                const feeText = t.entry_fee > 0 ? formatarMoedaShow(t.entry_fee) : "GRÁTIS";
                 
                 let prizesHtml = '';
                 if(t.has_prize_1 || t.has_prize_2 || t.has_prize_3) {
                     prizesHtml = `<div class="prizes-box">`;
-                    if(t.has_prize_1) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#fbbf24;"></i> ${formatarMoeda(t.prize_1st)}</span>`;
-                    if(t.has_prize_2) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#94a3b8;"></i> ${formatarMoeda(t.prize_2nd)}</span>`;
-                    if(t.has_prize_3) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#b45309;"></i> ${formatarMoeda(t.prize_3rd)}</span>`;
+                    if(t.has_prize_1) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#fbbf24;"></i> ${formatarMoedaShow(t.prize_1st)}</span>`;
+                    if(t.has_prize_2) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#94a3b8;"></i> ${formatarMoedaShow(t.prize_2nd)}</span>`;
+                    if(t.has_prize_3) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#b45309;"></i> ${formatarMoedaShow(t.prize_3rd)}</span>`;
                     prizesHtml += `</div>`;
                 }
 
                 let html = `
-                    <div class="card">
+                    <div class="card fade-in-element visible">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
                             <h2 style="margin: 0 0 10px 0;"><i class="fa-solid fa-trophy"></i> ${t.name}</h2>
                             ${isAdmin ? `
@@ -601,8 +637,8 @@
                             <div style="display:flex; gap: 5px;">`;
                         
                         if(currentUser) {
-                            if(isMember) html += `<button class="btn btn-outline" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="leaveTeam('${team.id}')"><i class="fa-solid fa-person-walking-arrow-right"></i> Sair do Time</button>`;
-                            else if (membersCount < t.format && statusOpen) html += `<button class="btn btn-success" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="joinTeam('${team.id}')"><i class="fa-solid fa-right-to-bracket"></i> Entrar no Time</button>`;
+                            if(isMember) html += `<button class="btn btn-outline" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="leaveTeam('${team.id}')"><i class="fa-solid fa-person-walking-arrow-right"></i> Sair</button>`;
+                            else if (membersCount < t.format && statusOpen) html += `<button class="btn btn-success" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="joinTeam('${team.id}')"><i class="fa-solid fa-right-to-bracket"></i> Entrar</button>`;
                         }
 
                         if (isAdmin || (currentUser && currentUser.id === team.captain_id)) {
@@ -628,6 +664,7 @@
                 html += `</div>`;
                 listDiv.innerHTML += html;
             });
+            setTimeout(checkScrollElements, 100);
         }
 
         async function createTournament(e) {
@@ -636,14 +673,15 @@
             const tDate = document.getElementById('tourDate').value;
             const format = parseInt(document.getElementById('tourFormat').value);
             const slots = parseInt(document.getElementById('tourSlots').value);
-            const fee = parseFloat(document.getElementById('tourFee').value) || 0;
             
+            // Usa a função de desformatar para pegar os números reais
+            const fee = desformatarMoeda(document.getElementById('tourFee').value);
             const hasP1 = document.getElementById('hasP1').checked;
             const hasP2 = document.getElementById('hasP2').checked;
             const hasP3 = document.getElementById('hasP3').checked;
-            const prize1 = parseFloat(document.getElementById('prize1').value) || 0;
-            const prize2 = parseFloat(document.getElementById('prize2').value) || 0;
-            const prize3 = parseFloat(document.getElementById('prize3').value) || 0;
+            const prize1 = desformatarMoeda(document.getElementById('prize1').value);
+            const prize2 = desformatarMoeda(document.getElementById('prize2').value);
+            const prize3 = desformatarMoeda(document.getElementById('prize3').value);
 
             const { error } = await supabase.from('tournaments').insert([{ 
                 name, tournament_date: tDate, format, slots, entry_fee: fee,
@@ -663,7 +701,8 @@
             document.getElementById('editId').value = id;
             document.getElementById('editName').value = name;
             document.getElementById('editDate').value = date && date !== 'null' ? date : '';
-            document.getElementById('editFee').value = fee;
+            // Coloca o valor da taxa já formatado na máscara
+            document.getElementById('editFee').value = formatarMoedaShow(fee);
             document.getElementById('editModal').classList.add('active');
         }
         function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
@@ -673,7 +712,7 @@
             const id = document.getElementById('editId').value;
             const name = document.getElementById('editName').value;
             const date = document.getElementById('editDate').value;
-            const fee = parseFloat(document.getElementById('editFee').value) || 0;
+            const fee = desformatarMoeda(document.getElementById('editFee').value);
 
             const { error } = await supabase.from('tournaments').update({ name, tournament_date: date, entry_fee: fee }).eq('id', id);
             if(!error) { alert("Atualizado!"); closeEditModal(); loadTournaments(); }
