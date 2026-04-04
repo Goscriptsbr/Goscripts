@@ -40,12 +40,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         body { background-color: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
 
-        .gradient-text {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-block;
-        }
+        .gradient-text { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
 
         #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
         .particle { position: absolute; top: -100px; width: 60px; height: auto; object-fit: contain; opacity: 0.15; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
@@ -70,7 +65,6 @@
         
         .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;}
         .nav-links button { color: var(--text); cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0.5rem 0.5rem; font-weight: 600; position: relative; }
-        
         .nav-links button.nav-item::after { content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 50%; background-color: var(--primary); transition: all 0.3s ease; transform: translateX(-50%); }
         .nav-links button.nav-item:hover::after { width: 100%; }
         .nav-links button.nav-item:hover { color: var(--primary); }
@@ -87,12 +81,7 @@
 
         @media (max-width: 900px) {
             .menu-icon { display: block; }
-            .nav-links { 
-                position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; 
-                background-color: var(--surface); padding: 0; text-align: center; 
-                max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease;
-                box-shadow: 0 10px 20px rgba(0,0,0,0.2); gap: 0;
-            }
+            .nav-links { position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; background-color: var(--surface); padding: 0; text-align: center; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.2); gap: 0; }
             .nav-links.active { max-height: 600px; opacity: 1; padding: 1.5rem; border-bottom: 2px solid var(--primary); gap: 1rem; }
             .nav-links button.nav-item::after { display: none; }
             .nav-links button.nav-item.active-tab { color: var(--primary); background: rgba(14, 165, 233, 0.1); border-radius: 6px;}
@@ -128,13 +117,25 @@
         button.btn-outline:hover { border-color: var(--primary); color: var(--primary); transform: none; box-shadow: none;}
 
         .admin-only, .user-only { display: none; }
-        .tournament-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.95rem; }
-        .tournament-meta span { background: var(--bg); padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
-        .prizes-box { margin-top: 10px; background: rgba(249, 115, 22, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--secondary); color: var(--text); font-weight: bold; display: flex; gap: 15px; flex-wrap: wrap; }
         
-        .team-list { margin-top: 1.5rem; padding: 1rem; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
-        .team-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
-        .team-item:last-child { border-bottom: none; }
+        /* NOVO DESIGN: CARDS DE TORNEIO */
+        .tour-card { padding: 0 !important; overflow: hidden; border: 1px solid var(--border); }
+        .tour-card:hover { border-color: var(--primary); }
+        .tour-header { background: linear-gradient(90deg, rgba(14, 165, 233, 0.1), transparent); padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .tour-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; padding: 1.5rem; background: var(--surface); }
+        .stat-box { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 15px 10px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
+        .stat-box i { font-size: 1.5rem; color: var(--text-muted); margin-bottom: 8px; }
+        .stat-box span { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
+        .stat-box strong { font-size: 1.1rem; color: var(--primary); margin-top: 5px; }
+        
+        .tour-prizes { background: rgba(249, 115, 22, 0.05); padding: 15px 1.5rem; border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border); display: flex; gap: 20px; flex-wrap: wrap; align-items: center; justify-content: center; }
+        .tour-prizes span { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+
+        .teams-section { padding: 1.5rem; background: var(--bg); }
+        .teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
+        .team-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 15px; transition: transform 0.2s ease; position: relative; overflow: hidden; }
+        .team-box:hover { border-color: var(--secondary); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .team-box::before { content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: var(--secondary); }
 
         .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         .leaderboard-table th, .leaderboard-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
@@ -154,8 +155,10 @@
         .community-icon { font-size: 3rem; color: var(--secondary); margin-bottom: 1rem; }
 
         .rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        .rank-card { background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
-        .rank-card img { max-width: 80px; margin-bottom: 10px; }
+        .rank-card { background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center; transition: transform 0.2s; }
+        .rank-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .rank-card img { max-width: 80px; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)); }
+        
         .image-preview { max-width: 100%; height: 200px; object-fit: contain; border-radius: 8px; display: none; margin-top: 10px; border: 2px dashed var(--primary); }
 
         .player-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; border-bottom: 1px solid var(--border); background: var(--bg); border-radius: 6px; margin-bottom: 5px; }
@@ -254,7 +257,7 @@
             <div class="card fade-in-element">
                 <h2><i class="fa-solid fa-chart-simple"></i> Meu Tracker (Ranks Oficiais)</h2>
                 <p style="color: var(--text-muted); margin-bottom: 1rem;">Buscando dados da sua conta Epic (<strong id="trackerEpicName">...</strong>)...</p>
-                <div id="trackerContent" class="rank-grid"><p><i class="fa-solid fa-circle-notch fa-spin"></i> Conectando API...</p></div>
+                <div id="trackerContent" class="rank-grid"><p><i class="fa-solid fa-circle-notch fa-spin"></i> Conectando API Tracker Network...</p></div>
             </div>
 
             <div class="card fade-in-element">
@@ -348,9 +351,10 @@
                         <div><label class="checkbox-group"><input type="checkbox" id="hasP2" onchange="togglePrizeInput('hasP2', 'prize2')"> 2º Lugar</label><input type="text" class="money-mask" id="prize2" style="display:none;"></div>
                         <div><label class="checkbox-group"><input type="checkbox" id="hasP3" onchange="togglePrizeInput('hasP3', 'prize3')"> 3º Lugar</label><input type="text" class="money-mask" id="prize3" style="display:none;"></div>
                     </div>
-                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 15px;"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 15px;"><i class="fa-solid fa-paper-plane"></i> Publicar Campeonato</button>
                 </form>
             </div>
+            
             <div id="tournamentsList"><p><i class="fa-solid fa-circle-notch fa-spin"></i> Buscando competições...</p></div>
         </section>
     </main>
@@ -387,7 +391,7 @@
         
         var allUsersCache = [];
         var myFriendsCache = [];
-        var selectedTeammates = []; // Array: {id, epic_id, points(input)}
+        var selectedTeammates = [];
 
         document.querySelectorAll('.money-mask').forEach(input => {
             input.addEventListener('input', function(e) {
@@ -452,9 +456,9 @@
         }
 
         // ==========================================
-        // SISTEMA DE AUTENTICAÇÃO (LOGIN/CADASTRO/SENHA)
+        // SISTEMA DE AUTENTICAÇÃO
         // ==========================================
-        let authState = 'login'; // 'login', 'signup', 'forgot'
+        let authState = 'login';
 
         function setAuthState(state) {
             authState = state;
@@ -511,72 +515,50 @@
 
         async function handleAuthSubmit(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const epic = document.getElementById('epic').value;
+            const email = document.getElementById('email').value, password = document.getElementById('password').value, epic = document.getElementById('epic').value;
             const msgBox = document.getElementById('authMessage'); 
-            
-            msgBox.style.color = "var(--primary)"; 
-            msgBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processando...';
+            msgBox.style.color = "var(--primary)"; msgBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processando...';
             
             try {
                 if (authState === 'signup') {
-                    const { error } = await supabase.auth.signUp({ 
-                        email, password, 
-                        options: { data: { epic_id: epic }, emailRedirectTo: 'https://goscriptsbr.github.io/Goscripts/confirm.html' } 
-                    });
+                    const { error } = await supabase.auth.signUp({ email, password, options: { data: { epic_id: epic }, emailRedirectTo: 'https://goscriptsbr.github.io/Goscripts/confirm.html' } });
                     if (error) throw error;
-                    msgBox.style.color = "var(--success)"; 
-                    msgBox.innerHTML = "<i class='fa-solid fa-envelope-circle-check'></i> Verifique seu e-mail para ativar a conta.";
+                    msgBox.style.color = "var(--success)"; msgBox.innerHTML = "<i class='fa-solid fa-envelope-circle-check'></i> Verifique seu e-mail para ativar a conta.";
                     document.getElementById('authForm').reset();
-                    
                 } else if (authState === 'login') {
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    msgBox.style.color = "var(--success)"; 
-                    msgBox.innerHTML = "<i class='fa-solid fa-check'></i> Conectado!";
-                    await checkSession(); 
-                    setTimeout(() => { showSection('home'); msgBox.innerText = ""; document.getElementById('authForm').reset(); }, 1000);
-                    
+                    msgBox.style.color = "var(--success)"; msgBox.innerHTML = "<i class='fa-solid fa-check'></i> Conectado!";
+                    await checkSession(); setTimeout(() => { showSection('home'); msgBox.innerText = ""; document.getElementById('authForm').reset(); }, 1000);
                 } else if (authState === 'forgot') {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: 'https://goscriptsbr.github.io/Goscripts/reset-password.html',
-                    });
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://goscriptsbr.github.io/Goscripts/reset-password.html' });
                     if (error) throw error;
-                    msgBox.style.color = "var(--success)"; 
-                    msgBox.innerHTML = "<i class='fa-solid fa-envelope-circle-check'></i> Link de recuperação enviado para o seu e-mail!";
+                    msgBox.style.color = "var(--success)"; msgBox.innerHTML = "<i class='fa-solid fa-envelope-circle-check'></i> Link enviado para o seu e-mail!";
                     document.getElementById('authForm').reset();
                 }
             } catch (error) { 
                 msgBox.style.color = "var(--danger)"; 
-                if(error.message.includes("Invalid login")) {
-                    msgBox.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Erro: E-mail ou senha incorretos.";
-                } else {
-                    msgBox.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> " + error.message; 
-                }
+                msgBox.innerHTML = error.message.includes("Invalid login") ? "<i class='fa-solid fa-triangle-exclamation'></i> Erro: E-mail ou senha incorretos." : "<i class='fa-solid fa-triangle-exclamation'></i> " + error.message; 
             }
         }
 
         async function logout() { await supabase.auth.signOut(); currentUser = null; userProfile = null; updateUI(); showSection('home'); }
 
         // ==========================================
-        // ÁREA DO JOGADOR: AMIGOS E PONTOS
+        // ÁREA DO JOGADOR
         // ==========================================
         async function fetchUsersForTeammates() {
             if(!currentUser) return;
             const { data: users } = await supabase.from('profiles').select('id, epic_id').neq('id', currentUser.id);
             allUsersCache = users || [];
-            
             const { data: friends } = await supabase.from('friendships').select('friend_id').eq('user_id', currentUser.id);
             myFriendsCache = friends ? friends.map(f => f.friend_id) : [];
-            
             renderAvailableUsers();
         }
 
         function renderAvailableUsers(filterText = '') {
             const listDiv = document.getElementById('availableUsersList');
             let html = '';
-            
             const sortedUsers = allUsersCache.sort((a, b) => {
                 const aFav = myFriendsCache.includes(a.id), bFav = myFriendsCache.includes(b.id);
                 if(aFav && !bFav) return -1; if(!aFav && bFav) return 1; return 0;
@@ -629,11 +611,7 @@
 
         function renderSelectedTeammates() {
             const container = document.getElementById('selectedTeammatesContainer');
-            if(selectedTeammates.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-            
+            if(selectedTeammates.length === 0) { container.innerHTML = ''; return; }
             let html = '';
             selectedTeammates.forEach(tm => {
                 html += `
@@ -647,14 +625,19 @@
         }
 
         // ==========================================
-        // ÁREA DO JOGADOR: TRACKER API E ENVIO DE PRINTS
+        // CÓDIGO DA API TRACKER COM CORS PROXY
         // ==========================================
         async function loadTracker() {
             if(!userProfile || !userProfile.epic_id) { document.getElementById('trackerContent').innerHTML = "<p>Nenhuma Epic ID vinculada.</p>"; return; }
             document.getElementById('trackerEpicName').innerText = userProfile.epic_id;
             try {
-                const response = await fetch(`https://public-api.tracker.gg/v2/rocket-league/standard/profile/epic/${encodeURIComponent(userProfile.epic_id)}`, { headers: { 'TRN-Api-Key': trackerApiKey } });
-                if(!response.ok) throw new Error("Perfil privado ou não encontrado no Tracker Network.");
+                // AQUI ESTÁ A CORREÇÃO DO ERRO CORS USANDO PROXY
+                const targetUrl = `https://public-api.tracker.gg/v2/rocket-league/standard/profile/epic/${encodeURIComponent(userProfile.epic_id)}`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+                
+                const response = await fetch(proxyUrl, { headers: { 'TRN-Api-Key': trackerApiKey } });
+                
+                if(!response.ok) throw new Error("Perfil não encontrado ou bloqueado.");
                 const data = await response.json();
                 
                 const playlists = { 'Duel (Ranked)': '1v1', 'Doubles (Ranked)': '2v2', 'Standard (Ranked)': '3v3' };
@@ -672,7 +655,7 @@
                 });
                 document.getElementById('trackerContent').innerHTML = html || "<p>Nenhuma partida ranqueada encontrada.</p>";
             } catch (err) {
-                document.getElementById('trackerContent').innerHTML = `<p style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> O jogador precisa ter o perfil público no Tracker Network e jogar Rankeds.</p>`;
+                document.getElementById('trackerContent').innerHTML = `<p style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> O Tracker Network bloqueou a requisição ou seu perfil é privado.</p>`;
             }
         }
 
@@ -685,9 +668,8 @@
                     const reader = new FileReader();
                     reader.readAsDataURL(result);
                     reader.onloadend = function() {
-                        const base64data = reader.result;
-                        document.getElementById('compressedImageBase64').value = base64data;
-                        document.getElementById('imagePreview').src = base64data;
+                        document.getElementById('compressedImageBase64').value = reader.result;
+                        document.getElementById('imagePreview').src = reader.result;
                         document.getElementById('imagePreview').style.display = 'block';
                     }
                 },
@@ -701,7 +683,6 @@
             const imgBase64 = document.getElementById('compressedImageBase64').value;
             
             if(!imgBase64) return alert("Por favor, selecione a imagem.");
-            
             const myPts = parseInt(document.getElementById('myRequestedPoints').value);
             if(isNaN(myPts) || myPts <= 0) return alert("Digite os seus pontos.");
 
@@ -714,89 +695,49 @@
                 pointsData.push({ id: tm.id, epic_id: tm.epic_id, points: tmPts });
             });
 
-            if(hasError) return alert("Por favor, digite os pontos de todos os amigos que você adicionou na lista.");
+            if(hasError) return alert("Por favor, digite os pontos de todos os amigos.");
 
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'; 
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'; btn.disabled = true;
 
             try {
-                // 1. Converte o Base64 (Comprimido) de volta para Arquivo Físico (Blob)
-                const arr = imgBase64.split(',');
-                const mime = arr[0].match(/:(.*?);/)[1];
-                const bstr = atob(arr[1]);
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                while(n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
-                }
+                const arr = imgBase64.split(','); const mime = arr[0].match(/:(.*?);/)[1];
+                const bstr = atob(arr[1]); let n = bstr.length; const u8arr = new Uint8Array(n);
+                while(n--) { u8arr[n] = bstr.charCodeAt(n); }
                 const blob = new Blob([u8arr], {type: mime});
 
-                // 2. Gera um nome único para o arquivo (usando o ID do jogador e a Data)
                 const ext = mime.split('/')[1] || 'jpeg';
                 const fileName = `${currentUser.id}_${Date.now()}.${ext}`;
 
-                // 3. Envia o arquivo para a pasta 'prints' no Supabase Storage
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('prints')
-                    .upload(fileName, blob, {
-                        contentType: mime,
-                        upsert: false
-                    });
-
+                const { error: uploadError } = await supabase.storage.from('prints').upload(fileName, blob, { contentType: mime, upsert: false });
                 if (uploadError) throw uploadError;
 
-                // 4. Pega o LINK público da imagem que acabou de ser salva
-                const { data: publicUrlData } = supabase.storage
-                    .from('prints')
-                    .getPublicUrl(fileName);
-                
+                const { data: publicUrlData } = supabase.storage.from('prints').getPublicUrl(fileName);
                 const finalImageUrl = publicUrlData.publicUrl;
 
-                // 5. Salva a solicitação na Tabela do Banco de Dados com o Link Real
-                const { error: dbError } = await supabase.from('point_requests').insert([{ 
-                    user_id: currentUser.id, 
-                    screenshot_url: finalImageUrl,
-                    points_data: pointsData
-                }]);
-
+                const { error: dbError } = await supabase.from('point_requests').insert([{ user_id: currentUser.id, screenshot_url: finalImageUrl, points_data: pointsData }]);
                 if (dbError) throw dbError;
 
-                // Sucesso!
-                alert("Solicitação enviada com sucesso! Aguarde o Admin aprovar.");
+                alert("Enviado com sucesso!");
                 document.getElementById('imagePreview').style.display = 'none';
                 document.getElementById('pointImage').value = '';
                 document.getElementById('compressedImageBase64').value = '';
                 document.getElementById('myRequestedPoints').value = '';
-                selectedTeammates = []; 
-                renderSelectedTeammates();
-                renderAvailableUsers();
-                loadMyRequests();
-
-            } catch (error) {
-                alert("Erro ao enviar: " + error.message);
-            } finally {
-                // Devolve o botão ao normal mesmo se der erro
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Enviar para o Admin'; 
-                btn.disabled = false;
-            }
+                selectedTeammates = []; renderSelectedTeammates(); renderAvailableUsers(); loadMyRequests();
+            } catch (error) { alert("Erro ao enviar: " + error.message); } finally { btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Enviar para o Admin'; btn.disabled = false; }
         }
+
         async function loadMyRequests() {
             const div = document.getElementById('myRequestsList');
             div.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Carregando...';
             const { data, error } = await supabase.from('point_requests').select('*').eq('user_id', currentUser.id).order('requested_at', {ascending: false});
-            if(error || !data) { div.innerHTML = "Erro ao carregar histórico."; return; }
+            if(error || !data) { div.innerHTML = "Erro ao carregar."; return; }
             if(data.length === 0) { div.innerHTML = "<p>Nenhum print enviado.</p>"; return; }
 
             let html = '';
             data.forEach(req => {
                 const colors = { 'pendente': 'var(--text-muted)', 'aprovado': 'var(--success)', 'recusado': 'var(--danger)' };
-                
                 let details = '';
-                if(req.points_data && req.points_data.length > 0) {
-                    req.points_data.forEach(pd => {
-                        details += `<span style="display:inline-block; margin-right:10px; background:rgba(0,0,0,0.2); padding:3px 8px; border-radius:4px; font-size:0.85rem;">${pd.epic_id}: <strong>${pd.points} Pts</strong></span>`;
-                    });
-                }
+                if(req.points_data) req.points_data.forEach(pd => { details += `<span style="display:inline-block; margin-right:10px; background:rgba(0,0,0,0.2); padding:3px 8px; border-radius:4px; font-size:0.85rem;">${pd.epic_id}: <strong>${pd.points} Pts</strong></span>`; });
 
                 html += `
                 <div style="background:var(--bg); border:1px solid var(--border); padding:1rem; border-radius:8px; margin-bottom:10px;">
@@ -817,30 +758,22 @@
         async function loadLeaderboard() {
             const tbody = document.getElementById('leaderboardBody');
             tbody.innerHTML = '<tr><td colspan="3"><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando...</td></tr>';
-            
             const { data, error } = await supabase.from('leaderboard').select(`total_points, profiles(epic_id)`).order('total_points', {ascending: false});
-            if(error) { tbody.innerHTML = '<tr><td colspan="3">Erro ao carregar tabela.</td></tr>'; return; }
+            if(error) { tbody.innerHTML = '<tr><td colspan="3">Erro ao carregar.</td></tr>'; return; }
             if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="3">Nenhum jogador possui pontos ainda.</td></tr>'; return; }
 
             let html = '';
             data.forEach((row, index) => {
-                const pos = index + 1;
-                const posClass = pos <= 3 ? `rank-${pos}` : '';
+                const pos = index + 1; const posClass = pos <= 3 ? `rank-${pos}` : '';
                 const icon = pos === 1 ? '🥇 ' : pos === 2 ? '🥈 ' : pos === 3 ? '🥉 ' : `#${pos} `;
                 html += `<tr><td class="${posClass}">${icon}</td><td style="font-weight:bold;">${row.profiles?.epic_id || 'Desconhecido'}</td><td style="color:var(--primary); font-weight:bold;">${row.total_points} Pts</td></tr>`;
             });
             tbody.innerHTML = html;
         }
-
-        async function resetLeaderboard() {
-            if(confirm("ATENÇÃO: Você vai zerar todos os pontos de TODOS os jogadores. Deseja continuar?")) {
-                const { error } = await supabase.from('leaderboard').delete().neq('user_id', '00000000-0000-0000-0000-000000000000'); 
-                if(!error) { alert("Tabela zerada!"); loadLeaderboard(); }
-            }
-        }
+        async function resetLeaderboard() { if(confirm("ATENÇÃO: Zerar todos os pontos?")) { await supabase.from('leaderboard').delete().neq('user_id', '00000000-0000-0000-0000-000000000000'); loadLeaderboard(); } }
 
         // ==========================================
-        // PAINEL ADMIN: APROVAÇÃO E USUÁRIOS
+        // PAINEL ADMIN: APROVAÇÃO DE PONTOS
         // ==========================================
         async function loadPendingRequests() {
             if(!userProfile || userProfile.role !== 'admin') return;
@@ -854,36 +787,17 @@
             let html = '';
             data.forEach(req => {
                 let ptsHtml = '';
-                const pointsArr = req.points_data || [];
-                
-                pointsArr.forEach(pd => {
-                    ptsHtml += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:4px; margin-bottom:5px;">
-                        <span><i class="fa-solid fa-gamepad"></i> ${pd.epic_id}</span>
-                        <input type="number" id="admin_pts_${req.id}_${pd.id}" value="${pd.points}" style="width:80px; margin:0; padding:5px; text-align:center; font-weight:bold;" data-userid="${pd.id}">
-                    </div>`;
+                if(req.points_data) req.points_data.forEach(pd => {
+                    ptsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:4px; margin-bottom:5px;"><span><i class="fa-solid fa-gamepad"></i> ${pd.epic_id}</span><input type="number" id="admin_pts_${req.id}_${pd.id}" value="${pd.points}" style="width:80px; margin:0; padding:5px; text-align:center; font-weight:bold;" data-userid="${pd.id}"></div>`;
                 });
 
                 html += `
                 <div style="background:var(--bg); border:1px solid var(--border); padding:1rem; border-radius:8px; margin-bottom:15px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <strong style="color:var(--text-muted); font-size:0.8rem;">Enviado por: ${req.profiles?.epic_id} | ${formatarData(req.requested_at)}</strong>
-                    </div>
-                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><strong style="color:var(--text-muted); font-size:0.8rem;">Enviado por: ${req.profiles?.epic_id} | ${formatarData(req.requested_at)}</strong></div>
                     <img src="${req.screenshot_url}" style="width:100%; height:auto; max-height:300px; object-fit:cover; border-radius:8px; border:2px dashed var(--secondary); cursor:pointer; margin-bottom:15px;" onclick="window.open('${req.screenshot_url}')" title="Clique para ampliar">
-                    
-                    <div style="margin-bottom:15px;">
-                        <h4 style="margin-bottom:5px; color:var(--primary);">Ajuste/Confirme os pontos:</h4>
-                        ${ptsHtml}
-                    </div>
-
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <button class="btn btn-success" style="flex:1;" onclick="approveRequest('${req.id}')"><i class="fa-solid fa-check-double"></i> Aprovar Pontos</button>
-                    </div>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <input type="text" id="feedback_${req.id}" placeholder="Motivo da Recusa" style="margin-bottom:0; flex:1;">
-                        <button class="btn btn-danger" style="width:auto;" onclick="rejectRequest('${req.id}')"><i class="fa-solid fa-ban"></i> Recusar</button>
-                    </div>
+                    <div style="margin-bottom:15px;"><h4 style="margin-bottom:5px; color:var(--primary);">Ajuste/Confirme os pontos:</h4>${ptsHtml}</div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;"><button class="btn btn-success" style="flex:1;" onclick="approveRequest('${req.id}')"><i class="fa-solid fa-check-double"></i> Aprovar Pontos</button></div>
+                    <div style="display:flex; gap:10px; margin-top:10px;"><input type="text" id="feedback_${req.id}" placeholder="Motivo da Recusa" style="margin-bottom:0; flex:1;"><button class="btn btn-danger" style="width:auto;" onclick="rejectRequest('${req.id}')"><i class="fa-solid fa-ban"></i> Recusar</button></div>
                 </div>`;
             });
             div.innerHTML = html;
@@ -891,37 +805,31 @@
 
         async function approveRequest(requestId) {
             const inputs = document.querySelectorAll(`input[id^="admin_pts_${requestId}_"]`);
-            
             for(let input of inputs) {
-                const uid = input.getAttribute('data-userid');
-                const pts = parseInt(input.value);
+                const uid = input.getAttribute('data-userid'); const pts = parseInt(input.value);
                 if(isNaN(pts) || pts <= 0) continue;
-
                 let { data: lbData } = await supabase.from('leaderboard').select('total_points').eq('user_id', uid).single();
-                if(lbData) {
-                    await supabase.from('leaderboard').update({total_points: lbData.total_points + pts}).eq('user_id', uid);
-                } else {
-                    await supabase.from('leaderboard').insert([{user_id: uid, total_points: pts}]);
-                }
+                if(lbData) await supabase.from('leaderboard').update({total_points: lbData.total_points + pts}).eq('user_id', uid);
+                else await supabase.from('leaderboard').insert([{user_id: uid, total_points: pts}]);
             }
-
             await supabase.from('point_requests').update({status: 'aprovado'}).eq('id', requestId);
-            alert("Pontos distribuídos com sucesso a todos os jogadores!");
-            loadPendingRequests();
+            alert("Pontos distribuídos!"); loadPendingRequests();
         }
 
         async function rejectRequest(requestId) {
             const feedback = document.getElementById(`feedback_${requestId}`).value;
-            if(!feedback) return alert("Você precisa digitar o motivo da recusa antes de clicar em Recusar.");
+            if(!feedback) return alert("Digite o motivo da recusa.");
             await supabase.from('point_requests').update({status: 'recusado', admin_feedback: feedback}).eq('id', requestId);
             alert("Print recusado."); loadPendingRequests();
         }
 
+        // ==========================================
+        // PAINEL ADMIN: USUÁRIOS
+        // ==========================================
         async function loadUsersList() {
             const div = document.getElementById('usersListContent');
             const { data, error } = await supabase.from('profiles').select('*').order('created_at', {ascending: false});
             if(error) return;
-
             let html = '';
             data.forEach(user => {
                 const isAdmin = user.role === 'admin';
@@ -941,14 +849,15 @@
         async function deleteUser(userId, epicId) { if(confirm(`Excluir ${epicId}?`)) { await supabase.rpc('admin_delete_user', { target_user_id: userId }); loadUsersList(); } }
         
         // ==========================================
-        // TORNEIOS (Restaurado)
+        // TORNEIOS (REMODELADO - VISUAL PRO)
         // ==========================================
         function togglePrizeInput(chkId, inputId) { const input = document.getElementById(inputId); if(document.getElementById(chkId).checked) { input.style.display = 'block'; input.required = true; } else { input.style.display = 'none'; input.value = ''; input.required = false; } }
         
         async function loadTournaments() {
             const listDiv = document.getElementById('tournamentsList');
-            listDiv.innerHTML = '<p><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando chaves...</p>';
+            listDiv.innerHTML = '<p><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando competições...</p>';
             const { data: tournaments, error } = await supabase.from('tournaments').select(`id, name, format, slots, is_open, tournament_date, entry_fee, has_prize_1, has_prize_2, has_prize_3, prize_1st, prize_2nd, prize_3rd, teams ( id, name, captain_id, team_members ( user_id, profiles(epic_id) ) )`).order('created_at', { ascending: false });
+            
             if (error) { listDiv.innerHTML = '<p style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Erro de conexão.</p>'; return; }
             if (tournaments.length === 0) { listDiv.innerHTML = '<p><i class="fa-solid fa-calendar-xmark"></i> Nenhum torneio ativo no momento.</p>'; return; }
 
@@ -958,12 +867,10 @@
                 const inscritos = t.teams ? t.teams.length : 0;
                 const limitReached = t.slots > 0 && inscritos >= t.slots;
                 const statusOpen = t.is_open && !limitReached; 
-                const slotText = t.slots === 0 ? `${inscritos} (Ilimitado)` : `${inscritos} / ${t.slots}`;
-                const feeText = t.entry_fee > 0 ? formatarMoedaShow(t.entry_fee) : "GRÁTIS";
                 
                 let prizesHtml = '';
                 if(t.has_prize_1 || t.has_prize_2 || t.has_prize_3) {
-                    prizesHtml = `<div class="prizes-box">`;
+                    prizesHtml = `<div class="tour-prizes">`;
                     if(t.has_prize_1) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#fbbf24;"></i> ${formatarMoedaShow(t.prize_1st)}</span>`;
                     if(t.has_prize_2) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#94a3b8;"></i> ${formatarMoedaShow(t.prize_2nd)}</span>`;
                     if(t.has_prize_3) prizesHtml += `<span><i class="fa-solid fa-medal" style="color:#b45309;"></i> ${formatarMoedaShow(t.prize_3rd)}</span>`;
@@ -971,60 +878,76 @@
                 }
 
                 let html = `
-                    <div class="card fade-in-element visible">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
-                            <h2 style="margin: 0 0 10px 0;"><i class="fa-solid fa-trophy"></i> ${t.name}</h2>
-                            ${isAdmin ? `
-                                <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                                    <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="openEditModal('${t.id}', '${t.name}', '${t.tournament_date}', ${t.entry_fee})"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
-                                    <button class="btn ${t.is_open ? 'btn-danger' : 'btn-success'}" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="toggleTournamentStatus('${t.id}', ${t.is_open})"><i class="fa-solid ${t.is_open ? 'fa-lock' : 'fa-lock-open'}"></i> ${t.is_open ? 'Fechar' : 'Abrir'}</button>
-                                </div>
-                            ` : ''}
+                    <div class="card tour-card fade-in-element visible">
+                        <div class="tour-header">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                                <h2 style="margin:0; color:var(--text); font-size:1.8rem;"><i class="fa-solid fa-trophy" style="color:var(--primary);"></i> ${t.name}</h2>
+                                ${isAdmin ? `
+                                    <div style="display:flex; gap:5px;">
+                                        <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="openEditModal('${t.id}', '${t.name}', '${t.tournament_date}', ${t.entry_fee})"><i class="fa-solid fa-pen-to-square"></i></button>
+                                        <button class="btn ${t.is_open ? 'btn-danger' : 'btn-success'}" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="toggleTournamentStatus('${t.id}', ${t.is_open})"><i class="fa-solid ${t.is_open ? 'fa-lock' : 'fa-lock-open'}"></i></button>
+                                        <button class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.8rem; width:auto;" onclick="deleteTournament('${t.id}')"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
-                        <div class="tournament-meta">
-                            <span><i class="fa-regular fa-calendar-days"></i> ${formatarData(t.tournament_date)}</span>
-                            <span><i class="fa-solid fa-sack-dollar"></i> ${feeText}</span>
-                            <span><i class="fa-solid fa-gamepad"></i> ${t.format}v${t.format}</span>
-                            <span><i class="fa-solid fa-users"></i> ${slotText}</span>
-                            <span><strong>Status:</strong> <span style="color:${statusOpen ? 'var(--success)' : 'var(--danger)'}; background:transparent; border:none; padding:0;">${statusOpen ? '<i class="fa-solid fa-circle-check"></i> Aberto' : (limitReached ? '<i class="fa-solid fa-ban"></i> Lotação Máxima' : '<i class="fa-solid fa-lock"></i> Fechado')}</span></span>
+
+                        <div class="tour-stats-grid">
+                            <div class="stat-box"><i class="fa-regular fa-calendar-days"></i><span>Data</span><strong>${formatarData(t.tournament_date)}</strong></div>
+                            <div class="stat-box"><i class="fa-solid fa-gamepad"></i><span>Formato</span><strong>${t.format}v${t.format}</strong></div>
+                            <div class="stat-box"><i class="fa-solid fa-users"></i><span>Vagas</span><strong>${t.slots === 0 ? `${inscritos} (Livre)` : `${inscritos}/${t.slots}`}</strong></div>
+                            <div class="stat-box"><i class="fa-solid fa-sack-dollar"></i><span>Entrada</span><strong>${t.entry_fee > 0 ? formatarMoedaShow(t.entry_fee) : "GRÁTIS"}</strong></div>
+                            <div class="stat-box" style="border-color:${statusOpen ? 'var(--success)' : 'var(--danger)'};">
+                                <i class="fa-solid ${statusOpen ? 'fa-circle-check' : 'fa-ban'}" style="color:${statusOpen ? 'var(--success)' : 'var(--danger)'};"></i>
+                                <span>Status</span>
+                                <strong style="color:${statusOpen ? 'var(--success)' : 'var(--danger)'};">${statusOpen ? 'Aberto' : 'Fechado'}</strong>
+                            </div>
                         </div>
+
                         ${prizesHtml}
+
+                        <div class="teams-section">
+                            <h3 style="color:var(--primary); margin-bottom:10px;"><i class="fa-solid fa-clipboard-list"></i> Equipes Confirmadas</h3>
                 `;
 
                 if (inscritos > 0) {
-                    html += `<div class="team-list"><strong style="color: var(--primary);"><i class="fa-solid fa-list-ol"></i> Roster de Equipes:</strong><br>`;
+                    html += `<div class="teams-grid">`;
                     t.teams.forEach(team => {
                         const members = team.team_members || [];
-                        const epicNames = members.map(m => m.profiles ? m.profiles.epic_id : 'Desconhecido').join(', ');
+                        const epicNames = members.map(m => m.profiles ? m.profiles.epic_id : 'Desconhecido').join(' • ');
                         const isMember = currentUser ? members.some(m => m.user_id === currentUser.id) : false;
 
                         html += `
-                        <div class="team-item">
-                            <div>
-                                <span style="font-weight:bold; color:var(--text); font-size:1.1rem;"><i class="fa-solid fa-shield-halved"></i> ${team.name}</span>
-                                <div style="color:var(--text-muted); font-size:0.9rem;"><i class="fa-solid fa-user-group"></i> (${members.length}/${t.format}): <span style="color: var(--primary);">${epicNames}</span></div>
+                        <div class="team-box">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                <span style="font-weight:bold; font-size:1.2rem; color:var(--text);"><i class="fa-solid fa-shield-halved" style="color:var(--primary);"></i> ${team.name}</span>
+                                <span style="color:var(--text-muted); font-size:0.85rem; font-weight:bold;">${members.length}/${t.format}</span>
                             </div>
+                            <p style="color:var(--primary); font-size:0.85rem; margin-bottom:15px; line-height:1.4;">${epicNames}</p>
                             <div style="display:flex; gap: 5px;">`;
                         
                         if(currentUser) {
-                            if(isMember) html += `<button class="btn btn-outline" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="leaveTeam('${team.id}')"><i class="fa-solid fa-person-walking-arrow-right"></i> Sair</button>`;
-                            else if (members.length < t.format && statusOpen) html += `<button class="btn btn-success" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="joinTeam('${team.id}')"><i class="fa-solid fa-right-to-bracket"></i> Entrar</button>`;
+                            if(isMember) html += `<button class="btn btn-outline" style="width:100%; padding:0.4rem; font-size:0.8rem;" onclick="leaveTeam('${team.id}')"><i class="fa-solid fa-person-walking-arrow-right"></i> Sair da Equipe</button>`;
+                            else if (members.length < t.format && statusOpen) html += `<button class="btn btn-success" style="width:100%; padding:0.4rem; font-size:0.8rem;" onclick="joinTeam('${team.id}')"><i class="fa-solid fa-right-to-bracket"></i> Entrar na Equipe</button>`;
                         }
                         if (isAdmin || (currentUser && currentUser.id === team.captain_id)) {
-                             html += `<button class="btn btn-danger" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="deleteTeam('${team.id}')"><i class="fa-solid fa-trash"></i> Apagar</button>`;
+                             html += `<button class="btn btn-danger" style="width:auto; padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="deleteTeam('${team.id}')"><i class="fa-solid fa-trash"></i></button>`;
                         }
                         html += `</div></div>`;
                     });
                     html += `</div>`;
+                } else {
+                    html += `<p style="color:var(--text-muted); text-align:center; padding:20px; background:rgba(0,0,0,0.2); border-radius:8px;">Nenhuma equipe inscrita ainda.</p>`;
                 }
 
                 if (currentUser && statusOpen) {
-                    html += `<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-wrap:wrap;"><input type="text" id="teamName_${t.id}" placeholder="Nome para Criar um Novo Time" style="margin-bottom:0; flex: 1; min-width:200px;"><button class="btn" onclick="registerTeam('${t.id}')" style="width: auto;"><i class="fa-solid fa-plus"></i> Criar Time</button></div>`;
-                } else if (!currentUser) {
-                    html += `<p style="color: var(--secondary); margin-top: 1.5rem;"><i class="fa-solid fa-circle-info"></i> <em>Faça login para criar ou entrar em um time.</em></p>`;
+                    html += `<div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--border); display: flex; gap: 10px; flex-wrap:wrap;"><input type="text" id="teamName_${t.id}" placeholder="Nome do seu Time" style="margin-bottom:0; flex: 1; min-width:200px;"><button class="btn" onclick="registerTeam('${t.id}')" style="width: auto;"><i class="fa-solid fa-flag-checkered"></i> Criar Nova Equipe</button></div>`;
+                } else if (!currentUser && statusOpen) {
+                    html += `<p style="text-align:center; color: var(--secondary); margin-top: 20px;"><i class="fa-solid fa-circle-info"></i> <em>Faça login para criar ou entrar em uma equipe.</em></p>`;
                 }
-                if (isAdmin) html += `<button class="btn btn-danger" onclick="deleteTournament('${t.id}')" style="margin-top: 1.5rem; width: 100%;"><i class="fa-solid fa-triangle-exclamation"></i> Apagar Campeonato Todo</button>`;
-                html += `</div>`; listDiv.innerHTML += html;
+                
+                html += `</div></div>`; // Fecha teams-section e card
+                listDiv.innerHTML += html;
             });
         }
 
@@ -1039,7 +962,7 @@
             const prize1 = desformatarMoeda(document.getElementById('prize1').value), prize2 = desformatarMoeda(document.getElementById('prize2').value), prize3 = desformatarMoeda(document.getElementById('prize3').value);
 
             const { error } = await supabase.from('tournaments').insert([{ name, tournament_date: tDate, format, slots, entry_fee: fee, has_prize_1: hasP1, has_prize_2: hasP2, has_prize_3: hasP3, prize_1st: prize1, prize_2nd: prize2, prize_3rd: prize3 }]);
-            if (!error) { alert("Campeonato publicado com sucesso!"); e.target.reset(); ['prize1', 'prize2', 'prize3'].forEach(id => document.getElementById(id).style.display = 'none'); loadTournaments(); } else alert("Erro: " + error.message);
+            if (!error) { alert("Campeonato publicado!"); e.target.reset(); ['prize1', 'prize2', 'prize3'].forEach(id => document.getElementById(id).style.display = 'none'); loadTournaments(); } else alert("Erro: " + error.message);
         }
 
         function openEditModal(id, name, date, fee) { document.getElementById('editId').value = id; document.getElementById('editName').value = name; document.getElementById('editDate').value = date && date !== 'null' ? date : ''; document.getElementById('editFee').value = formatarMoedaShow(fee); document.getElementById('editModal').classList.add('active'); }
@@ -1049,7 +972,7 @@
             e.preventDefault();
             const id = document.getElementById('editId').value, name = document.getElementById('editName').value, date = document.getElementById('editDate').value, fee = desformatarMoeda(document.getElementById('editFee').value);
             const { error } = await supabase.from('tournaments').update({ name, tournament_date: date, entry_fee: fee }).eq('id', id);
-            if(!error) { alert("Atualizado!"); closeEditModal(); loadTournaments(); } else alert("Erro: " + error.message);
+            if(!error) { closeEditModal(); loadTournaments(); } else alert("Erro: " + error.message);
         }
 
         async function toggleTournamentStatus(id, currentStatus) { if(confirm(`Deseja ${currentStatus ? 'FECHAR' : 'ABRIR'} as inscrições?`)) { await supabase.from('tournaments').update({ is_open: !currentStatus }).eq('id', id); loadTournaments(); } }
@@ -1059,18 +982,18 @@
             const teamName = document.getElementById(`teamName_${tournamentId}`).value;
             if(!teamName) return alert("Digite um nome!");
             const { data, error } = await supabase.from('teams').insert([{ tournament_id: tournamentId, name: teamName, captain_id: currentUser.id }]).select().single();
-            if (error) { alert("Erro ao criar: " + error.message); return; }
+            if (error) return alert("Erro ao criar: " + error.message);
             await joinTeam(data.id, true);
         }
 
         async function joinTeam(teamId, isCreator = false) {
             const { error } = await supabase.from('team_members').insert([{ team_id: teamId, user_id: currentUser.id }]);
-            if (!error) { if(!isCreator) alert("Você entrou no time!"); loadTournaments(); } 
+            if (!error) { if(!isCreator) alert("Entrou na equipe!"); loadTournaments(); } 
             else alert(error.message.includes('duplicate key') ? "Você já está no time!" : "Erro: " + error.message);
         }
 
-        async function leaveTeam(teamId) { if(confirm("Deseja sair do time?")) { await supabase.from('team_members').delete().match({ team_id: teamId, user_id: currentUser.id }); loadTournaments(); } }
-        async function deleteTeam(teamId) { if(confirm("Confirmar a exclusão do time?")) { await supabase.from('teams').delete().eq('id', teamId); loadTournaments(); } }
+        async function leaveTeam(teamId) { if(confirm("Sair do time?")) { await supabase.from('team_members').delete().match({ team_id: teamId, user_id: currentUser.id }); loadTournaments(); } }
+        async function deleteTeam(teamId) { if(confirm("Excluir o time?")) { await supabase.from('teams').delete().eq('id', teamId); loadTournaments(); } }
 
         checkSession();
     </script>
