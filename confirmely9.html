@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conta Confirmada - LY9</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #0ea5e9; --secondary: #f97316; --bg: #0b0f19; --surface: #1e293b; --text: #f8fafc; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; padding: 20px; }
+        
+        .container { background-color: var(--surface); padding: 3rem 2rem; border-radius: 15px; border: 2px solid var(--success, #22c55e); box-shadow: 0 10px 40px rgba(34, 197, 94, 0.15); max-width: 500px; width: 100%; animation: slideUp 0.6s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .icon { font-size: 5rem; color: #22c55e; margin-bottom: 1.5rem; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform: scale(0); }
+        @keyframes popIn { to { transform: scale(1); } }
+        
+        h1 { margin-bottom: 1rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.2rem; }
+        p { color: #94a3b8; margin-bottom: 2.5rem; font-size: 1.1rem; line-height: 1.5; }
+        
+        .btn { background: linear-gradient(135deg, var(--primary), #0284c7); color: white; border: none; padding: 1rem 2rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 10px; transition: transform 0.3s, box-shadow 0.3s; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <i class="fa-solid fa-circle-check icon"></i>
+        <h1>Conta Ativada!</h1>
+        <p>Sua conta na <strong>Lyrics9Team</strong> foi confirmada com sucesso. Você já está pronto para acessar o portal, montar seu time e enviar seus pontos!</p>
+        <a href="index.html" class="btn"><i class="fa-solid fa-gamepad"></i> Ir para o Login</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Substitua pelas suas chaves exatas que estão no index.html
+        var supabaseUrl = 'https://qpdrvvjkokqrzzjjialy.supabase.co';
+        var supabaseKey = 'sb_publishable_rT-zGqAU4aruy6C03vgrCw_qFpqfeDV';
+        var supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // O Supabase lê automaticamente o token na URL e faz o login invisível aqui
+        supabase.auth.getSession().then(({ data }) => {
+            console.log("Sessão confirmada!");
+        });
+    </script>
+</body>
+</html>
