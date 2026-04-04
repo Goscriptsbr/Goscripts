@@ -325,23 +325,8 @@
         <section id="adminPanelTab">
             <h1><span class="gradient-text">Central de Administração</span></h1>
             
-            <div class="card fade-in-element">
-                <h2 style="color: var(--secondary);"><i class="fa-solid fa-clipboard-check"></i> Análise de Prints (Pontos)</h2>
-                <p style="margin-bottom: 1rem;">Confira os pontos solicitados por cada jogador na partida.</p>
-                <div id="pendingRequestsList">Carregando solicitações...</div>
-            </div>
-
-            <div class="card fade-in-element">
-                <h2><i class="fa-solid fa-users-gear"></i> Controle de Usuários</h2>
-                <div id="usersListContent">Carregando jogadores...</div>
-            </div>
-        </section>
-
-        <section id="tournaments">
-            <h1><span class="gradient-text">Circuito de Campeonatos</span></h1>
-            
-            <div id="adminTourBuilder" class="card admin-only fade-in-element">
-                <h3 style="color: var(--secondary); margin-bottom: 1.5rem;"><i class="fa-solid fa-gear"></i> Criar Campeonato Oficial</h3>
+            <div id="adminTourBuilder" class="card fade-in-element">
+                <h2 style="color: var(--primary); margin-bottom: 1.5rem;"><i class="fa-solid fa-trophy"></i> Criar Campeonato Oficial</h2>
                 <form onsubmit="createTournament(event)">
                     
                     <div style="margin-bottom: 15px;">
@@ -380,7 +365,7 @@
                     </div>
 
                     <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-                        <h4 style="margin-bottom: 15px; color: var(--text-muted);"><i class="fa-solid fa-trophy"></i> Premiações (Marque a caixinha para adicionar o valor)</h4>
+                        <h4 style="margin-bottom: 15px; color: var(--text-muted);"><i class="fa-solid fa-medal"></i> Premiações (Marque a caixinha para adicionar o valor)</h4>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
                             <div style="display: flex; flex-direction: column;">
                                 <label class="checkbox-group"><input type="checkbox" id="hasP1" onchange="togglePrizeInput('hasP1', 'prize1')"> 🥇 1º Lugar</label>
@@ -397,11 +382,28 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 20px;"><i class="fa-solid fa-paper-plane"></i> Publicar Campeonato</button>
+                    <button type="submit" class="btn" style="background: var(--primary); margin-top: 20px;"><i class="fa-solid fa-paper-plane"></i> Publicar Campeonato</button>
                 </form>
             </div>
+
+            <div class="card fade-in-element">
+                <h2 style="color: var(--secondary);"><i class="fa-solid fa-clipboard-check"></i> Análise de Prints (Pontos)</h2>
+                <p style="margin-bottom: 1rem;">Confira os pontos solicitados por cada jogador na partida.</p>
+                <div id="pendingRequestsList">Carregando solicitações...</div>
+            </div>
+
+            <div class="card fade-in-element">
+                <h2><i class="fa-solid fa-users-gear"></i> Controle de Usuários</h2>
+                <div id="usersListContent">Carregando jogadores...</div>
+            </div>
+        </section>
+
+        <section id="tournaments">
+            <h1><span class="gradient-text">Circuito de Campeonatos</span></h1>
             
-            <div id="tournamentsList"><p><i class="fa-solid fa-circle-notch fa-spin"></i> Buscando competições...</p></div>
+            <div id="tournamentsList">
+                <p><i class="fa-solid fa-circle-notch fa-spin"></i> Buscando competições...</p>
+            </div>
         </section>
     </main>
 
