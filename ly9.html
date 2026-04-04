@@ -716,28 +716,70 @@
 
             if(hasError) return alert("Por favor, digite os pontos de todos os amigos que você adicionou na lista.");
 
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'; 
+            btn.disabled = true;
 
-            const { error } = await supabase.from('point_requests').insert([{ 
-                user_id: currentUser.id, 
-                screenshot_url: imgBase64,
-                points_data: pointsData
-            }]);
-            
-            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Enviar para o Admin'; btn.disabled = false;
-            
-            if(!error) {
+            try {
+                // 1. Converte o Base64 (Comprimido) de volta para Arquivo Físico (Blob)
+                const arr = imgBase64.split(',');
+                const mime = arr[0].match(/:(.*?);/)[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while(n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                const blob = new Blob([u8arr], {type: mime});
+
+                // 2. Gera um nome único para o arquivo (usando o ID do jogador e a Data)
+                const ext = mime.split('/')[1] || 'jpeg';
+                const fileName = `${currentUser.id}_${Date.now()}.${ext}`;
+
+                // 3. Envia o arquivo para a pasta 'prints' no Supabase Storage
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('prints')
+                    .upload(fileName, blob, {
+                        contentType: mime,
+                        upsert: false
+                    });
+
+                if (uploadError) throw uploadError;
+
+                // 4. Pega o LINK público da imagem que acabou de ser salva
+                const { data: publicUrlData } = supabase.storage
+                    .from('prints')
+                    .getPublicUrl(fileName);
+                
+                const finalImageUrl = publicUrlData.publicUrl;
+
+                // 5. Salva a solicitação na Tabela do Banco de Dados com o Link Real
+                const { error: dbError } = await supabase.from('point_requests').insert([{ 
+                    user_id: currentUser.id, 
+                    screenshot_url: finalImageUrl,
+                    points_data: pointsData
+                }]);
+
+                if (dbError) throw dbError;
+
+                // Sucesso!
                 alert("Solicitação enviada com sucesso! Aguarde o Admin aprovar.");
                 document.getElementById('imagePreview').style.display = 'none';
                 document.getElementById('pointImage').value = '';
+                document.getElementById('compressedImageBase64').value = '';
                 document.getElementById('myRequestedPoints').value = '';
                 selectedTeammates = []; 
                 renderSelectedTeammates();
                 renderAvailableUsers();
                 loadMyRequests();
-            } else alert("Erro ao enviar: " + error.message);
-        }
 
+            } catch (error) {
+                alert("Erro ao enviar: " + error.message);
+            } finally {
+                // Devolve o botão ao normal mesmo se der erro
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Enviar para o Admin'; 
+                btn.disabled = false;
+            }
+        }
         async function loadMyRequests() {
             const div = document.getElementById('myRequestsList');
             div.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Carregando...';
