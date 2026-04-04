@@ -68,7 +68,7 @@
         .logo-text { font-size: 1.5rem; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 1px;}
         .logo-text span { color: var(--primary); }
         
-        .nav-links { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;}
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;}
         .nav-links button { color: var(--text); cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0.5rem 0.5rem; font-weight: 600; position: relative; }
         
         .nav-links button.nav-item::after { content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 50%; background-color: var(--primary); transition: all 0.3s ease; transform: translateX(-50%); }
@@ -85,7 +85,7 @@
         
         .menu-icon { display: none; font-size: 1.8rem; cursor: pointer; color: var(--text); background: none; border: none; transition: transform 0.3s ease; }
 
-        @media (max-width: 950px) {
+        @media (max-width: 900px) {
             .menu-icon { display: block; }
             .nav-links { 
                 position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; 
@@ -228,13 +228,22 @@
         <section id="auth">
             <div class="card fade-in-element" style="max-width: 450px; margin: 0 auto;">
                 <h2 id="authTitle" style="text-align: center; margin-bottom: 1.5rem; font-size: 2rem;" class="gradient-text">Acessar Portal</h2>
-                <form id="authForm" onsubmit="handleAuth(event)">
+                <form id="authForm" onsubmit="handleAuthSubmit(event)">
                     <input type="email" id="email" placeholder="Seu E-mail" required>
                     <input type="password" id="password" placeholder="Sua Senha" required>
-                    <input type="text" id="epic" placeholder="Sua Epic Games ID (Ex: JogadorPro123)">
+                    
+                    <input type="text" id="epic" placeholder="Sua Epic Games ID (Ex: JogadorPro123)" style="display: none;">
+                    
+                    <div id="forgotPassLinkContainer" style="text-align: right; margin-bottom: 1rem; font-size: 0.85rem;">
+                        <a href="#" onclick="setAuthState('forgot')" style="color: var(--primary); text-decoration: none; font-weight: 500;">Esqueci minha senha</a>
+                    </div>
+                    
                     <button type="submit" class="btn" id="authBtn"><i class="fa-solid fa-right-to-bracket"></i> Entrar</button>
                 </form>
-                <p style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem;">Não tem conta? <a href="#" onclick="toggleAuthMode()" style="color: var(--primary); font-weight: bold; text-decoration: none;">Cadastrar-se</a></p>
+                
+                <p id="authToggleText" style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem;">
+                    Não tem conta? <a href="#" onclick="setAuthState('signup')" style="color: var(--primary); font-weight: bold; text-decoration: none;">Cadastrar-se</a>
+                </p>
                 <p id="authMessage" style="color: var(--secondary); margin-top: 15px; text-align: center; font-weight: bold;"></p>
             </div>
         </section>
@@ -272,8 +281,7 @@
                         <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-user-group"></i> Pontos da Equipe (Opcional)</h3>
                         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px;">Adicione quem jogou com você e a pontuação deles.</p>
                         
-                        <div id="selectedTeammatesContainer" style="margin-bottom: 15px;">
-                            </div>
+                        <div id="selectedTeammatesContainer" style="margin-bottom: 15px;"></div>
 
                         <input type="text" id="searchUserInput" placeholder="Pesquisar por Epic ID ou ver Amigos Favoritos..." onkeyup="filterUserList()">
                         <div id="availableUsersList" style="max-height: 200px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">
@@ -340,7 +348,7 @@
                         <div><label class="checkbox-group"><input type="checkbox" id="hasP2" onchange="togglePrizeInput('hasP2', 'prize2')"> 2º Lugar</label><input type="text" class="money-mask" id="prize2" style="display:none;"></div>
                         <div><label class="checkbox-group"><input type="checkbox" id="hasP3" onchange="togglePrizeInput('hasP3', 'prize3')"> 3º Lugar</label><input type="text" class="money-mask" id="prize3" style="display:none;"></div>
                     </div>
-                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 15px;"><i class="fa-solid fa-paper-plane"></i> Publicar Campeonato</button>
+                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 15px;"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
                 </form>
             </div>
             <div id="tournamentsList"><p><i class="fa-solid fa-circle-notch fa-spin"></i> Buscando competições...</p></div>
@@ -376,8 +384,7 @@
 
         var currentUser = null;
         var userProfile = null;
-        var isSignup = false;
-
+        
         var allUsersCache = [];
         var myFriendsCache = [];
         var selectedTeammates = []; // Array: {id, epic_id, points(input)}
@@ -444,11 +451,46 @@
             setTimeout(checkScrollElements, 100);
         }
 
-        function toggleAuthMode() {
-            isSignup = !isSignup;
-            document.getElementById('authTitle').innerText = isSignup ? 'Criar Conta' : 'Acessar Portal';
-            document.getElementById('authBtn').innerHTML = isSignup ? '<i class="fa-solid fa-user-plus"></i> Cadastrar' : '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
-            document.getElementById('epic').style.display = isSignup ? 'block' : 'none'; document.getElementById('epic').required = isSignup;
+        // ==========================================
+        // SISTEMA DE AUTENTICAÇÃO (LOGIN/CADASTRO/SENHA)
+        // ==========================================
+        let authState = 'login'; // 'login', 'signup', 'forgot'
+
+        function setAuthState(state) {
+            authState = state;
+            const title = document.getElementById('authTitle');
+            const btn = document.getElementById('authBtn');
+            const pass = document.getElementById('password');
+            const epic = document.getElementById('epic');
+            const toggleText = document.getElementById('authToggleText');
+            const forgotLink = document.getElementById('forgotPassLinkContainer');
+            const msgBox = document.getElementById('authMessage');
+            
+            msgBox.innerHTML = '';
+            document.getElementById('authForm').reset();
+            
+            if(state === 'login') {
+                title.innerText = 'Acessar Portal';
+                pass.style.display = 'block'; pass.required = true;
+                epic.style.display = 'none'; epic.required = false;
+                forgotLink.style.display = 'block';
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
+                toggleText.innerHTML = 'Não tem conta? <a href="#" onclick="setAuthState(\'signup\')" style="color: var(--primary); font-weight: bold; text-decoration: none;">Cadastrar-se</a>';
+            } else if(state === 'signup') {
+                title.innerText = 'Criar Conta';
+                pass.style.display = 'block'; pass.required = true;
+                epic.style.display = 'block'; epic.required = true;
+                forgotLink.style.display = 'none';
+                btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Cadastrar';
+                toggleText.innerHTML = 'Já tem conta? <a href="#" onclick="setAuthState(\'login\')" style="color: var(--primary); font-weight: bold; text-decoration: none;">Fazer Login</a>';
+            } else if(state === 'forgot') {
+                title.innerText = 'Recuperar Senha';
+                pass.style.display = 'none'; pass.required = false;
+                epic.style.display = 'none'; epic.required = false;
+                forgotLink.style.display = 'none';
+                btn.innerHTML = '<i class="fa-solid fa-envelope"></i> Enviar Link';
+                toggleText.innerHTML = '<a href="#" onclick="setAuthState(\'login\')" style="color: var(--text-muted); font-weight: bold; text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Voltar para Login</a>';
+            }
         }
 
         function updateUI() {
@@ -467,7 +509,7 @@
             updateUI(); setTimeout(checkScrollElements, 200);
         }
 
-        async function handleAuth(e) {
+        async function handleAuthSubmit(e) {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -478,42 +520,35 @@
             msgBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processando...';
             
             try {
-                if (isSignup) {
-                    // CÓDIGO NOVO DE CADASTRO (COM REDIRECIONAMENTO DE E-MAIL)
+                if (authState === 'signup') {
                     const { error } = await supabase.auth.signUp({ 
-                        email, 
-                        password, 
-                        options: { 
-                            data: { epic_id: epic },
-                            emailRedirectTo: 'https://goscriptsbr.github.io/Goscripts/confirm.html'
-                        } 
+                        email, password, 
+                        options: { data: { epic_id: epic }, emailRedirectTo: 'https://goscriptsbr.github.io/Goscripts/confirm.html' } 
                     });
-                    
                     if (error) throw error;
-                    
-                    msgBox.style.color = "var(--secondary)"; 
-                    msgBox.innerHTML = "<i class='fa-solid fa-envelope-circle-check'></i> Quase lá! Enviamos um link de confirmação para o seu e-mail. Verifique a caixa de entrada e o Spam.";
-                    
-                    // Limpa o formulário para evitar cliques duplos
+                    msgBox.style.color = "var(--success)"; 
+                    msgBox.innerHTML = "<i class='fa-solid fa-envelope-circle-check'></i> Verifique seu e-mail para ativar a conta.";
                     document.getElementById('authForm').reset();
                     
-                } else {
-                    // CÓDIGO NORMAL DE LOGIN MANTIDO
+                } else if (authState === 'login') {
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    
                     msgBox.style.color = "var(--success)"; 
                     msgBox.innerHTML = "<i class='fa-solid fa-check'></i> Conectado!";
                     await checkSession(); 
-                    setTimeout(() => { 
-                        showSection('home'); 
-                        msgBox.innerText = ""; 
-                        document.getElementById('authForm').reset(); 
-                    }, 1000);
+                    setTimeout(() => { showSection('home'); msgBox.innerText = ""; document.getElementById('authForm').reset(); }, 1000);
+                    
+                } else if (authState === 'forgot') {
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: 'https://goscriptsbr.github.io/Goscripts/reset-password.html',
+                    });
+                    if (error) throw error;
+                    msgBox.style.color = "var(--success)"; 
+                    msgBox.innerHTML = "<i class='fa-solid fa-envelope-circle-check'></i> Link de recuperação enviado para o seu e-mail!";
+                    document.getElementById('authForm').reset();
                 }
             } catch (error) { 
                 msgBox.style.color = "var(--danger)"; 
-                // Traduz mensagem de credenciais inválidas para pt-BR
                 if(error.message.includes("Invalid login")) {
                     msgBox.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Erro: E-mail ou senha incorretos.";
                 } else {
@@ -521,6 +556,7 @@
                 }
             }
         }
+
         async function logout() { await supabase.auth.signOut(); currentUser = null; userProfile = null; updateUI(); showSection('home'); }
 
         // ==========================================
@@ -666,7 +702,6 @@
             
             if(!imgBase64) return alert("Por favor, selecione a imagem.");
             
-            // Reúne todos os pontos
             const myPts = parseInt(document.getElementById('myRequestedPoints').value);
             if(isNaN(myPts) || myPts <= 0) return alert("Digite os seus pontos.");
 
@@ -813,10 +848,8 @@
         }
 
         async function approveRequest(requestId) {
-            // Busca todos os inputs de pontos referentes a esta request
             const inputs = document.querySelectorAll(`input[id^="admin_pts_${requestId}_"]`);
             
-            // Loop distribuindo os pontos no Leaderboard
             for(let input of inputs) {
                 const uid = input.getAttribute('data-userid');
                 const pts = parseInt(input.value);
@@ -830,7 +863,6 @@
                 }
             }
 
-            // Marca como aprovado
             await supabase.from('point_requests').update({status: 'aprovado'}).eq('id', requestId);
             alert("Pontos distribuídos com sucesso a todos os jogadores!");
             loadPendingRequests();
