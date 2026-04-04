@@ -266,33 +266,37 @@
                 
                 <form onsubmit="submitPointRequest(event)">
                     <div style="margin-bottom: 15px;">
-                        <label style="color: var(--text); font-weight: bold; display:block; margin-bottom: 5px;">Imagem / Print (Até 3MB):</label>
+                        <label style="color: var(--text); font-weight: bold; display:block; margin-bottom: 5px;"><i class="fa-solid fa-image"></i> Imagem / Print da Partida (Até 3MB):</label>
                         <input type="file" id="pointImage" accept="image/*" required onchange="previewAndCompressImage(event)">
                     </div>
                     <img id="imagePreview" class="image-preview">
                     <input type="hidden" id="compressedImageBase64">
 
-                    <div style="margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--primary);">
-                        <h3 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-user"></i> Meus Pontos</h3>
-                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                            <strong style="flex:1;"><i class="fa-solid fa-gamepad"></i> <span id="myEpicDisplay">...</span></strong>
-                            <input type="number" id="myRequestedPoints" placeholder="Pts" required min="1" style="width:100px; margin:0; text-align:center;">
+                    <div style="margin-top: 20px; background: rgba(14, 165, 233, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--primary);">
+                        <h3 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-user-astronaut"></i> Minha Pontuação</h3>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; background: var(--surface); padding: 10px 15px; border-radius: 8px;">
+                            <span style="flex:1; font-weight:bold; font-size: 1.1rem; color: var(--text);"><i class="fa-solid fa-gamepad" style="color:var(--primary);"></i> <span id="myEpicDisplay">Você</span></span>
+                            <input type="number" id="myRequestedPoints" placeholder="Pontos" required min="1" style="width:110px; margin:0; text-align:center; font-weight:bold; border-color: var(--primary);">
                         </div>
                     </div>
 
                     <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
-                        <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-user-group"></i> Pontos da Equipe (Opcional)</h3>
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px;">Adicione quem jogou com você e a pontuação deles.</p>
+                        <h3 style="margin-bottom: 5px;"><i class="fa-solid fa-users"></i> Companheiros de Equipe</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Adicione seus amigos e insira os pontos que eles fizeram.</p>
                         
-                        <div id="selectedTeammatesContainer" style="margin-bottom: 15px;"></div>
+                        <div id="selectedTeammatesContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;"></div>
 
-                        <input type="text" id="searchUserInput" placeholder="Pesquisar por Epic ID ou ver Amigos Favoritos..." onkeyup="filterUserList()">
+                        <div style="position: relative;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                            <input type="text" id="searchUserInput" placeholder="Buscar Epic ID ou ver Favoritos..." onkeyup="filterUserList()" style="padding-left: 45px; margin-bottom: 5px;">
+                        </div>
+                        
                         <div id="availableUsersList" style="max-height: 200px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px;">
                             <p style="text-align:center;"><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando jogadores...</p>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn" style="margin-top: 20px;" id="btnSubmitPoint"><i class="fa-solid fa-cloud-arrow-up"></i> Enviar para o Admin</button>
+                    <button type="submit" class="btn" style="margin-top: 25px; font-size: 1.1rem;" id="btnSubmitPoint"><i class="fa-solid fa-paper-plane"></i> Enviar Pontuações</button>
                 </form>
 
                 <h3 style="margin-top: 3rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Minhas Solicitações</h3>
@@ -337,21 +341,63 @@
             <h1><span class="gradient-text">Circuito de Campeonatos</span></h1>
             
             <div id="adminTourBuilder" class="card admin-only fade-in-element">
-                <h3 style="color: var(--secondary); margin-bottom: 1rem;"><i class="fa-solid fa-gear"></i> Criar Campeonato Oficial</h3>
+                <h3 style="color: var(--secondary); margin-bottom: 1.5rem;"><i class="fa-solid fa-gear"></i> Criar Campeonato Oficial</h3>
                 <form onsubmit="createTournament(event)">
-                    <input type="text" id="tourName" placeholder="Nome do Campeonato" required>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-                        <input type="date" id="tourDate" required>
-                        <select id="tourFormat" required><option value="" disabled selected>Formato</option><option value="1">1v1</option><option value="2">2v2</option><option value="3">3v3</option><option value="4">4v4</option></select>
-                        <select id="tourSlots" required><option value="" disabled selected>Máx. Times</option><option value="0">Ilimitado</option><option value="4">4 Times</option><option value="8">8 Times</option><option value="16">16 Times</option><option value="32">32 Times</option></select>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; display: block;">Nome da Competição</label>
+                        <input type="text" id="tourName" placeholder="Ex: Copa de Inverno LY9" required style="margin-bottom: 0;">
                     </div>
-                    <input type="text" class="money-mask" id="tourFee" placeholder="Taxa Inscrição (Deixe R$ 0,00 se grátis)" required>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px;">
-                        <div><label class="checkbox-group"><input type="checkbox" id="hasP1" onchange="togglePrizeInput('hasP1', 'prize1')"> 1º Lugar</label><input type="text" class="money-mask" id="prize1" style="display:none;"></div>
-                        <div><label class="checkbox-group"><input type="checkbox" id="hasP2" onchange="togglePrizeInput('hasP2', 'prize2')"> 2º Lugar</label><input type="text" class="money-mask" id="prize2" style="display:none;"></div>
-                        <div><label class="checkbox-group"><input type="checkbox" id="hasP3" onchange="togglePrizeInput('hasP3', 'prize3')"> 3º Lugar</label><input type="text" class="money-mask" id="prize3" style="display:none;"></div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                        <div style="display: flex; flex-direction: column;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Data de Início</label>
+                            <input type="date" id="tourDate" required style="margin-bottom: 0;">
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Formato</label>
+                            <select id="tourFormat" required style="margin-bottom: 0;">
+                                <option value="1">1v1</option>
+                                <option value="2">2v2</option>
+                                <option value="3" selected>3v3</option>
+                                <option value="4">4v4</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Limite de Times</label>
+                            <select id="tourSlots" required style="margin-bottom: 0;">
+                                <option value="0">Ilimitado</option>
+                                <option value="4">4 Times</option>
+                                <option value="8">8 Times</option>
+                                <option value="16" selected>16 Times</option>
+                                <option value="32">32 Times</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Taxa Inscrição (R$)</label>
+                            <input type="text" class="money-mask" id="tourFee" placeholder="Deixe 0 se grátis" required style="margin-bottom: 0;">
+                        </div>
                     </div>
-                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 15px;"><i class="fa-solid fa-paper-plane"></i> Publicar Campeonato</button>
+
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 15px; color: var(--text-muted);"><i class="fa-solid fa-trophy"></i> Premiações (Marque a caixinha para adicionar o valor)</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+                            <div style="display: flex; flex-direction: column;">
+                                <label class="checkbox-group"><input type="checkbox" id="hasP1" onchange="togglePrizeInput('hasP1', 'prize1')"> 🥇 1º Lugar</label>
+                                <input type="text" class="money-mask" id="prize1" placeholder="R$ 0,00" style="display:none; margin-bottom: 0; margin-top: 5px;">
+                            </div>
+                            <div style="display: flex; flex-direction: column;">
+                                <label class="checkbox-group"><input type="checkbox" id="hasP2" onchange="togglePrizeInput('hasP2', 'prize2')"> 🥈 2º Lugar</label>
+                                <input type="text" class="money-mask" id="prize2" placeholder="R$ 0,00" style="display:none; margin-bottom: 0; margin-top: 5px;">
+                            </div>
+                            <div style="display: flex; flex-direction: column;">
+                                <label class="checkbox-group"><input type="checkbox" id="hasP3" onchange="togglePrizeInput('hasP3', 'prize3')"> 🥉 3º Lugar</label>
+                                <input type="text" class="money-mask" id="prize3" placeholder="R$ 0,00" style="display:none; margin-bottom: 0; margin-top: 5px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" style="background: var(--secondary); margin-top: 20px;"><i class="fa-solid fa-paper-plane"></i> Publicar Campeonato</button>
                 </form>
             </div>
             
@@ -609,16 +655,21 @@
             renderAvailableUsers(document.getElementById('searchUserInput').value);
         }
 
-        function renderSelectedTeammates() {
+       function renderSelectedTeammates() {
             const container = document.getElementById('selectedTeammatesContainer');
-            if(selectedTeammates.length === 0) { container.innerHTML = ''; return; }
+            if(selectedTeammates.length === 0) { 
+                container.innerHTML = ''; 
+                return; 
+            }
+            
             let html = '';
             selectedTeammates.forEach(tm => {
                 html += `
-                <div style="display:flex; align-items:center; gap:10px; background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:5px;">
-                    <i class="fa-solid fa-gamepad" style="color:var(--text-muted);"></i> <span style="flex:1; font-weight:bold;">${tm.epic_id}</span>
-                    <input type="number" id="tm_pts_${tm.id}" placeholder="Pts" required min="1" style="width:90px; margin:0; text-align:center;">
-                    <button type="button" class="btn btn-danger" style="width:auto; padding:0.6rem;" onclick="removeTeammate('${tm.id}')" title="Remover"><i class="fa-solid fa-xmark"></i></button>
+                <div style="display:flex; align-items:center; gap:10px; background:var(--surface); padding:10px 15px; border-radius:8px; border:1px dashed var(--secondary);">
+                    <i class="fa-solid fa-user-group" style="color:var(--secondary);"></i>
+                    <span style="flex:1; font-weight:bold; font-size: 1.05rem;">${tm.epic_id}</span>
+                    <input type="number" id="tm_pts_${tm.id}" placeholder="Pontos" required min="1" style="width:100px; margin:0; text-align:center; font-weight:bold; border-color:var(--secondary);">
+                    <button type="button" class="btn btn-danger" style="width:auto; padding:0.6rem 0.8rem;" onclick="removeTeammate('${tm.id}')" title="Remover"><i class="fa-solid fa-trash"></i></button>
                 </div>`;
             });
             container.innerHTML = html;
