@@ -7,7 +7,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -16,7 +16,7 @@
             --primary: #3b82f6; 
             --primary-hover: #2563eb;
             --secondary: #8b5cf6;
-            --dark-bg: #0d1117; 
+            --dark-bg: #000000;
             --card-bg: rgba(22, 27, 34, 0.6); 
             --text-main: #f0f6fc;
             --text-muted: #8b949e;
@@ -38,14 +38,97 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--dark-bg);
+            background-color: transparent; /* Deixando transparente para ver o fundo fixo */
             color: var(--text-main);
             line-height: 1.6;
             overflow-x: hidden;
+            overscroll-behavior: none;
         }
 
         a { text-decoration: none; color: inherit; }
         ul { list-style: none; }
+
+        /* --- FUNDO ANIMADO GERAL (SITE INTEIRO) --- */
+        .site-bg-container {
+            position: fixed; /* Fixa no fundo da tela */
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1; /* Joga para trás de tudo */
+            background: var(--dark-bg);
+            overflow: hidden;
+        }
+
+        .gradient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.25;
+            will-change: transform;
+        }
+
+        .blob1 {
+            width: 70vmax;
+            height: 70vmax;
+            background: radial-gradient(circle, #2a7de1 0%, transparent 60%);
+            top: -30%;
+            left: -20%;
+            animation: float1 22s ease-in-out infinite alternate;
+        }
+
+        .blob2 {
+            width: 60vmax;
+            height: 60vmax;
+            background: radial-gradient(circle, #00c6ff 0%, transparent 60%);
+            bottom: -25%;
+            right: -15%;
+            animation: float2 26s ease-in-out infinite alternate;
+        }
+
+        @keyframes float1 {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            100% { transform: translate(8%, 5%) scale(1.15) rotate(10deg); }
+        }
+
+        @keyframes float2 {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            100% { transform: translate(-10%, -8%) scale(1.1) rotate(-10deg); }
+        }
+
+        .grid-bg {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+        }
+
+        .particles-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .site-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .site-noise {
+            position: absolute;
+            inset: 0;
+            opacity: 0.015;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)"/></svg>');
+            z-index: 3;
+            pointer-events: none;
+        }
 
         /* --- 2. Elementos de Layout --- */
         .container {
@@ -64,7 +147,8 @@
         .section-title h2 {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fff 0%, #00c6ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.75rem;
@@ -79,7 +163,6 @@
 
         section { padding: 6rem 0; position: relative; }
 
-        /* Scroll Reveal Animation */
         .reveal {
             opacity: 0;
             transform: translateY(30px);
@@ -96,7 +179,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            background: rgba(13, 17, 23, 0.7);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             z-index: 1000;
@@ -107,7 +190,7 @@
 
         .navbar.scrolled {
             padding: 0.8rem 0;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 30px rgba(0, 198, 255, 0.1);
         }
 
         .nav-container {
@@ -119,6 +202,7 @@
         .logo {
             font-size: 1.6rem;
             font-weight: 800;
+            font-family: 'Poppins', sans-serif;
             color: var(--text-main);
             display: flex;
             align-items: center;
@@ -127,7 +211,7 @@
         }
 
         .logo i {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            background: linear-gradient(45deg, #2a7de1, #00c6ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -152,7 +236,7 @@
             height: 2px;
             bottom: -5px;
             left: 0;
-            background-color: var(--primary);
+            background-color: #00c6ff;
             transition: width 0.3s ease;
         }
 
@@ -169,107 +253,117 @@
             justify-content: center;
             text-align: center;
             overflow: hidden;
+            
+            /* SUA IMAGEM DE FUNDO DO CABEÇALHO AQUI */
+            background-image: url('URL_DA_SUA_IMAGEM_AQUI');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
-        .hero-bg-container {
+        /* Camada escura apenas em cima da imagem do Header para o texto ficar legível */
+        header::before {
+            content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 1;
         }
 
-        .hero-bg-img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            transform-origin: center center; 
-            will-change: transform, opacity;
+        .hero-content { 
+            z-index: 10; 
+            position: relative; 
         }
-
-        .hero-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(180deg, rgba(13, 17, 23, 0.4) 0%, var(--dark-bg) 100%);
-            z-index: -1;
-        }
-
-        .hero-content { z-index: 2; position: relative; }
 
         .hero-content h1 {
             font-size: clamp(2.5rem, 6vw, 4.5rem);
             font-weight: 800;
+            font-family: 'Poppins', sans-serif;
             line-height: 1.1;
             margin-bottom: 1.5rem;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            letter-spacing: -1px;
         }
 
-        /* Efeito de Gradiente Animado no Texto */
-        .hero-content span.gradient-text { 
-            background: linear-gradient(270deg, #3b82f6, #a78bfa, #3b82f6);
-            background-size: 200% 200%;
+        /* TEXTO GLOW */
+        .glow-text {
+            background: linear-gradient(to right, #2a7de1, #56a8ff, #00c6ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: gradientMove 4s ease infinite;
+            text-shadow: 0 0 20px rgba(0,198,255,0.5), 0 0 40px rgba(42,125,225,0.4), 0 0 80px rgba(42,125,225,0.2);
+            animation: glowPulse 3s ease-in-out infinite alternate;
+            display: inline-block;
         }
 
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes glowPulse {
+            0% { filter: drop-shadow(0 0 10px rgba(0,198,255,0.3)); }
+            100% { filter: drop-shadow(0 0 25px rgba(0,198,255,0.7)); }
         }
 
         .hero-content p {
             font-size: 1.25rem;
-            color: #d0d7de;
+            color: rgba(255,255,255,0.7);
             max-width: 750px;
             margin: 0 auto 3rem auto;
-            min-height: 60px; /* Evita pulo na tela durante a digitação */
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            min-height: 60px;
         }
 
         .typing-cursor {
             display: inline-block;
             width: 3px;
             height: 1.2em;
-            background-color: var(--primary);
+            background-color: #00c6ff;
             vertical-align: middle;
             animation: blink 0.8s step-end infinite;
         }
 
         @keyframes blink { 50% { opacity: 0; } }
 
-        .btn {
+        /* BOTÃO */
+        .btn-glow {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            background: var(--primary);
+            background: linear-gradient(to right, #2a7de1, #00c6ff);
             color: #fff;
-            padding: 1rem 2.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
+            padding: 1.2rem 3rem;
+            border-radius: 2rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
             transition: var(--transition);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 30px rgba(0,198,255,0.4);
+            border: 1px solid rgba(255,255,255,0.2);
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            animation: pulseBtn 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
-        .btn::before {
+        .btn-glow::after {
             content: '';
             position: absolute;
-            top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: all 0.5s ease;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg);
+            animation: shine 3s ease-in-out infinite;
         }
 
-        .btn:hover::before { left: 100%; }
-        .btn:hover {
-            transform: translateY(-3px);
-            background: var(--primary-hover);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
+        .btn-glow:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(0,198,255,0.6);
         }
 
-        /* --- 5. Serviços (Efeito Glass e Glow) --- */
+        @keyframes pulseBtn {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0,198,255,0.7); }
+            50% { transform: scale(1.03); box-shadow: 0 0 0 15px rgba(0,198,255,0); }
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            50%, 100% { left: 200%; }
+        }
+
+        /* --- 5. Serviços --- */
         .services-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -278,39 +372,39 @@
         }
 
         .card {
-            background: var(--card-bg);
+            background: rgba(20, 20, 25, 0.7);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             padding: 2.5rem;
-            border-radius: 16px;
-            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
             transition: var(--transition);
             position: relative;
             overflow: hidden;
         }
 
-        .card::before {
+        .card::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            inset: 0;
+            background: linear-gradient(to bottom right, rgba(42,125,225,0.1), transparent);
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease;
         }
 
         .card:hover {
             transform: translateY(-10px);
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 15px 40px -10px rgba(59, 130, 246, 0.2);
+            border-color: rgba(0, 198, 255, 0.3);
+            box-shadow: 0 15px 40px -10px rgba(0, 198, 255, 0.2);
         }
 
-        .card:hover::before { opacity: 1; }
+        .card:hover::after { opacity: 1; }
 
         .card i {
             font-size: 1.8rem;
-            color: var(--primary);
+            color: #00c6ff;
             margin-bottom: 1.5rem;
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(0, 198, 255, 0.1);
             width: 60px;
             height: 60px;
             display: flex;
@@ -318,16 +412,18 @@
             justify-content: center;
             border-radius: 12px;
             transition: var(--transition);
+            position: relative;
+            z-index: 2;
         }
 
         .card:hover i {
-            background: var(--primary);
+            background: linear-gradient(45deg, #2a7de1, #00c6ff);
             color: #fff;
             transform: scale(1.1) rotate(5deg);
         }
 
-        .card h3 { font-size: 1.35rem; margin-bottom: 0.75rem; color: var(--text-main); }
-        .card p { font-size: 1rem; color: var(--text-muted); }
+        .card h3 { font-size: 1.35rem; margin-bottom: 0.75rem; color: var(--text-main); position: relative; z-index: 2;}
+        .card p { font-size: 1rem; color: var(--text-muted); position: relative; z-index: 2;}
 
         /* --- 6. Portfólio --- */
         .carousel-wrapper {
@@ -336,7 +432,8 @@
             overflow: hidden;
             border: 1px solid var(--border);
             height: 500px; 
-            background: #0d1117; 
+            background: rgba(13, 17, 23, 0.8); /* Fundo com leve transparência */
+            backdrop-filter: blur(5px);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
@@ -352,7 +449,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
+            background: radial-gradient(circle at center, rgba(22, 27, 34, 0.8) 0%, rgba(13, 17, 23, 0.9) 100%);
             position: relative;
         }
 
@@ -368,7 +465,7 @@
         .carousel-images a:hover img { 
             transform: scale(1.08); 
             opacity: 1; 
-            filter: drop-shadow(0 0 20px rgba(255,255,255,0.1));
+            filter: drop-shadow(0 0 20px rgba(0,198,255,0.2));
         }
 
         .nav-btn {
@@ -390,7 +487,7 @@
             justify-content: center;
             font-size: 1.2rem;
         }
-        .nav-btn:hover { background: var(--primary); border-color: var(--primary); }
+        .nav-btn:hover { background: #00c6ff; border-color: #00c6ff; box-shadow: 0 0 15px rgba(0,198,255,0.5);}
         .prev { left: 20px; }
         .next { right: 20px; }
 
@@ -403,12 +500,12 @@
         }
 
         .contact-info-box {
-            background: var(--card-bg);
+            background: rgba(20, 20, 25, 0.7);
             backdrop-filter: blur(10px);
             padding: 1.5rem;
             border-radius: 12px;
             margin-bottom: 1.2rem;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255,255,255,0.05);
             display: flex;
             align-items: center;
             gap: 1.2rem;
@@ -416,36 +513,36 @@
         }
         
         .contact-info-box:hover {
-            border-color: rgba(59, 130, 246, 0.3);
+            border-color: rgba(0, 198, 255, 0.3);
             transform: translateX(10px);
         }
 
         .contact-icon {
             width: 50px;
             height: 50px;
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(0, 198, 255, 0.1);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--primary);
+            color: #00c6ff;
             font-size: 1.2rem;
         }
 
         .form-box {
-            background: var(--card-bg);
+            background: rgba(20, 20, 25, 0.7);
             backdrop-filter: blur(10px);
             padding: 3rem;
             border-radius: 16px;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
 
         .form-input {
             width: 100%;
             padding: 1rem 1.2rem;
-            background: rgba(13, 17, 23, 0.8);
-            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 8px;
             color: #fff;
             margin-bottom: 1.5rem;
@@ -455,15 +552,16 @@
 
         .form-input:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
-            background: #0d1117;
+            border-color: #00c6ff;
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.2);
+            background: #000;
         }
 
         textarea.form-input { resize: vertical; min-height: 150px; }
 
         footer {
-            background: #010409;
+            background: rgba(0, 0, 0, 0.6); /* Leve transparência */
+            backdrop-filter: blur(10px);
             padding: 3rem 0;
             border-top: 1px solid var(--border);
             text-align: center;
@@ -514,6 +612,15 @@
 </head>
 <body>
 
+    <div class="site-bg-container">
+        <div class="grid-bg"></div>
+        <div class="blob1 gradient-blob"></div>
+        <div class="blob2 gradient-blob"></div>
+        <canvas id="particles" class="particles-canvas"></canvas>
+        <div class="site-overlay"></div>
+        <div class="site-noise"></div>
+    </div>
+
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
             <div class="logo"><i class="fas fa-terminal"></i> GoScripts</div>
@@ -527,17 +634,11 @@
     </nav>
 
     <header id="home">
-        <div class="hero-bg-container">
-            <img src="https://gozgames.neocities.org/1745943001077.jpg" alt="Background" class="hero-bg-img" id="heroBg">
-        </div>
-        
-        <div class="hero-overlay"></div>
-
         <div class="container hero-content">
             <div class="reveal">
-                <h1>Sistemas e sites empresariais<br><span class="gradient-text">Melhor preço do mercado</span></h1>
+                <h1>Sistemas e sites para<br><span class="glow-text">o seu negócio</span></h1>
                 <p><span id="typewriter"></span><span class="typing-cursor"></span></p>
-                <a href="#contact" class="btn">
+                <a href="#contact" class="btn-glow">
                     Solicitar Orçamento <i class="fas fa-arrow-right" style="margin-left:8px"></i>
                 </a>
             </div>
@@ -603,7 +704,7 @@
             </div>
         </section>
 
-        <section id="contact" style="background: linear-gradient(to top, #010409, var(--dark-bg));">
+        <section id="contact" style="background: transparent;">
             <div class="container">
                 <div class="section-title reveal">
                     <h2>Vamos Conversar?</h2>
@@ -627,10 +728,10 @@
                             </div>
                         </div>
                         
-                        <div style="margin-top: 2rem; padding: 2.5rem; border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 16px; text-align: center; background: rgba(59, 130, 246, 0.05);">
+                        <div style="margin-top: 2rem; padding: 2.5rem; border: 1px dashed rgba(0, 198, 255, 0.4); border-radius: 16px; text-align: center; background: rgba(0, 198, 255, 0.05); backdrop-filter: blur(10px);">
                             <h3 style="margin-bottom: 1rem; color: #fff;">Prefere atendimento imediato?</h3>
                             <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Nossa equipe está online agora para tirar suas dúvidas.</p>
-                            <a href="https://wa.me/5519983198544" class="btn" style="background: var(--whatsapp); width: 100%; border: none; box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2);">
+                            <a href="https://wa.me/5519983198544" class="btn-glow" style="background: var(--whatsapp); width: 100%; border: none; box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2); animation: none; padding: 1rem;">
                                 <i class="fab fa-whatsapp"></i> Chamar no WhatsApp
                             </a>
                         </div>
@@ -641,7 +742,7 @@
                             <input type="text" id="nome" class="form-input" placeholder="Seu Nome Completo" required>
                             <input type="email" id="email" class="form-input" placeholder="Seu melhor E-mail" required>
                             <textarea id="mensagem" class="form-input" placeholder="Conte um pouco sobre o seu projeto..." required></textarea>
-                            <button type="submit" class="btn" style="width: 100%; justify-content: center;">Enviar Mensagem <i class="fas fa-paper-plane"></i></button>
+                            <button type="submit" class="btn-glow" style="width: 100%; justify-content: center; padding: 1rem; animation:none;">Enviar Mensagem <i class="fas fa-paper-plane"></i></button>
                         </form>
                     </div>
                 </div>
@@ -651,7 +752,7 @@
 
     <footer>
         <div class="container">
-            <span style="font-size: 1.5rem; font-weight: 800; color:#fff; display:block; margin-bottom:10px; letter-spacing: -0.5px;"><i class="fas fa-terminal" style="color:var(--primary)"></i> GoScripts.</span>
+            <span style="font-size: 1.5rem; font-weight: 800; font-family:'Poppins', sans-serif; color:#fff; display:block; margin-bottom:10px; letter-spacing: -0.5px;"><i class="fas fa-terminal" style="color:#00c6ff"></i> GoScripts.</span>
             <p>&copy; 2025 GoScripts Soluções Digitais. Todos os direitos reservados.</p>
         </div>
     </footer>
@@ -671,21 +772,97 @@
             }
         });
 
-        // --- 2. LÓGICA DO ZOOM & FADE NO SCROLL (Hero Effect) ---
-        const heroImg = document.getElementById('heroBg');
-        window.addEventListener('scroll', function() {
-            let scrollPosition = window.scrollY;
-            if (scrollPosition < 900) {
-                let scaleValue = 1 + (scrollPosition / 2500);
-                let opacityValue = 1 - (scrollPosition / 700);
-                if (opacityValue < 0) opacityValue = 0;
-                heroImg.style.transform = `scale(${scaleValue})`;
-                heroImg.style.opacity = opacityValue;
-            }
-        });
+        // --- 2. Animação do Canvas (Partículas da Propaganda) ---
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d', { alpha: true });
+        let particles = [];
+        let width = 0, height = 0;
+        const isMobile = window.innerWidth < 768;
+        const particleCount = isMobile ? 40 : 80;
+        const maxDist = isMobile ? 100 : 140;
 
-        // --- 3. Máquina de Escrever (Typing Effect) ---
-        const textToType = "Somos a GoScripts, transformando suas ideias em sites e sistemas incríveis.";
+        function resize() {
+            width = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+            height = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            initParticles();
+        }
+
+        function initParticles() {
+            particles = [];
+            const w = canvas.offsetWidth;
+            const h = canvas.offsetHeight;
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    r: Math.random() * 1.5 + 0.5
+                });
+            }
+        }
+
+        function animateParticles() {
+            const w = canvas.offsetWidth;
+            const h = canvas.offsetHeight;
+            ctx.clearRect(0, 0, w, h);
+            
+            // Atualiza as posições
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > w) p.vx *= -1;
+                if (p.y < 0 || p.y > h) p.vy *= -1;
+            });
+
+            // Conexões
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const a = particles[i], b = particles[j];
+                    const dx = a.x - b.x, dy = a.y - b.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < maxDist) {
+                        const opacity = (1 - dist / maxDist) * 0.15;
+                        const gradient = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+                        gradient.addColorStop(0, `rgba(42,125,225,${opacity})`);
+                        gradient.addColorStop(1, `rgba(0,198,255,${opacity})`);
+                        ctx.strokeStyle = gradient;
+                        ctx.beginPath();
+                        ctx.moveTo(a.x, a.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Desenha as partículas
+            particles.forEach(p => {
+                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
+                gradient.addColorStop(0, 'rgba(0,198,255,0.8)');
+                gradient.addColorStop(0.5, 'rgba(42,125,225,0.4)');
+                gradient.addColorStop(1, 'rgba(42,125,225,0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'rgba(180,220,255,0.9)';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animateParticles();
+
+        // --- 3. Máquina de Escrever ---
+        const textToType = "Melhor preço do mercado. Transformando suas ideias em sites e sistemas incríveis.";
         const typeWriterElement = document.getElementById('typewriter');
         let typeIndex = 0;
 
@@ -693,13 +870,12 @@
             if (typeIndex < textToType.length) {
                 typeWriterElement.innerHTML += textToType.charAt(typeIndex);
                 typeIndex++;
-                setTimeout(typeWriter, 40); // Velocidade da digitação
+                setTimeout(typeWriter, 40);
             }
         }
-        // Inicia após um pequeno delay
         setTimeout(typeWriter, 500);
 
-        // --- 4. Intersection Observer (Substitui o antigo Reveal por performance) ---
+        // --- 4. Intersection Observer (Scroll Fade-in) ---
         const observerOptions = {
             root: null,
             rootMargin: '0px',
@@ -710,7 +886,7 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
-                    observer.unobserve(entry.target); // Para de observar após animar (melhora performance)
+                    observer.unobserve(entry.target); 
                 }
             });
         }, observerOptions);
