@@ -564,7 +564,17 @@ let animationFrameId;
 
 let unlocks = { hasDoubleJump: false, unlockedNinja: false, unlockedRobot: false, currentCharacter: 'normal', maxLevel: 0 };
 let doubleJumpUsed = false;
+
+// --- DADOS DO NOVO MAPA MUNDIAL NO CANVAS ---
 let mapCurrentNode = 0;
+let mapTargetNode = 0;
+const mapNodes = [];
+for (let i = 0; i < 20; i++) {
+    let row = Math.floor(i / 3);
+    let col = row % 2 === 0 ? (i % 3) : 2 - (i % 3);
+    // Cria um caminho em ziguezague descendo a tela infinitamente
+    mapNodes.push({ x: 80 + col * 100, y: 150 + i * 90 }); 
+}
 
 // --- SISTEMA DE SAVE ---
 function saveGame() { localStorage.setItem('superGatoSave', JSON.stringify({ level: unlocks.maxLevel, lives: lives, score: score, unlocks: unlocks })); }
@@ -645,58 +655,20 @@ document.getElementById('btnNextPhase').onclick = () => {
 };
 
 function showMap() {
-    state = 'map';
+    state = 'worldmap'; // Ativa a engine de mapa 2D
+    document.getElementById('mapScreen').style.display = 'none'; // Esconde aquele mapa HTML feio pra sempre
     document.getElementById('minimapContainer').style.display = 'none';
-    document.getElementById('mapScreen').style.display = 'flex';
-    renderMap();
-}
-
-function moveMap(dir) {
-    let nextNode = mapCurrentNode + dir;
-    if (nextNode >= 0 && nextNode <= unlocks.maxLevel && nextNode < levels.length) {
-        mapCurrentNode = nextNode;
-        renderMap();
-    }
-}
-
-function enterMapLevel() {
-    document.getElementById('mapScreen').style.display = 'none';
-    document.getElementById('minimapContainer').style.display = 'block';
-    loadLevel(mapCurrentNode);
-}
-
-function renderMap() {
-    const container = document.getElementById('mapNodesContainer');
-    container.innerHTML = '';
     
-    // Desenha as linhas entre os níveis
-    ctx.clearRect(0,0, canvas.width, canvas.height); // Limpa sujeira
-    
-    for(let i=0; i < levels.length; i++) {
-        let row = Math.floor(i / 4); let col = i % 4;
-        if (row % 2 !== 0) col = 3 - col; // Caminho em Zig-Zag (S)
-        let x = 40 + col * 75; let y = 30 + row * 65;
-        
-        let color = i <= unlocks.maxLevel ? '#e74c3c' : '#7f8c8d'; // Vermelho se liberado, Cinza se bloqueado
-        let shadow = i === mapCurrentNode ? '0 0 15px #f1c40f' : '0 4px 8px rgba(0,0,0,0.5)';
-        let border = i === mapCurrentNode ? '#f1c40f' : '#fff';
-        
-        // Ponto do Mapa
-        container.innerHTML += `<div style="position:absolute; left:${x}px; top:${y}px; width:22px; height:22px; background:${color}; border-radius:50%; border:4px solid ${border}; box-shadow: ${shadow}; transition: all 0.2s;"></div>`;
-        
-        // Número da Fase
-        container.innerHTML += `<div style="position:absolute; left:${x-5}px; top:${y+30}px; color:#fff; font-weight:bold; text-shadow:1px 1px #000;">${i+1}</div>`;
-        
-        // O Gato em cima da fase atual
-        if (i === mapCurrentNode) {
-            container.innerHTML += `<i class="fa-solid fa-cat" style="position:absolute; left:${x-2}px; top:${y-30}px; color:#f1c40f; font-size:32px; text-shadow: 2px 2px #000; z-index:10; animation: bounce 0.5s infinite;"></i>`;
-        }
-    }
+    // Coloca o gato na posição exata da fase no Canvas
+    player.x = mapNodes[mapCurrentNode].x;
+    player.y = mapNodes[mapCurrentNode].y;
+    mapTargetNode = mapCurrentNode;
+    keys.left = false; keys.right = false; keys.jump = false; keys.jumpHeld = false;
 }
 function loadLevel(index) {
   currentLevelData = JSON.parse(JSON.stringify(levels[index])); 
   player = { x: 50, y: currentLevelData.platforms[0].y - 50, w: 24, h: 36, vx: 0, vy: 0, onGround: false, hasCape: player?.hasCape || false, hasHairball: player?.hasHairball || false, flyEnergy: 120, facingRight: true, inWater: false };
-  camera.x = 0; currentLevelIndex = index; state = 'playing'; invincibleTime = 0; particles = []; hairballs = [];
+  camera = { x: 0, y: 0 }; currentLevelIndex = index; state = 'playing'; invincibleTime = 0; particles = []; hairballs = [];
   keys.left = false; keys.right = false; keys.jump = false; keys.jumpHeld = false; doubleJumpUsed = false;
   
   // Condição especial para a noite e vulcão gerarem estrelas/cinzas flutuantes
@@ -819,6 +791,46 @@ function shootHairball(directionRight) {
 
 // --- LÓGICA (UPDATE) ---
 function update(dt) {
+  // LÓGICA DO NOVO MAPA MUNDIAL
+  if (state === 'worldmap') {
+      let target = mapNodes[mapTargetNode];
+      let dx = target.x - player.x;
+      let dy = target.y - player.y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist > 4) {
+          player.x += (dx / dist) * 5; // Animação do gato caminhando até a fase
+          player.y += (dy / dist) * 5;
+      } else {
+          player.x = target.x; player.y = target.y;
+          mapCurrentNode = mapTargetNode;
+          
+          if (keys.jump && !keys.jumpHeld) {
+              keys.jumpHeld = true; loadLevel(mapCurrentNode); return;
+          }
+          
+          // Move no mapa pelas setinhas da tela (Esq / Dir)
+          if (keys.right && !keys.left) {
+              if (mapCurrentNode < unlocks.maxLevel && mapCurrentNode < levels.length - 1) { mapTargetNode++; keys.right = false; }
+          } else if (keys.left && !keys.right) {
+              if (mapCurrentNode > 0) { mapTargetNode--; keys.left = false; }
+          }
+      }
+
+      // Câmera segue o gato macio
+      camera.x += (player.x - canvas.width / 2 - camera.x) * 0.1 * dt;
+      camera.y += (player.y - canvas.height / 2 - camera.y) * 0.1 * dt;
+      
+      // Limites da tela no mapa
+      if (camera.x < 0) camera.x = 0; 
+      if (camera.x > 360) camera.x = 360; 
+      if (camera.y < 0) camera.y = 0; 
+      let maxMapY = mapNodes[levels.length-1].y - canvas.height/2 + 100;
+      if (camera.y > maxMapY) camera.y = maxMapY;
+      
+      return; // Trava o resto do jogo normal
+  }
+
   if (state !== 'playing') {
       if(state === 'menu' || state === 'shop') currentLevelData.firebars?.forEach(fb => fb.angle += fb.speed * dt);
       return;
@@ -926,7 +938,7 @@ function update(dt) {
     }
   }
 
-  // FÍSICA E DANO DA LAVA (Fase 8)
+  // FÍSICA E DANO DA LAVA
   currentLevelData.lava?.forEach(l => {
       let lavaHitbox = {x: l.x, y: l.y + 15, w: l.w, h: l.h - 15};
       if (invincibleTime <= 0 && isColliding(player, lavaHitbox)) takeDamage();
@@ -951,7 +963,7 @@ function update(dt) {
 
   if (player.y > canvas.height) { loseLife(); return; }
 
-currentLevelData.enemies.forEach((enemy, index) => {
+  currentLevelData.enemies.forEach((enemy, index) => {
     if (enemy.type === 'ray') {
         enemy.x += enemy.vx * dt;
         if (enemy.x > enemy.endX || enemy.x < enemy.startX) enemy.vx *= -1;
@@ -999,6 +1011,11 @@ currentLevelData.enemies.forEach((enemy, index) => {
                 
                 // Transição direta sem precisar de bandeira
                 setTimeout(() => {
+                    // CORREÇÃO: Desbloqueia a próxima fase ao matar qualquer chefão
+                    if (currentLevelIndex >= unlocks.maxLevel && currentLevelIndex + 1 < levels.length) {
+                        unlocks.maxLevel = currentLevelIndex + 1; 
+                    }
+
                     if (enemy.type === 'boss_final') {
                         state = 'won'; document.getElementById('minimapContainer').style.display = 'none';
                         showMessage("VOCÊ SALVOU O MUNDO! <i class='fa-solid fa-trophy' style='color:#f1c40f'></i><br><span style='font-size:16px'>Derrotou o Gato Robô Maligno!<br>Toque para reiniciar.</span>"); 
@@ -1109,6 +1126,80 @@ function drawCoin(x, y, offset) {
 // --- RENDERIZAÇÃO GRÁFICA ---
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height); 
+
+  if (state === 'worldmap') {
+      ctx.save();
+      ctx.translate(-camera.x, -camera.y);
+
+      // 1. Fundo do mapa com degradê descendo pelas Fases
+      let mapHeight = mapNodes[levels.length-1].y + 300;
+      let grad = ctx.createLinearGradient(0, 0, 0, mapHeight);
+      grad.addColorStop(0, '#2ecc71'); // Grama
+      grad.addColorStop(0.3, '#d35400'); // Deserto/Vulcão
+      grad.addColorStop(0.6, '#3498db'); // Gelo/Água
+      grad.addColorStop(1, '#8e44ad'); // Castelo Assombrado
+      ctx.fillStyle = grad;
+      ctx.fillRect(camera.x, camera.y, canvas.width, canvas.height);
+
+      // Padrão de textura (grade do jogo retrô)
+      ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 2;
+      for(let i = 0; i < canvas.width + 100; i += 40) {
+          for(let j = Math.floor(camera.y/40)*40; j < camera.y + canvas.height + 100; j += 40) {
+              ctx.strokeRect(camera.x + i, j, 40, 40);
+          }
+      }
+
+      // 2. Caminho (Linhas entre as fases)
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(mapNodes[0].x, mapNodes[0].y);
+      for(let i=1; i<=unlocks.maxLevel; i++) ctx.lineTo(mapNodes[i].x, mapNodes[i].y);
+      ctx.stroke();
+      ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 6; ctx.stroke(); // Miolo Dourado
+      
+      // Caminho bloqueado (Pontilhado cinza)
+      if(unlocks.maxLevel < levels.length - 1) {
+          ctx.strokeStyle = '#7f8c8d'; ctx.lineWidth = 8; ctx.setLineDash([10, 10]);
+          ctx.beginPath(); ctx.moveTo(mapNodes[unlocks.maxLevel].x, mapNodes[unlocks.maxLevel].y);
+          for(let i = unlocks.maxLevel + 1; i < levels.length; i++) ctx.lineTo(mapNodes[i].x, mapNodes[i].y);
+          ctx.stroke(); ctx.setLineDash([]);
+      }
+
+      // 3. Bolinhas das Fases
+      for (let i = 0; i < levels.length; i++) {
+          let n = mapNodes[i];
+          let isUnlocked = i <= unlocks.maxLevel;
+          ctx.fillStyle = isUnlocked ? (i === mapTargetNode ? '#e74c3c' : '#c0392b') : '#7f8c8d';
+          ctx.beginPath(); ctx.arc(n.x, n.y, i === mapTargetNode ? 24 : 18, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.font = "bold 16px Arial"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(i + 1, n.x, n.y);
+      }
+
+      // 4. Cabeça do Gato andando no mapa
+      ctx.translate(player.x, player.y - 25);
+      let bounce = (player.x !== mapNodes[mapTargetNode].x || player.y !== mapNodes[mapTargetNode].y) ? Math.sin(Date.now()/50)*5 : 0;
+      ctx.translate(0, bounce); // Pulo saltitante enquanto anda
+      
+      ctx.fillStyle = '#e67e22'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(-15, -25); ctx.lineTo(-2, -14); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(10, -10); ctx.lineTo(15, -25); ctx.lineTo(2, -14); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-5, -2, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(5, -2, 4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(-5, -2, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(5, -2, 2, 0, Math.PI*2); ctx.fill();
+
+      ctx.restore();
+
+      // 5. Interface Escura Superior
+      ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(0, 0, canvas.width, 60);
+      ctx.fillStyle = '#f1c40f'; ctx.font = "900 22px Arial"; ctx.textAlign = 'center';
+      ctx.fillText("MUNDO DO GATO", canvas.width/2, 25);
+      ctx.fillStyle = '#fff'; ctx.font = "bold 14px Arial";
+      if(mapTargetNode === mapCurrentNode) {
+          ctx.fillText(`FASE ${mapCurrentNode + 1} - Aperte PULAR pra entrar`, canvas.width/2, 48);
+      } else {
+          ctx.fillText(`Caminhando...`, canvas.width/2, 48);
+      }
+      return; // Para o draw aqui para não pintar as plataformas normais!
+  }
   
   let isNight = currentLevelIndex < 3 || currentLevelIndex === 6;
   
