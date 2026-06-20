@@ -655,11 +655,17 @@ document.getElementById('btnNextPhase').onclick = () => {
 };
 
 function showMap() {
-    state = 'worldmap'; // Ativa a engine de mapa 2D
-    document.getElementById('mapScreen').style.display = 'none'; // Esconde aquele mapa HTML feio pra sempre
+    state = 'worldmap'; 
+    document.getElementById('mapScreen').style.display = 'none'; 
     document.getElementById('minimapContainer').style.display = 'none';
     
-    // Coloca o gato na posição exata da fase no Canvas
+    // CORREÇÃO: Carrega os dados básicos da fase ANTES de mexer no player
+    // Isso cria o objeto player vazio para não dar undefined
+    if (!player) {
+        currentLevelData = JSON.parse(JSON.stringify(levels[mapCurrentNode])); 
+        player = { x: 0, y: 0, w: 24, h: 36, vx: 0, vy: 0, onGround: false, hasCape: false, hasHairball: false, flyEnergy: 120, facingRight: true, inWater: false };
+    }
+
     player.x = mapNodes[mapCurrentNode].x;
     player.y = mapNodes[mapCurrentNode].y;
     mapTargetNode = mapCurrentNode;
@@ -747,10 +753,15 @@ function initGame() {
         document.getElementById('btnContinue').style.display = 'flex';
         if(save.unlocks) unlocks = save.unlocks;
     } else { document.getElementById('btnContinue').style.display = 'none'; }
+    
     currentLevelData = JSON.parse(JSON.stringify(levels[0]));
-    camera.x = 0; currentLevelIndex = 0; state = 'menu';
+    // CORREÇÃO: Cria o player inicial vazio para o menu funcionar
+    player = { x: 0, y: 0, w: 24, h: 36, vx: 0, vy: 0, onGround: false, hasCape: false, hasHairball: false, flyEnergy: 120, facingRight: true, inWater: false };
+    
+    camera.x = 0; camera.y = 0; currentLevelIndex = 0; state = 'menu';
     document.getElementById('minimapContainer').style.display = 'none';
     stars = []; clouds = []; decorations = []; hairballs = []; lastTime = 0;
+    
     if(animationFrameId) cancelAnimationFrame(animationFrameId);
     requestAnimationFrame(gameLoop);
 }
