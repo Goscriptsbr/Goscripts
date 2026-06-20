@@ -399,59 +399,62 @@ const levels = [
     enemies: [ {x: 800, y: 450, w: 105, h: 105, vx: -2, vy: 0, startX: 200, endX: 1000, type: 'boss', hp: 3, hitTimer: 0} ],
     spikes: [], lava: [], firebars: [], water: [], goal: {x: -1000, y: -1000, w: 40, h: 250} 
   },
-  // FASE 11 (CÉU ESTRELADO - PLataformas Voadoras e Pulos Precisos)
+  // FASE 11 (CÉU ESTRELADO) - Ajustada para pulo normal
   {
     id: 11, width: 3500,
     platforms: [ 
         {x: 0, y: 560, w: 400, h: 60, type: 0},
-        {x: 500, y: 460, w: 100, h: 15, type: 7, vx: 2, vy: 0, startX: 500, endX: 900, triggered: false},
-        {x: 1000, y: 360, w: 100, h: 10, type: 5}, {x: 1200, y: 260, w: 100, h: 10, type: 5},
-        {x: 1400, y: 460, w: 100, h: 15, type: 7, vx: 3, vy: 0, startX: 1400, endX: 2000, triggered: false},
-        {x: 2200, y: 360, w: 300, h: 20, type: 0}, {x: 2600, y: 260, w: 100, h: 15, type: 7, vx: 2.5, vy: 0, startX: 2600, endX: 3000, triggered: false},
-        {x: 3200, y: 560, w: 300, h: 60, type: 0}
+        {x: 450, y: 460, w: 100, h: 15, type: 7, vx: 2, vy: 0, startX: 450, endX: 850, triggered: false},
+        {x: 950, y: 380, w: 80, h: 10, type: 5}, {x: 1150, y: 300, w: 80, h: 10, type: 5}, // Degraus acessíveis
+        {x: 1350, y: 400, w: 100, h: 15, type: 7, vx: 3, vy: 0, startX: 1350, endX: 1950, triggered: false},
+        {x: 2100, y: 360, w: 300, h: 20, type: 0}, 
+        {x: 2450, y: 460, w: 100, h: 15, type: 7, vx: 2.5, vy: 0, startX: 2450, endX: 2900, triggered: false},
+        {x: 3100, y: 560, w: 400, h: 60, type: 0}
     ],
-    blocks: [{x: 2300, y: 200, w: 40, h: 40, type: 6}], coins: [{x: 1040, y: 300, w:20, h:20}, {x: 1240, y: 200, w:20, h:20}], items: [], 
+    blocks: [{x: 2200, y: 220, w: 40, h: 40, type: 6}], coins: [{x: 990, y: 330, w:20, h:20}, {x: 1190, y: 250, w:20, h:20}], items: [], 
     enemies: [ 
         {x: 1000, y: 150, w: 35, h: 35, vx: 0, vy: 2, startY: 100, endY: 350, type: 'fly'},
-        {x: 2300, y: 325, w: 35, h: 35, vx: 2, vy: 0, startX: 2200, endX: 2450, type: 'smart'}
+        {x: 2200, y: 325, w: 35, h: 35, vx: 2, vy: 0, startX: 2100, endX: 2350, type: 'smart'}
     ], spikes: [], lava: [], firebars: [], water: [], goal: {x: 3300, y: 310, w: 40, h: 250} 
   },
-  // FASE 12 (TUNDRA DE GELO - Chão escorregadio simulado e Inimigos Inteligentes em blocos)
+  // FASE 12 (TUNDRA DE GELO) - Ajustada
   {
     id: 12, width: 3600,
     platforms: [ 
         {x: 0, y: 560, w: 800, h: 60, type: 0}, {x: 1000, y: 560, w: 600, h: 60, type: 0},
         {x: 1800, y: 560, w: 800, h: 60, type: 0}, {x: 2800, y: 560, w: 800, h: 60, type: 0},
-        {x: 600, y: 440, w: 80, h: 10, type: 5}, {x: 1200, y: 400, w: 80, h: 10, type: 5}, {x: 2100, y: 360, w: 150, h: 20, type: 0}
+        {x: 600, y: 460, w: 80, h: 10, type: 5}, {x: 1200, y: 440, w: 80, h: 10, type: 5}, {x: 2100, y: 380, w: 150, h: 20, type: 0},
+        {x: 1950, y: 480, w: 80, h: 10, type: 5} // Degrau para ajudar a subir
     ],
-    blocks: [{x: 400, y: 400, w: 40, h: 40, type: 2}, {x: 1400, y: 400, w: 40, h: 40, type: 1}, {x: 1440, y: 400, w: 40, h: 40, type: 9}, {x: 1480, y: 400, w: 40, h: 40, type: 1}], 
-    coins: [{x: 630, y: 380, w: 20, h: 20}, {x: 2160, y: 300, w: 20, h: 20}], items: [], 
+    blocks: [{x: 400, y: 420, w: 40, h: 40, type: 2}, {x: 1400, y: 420, w: 40, h: 40, type: 1}, {x: 1440, y: 420, w: 40, h: 40, type: 9}, {x: 1480, y: 420, w: 40, h: 40, type: 1}], 
+    coins: [{x: 630, y: 400, w: 20, h: 20}, {x: 2160, y: 320, w: 20, h: 20}], items: [], 
     enemies: [
         {x: 600, y: 525, w: 35, h: 35, vx: -1.5, vy: 0, startX: 300, endX: 700, type: 'smart'},
         {x: 1300, y: 525, w: 35, h: 35, vx: 2, vy: 0, startX: 1100, endX: 1500, type: 'smart'},
         {x: 2300, y: 525, w: 35, h: 35, vx: 2.5, vy: 0, startX: 1900, endX: 2500, type: 'smart'}
     ], spikes: [ {x: 800, y: 600, w: 200, h: 30}, {x: 1600, y: 600, w: 200, h: 30}, {x: 2600, y: 600, w: 200, h: 30} ], lava: [], firebars: [], water: [], goal: {x: 3400, y: 310, w: 40, h: 250} 
   },
-  // FASE 13 (CAVERNA CONGELADA DE LAVA - Fogo e Gelo misturados)
+  // FASE 13 (CAVERNA DE GELO) - Ajustada
   {
     id: 13, width: 3800,
     platforms: [ 
         {x: 0, y: 560, w: 500, h: 60, type: 0}, {x: 800, y: 560, w: 300, h: 60, type: 0}, {x: 1400, y: 560, w: 500, h: 60, type: 0},
         {x: 2200, y: 560, w: 300, h: 60, type: 0}, {x: 2800, y: 560, w: 1000, h: 60, type: 0},
-        {x: 550, y: 440, w: 80, h: 10, type: 5}, {x: 1150, y: 400, w: 80, h: 10, type: 5}, {x: 1950, y: 360, w: 80, h: 10, type: 5}
+        {x: 550, y: 460, w: 80, h: 10, type: 5}, {x: 1150, y: 460, w: 80, h: 10, type: 5}, {x: 1950, y: 460, w: 80, h: 10, type: 5},
+        {x: 650, y: 360, w: 80, h: 10, type: 5}, {x: 1250, y: 360, w: 80, h: 10, type: 5}, {x: 2050, y: 360, w: 80, h: 10, type: 5} // Degraus extras
     ],
     blocks: [{x: 1600, y: 400, w: 40, h: 40, type: 3}, {x: 2900, y: 400, w: 40, h: 40, type: 6}], coins: [], items: [], 
     enemies: [ {x: 900, y: 525, w: 35, h: 35, vx: 2, vy: 0, startX: 800, endX: 1050, type: 'smart'} ], 
     spikes: [], 
     lava: [ {x: 500, y: 580, w: 300, h: 40}, {x: 1100, y: 580, w: 300, h: 40}, {x: 1900, y: 580, w: 300, h: 40}, {x: 2500, y: 580, w: 300, h: 40} ], 
-    firebars: [ {x: 1650, y: 560, radius: 120, speed: 0.05, angle: 0}, {x: 2350, y: 560, radius: 120, speed: -0.05, angle: 3.14} ], water: [], goal: {x: 3600, y: 310, w: 40, h: 250} 
+    firebars: [ {x: 1650, y: 560, radius: 120, speed: 0.04, angle: 0}, {x: 2350, y: 560, radius: 120, speed: -0.04, angle: 3.14} ], water: [], goal: {x: 3600, y: 310, w: 40, h: 250} 
   },
-  // FASE 14 (O POÇO ESCURO - Muita água e raias elétricas em caverna escura)
+  // FASE 14 (O POÇO ESCURO) - Ajustada
   {
     id: 14, width: 3400,
     platforms: [ 
-        {x: 0, y: 560, w: 3400, h: 60, type: 0}, {x: 400, y: 200, w: 80, h: 360, type: 0}, {x: 1000, y: 100, w: 80, h: 460, type: 0},
-        {x: 1600, y: 300, w: 80, h: 260, type: 0}, {x: 2200, y: 150, w: 80, h: 410, type: 0}, {x: 2800, y: 460, w: 600, h: 160, type: 0}
+        {x: 0, y: 560, w: 3400, h: 60, type: 0}, {x: 400, y: 300, w: 80, h: 260, type: 0}, {x: 1000, y: 200, w: 80, h: 360, type: 0},
+        {x: 1600, y: 400, w: 80, h: 160, type: 0}, {x: 2200, y: 250, w: 80, h: 310, type: 0}, {x: 2800, y: 460, w: 600, h: 160, type: 0}
     ],
     blocks: [], coins: [{x: 700, y: 300, w: 20, h: 20}, {x: 1300, y: 200, w: 20, h: 20}, {x: 1900, y: 400, w: 20, h: 20}], items: [], 
     enemies: [
@@ -461,52 +464,51 @@ const levels = [
         {x: 2500, y: 300, w: 35, h: 35, vx: 0, vy: 2.5, startY: 150, endY: 500, type: 'jellyfish'}
     ], spikes: [ {x: 100, y: 530, w: 2700, h: 30, flip: false} ], lava: [], firebars: [], water: [{x: 0, y: 0, w: 3400, h: 620}], goal: {x: 3200, y: 210, w: 40, h: 250} 
   },
-  // FASE 15 (LABIRINTO NO ALTO - Sem chão, dependendo das plataformas móveis Sincronizadas)
+  // FASE 15 (LABIRINTO NO ALTO) - Ajustada
   {
     id: 15, width: 4000,
     platforms: [ 
         {x: 0, y: 560, w: 300, h: 60, type: 0},
-        {x: 400, y: 460, w: 100, h: 15, type: 7, vx: 3, vy: 0, startX: 400, endX: 1000, triggered: false},
-        {x: 1100, y: 360, w: 100, h: 15, type: 7, vx: 0, vy: 2, startY: 200, endY: 500, type: 7}, // Móvel vertical adaptado pelo motor
-        {x: 1400, y: 200, w: 200, h: 20, type: 0},
-        {x: 1800, y: 300, w: 80, h: 15, type: 7, vx: 4, vy: 0, startX: 1800, endX: 2600, triggered: false},
-        {x: 2800, y: 460, w: 100, h: 15, type: 7, vx: 2, vy: 0, startX: 2800, endX: 3400, triggered: false},
-        {x: 3600, y: 560, w: 400, h: 60, type: 0}
+        {x: 350, y: 480, w: 100, h: 15, type: 7, vx: 2.5, vy: 0, startX: 350, endX: 950, triggered: false},
+        {x: 1050, y: 400, w: 100, h: 15, type: 7, vx: 0, vy: 2, startY: 200, endY: 500, type: 7}, 
+        {x: 1350, y: 240, w: 200, h: 20, type: 0},
+        {x: 1700, y: 340, w: 80, h: 15, type: 7, vx: 3, vy: 0, startX: 1700, endX: 2500, triggered: false},
+        {x: 2700, y: 460, w: 100, h: 15, type: 7, vx: 2, vy: 0, startX: 2700, endX: 3400, triggered: false},
+        {x: 3500, y: 560, w: 500, h: 60, type: 0}
     ],
-    blocks: [{x: 1480, y: 50, w: 40, h: 40, type: 3}], coins: [{x: 700, y: 400, w: 20, h: 20}, {x: 2200, y: 200, w: 20, h: 20}, {x: 3100, y: 350, w: 20, h: 20}], items: [], 
-    enemies: [ {x: 1450, y: 165, w: 35, h: 35, vx: 2, vy: 0, startX: 1400, endX: 1550, type: 'smart'}, {x: 2200, y: 150, w: 35, h: 35, vx: 0, vy: 3, startY: 50, endY: 450, type: 'fly'} ], 
+    blocks: [{x: 1450, y: 100, w: 40, h: 40, type: 3}], coins: [{x: 700, y: 400, w: 20, h: 20}, {x: 2200, y: 200, w: 20, h: 20}, {x: 3100, y: 350, w: 20, h: 20}], items: [], 
+    enemies: [ {x: 1400, y: 205, w: 35, h: 35, vx: 1.5, vy: 0, startX: 1350, endX: 1500, type: 'smart'} ], 
     spikes: [{x: 0, y: 600, w: 4000, h: 30}], lava: [], firebars: [], water: [], goal: {x: 3800, y: 310, w: 40, h: 250} 
   },
-  // FASE 16 (CORREDOR DO PÂNICO - Cheia de Inimigos Inteligentes Correndo)
+  // FASE 16 (CORREDOR DO PÂNICO)
   {
     id: 16, width: 3800,
     platforms: [ 
         {x: 0, y: 560, w: 3800, h: 60, type: 0},
-        {x: 600, y: 440, w: 200, h: 10, type: 5}, {x: 1200, y: 360, w: 200, h: 10, type: 5}, {x: 1800, y: 440, w: 200, h: 10, type: 5}, {x: 2400, y: 360, w: 200, h: 10, type: 5}
+        {x: 600, y: 460, w: 200, h: 10, type: 5}, {x: 1200, y: 380, w: 200, h: 10, type: 5}, {x: 1800, y: 460, w: 200, h: 10, type: 5}, {x: 2400, y: 380, w: 200, h: 10, type: 5}
     ],
-    blocks: [{x: 1280, y: 200, w: 40, h: 40, type: 10}], coins: [], items: [], 
+    blocks: [{x: 1280, y: 220, w: 40, h: 40, type: 10}], coins: [], items: [], 
     enemies: [
-        {x: 800, y: 525, w: 35, h: 35, vx: -2.5, vy: 0, startX: 400, endX: 1000, type: 'smart'},
-        {x: 1400, y: 525, w: 35, h: 35, vx: 3, vy: 0, startX: 1100, endX: 1600, type: 'smart'},
-        {x: 2000, y: 525, w: 35, h: 35, vx: -3.5, vy: 0, startX: 1700, endX: 2200, type: 'smart'},
-        {x: 2600, y: 525, w: 35, h: 35, vx: 3, vy: 0, startX: 2300, endX: 2900, type: 'smart'},
-        {x: 3200, y: 525, w: 35, h: 35, vx: -4, vy: 0, startX: 3000, endX: 3500, type: 'smart'}
+        {x: 800, y: 525, w: 35, h: 35, vx: -2, vy: 0, startX: 400, endX: 1000, type: 'smart'},
+        {x: 1400, y: 525, w: 35, h: 35, vx: 2.5, vy: 0, startX: 1100, endX: 1600, type: 'smart'},
+        {x: 2000, y: 525, w: 35, h: 35, vx: -2.5, vy: 0, startX: 1700, endX: 2200, type: 'smart'},
+        {x: 2600, y: 525, w: 35, h: 35, vx: 2, vy: 0, startX: 2300, endX: 2900, type: 'smart'}
     ], spikes: [], lava: [], firebars: [], water: [], goal: {x: 3600, y: 310, w: 40, h: 250} 
   },
-  // FASE 17 (CASTELO EXTERNO - O Labirinto de Espinhos)
+  // FASE 17 (CASTELO EXTERNO) - Ajustada
   {
     id: 17, width: 3500,
     platforms: [ 
         {x: 0, y: 560, w: 400, h: 60, type: 0}, {x: 3100, y: 560, w: 400, h: 60, type: 0},
-        {x: 500, y: 480, w: 100, h: 20, type: 0}, {x: 750, y: 360, w: 100, h: 20, type: 0}, {x: 1000, y: 240, w: 100, h: 20, type: 0},
-        {x: 1300, y: 240, w: 400, h: 20, type: 0}, {x: 1900, y: 360, w: 100, h: 20, type: 0}, {x: 2200, y: 480, w: 100, h: 20, type: 0},
-        {x: 2500, y: 360, w: 100, h: 20, type: 0}, {x: 2800, y: 240, w: 100, h: 20, type: 0}
+        {x: 500, y: 480, w: 100, h: 20, type: 0}, {x: 750, y: 380, w: 100, h: 20, type: 0}, {x: 1000, y: 280, w: 100, h: 20, type: 0},
+        {x: 1250, y: 280, w: 400, h: 20, type: 0}, {x: 1850, y: 380, w: 100, h: 20, type: 0}, {x: 2150, y: 480, w: 100, h: 20, type: 0},
+        {x: 2450, y: 380, w: 100, h: 20, type: 0}, {x: 2750, y: 280, w: 100, h: 20, type: 0}
     ],
-    blocks: [{x: 1480, y: 100, w: 40, h: 40, type: 2}], coins: [{x: 780, y: 300, w: 20, h: 20}, {x: 1930, y: 300, w: 20, h: 20}, {x: 2530, y: 300, w: 20, h: 20}], items: [], 
-    enemies: [ {x: 1500, y: 205, w: 35, h: 35, vx: 2, vy: 0, startX: 1350, endX: 1650, type: 'smart'} ], 
-    spikes: [ {x: 400, y: 600, w: 2700, h: 30}, {x: 1300, y: 260, w: 400, h: 30, flip: true} ], lava: [], firebars: [], water: [], goal: {x: 3300, y: 310, w: 40, h: 250} 
+    blocks: [{x: 1430, y: 140, w: 40, h: 40, type: 2}], coins: [{x: 780, y: 320, w: 20, h: 20}, {x: 1880, y: 320, w: 20, h: 20}], items: [], 
+    enemies: [ {x: 1450, y: 245, w: 35, h: 35, vx: 2, vy: 0, startX: 1300, endX: 1600, type: 'smart'} ], 
+    spikes: [ {x: 400, y: 600, w: 2700, h: 30}, {x: 1250, y: 300, w: 400, h: 30, flip: true} ], lava: [], firebars: [], water: [], goal: {x: 3300, y: 310, w: 40, h: 250} 
   },
-  // FASE 18 (SALÃO DAS ENGRENAGENS - Fogo Giratório Implacável no Castelo)
+  // FASE 18 (SALÃO DAS ENGRENAGENS)
   {
     id: 18, width: 3200,
     platforms: [ 
@@ -516,26 +518,26 @@ const levels = [
     ],
     blocks: [], coins: [], items: [], enemies: [], spikes: [], lava: [ {x: 400, y: 580, w: 2400, h: 40} ], 
     firebars: [ 
-        {x: 600, y: 560, radius: 150, speed: 0.05, angle: 0}, {x: 1000, y: 560, radius: 150, speed: -0.05, angle: 1.5},
-        {x: 1400, y: 560, radius: 150, speed: 0.06, angle: 3.14}, {x: 1800, y: 560, radius: 150, speed: -0.06, angle: 4.71},
-        {x: 2200, y: 560, radius: 160, speed: 0.07, angle: 0}, {x: 2600, y: 560, radius: 160, speed: -0.07, angle: 1.5}
+        {x: 600, y: 560, radius: 130, speed: 0.04, angle: 0}, {x: 1000, y: 560, radius: 130, speed: -0.04, angle: 1.5},
+        {x: 1400, y: 560, radius: 130, speed: 0.05, angle: 3.14}, {x: 1800, y: 560, radius: 130, speed: -0.05, angle: 4.71},
+        {x: 2200, y: 560, radius: 140, speed: 0.06, angle: 0}, {x: 2600, y: 560, radius: 140, speed: -0.06, angle: 1.5}
     ], water: [], goal: {x: 3000, y: 310, w: 40, h: 250} 
   },
-  // FASE 19 (O ÚLTIMO DESAFIO - Mistura de mecânicas antes do Boss)
+  // FASE 19 (O ÚLTIMO DESAFIO) - Ajustada
   {
     id: 19, width: 4500,
     platforms: [ 
         {x: 0, y: 560, w: 500, h: 60, type: 0}, {x: 800, y: 560, w: 500, h: 60, type: 0},
-        {x: 1400, y: 460, w: 100, h: 15, type: 7, vx: 3.5, vy: 0, startX: 1400, endX: 2000, triggered: false},
-        {x: 2200, y: 360, w: 500, h: 200, type: 0}, {x: 2800, y: 200, w: 100, h: 10, type: 5}, {x: 3000, y: 300, w: 100, h: 10, type: 5},
-        {x: 3200, y: 400, w: 100, h: 10, type: 5}, {x: 3500, y: 560, w: 1000, h: 60, type: 0}
+        {x: 1400, y: 480, w: 100, h: 15, type: 7, vx: 3, vy: 0, startX: 1400, endX: 2000, triggered: false},
+        {x: 2200, y: 360, w: 500, h: 200, type: 0}, {x: 2800, y: 280, w: 100, h: 10, type: 5}, {x: 3050, y: 360, w: 100, h: 10, type: 5},
+        {x: 3300, y: 460, w: 100, h: 10, type: 5}, {x: 3500, y: 560, w: 1000, h: 60, type: 0}
     ],
-    blocks: [{x: 2430, y: 200, w: 40, h: 40, type: 6}, {x: 3700, y: 400, w: 40, h: 40, type: 3}], coins: [{x: 1700, y: 350, w: 20, h: 20}, {x: 2900, y: 150, w: 20, h: 20}], items: [], 
+    blocks: [{x: 2430, y: 200, w: 40, h: 40, type: 6}, {x: 3700, y: 400, w: 40, h: 40, type: 3}], coins: [{x: 1700, y: 350, w: 20, h: 20}, {x: 2850, y: 230, w: 20, h: 20}], items: [], 
     enemies: [
-        {x: 900, y: 525, w: 35, h: 35, vx: 3, vy: 0, startX: 850, endX: 1250, type: 'smart'},
-        {x: 2400, y: 325, w: 35, h: 35, vx: -3, vy: 0, startX: 2250, endX: 2650, type: 'smart'},
-        {x: 3800, y: 525, w: 35, h: 35, vx: 4, vy: 0, startX: 3600, endX: 4300, type: 'smart'}
-    ], spikes: [ {x: 500, y: 600, w: 300, h: 30}, {x: 2200, y: 560, w: 500, h: 30, flip: false} ], lava: [], firebars: [ {x: 3050, y: 300, radius: 100, speed: 0.05, angle: 0} ], water: [], goal: {x: 4300, y: 310, w: 40, h: 250} 
+        {x: 900, y: 525, w: 35, h: 35, vx: 2.5, vy: 0, startX: 850, endX: 1250, type: 'smart'},
+        {x: 2400, y: 325, w: 35, h: 35, vx: -2.5, vy: 0, startX: 2250, endX: 2650, type: 'smart'},
+        {x: 3800, y: 525, w: 35, h: 35, vx: 3, vy: 0, startX: 3600, endX: 4300, type: 'smart'}
+    ], spikes: [ {x: 500, y: 600, w: 300, h: 30}, {x: 2200, y: 560, w: 500, h: 30, flip: false} ], lava: [], firebars: [ {x: 3100, y: 360, radius: 90, speed: 0.05, angle: 0} ], water: [], goal: {x: 4300, y: 310, w: 40, h: 250} 
   },
   // FASE 20 (CHEFÃO FINAL - O Gato Robô Flutuante!)
   {
@@ -546,7 +548,6 @@ const levels = [
     ],
     blocks: [], coins: [], items: [],
     enemies: [ 
-        // O Boss final com muito mais vida (hp: 8)
         {x: 800, y: 400, w: 105, h: 105, vx: -3.5, vy: 0, startX: 100, endX: 1000, type: 'boss_final', hp: 8, hitTimer: 0} 
     ],
     spikes: [ {x: 400, y: 600, w: 400, h: 30} ], lava: [], firebars: [], water: [], goal: {x: -1000, y: -1000, w: 40, h: 250} 
@@ -677,26 +678,40 @@ function loadLevel(index) {
   camera = { x: 0, y: 0 }; currentLevelIndex = index; state = 'playing'; invincibleTime = 0; particles = []; hairballs = [];
   keys.left = false; keys.right = false; keys.jump = false; keys.jumpHeld = false; doubleJumpUsed = false;
   
-  // Condição especial para a noite e vulcão gerarem estrelas/cinzas flutuantes
-  let isNight = index < 3 || index === 6;
-  let isVolcano = index === 7;
+// Lógica aprimorada de geração de partículas e decorações para os novos biomas
+  let isNight = index === 10 || index === 11 || index === 2 || index === 6; // Inclui fases 11 e 12 no céu noturno
+  let isVolcano = index === 7 || index === 12; // Fase 13 é Vulcão de Gelo
+  let isIce = index >= 11 && index <= 12; // Fases de neve
+  let isCastle = index >= 16 && index <= 19; // Castelos
   
   stars = []; clouds = []; decorations = [];
   
-  if (isNight || isVolcano) {
+  // Estrelas ou Cinzas
+  if (isNight || isVolcano || isCastle) {
       for(let i=0; i<100; i++) { stars.push({ x: Math.random() * currentLevelData.width, y: Math.random() * 640, size: Math.random() * 1.5 + 0.5, alpha: Math.random() }); }
   }
   
-  if (index !== 9 && index !== 8 && index !== 7) { 
-      for(let i=0; i<15; i++) { clouds.push({ x: Math.random() * currentLevelData.width, y: Math.random() * 250, speed: Math.random() * 0.5 + 0.1, size: Math.random() * 20 + 20 }); }
+  // Nuvens ou Flocos de Neve
+  if (index !== 9 && index !== 8 && index !== 7 && !isCastle) { 
+      let maxClouds = isIce ? 80 : 15; // Muita "nuvem" pequena na fase de gelo para simular neve
+      for(let i=0; i<maxClouds; i++) { 
+          let size = isIce ? Math.random() * 3 + 2 : Math.random() * 20 + 20;
+          clouds.push({ x: Math.random() * currentLevelData.width, y: Math.random() * (isIce ? 640 : 250), speed: Math.random() * 0.5 + 0.1, size: size }); 
+      }
   }
   
+  // Plantas, Pinheiros ou Janelas
   currentLevelData.platforms.forEach(p => {
       if (p.type === 0 && p.w > 100 && p.y > 0) { 
           let plantCount = Math.floor(p.w / 150); 
           for(let i=0; i < plantCount; i++) {
-              let decType = isNight ? 'alien' : (Math.random() > 0.6 ? 'tree' : 'bush'); 
-              if(index === 7 || index === 9) continue; // Sem mato no vulcão e chefe
+              let decType = 'bush';
+              if (isCastle) decType = 'window';
+              else if (isIce) decType = 'pine';
+              else if (isNight) decType = 'alien';
+              else if (Math.random() > 0.6) decType = 'tree';
+              
+              if(index === 7 || index === 9) continue; // Sem mato na água e vulcão
               decorations.push({ x: p.x + 40 + Math.random() * (p.w - 80), y: p.y, type: decType });
           }
       }
@@ -1209,10 +1224,12 @@ function draw() {
       } else {
           ctx.fillText(`Caminhando...`, canvas.width/2, 48);
       }
-      return; // Para o draw aqui para não pintar as plataformas normais!
+      return; 
   }
   
-  let isNight = currentLevelIndex < 3 || currentLevelIndex === 6;
+  let isNight = currentLevelIndex === 10 || currentLevelIndex === 11 || currentLevelIndex < 3 || currentLevelIndex === 6;
+  let isIce = currentLevelIndex >= 11 && currentLevelIndex <= 12;
+  let isCastle = currentLevelIndex >= 16 && currentLevelIndex <= 19;
   
   let dirtColor = isNight ? '#2c3e50' : '#5c4033'; 
   let dirtDetail = isNight ? '#1a252f' : '#4a3225';
@@ -1224,66 +1241,65 @@ function draw() {
   if (currentLevelIndex === 9 || currentLevelIndex === 14) {
       dirtColor = '#2c3e50'; dirtDetail = '#1a252f'; grassColor1 = '#34495e'; grassColor2 = '#2c3e50';
   }
-  else if (currentLevelIndex === 7 || currentLevelIndex === 13 || currentLevelIndex === 16) { 
+  else if (currentLevelIndex === 7 || currentLevelIndex === 13) { // Vulcões
       dirtColor = '#3a0000'; dirtDetail = '#200000'; grassColor1 = '#8b0000'; grassColor2 = '#5c0000';
       onewayColor1 = '#c0392b'; onewayColor2 = '#7b241c';
   }
-  else if (currentLevelIndex >= 10 && currentLevelIndex <= 12) {
-      // Bioma de Gelo/Neve
+  else if (isIce) {
       dirtColor = '#7f8c8d'; dirtDetail = '#95a5a6'; grassColor1 = '#ecf0f1'; grassColor2 = '#bdc3c7';
       onewayColor1 = '#3498db'; onewayColor2 = '#2980b9';
   }
-  else if (currentLevelIndex >= 17 && currentLevelIndex <= 19) {
-      // Bioma de Castelo Sombrio Assombrado
-      dirtColor = '#4a235a'; dirtDetail = '#154360'; grassColor1 = '#6c3483'; grassColor2 = '#5b2c6f';
+  else if (isCastle) {
+      dirtColor = '#111'; dirtDetail = '#222'; grassColor1 = '#4a235a'; grassColor2 = '#2c1236'; // Piso Sombrio de Castelo
       onewayColor1 = '#8e44ad'; onewayColor2 = '#732d91';
   }
 
   // --- DESENHO DE FUNDOS ESPECÍFICOS ---
-  if (currentLevelIndex === 7) { 
-      // VULCÃO 100% NOVO COM PARALLAX E LAVA FLUINDO
-      document.getElementById('gameContainer').style.background = 'linear-gradient(to bottom, #2b0000 0%, #b32400 60%, #ff4500 100%)';
+  if (currentLevelIndex === 7 || currentLevelIndex === 13) { 
+      // VULCÃO
+      document.getElementById('gameContainer').style.background = currentLevelIndex === 13 ? 'linear-gradient(to bottom, #1a0033 0%, #4a235a 60%, #ff4500 100%)' : 'linear-gradient(to bottom, #2b0000 0%, #b32400 60%, #ff4500 100%)';
       ctx.save(); ctx.translate(-camera.x * 0.15, 0);
-      
-      // Camada 1: Montanhas Distantes
-      ctx.fillStyle = '#260909';
+      ctx.fillStyle = currentLevelIndex === 13 ? '#110022' : '#260909';
       ctx.beginPath(); ctx.moveTo(0, 640);
       for(let i=0; i<4000; i+=300) { ctx.lineTo(i+150, 300 + Math.sin(i)*50); ctx.lineTo(i+300, 640); }
-      ctx.fill();
-      ctx.restore();
+      ctx.fill(); ctx.restore();
 
-      // Camada 2: Vulcões na Frente
       ctx.save(); ctx.translate(-camera.x * 0.3, 0);
       for(let i=-100; i<4000; i+=700) {
-          let vx = i + 350; 
-          let vy = 200 + Math.cos(i)*50; 
-
-          // Base do vulcão
+          let vx = i + 350; let vy = 200 + Math.cos(i)*50; 
           ctx.fillStyle = '#140000'; ctx.beginPath(); ctx.moveTo(i, 640); ctx.lineTo(vx - 50, vy); ctx.lineTo(vx + 50, vy); ctx.lineTo(i+700, 640); ctx.fill();
-
-          // Magma e Lavas escorrendo
           ctx.fillStyle = '#ff3300';
           ctx.beginPath(); ctx.moveTo(vx - 40, vy); ctx.lineTo(vx + 40, vy); ctx.lineTo(vx + 20, vy + 80); ctx.lineTo(vx, vy + 40); ctx.lineTo(vx - 20, vy + 120); ctx.fill();
-
-          // Brilho da Erupção pulsante
           let pulse = Math.sin(Date.now() / 200 + i) * 10;
           ctx.fillStyle = `rgba(255, 69, 0, ${0.4 + pulse/100})`;
           ctx.beginPath(); ctx.arc(vx, vy, 60 + pulse, 0, Math.PI*2); ctx.fill();
       }
       ctx.restore();
 
-      // Partículas: Cinzas flutuantes subindo (Feito reutilizando as 'stars' do sistema de noite)
       ctx.save(); ctx.translate(-camera.x * 0.2, 0);
       stars.forEach(s => {
           ctx.fillStyle = `rgba(255, 100, 0, ${s.alpha})`;
           ctx.beginPath(); ctx.arc(s.x, s.y, s.size * 1.5, 0, Math.PI*2); ctx.fill();
-          s.y -= 0.8; 
-          s.x += Math.sin(Date.now()/500 + s.y) * 0.5; // Movimento leve lateral
+          s.y -= 0.8; s.x += Math.sin(Date.now()/500 + s.y) * 0.5;
           if (s.y < 0) s.y = 640;
       });
       ctx.restore();
-
   } 
+  else if (isCastle) {
+      document.getElementById('gameContainer').style.background = 'linear-gradient(to bottom, #000 0%, #1a0033 100%)';
+      ctx.save(); ctx.translate(-camera.x * 0.1, 0);
+      // Pilares do castelo no fundo
+      for(let i=0; i<4000; i+=200) {
+          ctx.fillStyle = '#150520'; ctx.fillRect(i, 0, 50, 640);
+          ctx.fillStyle = '#2a0a40'; ctx.fillRect(i+5, 0, 40, 640);
+      }
+      stars.forEach(s => {
+          ctx.fillStyle = `rgba(150, 0, 255, ${s.alpha * 0.5})`; // Partículas sombrias
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+          s.y += 0.5; if (s.y > 640) s.y = 0;
+      });
+      ctx.restore();
+  }
   else if (currentLevelIndex === 8) {
       document.getElementById('gameContainer').style.background = 'linear-gradient(to bottom, #001f3f 0%, #0984e3 100%)';
       ctx.save(); ctx.translate(-camera.x * 0.3, 0);
@@ -1299,10 +1315,10 @@ function draw() {
       }
       ctx.restore();
   }
-  else if (currentLevelIndex === 9) {
+  else if (currentLevelIndex === 9 || currentLevelIndex === 14) {
       document.getElementById('gameContainer').style.background = '#111';
       ctx.save(); ctx.translate(-camera.x * 0.1, 0);
-      for(let i=0; i<1500; i+=100) {
+      for(let i=0; i<4000; i+=100) {
           ctx.fillStyle = '#222'; ctx.fillRect(i, 0, 95, 640); 
           if (i % 300 === 0) { 
               ctx.fillStyle = '#5c4033'; ctx.fillRect(i + 40, 250, 10, 40);
@@ -1314,7 +1330,7 @@ function draw() {
       ctx.restore();
   }
   else if (isNight) {
-      document.getElementById('gameContainer').style.background = 'linear-gradient(to bottom, #0f2027 0%, #203a43 100%)';
+      document.getElementById('gameContainer').style.background = isIce ? 'linear-gradient(to bottom, #1a252f 0%, #2c3e50 100%)' : 'linear-gradient(to bottom, #0f2027 0%, #203a43 100%)';
       ctx.save(); ctx.translate(-camera.x * 0.1, 0); 
       stars.forEach(s => {
           let alpha = s.alpha + Math.sin(Date.now()/500 + s.x)*0.3;
@@ -1332,19 +1348,27 @@ function draw() {
       ctx.restore();
   }
 
-  // Nuvens
-  if(currentLevelIndex !== 7 && currentLevelIndex !== 8 && currentLevelIndex !== 9) {
+  // Nuvens ou Neve caindo
+  if(currentLevelIndex !== 7 && currentLevelIndex !== 8 && currentLevelIndex !== 9 && currentLevelIndex !== 13 && currentLevelIndex !== 14 && !isCastle) {
       ctx.save();
-      ctx.translate(-camera.x * 0.2, 0); 
-      ctx.fillStyle = isNight ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)';
+      ctx.translate(-camera.x * (isIce ? 1.0 : 0.2), 0); // Neve acompanha a câmera
+      ctx.fillStyle = isNight ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.8)';
       clouds.forEach(c => {
-          ctx.beginPath(); ctx.arc(c.x, c.y, c.size, 0, Math.PI*2); ctx.arc(c.x + c.size*0.8, c.y - c.size*0.3, c.size*0.8, 0, Math.PI*2); ctx.arc(c.x + c.size*1.4, c.y, c.size*0.9, 0, Math.PI*2); ctx.fill();
+          if (isIce) {
+              // Efeito de neve caindo
+              ctx.beginPath(); ctx.arc(c.x, c.y, c.size, 0, Math.PI*2); ctx.fill();
+              c.y += c.speed;
+              c.x += Math.sin(Date.now()/1000 + c.size) * 0.5;
+              if(c.y > 640) c.y = -10;
+          } else {
+              ctx.beginPath(); ctx.arc(c.x, c.y, c.size, 0, Math.PI*2); ctx.arc(c.x + c.size*0.8, c.y - c.size*0.3, c.size*0.8, 0, Math.PI*2); ctx.arc(c.x + c.size*1.4, c.y, c.size*0.9, 0, Math.PI*2); ctx.fill();
+          }
       });
       ctx.restore();
   }
 
   ctx.save();
-  ctx.translate(-camera.x, 0); 
+  ctx.translate(-camera.x, 0);
 
   let gx = currentLevelData.goal.x; let gy = currentLevelData.goal.y; let gh = currentLevelData.goal.h;
   ctx.fillStyle = '#bdc3c7'; ctx.fillRect(gx + 16, gy, 8, gh); 
@@ -1385,6 +1409,22 @@ function draw() {
       } else if (d.type === 'tree') {
           ctx.fillStyle = '#8B4513'; ctx.fillRect(d.x - 5, d.y - 40, 10, 40);
           ctx.fillStyle = isNight ? '#16a085' : '#27ae60'; ctx.beginPath(); ctx.arc(d.x, d.y - 50, 25, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(d.x - 15, d.y - 35, 20, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(d.x + 15, d.y - 35, 20, 0, Math.PI*2); ctx.fill();
+      } else if (d.type === 'pine') {
+          ctx.fillStyle = '#5C4033'; ctx.fillRect(d.x + 8, d.y - 20, 8, 20); // Tronco
+          ctx.fillStyle = '#ecf0f1'; // Neve no pinheiro
+          ctx.beginPath(); ctx.moveTo(d.x+12, d.y-60); ctx.lineTo(d.x-10, d.y-20); ctx.lineTo(d.x+34, d.y-20); ctx.fill();
+          ctx.fillStyle = '#34495e'; // Sombra da folha
+          ctx.beginPath(); ctx.moveTo(d.x+12, d.y-50); ctx.lineTo(d.x-5, d.y-20); ctx.lineTo(d.x+29, d.y-20); ctx.fill();
+      } else if (d.type === 'window') {
+          // Janela Sombria do Castelo
+          ctx.fillStyle = '#000';
+          ctx.beginPath(); ctx.arc(d.x+15, d.y-40, 15, Math.PI, 0); ctx.fill();
+          ctx.fillRect(d.x, d.y-40, 30, 25);
+          ctx.fillStyle = '#f1c40f'; // Brilho maligno
+          let flicker = Math.random() > 0.1 ? 0.3 : 0.8;
+          ctx.globalAlpha = flicker;
+          ctx.fillRect(d.x+5, d.y-35, 8, 15); ctx.fillRect(d.x+17, d.y-35, 8, 15);
+          ctx.globalAlpha = 1.0;
       } else { 
           ctx.fillStyle = isNight ? '#16a085' : '#27ae60'; ctx.beginPath(); ctx.arc(d.x+10, d.y-5, 15, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(d.x+25, d.y-5, 12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(d.x, d.y-5, 10, 0, Math.PI*2); ctx.fill();
       }
