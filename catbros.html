@@ -2042,9 +2042,11 @@ function updateMap(dt) {
       mapCursor--; mapMoveCd = 12; SFX.select(); updateMapBar();
     }
   }
-  if (keys.jump) {
+    if (keys.jump && mapCursor <= unlocks.maxLevel && d < 6) {
     keys.jump = false;
-    if (mapCursor <= unlocks.maxLevel && d < 6) { checkpointX = 60; loadLevel(mapCursor, false); return; }
+    checkpointX = 60; 
+    loadLevel(mapCursor, false); 
+    return;
   }
   mapCam = lerp(mapCam, clamp(mapAvatar.y - VH * 0.45, 0, MAP_HEIGHT - VH), 1 - Math.pow(0.88, dt));
 }
@@ -3534,8 +3536,25 @@ $('btnQuitToMap').onclick = () => { $('pauseScreen').style.display = 'none'; Mus
 $('btnNewGame').onclick = () => {
   initAudio(); SFX.select();
   lives = 5; coins = 0;
-  unlocks = { maxLevel: 0, doubleJump: false, startCape: false, magnet: false, chars: { normal: true, ninja: false, robot: false, panda: false }, current: 'normal', seen: {} };
+  // CORREÇÃO: Adicionado o "dourado: false" e o "stars: {}" no final
+  unlocks = { maxLevel: 0, doubleJump: false, startCape: false, magnet: false, chars: { normal: true, ninja: false, robot: false, panda: false, dourado: false }, current: 'normal', seen: {}, stars: {} };
   saveGame();
+  $('menuScreen').style.display = 'none';
+  showMap();
+};
+$('btnContinue').onclick = () => {
+  initAudio(); SFX.select();
+  const s = loadSave();
+  if (s) {
+    lives = s.lives || 5; coins = s.coins || 0;
+    if (s.unlocks) {
+      unlocks = Object.assign(unlocks, s.unlocks);
+      unlocks.chars = Object.assign({ normal: true, ninja: false, robot: false, panda: false, dourado: false }, s.unlocks.chars || {});
+      unlocks.seen = s.unlocks.seen || {};
+      unlocks.stars = s.unlocks.stars || {}; // CORREÇÃO: Garante que "stars" exista sempre
+      unlocks.maxLevel = clamp(s.unlocks.maxLevel || 0, 0, LEVEL_COUNT - 1);
+    }
+  }
   $('menuScreen').style.display = 'none';
   showMap();
 };
