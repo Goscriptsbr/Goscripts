@@ -290,6 +290,8 @@
         <h2 class="panel-title">Pausado</h2>
         <button class="menu-btn btn-green" id="btnResume" style="width:100%">▶ Continuar</button>
         <button class="menu-btn btn-blue" id="btnRestartLevel" style="width:100%">↻ Reiniciar fase</button>
+        <button class="menu-btn btn-gray" id="btnQualidade" style="width:100%;font-size:13px">Gráficos: Automático</button>
+        <div id="fpsInfo" style="color:#9fb2cc;font-size:11px;margin:-2px 0 8px;font-weight:700"></div>
         <button class="menu-btn btn-gray" id="btnQuitToMap" style="width:100%">Voltar ao mapa</button>
       </div>
     </div>
@@ -327,13 +329,43 @@ const VW = 360, VH = 620;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+/* =========================================================
+   QUALIDADE GRÁFICA — o jogo mede os quadros por segundo e cai
+   sozinho para o modo leve se o celular não estiver aguentando.
+   Também dá para trocar na mão, no menu de pausa.
+   ========================================================= */
+let QUALIDADE = 'auto';        // auto | alta | leve
+let MODO_LEVE = false;         // o que vale de verdade no desenho
+let fpsAmostras = [], fpsMedido = 0, jaAvisouLeve = false;
+
+function celularFraco() {
+  const n = (typeof navigator !== 'undefined') ? navigator : {};
+  const nucleos = n.hardwareConcurrency || 4;
+  const memoria = n.deviceMemory || 4;
+  const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+  const tela = (typeof window !== 'undefined') ? (window.innerWidth || 400) * (window.innerHeight || 800) : 320000;
+  // pouco núcleo, pouca memória, ou tela grande com pixel ratio alto = muito pixel para pouco processador
+  return nucleos <= 4 || memoria <= 3 || (tela * dpr * dpr > 2600000 && nucleos <= 6);
+}
+
+function aplicarQualidade() {
+  MODO_LEVE = (QUALIDADE === 'leve') || (QUALIDADE === 'auto' && celularFraco());
+  if (typeof setupCanvas === 'function') setupCanvas();
+  if (typeof level !== 'undefined' && level && typeof buildAmbient === 'function') buildAmbient();
+  _gradCache = {};
+}
+let _gradCache = {};
+
 function setupCanvas() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  // o custo de desenhar cresce com o QUADRADO desse número:
+  // 3x = 2 milhões de pixels por quadro, 1x = 223 mil
+  const dpr = Math.min(window.devicePixelRatio || 1, MODO_LEVE ? 1 : 2);
   canvas.width = VW * dpr; canvas.height = VH * dpr;
   canvas.style.width = VW + 'px'; canvas.style.height = VH + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.imageSmoothingEnabled = true;
 }
+MODO_LEVE = celularFraco();
 setupCanvas();
 
 function fitScreen() {
@@ -345,13 +377,13 @@ function fitScreen() {
 window.addEventListener('resize', fitScreen);
 
 /* ---------- física ---------- */
-const GRAVITY      = 0.50;
-const MAX_FALL     = 11.0;
-const JUMP_POWER   = -12.6;   // alcança ~158px de altura e ~210px de distância
-const BOUNCE_POWER = -12.0;
-const SPEED        = 4.2;
-const ACCEL        = 0.42;
-const FRICTION     = 0.82;
+const GRAVITY      = 0.44;
+const MAX_FALL     = 9.6;
+const JUMP_POWER   = -11.6;   // mesma altura de antes, só que subindo/caindo mais devagar
+const BOUNCE_POWER = -11.2;
+const SPEED        = 3.55;  // andar mais calmo (era 4.2)
+const ACCEL        = 0.30;  // acelera suave, sem arranque brusco
+const FRICTION     = 0.87;  // freia suave, sem parar seco
 const GLIDE_SPEED  = -2.6;
 const FLY_MAX      = 235;   // duracao do voo (mais curto)
 const FLY_LIFT     = -4.6;  // subida da capa
@@ -491,43 +523,43 @@ const WORLDS = [
    ========================================================= */
 const LEVEL_DEFS = [
   // ---------- MUNDO 1 : CAMPO ----------
-  { name: 'Colina Ensolarada', biome: 'grass', width: 4000, seed: 101, maxGap: 100, enemyRate: 0.5, kinds: ['walker'] },
-  { name: 'Vale das Flores',   biome: 'grass', width: 4400, seed: 202, maxGap: 115, enemyRate: 0.7, kinds: ['walker', 'jumper'] },
-  { name: 'Ponte de Pedra',    biome: 'grass', width: 4600, seed: 303, maxGap: 125, enemyRate: 0.8, kinds: ['walker', 'flyer'], movers: 2 },
+  { name: 'Colina Ensolarada', biome: 'grass', width: 4000, seed: 101, maxGap: 95, enemyRate: 0.5, kinds: ['walker'] },
+  { name: 'Vale das Flores',   biome: 'grass', width: 4400, seed: 202, maxGap: 108, enemyRate: 0.7, kinds: ['walker', 'jumper'] },
+  { name: 'Ponte de Pedra',    biome: 'grass', width: 4600, seed: 303, maxGap: 118, enemyRate: 0.8, kinds: ['walker', 'flyer'], movers: 2 },
   { boss: 'dog', name: 'Toca do Cão Bravo', biome: 'grass' },
 
   // ---------- MUNDO 2 : FLORESTA ----------
-  { name: 'Floresta Verde',    biome: 'forest', width: 4600, seed: 404, maxGap: 120, enemyRate: 0.8, kinds: ['walker', 'flyer'] },
-  { name: 'Copa das Árvores',  biome: 'forest', width: 4800, seed: 505, maxGap: 125, enemyRate: 0.9, kinds: ['jumper', 'flyer', 'spiky'], movers: 2 },
-  { name: 'Cipós e Espinhos',  biome: 'forest', width: 4900, seed: 606, maxGap: 130, enemyRate: 1.0, kinds: ['walker', 'spiky', 'bat'], spikeRate: 0.5 },
+  { name: 'Floresta Verde',    biome: 'forest', width: 4600, seed: 404, maxGap: 112, enemyRate: 0.8, kinds: ['walker', 'flyer'] },
+  { name: 'Copa das Árvores',  biome: 'forest', width: 4800, seed: 505, maxGap: 118, enemyRate: 0.9, kinds: ['jumper', 'flyer', 'spiky'], movers: 2 },
+  { name: 'Cipós e Espinhos',  biome: 'forest', width: 4900, seed: 606, maxGap: 122, enemyRate: 1.0, kinds: ['walker', 'spiky', 'bat'], spikeRate: 0.5 },
   { boss: 'spider', name: 'Ninho da Aranha', biome: 'forest' },
 
   // ---------- MUNDO 3 : GELO ----------
-  { name: 'Tundra Gelada',     biome: 'ice', width: 4800, seed: 707, maxGap: 125, enemyRate: 0.8, kinds: ['walker', 'snowball'] },
-  { name: 'Caverna de Gelo',   biome: 'ice', width: 4900, seed: 808, maxGap: 130, enemyRate: 0.9, kinds: ['bat', 'snowball', 'spiky'], movers: 2 },
-  { name: 'Pico Nevado',       biome: 'ice', width: 5100, seed: 909, maxGap: 135, enemyRate: 1.0, kinds: ['runner', 'flyer', 'snowball'], movers: 3 },
+  { name: 'Tundra Gelada',     biome: 'ice', width: 4800, seed: 707, maxGap: 118, enemyRate: 0.8, kinds: ['walker', 'snowball'] },
+  { name: 'Caverna de Gelo',   biome: 'ice', width: 4900, seed: 808, maxGap: 122, enemyRate: 0.9, kinds: ['bat', 'snowball', 'spiky'], movers: 2 },
+  { name: 'Pico Nevado',       biome: 'ice', width: 5100, seed: 909, maxGap: 122, enemyRate: 1.0, kinds: ['runner', 'flyer', 'snowball'], movers: 3 },
   { boss: 'yeti', name: 'Trono do Yeti', biome: 'ice' },
 
   // ---------- MUNDO 4 : OCEANO ----------
-  { name: 'Praia Azul',        biome: 'beach', width: 4600, seed: 111, maxGap: 120, enemyRate: 0.8, kinds: ['walker', 'jumper'] },
+  { name: 'Praia Azul',        biome: 'beach', width: 4600, seed: 111, maxGap: 112, enemyRate: 0.8, kinds: ['walker', 'jumper'] },
   { name: 'Recife de Coral',   biome: 'ocean', width: 4800, seed: 222, underwater: true, enemyRate: 0.9, kinds: ['fish', 'jelly'] },
   { name: 'Abismo Profundo',   biome: 'ocean', width: 5100, seed: 333, underwater: true, enemyRate: 1.1, kinds: ['fish', 'jelly', 'ray'] },
   { boss: 'octopus', name: 'Covil do Polvo', biome: 'ocean' },
 
   // ---------- MUNDO 5 : VULCÃO ----------
-  { name: 'Encosta do Vulcão', biome: 'volcano', width: 4800, seed: 444, maxGap: 125, enemyRate: 0.9, kinds: ['walker', 'flame'] },
-  { name: 'Rio de Lava',       biome: 'volcano', width: 4900, seed: 555, maxGap: 135, enemyRate: 1.0, kinds: ['flame', 'flyer', 'spiky'], movers: 3, firebars: 2 },
-  { name: 'Castelo Sombrio',   biome: 'castle',  width: 5100, seed: 666, maxGap: 135, enemyRate: 1.1, kinds: ['runner', 'bat', 'spiky'], movers: 2, firebars: 3 },
+  { name: 'Encosta do Vulcão', biome: 'volcano', width: 4800, seed: 444, maxGap: 118, enemyRate: 0.9, kinds: ['walker', 'flame'] },
+  { name: 'Rio de Lava',       biome: 'volcano', width: 4900, seed: 555, maxGap: 122, enemyRate: 1.0, kinds: ['flame', 'flyer', 'spiky'], movers: 3, firebars: 2 },
+  { name: 'Castelo Sombrio',   biome: 'castle',  width: 5100, seed: 666, maxGap: 122, enemyRate: 1.1, kinds: ['runner', 'bat', 'spiky'], movers: 2, firebars: 3 },
   { boss: 'robot', name: 'Gato Robô Maligno', biome: 'castle' },
 
   // ---------- MUNDO 6 : CÉU (desbloqueia depois de vencer o Gato Robô) ----------
-  { name: 'Escada de Nuvens', biome: 'sky', width: 4700, seed: 2121, maxGap: 130, enemyRate: 0.9,
+  { name: 'Escada de Nuvens', biome: 'sky', width: 4700, seed: 2121, maxGap: 122, enemyRate: 0.9,
     kinds: ['flyer', 'bat', 'jumper'], movers: 3 },
-  { name: 'Ponte de Vento',   biome: 'sky', width: 4900, seed: 2222, maxGap: 132, enemyRate: 1.0,
+  { name: 'Ponte de Vento',   biome: 'sky', width: 4900, seed: 2222, maxGap: 122, enemyRate: 1.0,
     kinds: ['flyer', 'bat', 'runner'], movers: 4 },
-  { name: 'Jardim Flutuante', biome: 'sky', width: 5000, seed: 2323, maxGap: 128, enemyRate: 1.0,
+  { name: 'Jardim Flutuante', biome: 'sky', width: 5000, seed: 2323, maxGap: 118, enemyRate: 1.0,
     kinds: ['jumper', 'spiky', 'flyer'], movers: 3, spikeRate: 0.4 },
-  { name: 'Portão Dourado',   biome: 'sky', width: 5200, seed: 2424, maxGap: 135, enemyRate: 1.1,
+  { name: 'Portão Dourado',   biome: 'sky', width: 5200, seed: 2424, maxGap: 122, enemyRate: 1.1,
     kinds: ['runner', 'flyer', 'bat', 'spiky'], movers: 4, spikeRate: 0.5 },
   { boss: 'king', name: 'O Gato Rei', biome: 'sky' }
 ];
@@ -593,9 +625,9 @@ function genRunLevel(def, id) {
       let t = 'coin';
       const r = rnd();
       if (r < 0.16) t = 'cape'; else if (r < 0.30) t = 'ball'; else if (r < 0.40) t = 'life';
-      L.blocks.push({ x: bx, y: GROUND_Y - 145, w: 40, h: 40, type: t, used: false, bump: 0 });
-      if (rnd() < 0.5) L.blocks.push({ x: bx + 40, y: GROUND_Y - 145, w: 40, h: 40, type: 'brick', used: false, bump: 0 });
-      if (rnd() < 0.3) L.blocks.push({ x: bx - 40, y: GROUND_Y - 145, w: 40, h: 40, type: 'brick', used: false, bump: 0 });
+      L.blocks.push({ x: bx, y: GROUND_Y - 132, w: 40, h: 40, type: t, used: false, bump: 0 });
+      if (rnd() < 0.5) L.blocks.push({ x: bx + 40, y: GROUND_Y - 132, w: 40, h: 40, type: 'brick', used: false, bump: 0 });
+      if (rnd() < 0.3) L.blocks.push({ x: bx - 40, y: GROUND_Y - 132, w: 40, h: 40, type: 'brick', used: false, bump: 0 });
     }
 
     // moedas no chão
@@ -798,8 +830,8 @@ function esconderSegredo(L, def) {
 
   if (modo === 0) {
     // bloco invisível: bata nele no ar e ele vira o degrau para a estrela
-    L.blocks.push({ x: cx, y: GROUND_Y - 150, w: 40, h: 40, type: 'secret', used: false, bump: 0, oculto: true });
-    L.secret = { x: cx + 5, y: GROUND_Y - 282, w: 30, h: 30, got: false, t: 0 };
+    L.blocks.push({ x: cx, y: GROUND_Y - 132, w: 40, h: 40, type: 'secret', used: false, bump: 0, oculto: true });
+    L.secret = { x: cx + 5, y: GROUND_Y - 262, w: 30, h: 30, got: false, t: 0 };
   } else if (modo === 1) {
     // trilha de moedas subindo: 3 degraus de 100px levam ao topo
     L.platforms.push({ x: cx - 120, y: GROUND_Y - 100, w: 96, h: 14, type: 5 });
@@ -809,9 +841,9 @@ function esconderSegredo(L, def) {
     L.secret = { x: cx + 133, y: GROUND_Y - 338, w: 30, h: 30, got: false, t: 0 };
   } else {
     // escondida atras de uma pilha de tijolos
-    for (let i = 0; i < 3; i++) L.blocks.push({ x: cx, y: GROUND_Y - 145 - i * 40, w: 40, h: 40, type: 'brick', used: false, bump: 0 });
-    L.platforms.push({ x: cx - 130, y: GROUND_Y - 235, w: 110, h: 14, type: 5 });
-    L.secret = { x: cx - 90, y: GROUND_Y - 275, w: 30, h: 30, got: false, t: 0 };
+    for (let i = 0; i < 3; i++) L.blocks.push({ x: cx, y: GROUND_Y - 132 - i * 40, w: 40, h: 40, type: 'brick', used: false, bump: 0 });
+    L.platforms.push({ x: cx - 130, y: GROUND_Y - 222, w: 110, h: 14, type: 5 });
+    L.secret = { x: cx - 90, y: GROUND_Y - 262, w: 30, h: 30, got: false, t: 0 };
   }
   return L;
 }
@@ -1246,7 +1278,7 @@ function updateMapBar() {
   $('mapWorldName').textContent = WORLDS[worldOf(mapCursor)].name;
   const locked = mapCursor > unlocks.maxLevel;
   $('mapLevelName').textContent = (locked ? '\u2022 TRANCADA \u2022 ' : '') + 'Fase ' + (mapCursor + 1) + ' — ' + (d.name || levels[mapCursor].name);
-  $('mapTip').textContent = locked ? 'Termine as fases anteriores para liberar' : '◀ ▶ escolher  •  PULAR para entrar';
+  $('mapTip').textContent = locked ? 'Termine as fases anteriores para liberar' : '◀ ▶ escolher  •  PULAR ou toque na fase';
 }
 
 /* =========================================================
@@ -1291,7 +1323,8 @@ function buildAmbient() {
   const B = BIOMES[level.biome];
   const kind = B.particle;
   if (!kind) return;
-  const n = kind === 'snow' ? 90 : kind === 'bubbles' ? 60 : kind === 'ash' ? 70 : kind === 'embers' ? 45 : 40;
+  let n = kind === 'snow' ? 90 : kind === 'bubbles' ? 60 : kind === 'ash' ? 70 : kind === 'embers' ? 45 : 40;
+  if (MODO_LEVE) n = Math.round(n * 0.35);      // 90 flocos de neve viram 32
   for (let i = 0; i < n; i++) {
     ambient.push({
       x: Math.random() * VW, y: Math.random() * VH,
@@ -1389,14 +1422,19 @@ function backToMenu() {
 /* =========================================================
    PARTÍCULAS
    ========================================================= */
+const TETO_PARTICULAS = () => MODO_LEVE ? 70 : 260;
 function burst(x, y, n, color) {
+  if (MODO_LEVE) n = Math.ceil(n * 0.45);
   for (let i = 0; i < n; i++) {
+    if (particles.length >= TETO_PARTICULAS()) break;
     const a = Math.random() * 6.28, sp = Math.random() * 3.4 + 0.6;
     particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1, life: 1, size: Math.random() * 4 + 2, color, g: 0.16 });
   }
 }
 function dust(x, y, n, color) {
+  if (MODO_LEVE) n = Math.ceil(n * 0.4);
   for (let i = 0; i < n; i++) {
+    if (particles.length >= TETO_PARTICULAS()) break;
     particles.push({
       x: x + (Math.random() * 16 - 8), y, vx: (Math.random() - 0.5) * 2.2,
       vy: -Math.random() * 1.8, life: 1, size: Math.random() * 5 + 2,
@@ -1405,6 +1443,8 @@ function dust(x, y, n, color) {
   }
 }
 function sparkle(x, y, color) {
+  if (particles.length >= TETO_PARTICULAS()) return;
+  if (MODO_LEVE && Math.random() < 0.5) return;
   particles.push({ x, y, vx: (Math.random() - 0.5) * 1.2, vy: -Math.random() * 1.4 - 0.3, life: 1, size: Math.random() * 3 + 1.5, color, g: 0.02 });
 }
 /* =========================================================
@@ -2027,6 +2067,22 @@ function updateAmbient(dt) {
 }
 
 /* ---------- mapa ---------- */
+/* tocar direto em uma fase no mapa: 1º toque escolhe, 2º entra */
+function tocarNoMapa(sx, sy) {
+  if (state !== 'map') return;
+  const my = sy + mapCam;
+  let melhor = -1, melhorD = 44;
+  for (let i = 0; i < LEVEL_COUNT; i++) {
+    const n = mapNodes[i];
+    const d = Math.hypot(n.x - sx, n.y - my);
+    if (d < melhorD) { melhorD = d; melhor = i; }
+  }
+  if (melhor < 0) return;
+  if (melhor > unlocks.maxLevel) { SFX.hurt(); return; }
+  if (melhor === mapCursor) { keys.jump = true; return; }   // já escolhida: entra
+  mapCursor = melhor; mapMoveCd = 8; SFX.select(); updateMapBar();
+}
+
 function updateMap(dt) {
   const t = mapNodes[mapCursor];
   const dx = t.x - mapAvatar.x, dy = t.y - mapAvatar.y;
@@ -2042,11 +2098,15 @@ function updateMap(dt) {
       mapCursor--; mapMoveCd = 12; SFX.select(); updateMapBar();
     }
   }
-    if (keys.jump && mapCursor <= unlocks.maxLevel && d < 6) {
+  if (keys.jump) {
     keys.jump = false;
-    checkpointX = 60; 
-    loadLevel(mapCursor, false); 
-    return;
+    // ANTES: só entrava se o gatinho JÁ tivesse chegado no nó (d < 6), então
+    // o toque era jogado fora enquanto ele andava. Agora entra sempre.
+    if (mapCursor <= unlocks.maxLevel) {
+      mapAvatar.x = t.x; mapAvatar.y = t.y;
+      checkpointX = 60; loadLevel(mapCursor, false); return;
+    }
+    SFX.hurt();                       // fase trancada: avisa em vez de ignorar
   }
   mapCam = lerp(mapCam, clamp(mapAvatar.y - VH * 0.45, 0, MAP_HEIGHT - VH), 1 - Math.pow(0.88, dt));
 }
@@ -2054,8 +2114,13 @@ function updateMap(dt) {
    DESENHO — FUNDOS
    ========================================================= */
 function skyGradient(B) {
-  const g = ctx.createLinearGradient(0, 0, 0, VH);
-  g.addColorStop(0, B.sky[0]); g.addColorStop(0.55, B.sky[1]); g.addColorStop(1, B.sky[2]);
+  // guardado: criar gradiente todo quadro é caro em celular fraco
+  let g = _gradCache['ceu_' + B.name];
+  if (!g) {
+    g = ctx.createLinearGradient(0, 0, 0, VH);
+    g.addColorStop(0, B.sky[0]); g.addColorStop(0.55, B.sky[1]); g.addColorStop(1, B.sky[2]);
+    _gradCache['ceu_' + B.name] = g;
+  }
   ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
 }
 
@@ -2064,7 +2129,8 @@ function hills(color, base, amp, freq, par, phase) {
   const off = camera.x * par;
   ctx.fillStyle = color;
   ctx.beginPath(); ctx.moveTo(0, VH);
-  for (let x = 0; x <= VW + 8; x += 8) {
+  const passo = MODO_LEVE ? 20 : 8;
+  for (let x = 0; x <= VW + passo; x += passo) {
     const wx = x + off;
     const y = base - Math.sin(wx * freq + phase) * amp - Math.sin(wx * freq * 2.3 + phase) * amp * 0.35;
     ctx.lineTo(x, y);
@@ -2118,6 +2184,7 @@ function serra(par, esp, baseY, topoMin, variacao, corSombra, corLuz, corNeve, n
 
 /* fileira de árvores/objetos repetidos */
 function repeatProp(par, spacing, drawFn) {
+  if (MODO_LEVE && par < 0.18) return;      // camada mais longe: quase não se percebe
   const off = camera.x * par;
   const start = Math.floor(off / spacing) * spacing;
   for (let i = -1; i < VW / spacing + 2; i++) {
@@ -2338,21 +2405,24 @@ function drawTerrain() {
     }
     else {                       // chão sólido
       ctx.fillStyle = B.dirt; ctx.fillRect(p.x, p.y, p.w, p.h);
-      // textura de terra
-      ctx.fillStyle = B.dirtDark;
+      // textura de terra (dezenas de retângulos por tela: some no modo leve)
       const x0 = Math.max(p.x, left), x1 = Math.min(p.x + p.w, right);
+      if (!MODO_LEVE) {
+      ctx.fillStyle = B.dirtDark;
       for (let tx = Math.floor(x0 / 24) * 24; tx < x1; tx += 24) {
         for (let ty = p.y + 22; ty < p.y + p.h; ty += 26) {
           const o = ((tx / 24) % 2) * 12;
           ctx.fillRect(tx + o, ty, 12, 8);
         }
       }
+      }
       // grama / superfície
       ctx.fillStyle = B.top; ctx.fillRect(p.x, p.y, p.w, 16);
       ctx.fillStyle = B.topLight; ctx.fillRect(p.x, p.y, p.w, 7);
-      // franjinha da superfície
+      // franjinha da superfície (um arco a cada 12px: vira faixa lisa no modo leve)
       ctx.fillStyle = B.top;
-      for (let tx = Math.floor(x0 / 12) * 12; tx < x1; tx += 12) {
+      if (MODO_LEVE) ctx.fillRect(p.x, p.y + 16, p.w, 6);
+      else for (let tx = Math.floor(x0 / 12) * 12; tx < x1; tx += 12) {
         ctx.beginPath(); ctx.arc(tx + 6, p.y + 18, 6, 0, Math.PI); ctx.fill();
       }
       // bordas
@@ -2362,8 +2432,11 @@ function drawTerrain() {
   }
 
   // decorações
+  let nDeco = 0;
+  const limiteDeco = MODO_LEVE ? 10 : 999;
   for (const d of level.deco) {
     if (d.x < left - 60 || d.x > right + 60) continue;
+    if (++nDeco > limiteDeco) break;
     drawDeco(d, B);
   }
 }
@@ -3269,7 +3342,7 @@ function draw() {
     ctx.save(); ctx.translate(it.x + 15, it.y + 15);
     const bob = Math.sin(T() / 200) * 2;
     ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.shadowColor = '#ffd93b'; ctx.shadowBlur = 14;
+    if (!MODO_LEVE) { ctx.shadowColor = '#ffd93b'; ctx.shadowBlur = 14; }
     ctx.rotate((it.giro || 0) + (it.tomb || 0));
     if (it.type === 'life') icCoracao(0, bob - 7, 10);
     else if (it.type === 'cape') icCapa(0, bob - 7, 11);
@@ -3290,7 +3363,7 @@ function draw() {
   }
   for (const s of bossShots) {
     ctx.fillStyle = s.color;
-    ctx.shadowColor = s.color; ctx.shadowBlur = 12;
+    if (!MODO_LEVE) { ctx.shadowColor = s.color; ctx.shadowBlur = 12; }
     ctx.beginPath(); ctx.arc(s.x + 8, s.y + 8, 8, 0, 6.2832); ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -3320,9 +3393,15 @@ function draw() {
     ctx.fillStyle = 'rgba(20,110,170,0.18)'; ctx.fillRect(0, 0, VW, VH);
   }
   // vinheta
-  const vg = ctx.createRadialGradient(VW / 2, VH / 2, 160, VW / 2, VH / 2, 400);
-  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.35)');
-  ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
+  if (!MODO_LEVE) {
+    let vg = _gradCache.vinheta;
+    if (!vg) {
+      vg = ctx.createRadialGradient(VW / 2, VH / 2, 160, VW / 2, VH / 2, 400);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+      _gradCache.vinheta = vg;
+    }
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
+  }
 
   if (level.bossType) drawBossBar();
 
@@ -3476,12 +3555,43 @@ function drawMap() {
 function gameLoop(time) {
   if (!lastTime) lastTime = time;
   let dt = (time - lastTime) / 16.667;
+  const msQuadro = time - lastTime;
   lastTime = time;
   if (dt > 2.5) dt = 2.5;
   if (dt < 0) dt = 0;
-  update(dt);
-  draw();
+
+  // mede os primeiros segundos e cai sozinho para o modo leve se estiver travando
+  if (QUALIDADE === 'auto' && !MODO_LEVE && msQuadro > 0 && msQuadro < 500) {
+    fpsAmostras.push(msQuadro);
+    if (fpsAmostras.length === 90) {
+      fpsAmostras.sort((a, b) => a - b);
+      const mediana = fpsAmostras[45];
+      fpsMedido = Math.round(1000 / mediana);
+      if (mediana > 23) {                       // abaixo de ~43 fps
+        MODO_LEVE = true; aplicarQualidade();
+        if (!jaAvisouLeve) { jaAvisouLeve = true; avisarModoLeve(); }
+      }
+      fpsAmostras = [];
+    }
+  }
+
+  try {
+    update(dt);
+    draw();
+  } catch (err) {
+    // um erro não pode congelar o jogo inteiro: avisa e segue
+    if (!window._erroMostrado) {
+      window._erroMostrado = true;
+      try { showMessage('Ops, algo falhou<br><span style="font-size:12px;font-weight:700">' + (err && err.message ? err.message : err) + '</span>'); } catch (e) { }
+    }
+    console.error(err);
+  }
   rafId = requestAnimationFrame(gameLoop);
+}
+
+function avisarModoLeve() {
+  const el = $('mapTip');
+  popup(player ? player.x : 100, player ? player.y - 40 : 100, 'MODO LEVE ATIVADO', '#7fd4ff');
 }
 
 /* =========================================================
@@ -3499,6 +3609,27 @@ function bindHold(id, onDown, onUp) {
   el.addEventListener('mouseleave', up);
 }
 ['touchstart', 'mousedown', 'keydown'].forEach(ev => window.addEventListener(ev, initAudio, { passive: true, once: false }));
+
+/* toque/clique no canvas — usado para escolher fase no mapa */
+(function ligarToqueNoCanvas() {
+  const cv = $('gameCanvas');
+  const paraTela = (cx, cy) => {
+    const r = cv.getBoundingClientRect();            // resolve escala do #fitter e do devicePixelRatio
+    if (!r.width || !r.height) return null;
+    return { x: (cx - r.left) / r.width * VW, y: (cy - r.top) / r.height * VH };
+  };
+  const agir = e => {
+    if (state !== 'map') return;
+    const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+    const p = paraTela(t.clientX, t.clientY);
+    if (!p) return;
+    if (e.cancelable) e.preventDefault();
+    initAudio();
+    tocarNoMapa(p.x, p.y);
+  };
+  cv.addEventListener('touchstart', agir, { passive: false });
+  cv.addEventListener('mousedown', agir);
+})();
 bindHold('btnLeft', () => keys.left = true, () => keys.left = false);
 bindHold('btnRight', () => keys.right = true, () => keys.right = false);
 bindHold('btnJump', () => { keys.jump = true; keys.jumpHeld = true; }, () => { keys.jumpHeld = false; });
@@ -3511,6 +3642,7 @@ window.addEventListener('keydown', e => {
   if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w') { if (!keys.jumpHeld) keys.jump = true; keys.jumpHeld = true; e.preventDefault(); }
   if (e.key === 'x' || e.key === 'X' || e.key === 'Shift') { keys.shoot = true; shoot(); }
   if (e.key === 'p' || e.key === 'Escape') togglePause();
+  if (e.key === 'Enter') { if (!keys.jumpHeld) keys.jump = true; }
 });
 window.addEventListener('keyup', e => {
   if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
@@ -3521,7 +3653,7 @@ window.addEventListener('keyup', e => {
 
 /* ---------- botões de tela ---------- */
 function togglePause() {
-  if (state === 'playing') { Musica.mudo(true); state = 'pause'; $('pauseScreen').style.display = 'flex'; keys.left = keys.right = false; }
+  if (state === 'playing') { Musica.mudo(true); state = 'pause'; textoQualidade(); $('pauseScreen').style.display = 'flex'; keys.left = keys.right = false; }
   else if (state === 'pause') { state = 'playing'; $('pauseScreen').style.display = 'none'; Musica.mudo(!soundOn); lastTime = 0; }
 }
 $('btnPause').onclick = togglePause;
@@ -3531,13 +3663,27 @@ $('btnSound').onclick = () => {
 };
 $('btnResume').onclick = () => { $('pauseScreen').style.display = 'none'; Musica.mudo(!soundOn); state = 'playing'; lastTime = 0; };
 $('btnRestartLevel').onclick = () => { $('pauseScreen').style.display = 'none'; Musica.mudo(!soundOn); checkpointX = 60; loadLevel(levelIndex, false); };
+function textoQualidade() {
+  const nome = QUALIDADE === 'auto' ? ('Automático' + (MODO_LEVE ? ' (leve)' : ' (alta)'))
+             : QUALIDADE === 'leve' ? 'Modo leve' : 'Qualidade alta';
+  $('btnQualidade').textContent = 'Gráficos: ' + nome;
+  $('fpsInfo').textContent = MODO_LEVE
+    ? 'Menos efeitos e metade dos pixels — para celular mais fraco'
+    : (fpsMedido ? 'Rodando a cerca de ' + fpsMedido + ' quadros por segundo' : 'Todos os efeitos ligados');
+}
+$('btnQualidade').onclick = () => {
+  QUALIDADE = QUALIDADE === 'auto' ? 'leve' : QUALIDADE === 'leve' ? 'alta' : 'auto';
+  aplicarQualidade(); textoQualidade(); SFX.select();
+  try { localStorage.setItem('sgb_qualidade', QUALIDADE); } catch (e) { }
+};
 $('btnQuitToMap').onclick = () => { $('pauseScreen').style.display = 'none'; Musica.mudo(!soundOn); saveGame(); showMap(); };
 
 $('btnNewGame').onclick = () => {
   initAudio(); SFX.select();
   lives = 5; coins = 0;
-  // CORREÇÃO: Adicionado o "dourado: false" e o "stars: {}" no final
-  unlocks = { maxLevel: 0, doubleJump: false, startCape: false, magnet: false, chars: { normal: true, ninja: false, robot: false, panda: false, dourado: false }, current: 'normal', seen: {}, stars: {} };
+  unlocks = { maxLevel: 0, doubleJump: false, startCape: false, magnet: false,
+              chars: { normal: true, ninja: false, robot: false, panda: false, dourado: false },
+              current: 'normal', seen: {}, stars: {} };
   saveGame();
   $('menuScreen').style.display = 'none';
   showMap();
@@ -3551,22 +3697,7 @@ $('btnContinue').onclick = () => {
       unlocks = Object.assign(unlocks, s.unlocks);
       unlocks.chars = Object.assign({ normal: true, ninja: false, robot: false, panda: false, dourado: false }, s.unlocks.chars || {});
       unlocks.seen = s.unlocks.seen || {};
-      unlocks.stars = s.unlocks.stars || {}; // CORREÇÃO: Garante que "stars" exista sempre
-      unlocks.maxLevel = clamp(s.unlocks.maxLevel || 0, 0, LEVEL_COUNT - 1);
-    }
-  }
-  $('menuScreen').style.display = 'none';
-  showMap();
-};
-$('btnContinue').onclick = () => {
-  initAudio(); SFX.select();
-  const s = loadSave();
-  if (s) {
-    lives = s.lives || 5; coins = s.coins || 0;
-    if (s.unlocks) {
-      unlocks = Object.assign(unlocks, s.unlocks);
-      unlocks.chars = Object.assign({ normal: true, ninja: false, robot: false, panda: false }, s.unlocks.chars || {});
-      unlocks.seen = s.unlocks.seen || {};
+      unlocks.stars = s.unlocks.stars || {};
       unlocks.maxLevel = clamp(s.unlocks.maxLevel || 0, 0, LEVEL_COUNT - 1);
     }
   }
@@ -3590,6 +3721,8 @@ $('btnNextPhase').onclick = () => {
    INÍCIO
    ========================================================= */
 function bootstrap() {
+  try { const q = localStorage.getItem('sgb_qualidade'); if (q) QUALIDADE = q; } catch (e) { }
+  aplicarQualidade();
   level = JSON.parse(JSON.stringify(levels[0]));   // cenário bonito atrás do menu
   buildAmbient();
   camera.x = 300;
