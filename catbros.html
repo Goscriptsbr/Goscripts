@@ -523,6 +523,12 @@ const LEVEL_DEFS = [
   // ---------- MUNDO 6 : CÉU (desbloqueia depois de vencer o Gato Robô) ----------
   { name: 'Escada de Nuvens', biome: 'sky', width: 4700, seed: 2121, maxGap: 130, enemyRate: 0.9,
     kinds: ['flyer', 'bat', 'jumper'], movers: 3 },
+  { name: 'Ponte de Vento',   biome: 'sky', width: 4900, seed: 2222, maxGap: 132, enemyRate: 1.0,
+    kinds: ['flyer', 'bat', 'runner'], movers: 4 },
+  { name: 'Jardim Flutuante', biome: 'sky', width: 5000, seed: 2323, maxGap: 128, enemyRate: 1.0,
+    kinds: ['jumper', 'spiky', 'flyer'], movers: 3, spikeRate: 0.4 },
+  { name: 'Portão Dourado',   biome: 'sky', width: 5200, seed: 2424, maxGap: 135, enemyRate: 1.1,
+    kinds: ['runner', 'flyer', 'bat', 'spiky'], movers: 4, spikeRate: 0.5 },
   { boss: 'king', name: 'O Gato Rei', biome: 'sky' }
 ];
 
@@ -777,6 +783,39 @@ function genBossLevel(def, id) {
   return L;
 }
 
+/* ---------- SEGREDOS: uma estrela escondida por fase ----------
+   ficam em lugares que so aparecem se voce procurar: em cima de
+   um bloco invisivel, atras de uma parede alta ou no fim de uma
+   trilha de moedas que sobe                                     */
+function esconderSegredo(L, def) {
+  if (L.bossType) return L;
+  const rnd = mulberry32((def.seed || 7) * 31 + 5);
+  const chaos = L.platforms.filter(p => p.type === 0 && p.w > 300 && p.x > 700);
+  if (!chaos.length) return L;
+  const alvo = chaos[Math.floor(rnd() * chaos.length) % chaos.length];
+  const cx = Math.round(alvo.x + alvo.w * 0.5);
+  const modo = Math.floor(rnd() * 3);
+
+  if (modo === 0) {
+    // bloco invisível: bata nele no ar e ele vira o degrau para a estrela
+    L.blocks.push({ x: cx, y: GROUND_Y - 150, w: 40, h: 40, type: 'secret', used: false, bump: 0, oculto: true });
+    L.secret = { x: cx + 5, y: GROUND_Y - 282, w: 30, h: 30, got: false, t: 0 };
+  } else if (modo === 1) {
+    // trilha de moedas subindo: 3 degraus de 100px levam ao topo
+    L.platforms.push({ x: cx - 120, y: GROUND_Y - 100, w: 96, h: 14, type: 5 });
+    L.platforms.push({ x: cx - 10,  y: GROUND_Y - 200, w: 96, h: 14, type: 5 });
+    L.platforms.push({ x: cx + 100, y: GROUND_Y - 298, w: 96, h: 14, type: 5 });
+    for (let i = 0; i < 6; i++) L.coins.push({ x: cx - 100 + i * 44, y: GROUND_Y - 140 - i * 34, w: 22, h: 22, got: false });
+    L.secret = { x: cx + 133, y: GROUND_Y - 338, w: 30, h: 30, got: false, t: 0 };
+  } else {
+    // escondida atras de uma pilha de tijolos
+    for (let i = 0; i < 3; i++) L.blocks.push({ x: cx, y: GROUND_Y - 145 - i * 40, w: 40, h: 40, type: 'brick', used: false, bump: 0 });
+    L.platforms.push({ x: cx - 130, y: GROUND_Y - 235, w: 110, h: 14, type: 5 });
+    L.secret = { x: cx - 90, y: GROUND_Y - 275, w: 30, h: 30, got: false, t: 0 };
+  }
+  return L;
+}
+
 /* ---------- garantia final: NENHUM inimigo alcanca uma bandeira ----------
    roda depois da fase pronta, entao vale para qualquer gerador           */
 function afastarInimigosDasBandeiras(L) {
@@ -801,11 +840,21 @@ function afastarInimigosDasBandeiras(L) {
 /* ---------- monta todas as fases ---------- */
 const levels = LEVEL_DEFS.map((d, i) => {
   if (d.boss) return genBossLevel(d, i + 1);
-  if (d.underwater) return afastarInimigosDasBandeiras(genOceanLevel(d, i + 1));
-  return afastarInimigosDasBandeiras(genRunLevel(d, i + 1));
+  if (d.underwater) return esconderSegredo(afastarInimigosDasBandeiras(genOceanLevel(d, i + 1)), d);
+  return esconderSegredo(afastarInimigosDasBandeiras(genRunLevel(d, i + 1)), d);
 });
 const LEVEL_COUNT = levels.length;
-function worldOf(i) { return Math.floor(i / 4); }
+const SEGREDOS_TOTAL = levels.filter(L => L.secret).length;
+// mundos podem ter tamanhos diferentes: o Céu tem 5 fases
+const FASES_POR_MUNDO = [4, 4, 4, 4, 4, 5];
+const MUNDO_DA_FASE = [], POS_NO_MUNDO = [];
+(function () {
+  let n = 0;
+  FASES_POR_MUNDO.forEach((qtd, w) => { for (let k = 0; k < qtd; k++) { MUNDO_DA_FASE[n] = w; POS_NO_MUNDO[n] = k; n++; } });
+})();
+function worldOf(i) { return MUNDO_DA_FASE[i] !== undefined ? MUNDO_DA_FASE[i] : FASES_POR_MUNDO.length - 1; }
+function posNoMundo(i) { return POS_NO_MUNDO[i] !== undefined ? POS_NO_MUNDO[i] : 0; }
+function fasesDoMundo(w) { return FASES_POR_MUNDO[w] || 4; }
 /* =========================================================
    MÚSICA — trilha chiptune gerada na hora pelo WebAudio.
    Nada é baixado: as melodias são tocadas nota por nota.
@@ -991,6 +1040,7 @@ const _SVG = {
   bloco: `<rect x="3.6" y="3.6" width="16.8" height="16.8" rx="2.6" fill="#ffb347" stroke="#8a4b13" stroke-width="1.6"/><path d="M9.6 9.4a2.5 2.5 0 014.9.7c0 1.7-2.4 2-2.4 3.6" fill="none" stroke="#8a4b13" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="#8a4b13"/>`,
   espinho: `<path d="M2.6 19.4l3.6-8 3.6 8zM9.2 19.4l3.6-9.6 3.6 9.6zM15.8 19.4l3-6.6 3 6.6z" fill="#9fb2cc" stroke="#3d4a63" stroke-width="1.4" stroke-linejoin="round"/>`,
   pata: `<ellipse cx="12" cy="15.4" rx="5" ry="4.2" fill="currentColor"/><ellipse cx="6.6" cy="10.4" rx="2.1" ry="2.6" fill="currentColor"/><ellipse cx="10.2" cy="7.6" rx="2.1" ry="2.7" fill="currentColor"/><ellipse cx="13.8" cy="7.6" rx="2.1" ry="2.7" fill="currentColor"/><ellipse cx="17.4" cy="10.4" rx="2.1" ry="2.6" fill="currentColor"/>`,
+  estrela: `<path d="M12 2.6l2.9 6.1 6.7.9-4.9 4.6 1.2 6.6L12 17.6 6.1 20.8l1.2-6.6L2.4 9.6l6.7-.9z" fill="#ffd93b" stroke="#a97a00" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 6.2l1.6 3.4 3.7.5" fill="none" stroke="#fff6c2" stroke-width="1.2" stroke-linecap="round" opacity=".9"/>`,
   caveira: `<path d="M12 2.8c5 0 8.4 3.4 8.4 7.9 0 2.8-1.3 4.5-2.7 5.6v3.2a1.7 1.7 0 01-1.7 1.7H8a1.7 1.7 0 01-1.7-1.7v-3.2C4.9 15.2 3.6 13.5 3.6 10.7 3.6 6.2 7 2.8 12 2.8z" fill="#eef2f8" stroke="#3d4a63" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="8.8" cy="11" rx="2.2" ry="2.5" fill="#3d4a63"/><ellipse cx="15.2" cy="11" rx="2.2" ry="2.5" fill="#3d4a63"/><path d="M12 14.2l-1.1 2.2h2.2z" fill="#3d4a63"/>`
 };
 function IC(nome, tam) {
@@ -1006,7 +1056,7 @@ let player = null, level = null, levelIndex = 0;
 let camera = { x: 0, y: 0 };
 let shake = 0, flash = 0, flashColor = '#fff';
 let lives = 5, coins = 0;
-let invincible = 0, dbljumpUsed = 0;
+let invincible = 0, dbljumpUsed = 0, estrelasNovas = 0;
 let particles = [], balls = [], popups = [], ambient = [];
 let checkpointX = 60;
 let levelClearT = 0;
@@ -1017,14 +1067,15 @@ let jumpBuffer = 0;
 
 let unlocks = {
   maxLevel: 0, doubleJump: false, startCape: false, magnet: false,
-  chars: { normal: true, ninja: false, robot: false, panda: false },
-  current: 'normal', seen: {}
+  chars: { normal: true, ninja: false, robot: false, panda: false, dourado: false },
+  current: 'normal', seen: {}, stars: {}
 };
 
 const CHARS = {
   normal: { name: 'Gato Laranja', body: '#f0913c', dark: '#d1701f', belly: '#ffe0b8', ic: 'moeda' },
   ninja:  { name: 'Gato Ninja',   body: '#39445c', dark: '#232b3d', belly: '#5a6883', ic: 'ninja' },
   robot:  { name: 'Gato Robô',    body: '#9aa7b4', dark: '#6f7d8c', belly: '#c8d3dd', ic: 'robo' },
+  dourado:{ name: 'Gato Dourado', body: '#ffd93b', dark: '#c99a00', belly: '#fff6c2', ic: 'estrela' },
   panda:  { name: 'Gato Panda',   body: '#f2f2f2', dark: '#2b2b2b', belly: '#ffffff', ic: 'panda' }
 };
 
@@ -1051,6 +1102,8 @@ function updateHUD() {
   if (player && player.hasCape) html += '<div class="power-chip">' + IC('capa', 15) + 'VOAR</div>';
   if (player && player.hasBall) html += '<div class="power-chip">' + IC('novelo', 15) + 'TIRO</div>';
   if (unlocks.doubleJump) html += '<div class="power-chip">' + IC('pulo2', 15) + 'PULO 2×</div>';
+  const totEstrelas = Object.keys(unlocks.stars || {}).length;
+  if (totEstrelas) html += '<div class="power-chip" style="border-color:#7fd4ff">' + IC('estrela', 15) + totEstrelas + '/' + SEGREDOS_TOTAL + '</div>';
   $('powerRow').innerHTML = html;
   // o botao de ATIRAR fica sempre a vista: cadeado quando travado, brilhando quando tem a bola
   const sb = $('btnShoot'), temBola = !!(player && player.hasBall);
@@ -1074,7 +1127,8 @@ const SHOP_ITEMS = [
   { id: 'magnet', ic: 'ima', label: 'Ímã de moedas',  price: 110 },
   { id: 'ninja',  ic: 'ninja', label: 'Gato Ninja',     price: 200, char: true },
   { id: 'robot',  ic: 'robo', label: 'Gato Robô',      price: 260, char: true },
-  { id: 'panda',  ic: 'panda', label: 'Gato Panda',     price: 320, char: true }
+  { id: 'panda',  ic: 'panda', label: 'Gato Panda',     price: 320, char: true },
+  { id: 'dourado', ic: 'estrela', label: 'Gato Dourado',  price: 0, char: true, estrelas: 10 }
 ];
 
 function renderShop() {
@@ -1085,6 +1139,7 @@ function renderShop() {
     const b = document.createElement('button');
     b.className = 'menu-btn btn-buy';
     let owned = false, right = it.price + IC('moeda', 15);
+    if (it.estrelas) right = Object.keys(unlocks.stars || {}).length + '/' + it.estrelas + IC('estrela', 15);
     if (it.char) {
       owned = unlocks.chars[it.id];
       if (owned) right = (unlocks.current === it.id) ? 'EQUIPADO' : 'EQUIPAR';
@@ -1105,6 +1160,12 @@ function shopError(msg) {
 function buy(it) {
   // equipar personagem já comprado
   if (it.char && unlocks.chars[it.id]) { unlocks.current = it.id; SFX.select(); renderShop(); saveGame(); return; }
+  if (it.estrelas) {
+    const t = Object.keys(unlocks.stars || {}).length;
+    if (t < it.estrelas) { shopError('Ache ' + (it.estrelas - t) + ' estrela(s) secreta(s)!'); return; }
+    unlocks.chars.dourado = true; unlocks.current = 'dourado';
+    SFX.power(); renderShop(); updateHUD(); saveGame(); return;
+  }
   if (it.id === 'double' && unlocks.doubleJump) { shopError('Você já tem esse poder!'); return; }
   if (it.id === 'cape' && unlocks.startCape) { shopError('Você já tem esse poder!'); return; }
   if (it.id === 'magnet' && unlocks.magnet) { shopError('Você já tem esse poder!'); return; }
@@ -1145,12 +1206,12 @@ function showTutorial(key) {
 const mapNodes = [];
 (function buildMap() {
   for (let i = 0; i < LEVEL_COUNT; i++) {
-    const w = worldOf(i), k = i % 4;
+    const w = worldOf(i), k = posNoMundo(i);
     // cada mundo é uma faixa; os nós fazem um "S" suave dentro da faixa
-    const bandTop = 210 + w * 400;
+    const bandTop = 210 + w * 400 + (w >= 6 ? 0 : 0);
     const y = bandTop + k * 92;
     const x = 180 + Math.sin((i * 1.15) + w * 0.7) * 96;
-    mapNodes.push({ x: Math.round(x), y: Math.round(y), world: w, boss: k === 3 });
+    mapNodes.push({ x: Math.round(x), y: Math.round(y), world: w, boss: k === fasesDoMundo(w) - 1 });
   }
 })();
 const MAP_HEIGHT = mapNodes[LEVEL_COUNT - 1].y + 240;
@@ -1201,6 +1262,7 @@ function loadLevel(index, fromCheckpoint) {
   };
   camera.x = clamp(player.x - 120, 0, level.width - VW);
   camera.y = 0;
+  if (level.secret) level.secret.got = !!unlocks.stars[levelIndex];
   limparAreaDeNascimento(checkpointX);
   state = 'playing'; invincible = 75; dbljumpUsed = 0; jumpBuffer = 0;
   particles = []; balls = []; popups = []; bossShots = []; levelClearT = 0; shake = 0; flash = 0;
@@ -1561,26 +1623,65 @@ function bumpBlock(b) {
   if (b.used) return;
   b.used = true;
   const t = b.type;
-  if (t === 'coin') { coins += 10; popup(b.x, b.y - 10, '+10', '#ffd93b'); SFX.coin(); updateHUD(); }
+  if (t === 'secret') { b.oculto = false; SFX.power(); popup(b.x, b.y - 10, 'SEGREDO!', '#7fd4ff'); burst(b.x + 20, b.y, 14, '#7fd4ff'); return; }
+  if (t === 'coin') {
+    coins += 10; popup(b.x, b.y - 10, '+10', '#ffd93b'); SFX.coin(); updateHUD();
+    for (let i = 0; i < 5; i++) particles.push({ x: b.x + 20, y: b.y, vx: (Math.random() - .5) * 3.4, vy: -5 - Math.random() * 3,
+      life: 1, size: 5, color: '#ffd93b', g: 0.34, quica: true });
+  }
   else if (t === 'life') { level.items.push(mkItem(b.x + 4, b.y - 34, 'life')); }
   else if (t === 'cape') { level.items.push(mkItem(b.x + 4, b.y - 34, 'cape')); }
   else if (t === 'ball') { level.items.push(mkItem(b.x + 4, b.y - 34, 'ball')); }
   burst(b.x + 20, b.y, 8, '#ffd93b');
 }
-function mkItem(x, y, type) { return { x, y, w: 30, h: 30, vx: 1.5, vy: -3.4, type, t: 0 }; }
+function mkItem(x, y, type) {
+  // sai do bloco com força: pulinho alto e uma direção sorteada
+  const lado = Math.random() < 0.5 ? -1 : 1;
+  return { x, y, w: 30, h: 30, vx: lado * (1.4 + Math.random() * 1.5), vy: -8.4 - Math.random() * 1.6,
+           type, t: 0, giro: 0, tomb: 0, noChao: false };
+}
 
 /* ---------- itens soltos ---------- */
 function updateItems(dt, solids) {
   for (let i = level.items.length - 1; i >= 0; i--) {
     const it = level.items[i];
     it.t += dt;
-    it.vy += GRAVITY * 0.55 * dt;
-    if (it.vy > 6) it.vy = 6;
-    it.x += it.vx * dt; it.y += it.vy * dt;
-    for (const s of solids) {
-      if (it.vy > 0 && hit(it, s) && it.y + it.h - it.vy * dt <= s.y + 10) { it.y = s.y - it.h; it.vy = 0; }
-      else if (hit(it, s) && it.vy === 0) { it.vx *= -1; }
+
+    // --- física: gravidade, quique, atrito e rolagem ---
+    it.vy += GRAVITY * 0.82 * dt;
+    if (it.vy > 12) it.vy = 12;
+    it.x += it.vx * dt;
+
+    for (const s of solids) {                       // parede: bate e volta
+      if (!hit(it, s)) continue;
+      const pen = (it.y + it.h) - s.y;
+      if (pen > 8) {
+        it.x = (it.vx > 0) ? s.x - it.w : s.x + s.w;
+        it.vx *= -0.62;                             // perde energia na batida
+        if (Math.abs(it.vx) < 0.25) it.vx = 0;
+      }
     }
+
+    it.y += it.vy * dt;
+    it.noChao = false;
+    for (const s of solids) {
+      if (!hit(it, s)) continue;
+      if (it.vy > 0) {
+        it.y = s.y - it.h;
+        if (it.vy > 2.2) {                                 // quica
+          it.vy *= -0.42;
+          if (Math.abs(it.vy) < 1.7) { it.vy = 0; it.noChao = true; }   // quique pequeno: assenta
+          else SFX.block();
+        }
+        else { it.vy = 0; it.noChao = true; }
+      } else if (it.vy < 0) { it.y = s.y + s.h; it.vy = 0; }
+    }
+    if (it.noChao) {
+      it.vx *= 0.955;                               // atrito do chão
+      if (Math.abs(it.vx) < 0.06) it.vx = 0;
+    }
+    it.giro = (it.giro || 0) + it.vx * 0.05 * dt;   // rola conforme anda
+    it.tomb = (it.noChao && Math.abs(it.vx) < 0.4) ? Math.sin(it.t * 0.09) * 0.06 : 0;
     if (hit(player, it)) {
       if (it.type === 'life') { lives++; popup(it.x, it.y, '+1 VIDA', '#ff6b6b'); }
       else if (it.type === 'cape') { player.hasCape = true; player.flyEnergy = FLY_MAX; showTutorial('cape'); }
@@ -1589,6 +1690,19 @@ function updateItems(dt, solids) {
       level.items.splice(i, 1); updateHUD(); continue;
     }
     if (it.y > VH + 200) level.items.splice(i, 1);
+  }
+  // ---- estrela secreta ----
+  const sec = level.secret;
+  if (sec && !sec.got) {
+    sec.t += dt;
+    if (hit(player, sec)) {
+      sec.got = true;
+      unlocks.stars[levelIndex] = true;
+      coins += 50; estrelasNovas = 1;
+      popup(sec.x - 10, sec.y - 14, 'ESTRELA SECRETA! +50', '#ffd93b');
+      burst(sec.x + 15, sec.y + 15, 30, '#ffd93b');
+      SFX.win(); shake = 6; updateHUD(); saveGame();
+    }
   }
 }
 
@@ -1879,6 +1993,10 @@ function updateParticles(dt) {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.g || 0.1) * dt;
+    if (p.quica && p.vy > 0 && p.y > GROUND_Y - 4) {        // moedinha bate no chão e pula de novo
+      p.y = GROUND_Y - 4; p.vy *= -0.5; p.vx *= 0.7;
+      if (Math.abs(p.vy) < 1) p.quica = false;
+    }
     p.life -= 0.032 * dt; p.size *= Math.pow(0.965, dt);
     if (p.life <= 0 || p.size < 0.4) particles.splice(i, 1);
   }
@@ -1941,6 +2059,50 @@ function hills(color, base, amp, freq, par, phase) {
     ctx.lineTo(x, y);
   }
   ctx.lineTo(VW, VH); ctx.closePath(); ctx.fill();
+}
+
+/* serra de montanhas: base sólida e picos largos que se sobrepõem,
+   em vez de triângulos finos com buraco entre um e outro          */
+function serra(par, esp, baseY, topoMin, variacao, corSombra, corLuz, corNeve, neveAte) {
+  ctx.fillStyle = corSombra;
+  ctx.fillRect(0, baseY - 2, VW, VH - baseY + 2);          // o pé nunca fica fino
+  repeatProp(par, esp, wx => {
+    const alt = topoMin + ((Math.abs(Math.sin(wx * 0.017)) * variacao) | 0);
+    const cx = esp * 0.5, meia = esp * 0.92;               // mais largas que o vão: encostam uma na outra
+    const om = alt + (baseY - alt) * 0.42;                 // altura dos "ombros"
+    ctx.fillStyle = corSombra;                             // lado na sombra
+    ctx.beginPath();
+    ctx.moveTo(cx - meia, baseY + 4);
+    ctx.lineTo(cx - meia * 0.52, om);
+    ctx.lineTo(cx - meia * 0.16, alt + (baseY - alt) * 0.10);
+    ctx.lineTo(cx, alt);
+    ctx.lineTo(cx + meia * 0.20, alt + (baseY - alt) * 0.12);
+    ctx.lineTo(cx + meia * 0.56, om + 6);
+    ctx.lineTo(cx + meia, baseY + 4);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = corLuz;                                // lado iluminado
+    ctx.beginPath();
+    ctx.moveTo(cx, alt);
+    ctx.lineTo(cx + meia * 0.20, alt + (baseY - alt) * 0.12);
+    ctx.lineTo(cx + meia * 0.56, om + 6);
+    ctx.lineTo(cx + meia, baseY + 4);
+    ctx.lineTo(cx, baseY + 4);
+    ctx.closePath(); ctx.fill();
+    if (corNeve) {                                         // touca de neve acompanhando o pico
+      const nb = alt + (baseY - alt) * (neveAte || 0.30);
+      ctx.fillStyle = corNeve;
+      ctx.beginPath();
+      ctx.moveTo(cx, alt);
+      ctx.lineTo(cx + meia * 0.20, alt + (baseY - alt) * 0.12);
+      ctx.lineTo(cx + meia * 0.26, nb);
+      ctx.lineTo(cx + meia * 0.10, nb - 10);
+      ctx.lineTo(cx - meia * 0.04, nb + 4);
+      ctx.lineTo(cx - meia * 0.18, nb - 8);
+      ctx.lineTo(cx - meia * 0.28, nb);
+      ctx.lineTo(cx - meia * 0.16, alt + (baseY - alt) * 0.10);
+      ctx.closePath(); ctx.fill();
+    }
+  });
 }
 
 /* fileira de árvores/objetos repetidos */
@@ -2012,21 +2174,9 @@ function drawBackground() {
   else if (bio === 'ice') {
     drawSun(288, 74, 20, '#ffffff', 'rgba(200,235,255,0.5)');
     repeatProp(0.10, 300, () => drawCloud(40, 96, 1.1, 0.5));
-    // montanhas nevadas
-    repeatProp(0.20, 190, wx => {
-      const h = 200 + ((wx * 11) % 70);
-      ctx.fillStyle = '#5f88a8';
-      ctx.beginPath(); ctx.moveTo(-20, VH); ctx.lineTo(95, h); ctx.lineTo(210, VH); ctx.fill();
-      ctx.fillStyle = '#e8f5ff';
-      ctx.beginPath(); ctx.moveTo(95, h); ctx.lineTo(60, h + 55); ctx.lineTo(78, h + 42); ctx.lineTo(95, h + 58); ctx.lineTo(112, h + 42); ctx.lineTo(130, h + 55); ctx.fill();
-    });
-    repeatProp(0.42, 150, wx => {
-      const h = 340 + ((wx * 5) % 40);
-      ctx.fillStyle = '#a9cadd';
-      ctx.beginPath(); ctx.moveTo(-10, VH); ctx.lineTo(75, h); ctx.lineTo(160, VH); ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.moveTo(75, h); ctx.lineTo(52, h + 32); ctx.lineTo(98, h + 32); ctx.fill();
-    });
+    // serra nevada ao fundo, com pé sólido
+    serra(0.20, 210, 470, 168, 74, '#4f7794', '#6c96b4', '#eaf6ff', 0.34);
+    serra(0.42, 168, 505, 300, 46, '#8fb6cc', '#b3d3e5', '#ffffff', 0.30);
     hills('#dceef8', 500, 14, 0.02, 0.64, 1.2);
   }
   else if (bio === 'beach') {
@@ -2397,6 +2547,21 @@ function drawBlocks() {
   for (const b of level.blocks) {
     if (b.gone) continue;
     if (b.x > camera.x + VW + 40 || b.x + b.w < camera.x - 40) continue;
+    if (b.oculto) continue;                       // bloco secreto: invisível até levar uma cabeçada
+    if (b.type === 'secret') {                    // depois de achado, vira um bloco brilhante
+      const p2 = 0.6 + Math.abs(Math.sin(T() / 260)) * 0.4;
+      const yb = b.y + (b.bump > 0 ? -Math.sin((12 - b.bump) / 12 * Math.PI) * 8 : 0);
+      roundRect(b.x, yb, 40, 40, 6, '#3f6fa8');
+      ctx.fillStyle = 'rgba(127,212,255,' + p2 + ')';
+      ctx.fillRect(b.x + 3, yb + 3, 34, 34);
+      ctx.fillStyle = '#eaf6ff';
+      ctx.beginPath();
+      ctx.moveTo(b.x + 20, yb + 8); ctx.lineTo(b.x + 24, yb + 17); ctx.lineTo(b.x + 33, yb + 18);
+      ctx.lineTo(b.x + 26, yb + 24); ctx.lineTo(b.x + 29, yb + 33); ctx.lineTo(b.x + 20, yb + 28);
+      ctx.lineTo(b.x + 11, yb + 33); ctx.lineTo(b.x + 14, yb + 24); ctx.lineTo(b.x + 7, yb + 18);
+      ctx.lineTo(b.x + 16, yb + 17); ctx.closePath(); ctx.fill();
+      continue;
+    }
     const off = b.bump > 0 ? -Math.sin((12 - b.bump) / 12 * Math.PI) * 8 : 0;
     const y = b.y + off;
     if (b.type === 'brick') {
@@ -2436,6 +2601,34 @@ function drawCoin(x, y, seed) {
   ctx.strokeStyle = '#e0a41c'; ctx.lineWidth = 1.8;
   ctx.beginPath(); ctx.ellipse(0, 0, 4, 6.4, 0, 0, 6.2832); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.beginPath(); ctx.ellipse(-2.5, -4, 1.8, 3.2, 0, 0, 6.2832); ctx.fill();
+  ctx.restore();
+}
+
+/* estrela secreta */
+function drawSecret() {
+  const sc = level.secret;
+  if (!sc || sc.got) return;
+  if (sc.x > camera.x + VW + 60 || sc.x < camera.x - 60) return;
+  const pulso = 0.72 + Math.abs(Math.sin(T() / 300)) * 0.28;
+  const sobe = Math.sin(T() / 420) * 6;
+  ctx.save();
+  ctx.translate(sc.x + 15, sc.y + 15 + sobe);
+  ctx.globalAlpha = 0.22 * pulso;
+  ctx.fillStyle = '#ffd93b';
+  ctx.beginPath(); ctx.arc(0, 0, 34 * pulso, 0, 6.2832); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.rotate(Math.sin(T() / 700) * 0.22);
+  const R = 17, r = 7.4;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const ang = -Math.PI / 2 + i * Math.PI / 5, rr = (i % 2 === 0) ? R : r;
+    ctx.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#ffd93b'; ctx.fill();
+  ctx.strokeStyle = '#a97a00'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.beginPath(); ctx.ellipse(-4.6, -5.4, 4.2, 2.6, -0.6, 0, 6.2832); ctx.fill();
   ctx.restore();
 }
 
@@ -3055,6 +3248,7 @@ function draw() {
   drawTerrain();
   drawHazards();
   drawBlocks();
+  drawSecret();
   drawGoalAndFlags();
   for (const c of level.coins) {
     if (c.x > camera.x + VW + 30 || c.x < camera.x - 30) continue;
@@ -3065,6 +3259,7 @@ function draw() {
     const bob = Math.sin(T() / 200) * 2;
     ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.shadowColor = '#ffd93b'; ctx.shadowBlur = 14;
+    ctx.rotate((it.giro || 0) + (it.tomb || 0));
     if (it.type === 'life') icCoracao(0, bob - 7, 10);
     else if (it.type === 'cape') icCapa(0, bob - 7, 11);
     else icNovelo(0, bob - 7, 9);
@@ -3201,6 +3396,14 @@ function drawMap() {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if (!unlocked) { icCadeado(n.x, n.y + 1, 8); }
     else if (n.boss) { icCaveira(n.x, n.y + 1, 9); }
+    if (unlocks.stars && unlocks.stars[i]) {
+      ctx.save(); ctx.translate(n.x + 19, n.y - 15);
+      ctx.beginPath();
+      for (let q = 0; q < 10; q++) { const ag = -Math.PI / 2 + q * Math.PI / 5, rr = (q % 2 === 0) ? 8 : 3.6; ctx.lineTo(Math.cos(ag) * rr, Math.sin(ag) * rr); }
+      ctx.closePath(); ctx.fillStyle = '#ffd93b'; ctx.fill();
+      ctx.strokeStyle = '#a97a00'; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.restore();
+    }
     else {
       ctx.fillStyle = '#4a3505'; ctx.font = '900 15px Trebuchet MS';
       ctx.fillText(i + 1, n.x, n.y + 1);
@@ -3245,7 +3448,13 @@ function drawMap() {
   const _cx = VW / 2 - 96;
   icCoracao(_cx, 30, 8);      ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.fillText(String(lives), _cx + 12, 36);
   icMoeda(_cx + 58, 30, 8);   ctx.fillText(String(coins), _cx + 70, 36);
-  icBandeira(_cx + 132, 30, 9); ctx.fillText(Math.min(unlocks.maxLevel, LEVEL_COUNT) + '/' + LEVEL_COUNT, _cx + 144, 36);
+  icBandeira(_cx + 126, 30, 9); ctx.fillText(Math.min(unlocks.maxLevel, LEVEL_COUNT) + '/' + LEVEL_COUNT, _cx + 138, 36);
+  const _est = Object.keys(unlocks.stars || {}).length;
+  ctx.save(); ctx.translate(_cx + 186, 30);
+  ctx.beginPath();
+  for (let q = 0; q < 10; q++) { const ag = -Math.PI / 2 + q * Math.PI / 5, rr = (q % 2 === 0) ? 8 : 3.6; ctx.lineTo(Math.cos(ag) * rr, Math.sin(ag) * rr); }
+  ctx.closePath(); ctx.fillStyle = '#ffd93b'; ctx.fill(); ctx.restore();
+  ctx.fillStyle = '#fff'; ctx.fillText(_est + '/' + SEGREDOS_TOTAL, _cx + 198, 36);
   ctx.textAlign = 'center';
 }
 
@@ -3379,14 +3588,14 @@ function pintaIcones() {
 function pintaMenu() {
   pintaIcones();
   const feito = Math.min(unlocks.maxLevel + 1, 20);
-  const mundo = WORLDS[Math.min(Math.floor(unlocks.maxLevel / 4), WORLDS.length - 1)];
+  const mundo = WORLDS[Math.min(worldOf(unlocks.maxLevel), WORLDS.length - 1)];
   $('menuStats').innerHTML =
     '<div class="stat">' + IC('bandeira', 17) + '<b>' + feito + '</b>/20 fases</div>' +
     '<div class="stat">' + IC('moeda', 17) + '<b>' + coins + '</b></div>' +
     '<div class="stat">' + IC('vida', 17) + '<b>' + lives + '</b></div>';
   $('menuWorld').textContent = mundo ? mundo.name : '';
   let dots = '';
-  for (let i = 0; i < WORLDS.length; i++) dots += '<span class="wdot' + (Math.floor(unlocks.maxLevel / 4) >= i ? ' on' : '') + '"></span>';
+  for (let i = 0; i < WORLDS.length; i++) dots += '<span class="wdot' + (worldOf(unlocks.maxLevel) >= i ? ' on' : '') + '"></span>';
   $('menuDots').innerHTML = dots;
   $('btnNewGame').innerHTML = IC('novo', 19) + (unlocks.maxLevel > 0 ? 'Recomeçar' : 'Começar');
   $('btnContinue').innerHTML = IC('jogar', 19) + 'Continuar';
