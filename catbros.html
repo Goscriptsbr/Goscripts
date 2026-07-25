@@ -485,7 +485,7 @@ const WORLDS = [
 ];
 
 /* =========================================================
-   DEFINIÇÃO DAS 20 FASES
+   DEFINIÇÃO DAS 25 FASES
    maxGap nunca passa de 150px: o pulo básico alcança ~210px,
    então TODA fase é passável sem nenhum poder.
    ========================================================= */
@@ -1204,17 +1204,26 @@ function showTutorial(key) {
    MAPA-MÚNDI
    ========================================================= */
 const mapNodes = [];
+const FAIXAS_MAPA = [];                       // limites de cada faixa de mundo
 (function buildMap() {
-  for (let i = 0; i < LEVEL_COUNT; i++) {
-    const w = worldOf(i), k = posNoMundo(i);
-    // cada mundo é uma faixa; os nós fazem um "S" suave dentro da faixa
-    const bandTop = 210 + w * 400 + (w >= 6 ? 0 : 0);
-    const y = bandTop + k * 92;
-    const x = 180 + Math.sin((i * 1.15) + w * 0.7) * 96;
-    mapNodes.push({ x: Math.round(x), y: Math.round(y), world: w, boss: k === fasesDoMundo(w) - 1 });
+  // a faixa é construída EM VOLTA dos nós, então mundo e fases sempre batem,
+  // não importa quantas fases cada mundo tenha
+  const TOPO_TITULO = 76, ESPACO = 92, RODAPE = 40;
+  let y = 150, n = 0;
+  for (let w = 0; w < WORLDS.length; w++) {
+    const qtd = fasesDoMundo(w);
+    const y0 = y;
+    y += TOPO_TITULO;
+    for (let k = 0; k < qtd; k++) {
+      const x = 180 + Math.sin(n * 1.15 + w * 0.7) * 96;
+      mapNodes.push({ x: Math.round(x), y: Math.round(y), world: w, boss: k === qtd - 1 });
+      y += ESPACO; n++;
+    }
+    y += RODAPE - ESPACO + ESPACO * 0.5;
+    FAIXAS_MAPA.push({ y0: Math.round(y0), y1: Math.round(y), w });
   }
 })();
-const MAP_HEIGHT = mapNodes[LEVEL_COUNT - 1].y + 240;
+const MAP_HEIGHT = FAIXAS_MAPA[FAIXAS_MAPA.length - 1].y1 + 140;
 
 let mapCursor = 0, mapAvatar = { x: 0, y: 0 }, mapCam = 0, mapMoveCd = 0;
 
@@ -3335,8 +3344,9 @@ function drawMap() {
 
   // faixas de mundo
   for (let w = 0; w < WORLDS.length; w++) {
-    const y0 = w === 0 ? -200 : 10 + w * 400 - 200;
-    const h = w === 0 ? 610 : 400;
+    const f = FAIXAS_MAPA[w];
+    const y0 = (w === 0) ? f.y0 - 420 : f.y0;                       // a 1ª sobe até o topo
+    const h = (f.y1 - y0) + (w === WORLDS.length - 1 ? 200 : 0);    // a última desce até o fim
     const B = BIOMES[WORLDS[w].biome];
     const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
     g.addColorStop(0, B.sky[0]); g.addColorStop(0.5, B.sky[1]); g.addColorStop(1, B.sky[2]);
@@ -3359,9 +3369,9 @@ function drawMap() {
     }
     // nome do mundo
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(0, y0 + 6, VW, 26);
+    ctx.fillRect(0, f.y0 + 14, VW, 28);
     ctx.fillStyle = '#fff'; ctx.font = '900 14px Trebuchet MS'; ctx.textAlign = 'center';
-    ctx.fillText(WORLDS[w].name, VW / 2, y0 + 24);
+    ctx.fillText(WORLDS[w].name, VW / 2, f.y0 + 33);
   }
 
   // caminho
@@ -3587,10 +3597,10 @@ function pintaIcones() {
 }
 function pintaMenu() {
   pintaIcones();
-  const feito = Math.min(unlocks.maxLevel + 1, 20);
+  const feito = Math.min(unlocks.maxLevel, LEVEL_COUNT);   // mesma conta do mapa
   const mundo = WORLDS[Math.min(worldOf(unlocks.maxLevel), WORLDS.length - 1)];
   $('menuStats').innerHTML =
-    '<div class="stat">' + IC('bandeira', 17) + '<b>' + feito + '</b>/20 fases</div>' +
+    '<div class="stat">' + IC('bandeira', 17) + '<b>' + feito + '</b>/' + LEVEL_COUNT + ' fases</div>' +
     '<div class="stat">' + IC('moeda', 17) + '<b>' + coins + '</b></div>' +
     '<div class="stat">' + IC('vida', 17) + '<b>' + lives + '</b></div>';
   $('menuWorld').textContent = mundo ? mundo.name : '';
