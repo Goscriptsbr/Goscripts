@@ -17,7 +17,7 @@
 
   #fitter { transform-origin: center center; }
 
-  #gameWrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    #gameWrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
 
   #gameContainer {
     position: relative; width: 360px; height: 620px;
@@ -222,6 +222,28 @@
   .arrow { width: 0; height: 0; border-top: 15px solid transparent; border-bottom: 15px solid transparent; }
   .arrow-l { border-right: 22px solid #fff; }
   .arrow-r { border-left: 22px solid #fff; }
+  
+    /* --- MODO PAISAGEM (LANDSCAPE) --- */
+  @media (orientation: landscape) {
+    #gameWrapper {
+      position: relative;
+    }
+    #controls { width: 360px; display: flex; justify-content: space-between; align-items: flex-end;
+    padding: 0 8px 4px; box-sizing: border-box; pointer-events: none; z-index: 60; }
+  .pad, .right-pad { pointer-events: auto; }
+  .pad { display: flex; gap: 14px; }
+    #controls .pad, 
+    #controls .right-pad {
+      pointer-events: auto; /* Mantém os botões clicáveis */
+      transform: scale(1.15); /* Aumenta os botões um pouquinho para melhor pegada */
+    }
+    #controls .pad {
+      transform-origin: bottom left;
+    }
+    #controls .right-pad {
+      transform-origin: bottom right;
+    }
+  }
 </style>
 </head>
 <body>
@@ -372,7 +394,7 @@
 /* =========================================================
    SUPER GATO BROS  —  motor
    ========================================================= */
-const VW = 360, VH = 620;
+let VW = 360, VH = 620;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -417,10 +439,65 @@ setupCanvas();
 
 function fitScreen() {
   const el = document.getElementById('fitter');
-  const needH = 620 + 10 + 94 + 16;   // tela + gap + controles + folga
-  const s = Math.min(window.innerWidth / (VW + 16), window.innerHeight / needH, 1.35);
-  el.style.transform = 'scale(' + s + ')';
+  const container = document.getElementById('gameContainer');
+  const cvs = document.getElementById('gameCanvas');
+  const ctrls = document.getElementById('controls');
+  
+  const isLandscape = window.innerWidth > window.innerHeight;
+  
+  if (isLandscape) {
+    // Modo Paisagem: Expande a visão do jogo (Widescreen)
+    VH = 620;
+    VW = Math.floor(620 * (window.innerWidth / window.innerHeight));
+    
+    container.style.width = VW + 'px';
+    container.style.height = VH + 'px';
+    container.style.borderRadius = '0'; // Tira borda para tela cheia
+    cvs.style.width = VW + 'px';
+    cvs.style.height = VH + 'px';
+    
+    // Sobrepõe os controles nas laterais do jogo
+    ctrls.style.position = 'absolute';
+    ctrls.style.width = VW + 'px';
+    ctrls.style.bottom = '20px';
+    ctrls.style.padding = '0 60px';
+    
+    // Aumenta os botões para o polegar
+    document.querySelector('.pad').style.transform = 'scale(1.2)';
+    document.querySelector('.pad').style.transformOrigin = 'bottom left';
+    document.querySelector('.right-pad').style.transform = 'scale(1.2)';
+    document.querySelector('.right-pad').style.transformOrigin = 'bottom right';
+    
+    const s = window.innerHeight / VH;
+    el.style.transform = 'scale(' + s + ')';
+  } else {
+    // Modo Retrato Padrão
+    VW = 360;
+    VH = 620;
+    
+    container.style.width = '360px';
+    container.style.height = '620px';
+    container.style.borderRadius = '18px';
+    cvs.style.width = '360px';
+    cvs.style.height = '620px';
+    
+    // Volta os controles para baixo
+    ctrls.style.position = 'relative';
+    ctrls.style.width = '360px';
+    ctrls.style.bottom = 'auto';
+    ctrls.style.padding = '0 8px 4px';
+    
+    document.querySelector('.pad').style.transform = 'none';
+    document.querySelector('.right-pad').style.transform = 'none';
+    
+    const needH = 620 + 10 + 94 + 16;
+    const s = Math.min(window.innerWidth / (VW + 16), window.innerHeight / needH, 1.35);
+    el.style.transform = 'scale(' + s + ')';
+  }
+  
+  if (typeof setupCanvas === 'function') setupCanvas();
 }
+
 window.addEventListener('resize', fitScreen);
 
 /* ---------- física ---------- */
@@ -1553,8 +1630,8 @@ function update(dt) {
   updateHazards(dt);
   updateParticles(dt);
 
-  // câmera com folga na direção do movimento
-  const target = clamp(player.x - 130 + player.vx * 10, 0, Math.max(0, level.width - VW));
+   // câmera com folga na direção do movimento (centraliza dinamicamente)
+  const target = clamp(player.x - (VW / 2.2) + player.vx * 15, 0, Math.max(0, level.width - VW));
   camera.x = lerp(camera.x, target, 1 - Math.pow(0.86, dt));
   camera.x = clamp(camera.x, 0, Math.max(0, level.width - VW));
 
@@ -3578,16 +3655,6 @@ function draw() {
   // tinta de água nas fases submersas
   if (level.underwater) {
     ctx.fillStyle = 'rgba(20,110,170,0.18)'; ctx.fillRect(0, 0, VW, VH);
-  }
-  // vinheta
-  if (!MODO_LEVE) {
-    let vg = _gradCache.vinheta;
-    if (!vg) {
-      vg = ctx.createRadialGradient(VW / 2, VH / 2, 160, VW / 2, VH / 2, 400);
-      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.35)');
-      _gradCache.vinheta = vg;
-    }
-    ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
   }
 
   if (level.bossType) drawBossBar();
