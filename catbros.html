@@ -425,10 +425,16 @@ function aplicarQualidade() {
 }
 let _gradCache = {};
 
+let ZOOM_PAISAGEM_ATIVO = false;
+const ZOOM_PAISAGEM = 1.42;
+
 function setupCanvas() {
   // o custo de desenhar cresce com o QUADRADO desse número:
   // 3x = 2 milhões de pixels por quadro, 1x = 223 mil
-  const dpr = Math.min(window.devicePixelRatio || 1, MODO_LEVE ? 1 : 2);
+  // no modo paisagem o CSS já amplia a imagem por cima (zoom), então não
+  // vale a pena gastar processamento desenhando em resolução "retina"
+  const tetoDpr = (MODO_LEVE || ZOOM_PAISAGEM_ATIVO) ? 1 : 2;
+  const dpr = Math.min(window.devicePixelRatio || 1, tetoDpr);
   canvas.width = VW * dpr; canvas.height = VH * dpr;
   canvas.style.width = VW + 'px'; canvas.style.height = VH + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -436,6 +442,21 @@ function setupCanvas() {
 }
 MODO_LEVE = celularFraco();
 setupCanvas();
+
+let ultimaOrigemZoom = null, ultimoZoomAplicado = null;
+function ajustarOrigemZoomPaisagem() {
+  if (!ZOOM_PAISAGEM_ATIVO) return;
+  // no mapa/menu a cena inteira precisa aparecer (cabeçalho incluso e
+  // centralizado), então o zoom fica desligado ali; jogando, o zoom entra
+  // com a origem um pouco mais baixa para manter o chão e o gato no quadro
+  const noMapaOuMenu = (state === 'map' || state === 'menu');
+  const y = noMapaOuMenu ? 50 : 66;
+  const z = noMapaOuMenu ? 1 : ZOOM_PAISAGEM;
+  if (y === ultimaOrigemZoom && z === ultimoZoomAplicado) return;
+  ultimaOrigemZoom = y; ultimoZoomAplicado = z;
+  canvas.style.transformOrigin = '50% ' + y + '%';
+  canvas.style.transform = 'scale(' + z + ')';
+}
 
 function fitScreen() {
   const el = document.getElementById('fitter');
@@ -459,20 +480,23 @@ function fitScreen() {
     // Zoom visual: deixa a cena mais perto do gato sem mexer na física do jogo.
     // O canvas é ampliado por CSS e o próprio #gameContainer (overflow:hidden)
     // corta as bordas que sobram, então o chão e a HUD continuam no lugar certo.
-    const ZOOM_PAISAGEM = 1.32;
-    cvs.style.transformOrigin = '50% 74%';
-    cvs.style.transform = 'scale(' + ZOOM_PAISAGEM + ')';
+    // No mapa/menu o zoom fica desligado (ver ajustarOrigemZoomPaisagem) para
+    // a cena inteira, com cabeçalho, aparecer centralizada.
+    ZOOM_PAISAGEM_ATIVO = true;
+    ultimaOrigemZoom = null; ultimoZoomAplicado = null;   // força recalcular já no próximo quadro
+    ajustarOrigemZoomPaisagem();
     
     // Sobrepõe os controles nas laterais do jogo
     ctrls.style.position = 'absolute';
     ctrls.style.width = VW + 'px';
     ctrls.style.bottom = '20px';
     ctrls.style.padding = '0 60px';
+    ctrls.style.opacity = '0.8';
     
-    // Aumenta os botões para o polegar
-    document.querySelector('.pad').style.transform = 'scale(1.2)';
+    // Aumenta os botões para o polegar e deixa levemente translúcidos
+    document.querySelector('.pad').style.transform = 'scale(1.4)';
     document.querySelector('.pad').style.transformOrigin = 'bottom left';
-    document.querySelector('.right-pad').style.transform = 'scale(1.2)';
+    document.querySelector('.right-pad').style.transform = 'scale(1.4)';
     document.querySelector('.right-pad').style.transformOrigin = 'bottom right';
     
     const s = window.innerHeight / VH;
@@ -488,12 +512,14 @@ function fitScreen() {
     cvs.style.width = '360px';
     cvs.style.height = '620px';
     cvs.style.transform = 'none';
+    ZOOM_PAISAGEM_ATIVO = false;
     
     // Volta os controles para baixo
     ctrls.style.position = 'relative';
     ctrls.style.width = '360px';
     ctrls.style.bottom = 'auto';
     ctrls.style.padding = '0 8px 4px';
+    ctrls.style.opacity = '1';
     
     document.querySelector('.pad').style.transform = 'none';
     document.querySelector('.right-pad').style.transform = 'none';
@@ -1464,6 +1490,7 @@ function buildAmbient() {
   if (!kind) return;
   let n = kind === 'snow' ? 90 : kind === 'bubbles' ? 60 : kind === 'ash' ? 70 : kind === 'embers' ? 45 : 40;
   if (MODO_LEVE) n = Math.round(n * 0.35);      // 90 flocos de neve viram 32
+  else if (ZOOM_PAISAGEM_ATIVO) n = Math.round(n * 0.6);   // paisagem: tela mais larga, menos partículas por área visível
   for (let i = 0; i < n; i++) {
     ambient.push({
       x: Math.random() * VW, y: Math.random() * VH,
@@ -1566,7 +1593,7 @@ function backToMenu() {
 /* =========================================================
    PARTÍCULAS
    ========================================================= */
-const TETO_PARTICULAS = () => MODO_LEVE ? 70 : 260;
+const TETO_PARTICULAS = () => MODO_LEVE ? 70 : (ZOOM_PAISAGEM_ATIVO ? 150 : 260);
 function burst(x, y, n, color) {
   if (MODO_LEVE) n = Math.ceil(n * 0.45);
   for (let i = 0; i < n; i++) {
@@ -2549,7 +2576,12 @@ function drawBackground() {
    ========================================================= */
 function drawTerrain() {
   const B = BIOMES[level.biome];
-  const left = camera.x - 60, right = camera.x + VW + 60;
+  // no modo paisagem, boa parte da largura desenhada fica cortada fora da
+  // tela pelo zoom — estreitar a janela de desenho aqui economiza processamento
+  // sem cortar nada que já não estivesse escondido
+  const visW = (ZOOM_PAISAGEM_ATIVO && state !== 'map' && state !== 'menu') ? VW / ZOOM_PAISAGEM : VW;
+  const folga = (VW - visW) / 2;
+  const left = camera.x + folga - 60, right = camera.x + VW - folga + 60;
 
   for (const p of level.platforms) {
     if (p.x > right || p.x + p.w < left) continue;
@@ -2599,7 +2631,7 @@ function drawTerrain() {
 
   // decorações
   let nDeco = 0;
-  const limiteDeco = MODO_LEVE ? 10 : 999;
+  const limiteDeco = MODO_LEVE ? 10 : (ZOOM_PAISAGEM_ATIVO ? 26 : 999);
   for (const d of level.deco) {
     if (d.x < left - 60 || d.x > right + 60) continue;
     if (++nDeco > limiteDeco) break;
@@ -3838,6 +3870,7 @@ function gameLoop(time) {
   }
 
   try {
+    ajustarOrigemZoomPaisagem();
     update(dt);
     draw();
   } catch (err) {
