@@ -455,6 +455,13 @@ function fitScreen() {
     container.style.borderRadius = '0'; // Tira borda para tela cheia
     cvs.style.width = VW + 'px';
     cvs.style.height = VH + 'px';
+
+    // Zoom visual: deixa a cena mais perto do gato sem mexer na física do jogo.
+    // O canvas é ampliado por CSS e o próprio #gameContainer (overflow:hidden)
+    // corta as bordas que sobram, então o chão e a HUD continuam no lugar certo.
+    const ZOOM_PAISAGEM = 1.32;
+    cvs.style.transformOrigin = '50% 74%';
+    cvs.style.transform = 'scale(' + ZOOM_PAISAGEM + ')';
     
     // Sobrepõe os controles nas laterais do jogo
     ctrls.style.position = 'absolute';
@@ -480,6 +487,7 @@ function fitScreen() {
     container.style.borderRadius = '18px';
     cvs.style.width = '360px';
     cvs.style.height = '620px';
+    cvs.style.transform = 'none';
     
     // Volta os controles para baixo
     ctrls.style.position = 'relative';
