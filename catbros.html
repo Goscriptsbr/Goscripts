@@ -358,6 +358,7 @@
       <div class="panel">
         <h2 class="panel-title">Pausado</h2>
         <button class="menu-btn btn-green" id="btnResume" style="width:100%">▶ Continuar</button>
+        <button class="menu-btn" id="btnLojaPause" style="width:100%;background:linear-gradient(180deg,#ffd93b,#f0a41c);box-shadow:0 6px 0 #a8700c, 0 10px 14px rgba(0,0,0,.45);color:#241a00">Loja do Gato</button>
         <button class="menu-btn btn-blue" id="btnRestartLevel" style="width:100%">↻ Reiniciar fase</button>
         <button class="menu-btn btn-gray" id="btnQualidade" style="width:100%;font-size:13px">Gráficos: Automático</button>
         <div id="fpsInfo" style="color:#9fb2cc;font-size:11px;margin:-2px 0 8px;font-weight:700"></div>
@@ -1518,6 +1519,22 @@ function updateMapBar() {
 /* =========================================================
    CARREGAR FASE
    ========================================================= */
+// no modo paisagem os controles ficam por cima do jogo; sem essa folga a
+// câmera trava exatamente na borda do mundo bem no início/fim da fase e o
+// gato nasce escondido atrás dos botões. Deixando a câmera "passear" um
+// pouco além da borda (mostrando só cenário de fundo ali) o gato sempre
+// fica centralizado, com os botões livres, e só encosta na borda de
+// verdade quando ele mesmo chega perto dela.
+const MARGEM_CAMERA_PAISAGEM = 230;
+function limitesCameraX() {
+  const margem = ZOOM_PAISAGEM_ATIVO ? MARGEM_CAMERA_PAISAGEM : 0;
+  return { min: -margem, max: Math.max(-margem, level.width - VW + margem) };
+}
+
+// poderes (capa/bola de pelo) que continuam valendo ao entrar em outra fase
+// pelo mapa — só se perdem se o gato apanhar (ou ao morrer e recomeçar a fase)
+let inventarioAtual = { cape: false, ball: false };
+
 function loadLevel(index, fromCheckpoint) {
   levelIndex = clamp(index, 0, LEVEL_COUNT - 1);
   level = JSON.parse(JSON.stringify(levels[levelIndex]));
@@ -1528,14 +1545,18 @@ function loadLevel(index, fromCheckpoint) {
     level.checkpoints.forEach(c => { if (c.x <= checkpointX) c.on = true; });
   }
 
+  // morrer custa os poderes (igual apanhar); continuar pelo mapa preserva o que já tinha
+  if (fromCheckpoint) inventarioAtual = { cape: false, ball: false };
+
   const spawnY = level.underwater ? GROUND_Y - 120 : GROUND_Y - 60;
   player = {
     x: checkpointX, y: spawnY, w: 24, h: 34, vx: 0, vy: 0,
     onGround: false, facing: 1, coyote: 0, inWater: false, swimT: 0,
-    hasCape: unlocks.startCape, hasBall: false, flyEnergy: FLY_MAX,
+    hasCape: unlocks.startCape || inventarioAtual.cape, hasBall: inventarioAtual.ball, flyEnergy: FLY_MAX,
     anim: 0, squash: 1, stretch: 1, ridePlat: null
   };
-  camera.x = clamp(player.x - 120, 0, level.width - VW);
+  const limCam = limitesCameraX();
+  camera.x = clamp(player.x - 120, limCam.min, limCam.max);
   camera.y = 0;
   if (level.secret) level.secret.got = !!unlocks.stars[levelIndex];
   limparAreaDeNascimento(checkpointX);
@@ -1590,11 +1611,14 @@ function completeLevel() {
     }
   }, 1500);
 }
-function openShop() {
+let origemLoja = 'fase';
+function openShop(origem) {
+  origemLoja = origem || 'fase';
   Musica.tocar('menu');
   state = 'shop'; showUI(false);
   $('btnPause').style.display = 'none';
   renderShop(); $('shopScreen').style.display = 'flex'; saveGame();
+  $('btnNextPhase').textContent = (origemLoja === 'pause') ? '▶ Voltar a jogar' : 'Continuar ▶';
 }
 function loseLife() {
   if (state !== 'playing') return;
@@ -1618,6 +1642,7 @@ function hurtPlayer() {
   if (invincible > 0 || state !== 'playing') return;
   if (player.hasCape || player.hasBall) {
     player.hasCape = false; player.hasBall = false;
+    inventarioAtual.cape = false; inventarioAtual.ball = false;
     invincible = 90; shake = 8; SFX.hurt();
     burst(player.x + 12, player.y + 16, 16, '#ffd93b');
     updateHUD();
@@ -1735,9 +1760,10 @@ function update(dt) {
   updateParticles(dt);
 
    // câmera com folga na direção do movimento (centraliza dinamicamente)
-  const target = clamp(player.x - (VW / 2.2) + player.vx * 15, 0, Math.max(0, level.width - VW));
+  const limCam = limitesCameraX();
+  const target = clamp(player.x - (VW / 2.2) + player.vx * 15, limCam.min, limCam.max);
   camera.x = lerp(camera.x, target, 1 - Math.pow(0.86, dt));
-  camera.x = clamp(camera.x, 0, Math.max(0, level.width - VW));
+  camera.x = clamp(camera.x, limCam.min, limCam.max);
 
   // barra de progresso
   const prog = clamp((player.x / (level.width - 200)) * 100, 0, 100);
@@ -2011,8 +2037,8 @@ function updateItems(dt, solids) {
 
 function pegarItem(it, i) {
   if (it.type === 'life') { lives++; popup(it.x, it.y, '+1 VIDA', '#ff6b6b'); }
-  else if (it.type === 'cape') { player.hasCape = true; player.flyEnergy = FLY_MAX; showTutorial('cape'); }
-  else if (it.type === 'ball') { player.hasBall = true; showTutorial('ball'); }
+  else if (it.type === 'cape') { player.hasCape = true; inventarioAtual.cape = true; player.flyEnergy = FLY_MAX; showTutorial('cape'); }
+  else if (it.type === 'ball') { player.hasBall = true; inventarioAtual.ball = true; showTutorial('ball'); }
   SFX.power(); burst(it.x + 15, it.y + 15, 16, '#ffd93b');
   level.items.splice(i, 1); updateHUD();
 }
@@ -4060,6 +4086,7 @@ $('btnSound').onclick = () => {
   if (soundOn) { initAudio(); SFX.select(); }
 };
 $('btnResume').onclick = () => { $('pauseScreen').style.display = 'none'; Musica.mudo(!soundOn); state = 'playing'; lastTime = 0; };
+$('btnLojaPause').onclick = () => { SFX.select(); $('pauseScreen').style.display = 'none'; openShop('pause'); };
 $('btnRestartLevel').onclick = () => { $('pauseScreen').style.display = 'none'; Musica.mudo(!soundOn); checkpointX = 60; loadLevel(levelIndex, false); };
 function textoQualidade() {
   const nome = QUALIDADE === 'auto' ? ('Automático' + (MODO_LEVE ? ' (leve)' : ' (alta)'))
@@ -4074,7 +4101,7 @@ $('btnQuitToMap').onclick = () => { $('pauseScreen').style.display = 'none'; Mus
 
 $('btnNewGame').onclick = () => {
   initAudio(); SFX.select();
-  lives = 5; coins = 0;
+  lives = 5; coins = 0; inventarioAtual = { cape: false, ball: false };
   unlocks = { maxLevel: 0, doubleJump: false, startCape: false, magnet: false,
               chars: { normal: true, ninja: false, robot: false, panda: false, dourado: false },
               current: 'normal', seen: {}, stars: {} };
@@ -4084,6 +4111,7 @@ $('btnNewGame').onclick = () => {
 };
 $('btnContinue').onclick = () => {
   initAudio(); SFX.select();
+  inventarioAtual = { cape: false, ball: false };
   const s = loadSave();
   if (s) {
     lives = s.lives || 5; coins = s.coins || 0;
@@ -4152,7 +4180,16 @@ $('btnCloseTutorial').onclick = () => {
 $('btnNextPhase').onclick = () => {
   SFX.select();
   $('shopScreen').style.display = 'none';
-  showMap();
+  if (origemLoja === 'pause') {
+    showUI(true);
+    $('btnPause').style.display = 'flex';
+    $('btnSound').style.display = 'flex';
+    state = 'playing'; lastTime = 0;
+    Musica.mudo(!soundOn);
+    Musica.tocar(level.bossType ? 'boss' : Musica.faixaDoBioma(level.biome));
+  } else {
+    showMap();
+  }
 };
 
 /* =========================================================
