@@ -443,19 +443,27 @@ function setupCanvas() {
 MODO_LEVE = celularFraco();
 setupCanvas();
 
-let ultimaOrigemZoom = null, ultimoZoomAplicado = null;
+let zoomOrigemXPercent = 50;
+let ultimoOrigemStr = null, ultimoZoomStr = null;
 function ajustarOrigemZoomPaisagem() {
   if (!ZOOM_PAISAGEM_ATIVO) return;
   // no mapa/menu a cena inteira precisa aparecer (cabeçalho incluso e
   // centralizado), então o zoom fica desligado ali; jogando, o zoom entra
-  // com a origem um pouco mais baixa para manter o chão e o gato no quadro
+  // com a origem acompanhando a posição do gato na tela — não fixa no
+  // centro — pra ele nunca ficar escondido pelo corte do zoom perto do
+  // início ou do fim da fase, quando a câmera trava na borda do mundo
   const noMapaOuMenu = (state === 'map' || state === 'menu');
-  const y = noMapaOuMenu ? 50 : 66;
   const z = noMapaOuMenu ? 1 : ZOOM_PAISAGEM;
-  if (y === ultimaOrigemZoom && z === ultimoZoomAplicado) return;
-  ultimaOrigemZoom = y; ultimoZoomAplicado = z;
-  canvas.style.transformOrigin = '50% ' + y + '%';
-  canvas.style.transform = 'scale(' + z + ')';
+  let ox = 50, oy = 50;
+  if (!noMapaOuMenu) {
+    oy = 66;
+    ox = (player && level) ? clamp(((player.x - camera.x) / VW) * 100, 5, 95) : 45;
+  }
+  zoomOrigemXPercent = ox;
+  const origemStr = ox.toFixed(1) + '% ' + oy + '%';
+  const zoomStr = 'scale(' + z + ')';
+  if (origemStr !== ultimoOrigemStr) { canvas.style.transformOrigin = origemStr; ultimoOrigemStr = origemStr; }
+  if (zoomStr !== ultimoZoomStr) { canvas.style.transform = zoomStr; ultimoZoomStr = zoomStr; }
 }
 
 function fitScreen() {
@@ -483,7 +491,7 @@ function fitScreen() {
     // No mapa/menu o zoom fica desligado (ver ajustarOrigemZoomPaisagem) para
     // a cena inteira, com cabeçalho, aparecer centralizada.
     ZOOM_PAISAGEM_ATIVO = true;
-    ultimaOrigemZoom = null; ultimoZoomAplicado = null;   // força recalcular já no próximo quadro
+    ultimoOrigemStr = null; ultimoZoomStr = null;   // força recalcular já no próximo quadro
     ajustarOrigemZoomPaisagem();
     
     // Sobrepõe os controles nas laterais do jogo
@@ -681,7 +689,7 @@ const WORLDS = [
    ========================================================= */
 const LEVEL_DEFS = [
   // ---------- MUNDO 1 : CAMPO ----------
-  { name: 'Colina Ensolarada', biome: 'grass', width: 4000, seed: 101, maxGap: 95, enemyRate: 0.5, kinds: ['walker'] },
+  { name: 'Colina Ensolarada', biome: 'grass', width: 4000, seed: 101, maxGap: 95, enemyRate: 0.65, kinds: ['walker', 'jumper'] },
   { name: 'Vale das Flores',   biome: 'grass', width: 4400, seed: 202, maxGap: 108, enemyRate: 0.7, kinds: ['walker', 'jumper'] },
   { name: 'Ponte de Pedra',    biome: 'grass', width: 4600, seed: 303, maxGap: 118, enemyRate: 0.8, kinds: ['walker', 'flyer'], movers: 2 },
   { boss: 'dog', name: 'Toca do Cão Bravo', biome: 'grass' },
@@ -699,7 +707,7 @@ const LEVEL_DEFS = [
   { boss: 'yeti', name: 'Trono do Yeti', biome: 'ice' },
 
   // ---------- MUNDO 4 : OCEANO ----------
-  { name: 'Praia Azul',        biome: 'beach', width: 4600, seed: 111, maxGap: 112, enemyRate: 0.8, kinds: ['walker', 'jumper'] },
+  { name: 'Praia Azul',        biome: 'beach', width: 4600, seed: 111, maxGap: 112, enemyRate: 0.9, kinds: ['walker', 'jumper', 'crab'] },
   { name: 'Recife de Coral',   biome: 'ocean', width: 4800, seed: 222, underwater: true, enemyRate: 0.9, kinds: ['fish', 'jelly'] },
   { name: 'Abismo Profundo',   biome: 'ocean', width: 5100, seed: 333, underwater: true, enemyRate: 1.1, kinds: ['fish', 'jelly', 'ray'] },
   { boss: 'octopus', name: 'Covil do Polvo', biome: 'ocean' },
@@ -794,14 +802,18 @@ function genRunLevel(def, id) {
     // inimigos (nunca no primeiro trecho)
     // patrulha nunca chega perto da beirada: sempre sobra pista para tomar impulso
     if (seg > 0 && w > 300) {
-      const n = rnd() < (def.enemyRate || 0.8) ? 1 : 0;
+      const taxa = def.enemyRate || 0.8;
+      const baseGarantida = Math.floor(taxa);
+      const n = baseGarantida + (rnd() < (taxa - baseGarantida) ? 1 : 0);
       for (let i = 0; i < n; i++) {
         let a = x + 90, b = x + w - 90;
         // se tem bandeira nesse pedaço, o inimigo só patrulha FORA da zona segura
         if (cpX !== null) {
           const dirL = (cpX - ZONA_SEGURA) - a, dirR = b - (cpX + ZONA_SEGURA);
-          if (dirR >= 130) a = cpX + ZONA_SEGURA;
-          else if (dirL >= 130) b = cpX - ZONA_SEGURA;
+          // antes exigia 130px de folga pra "valer a pena" — descartava trechos
+          // que cabiam um inimigo com tranquilidade e deixava a fase mais vazia
+          if (dirR >= 46) a = cpX + ZONA_SEGURA;
+          else if (dirL >= 46) b = cpX - ZONA_SEGURA;
           else continue;                       // não cabe inimigo longe da bandeira: pula
         }
         spawnEnemy(L, pick(kinds), Math.round(a + (b - a) * (0.3 + rnd() * 0.4)), a, b, RI);
@@ -877,12 +889,18 @@ function genOceanLevel(def, id) {
 
     coinArc(L, x + 110, openTop ? 200 : GROUND_Y - 120, RI(3, 5));
 
-    if (rnd() < (def.enemyRate || 0.9)) {
+    const taxaOceano = def.enemyRate || 0.9;
+    const baseOceano = Math.floor(taxaOceano);
+    const qtdOceano = baseOceano + (rnd() < (taxaOceano - baseOceano) ? 1 : 0);
+    if (qtdOceano > 0) {
       // longe da bandeira que pode nascer neste trecho
       const proxCP = (x > nextCheck) ? x : null;
       let ea = x + 100, eb = x + 320;
       if (proxCP !== null) ea = Math.max(ea, proxCP + ZONA_SEGURA);
-      if (eb - ea >= 120) spawnEnemy(L, pick(def.kinds), Math.round(ea + (eb - ea) * 0.5), ea, eb, RI);
+      if (eb - ea >= 120) {
+        spawnEnemy(L, pick(def.kinds), Math.round(ea + (eb - ea) * 0.35), ea, eb, RI);
+        if (qtdOceano > 1 && eb - ea >= 180) spawnEnemy(L, pick(def.kinds), Math.round(ea + (eb - ea) * 0.75), ea, eb, RI);
+      }
     }
     if (x > nextCheck) {
       L.checkpoints.push({ x, y: GROUND_Y - 40, w: 26, h: 60, on: false });
@@ -910,6 +928,7 @@ function spawnEnemy(L, kind, x, minX, maxX, RI) {
     case 'jumper':   Object.assign(base, { y: GROUND_Y - 32, w: 32, h: 32, vx: 1.0, stompable: true, hopT: 0 }); break;
     case 'spiky':    Object.assign(base, { y: GROUND_Y - 32, w: 34, h: 32, vx: 0.9, stompable: false }); break;
     case 'snowball': Object.assign(base, { y: GROUND_Y - 30, w: 30, h: 30, vx: 2.1, stompable: true }); break;
+    case 'crab':     Object.assign(base, { y: GROUND_Y - 26, w: 32, h: 26, vx: 2.4, stompable: true }); break;
     case 'flame':    Object.assign(base, { y: GROUND_Y - 34, w: 30, h: 34, vx: 1.2, stompable: true, hopT: 0 }); break;
     case 'flyer':    Object.assign(base, { y: GROUND_Y - 190, w: 34, h: 28, vx: 1.5, stompable: true, amp: 48, baseY: GROUND_Y - 190 }); break;
     case 'bat':      Object.assign(base, { y: GROUND_Y - 230, w: 32, h: 26, vx: 1.7, stompable: true, amp: 62, baseY: GROUND_Y - 230 }); break;
@@ -982,7 +1001,18 @@ function esconderSegredo(L, def) {
   const rnd = mulberry32((def.seed || 7) * 31 + 5);
   const chaos = L.platforms.filter(p => p.type === 0 && p.w > 300 && p.x > 700);
   if (!chaos.length) return L;
-  const alvo = chaos[Math.floor(rnd() * chaos.length) % chaos.length];
+  // evita empilhar o esconderijo em cima de uma plataforma flutuante (ou
+  // bloco) que o gerador da fase já colocou ali — isso é o que causava
+  // plataformas duplicadas/coladas uma na outra em algumas fases
+  const livre = cx => {
+    const xEsq = cx - 160, xDir = cx + 260, yTopo = GROUND_Y - 360, yBase = GROUND_Y - 60;
+    const bateComPlataforma = L.platforms.some(p => p.type !== 0 && p.x < xDir && p.x + p.w > xEsq && p.y < yBase && p.y + p.h > yTopo);
+    const bateComBloco = L.blocks.some(b => b.x < xDir && b.x + b.w > xEsq && b.y < yBase && b.y + b.h > yTopo);
+    return !bateComPlataforma && !bateComBloco;
+  };
+  const candidatos = chaos.filter(p => livre(Math.round(p.x + p.w * 0.5)));
+  const lista = candidatos.length ? candidatos : chaos;
+  const alvo = lista[Math.floor(rnd() * lista.length) % lista.length];
   const cx = Math.round(alvo.x + alvo.w * 0.5);
   const modo = Math.floor(rnd() * 3);
 
@@ -1034,11 +1064,50 @@ function afastarInimigosDasBandeiras(L) {
   return L;
 }
 
+/* ---------- rede de segurança: nenhuma plataforma flutuante fica colada
+   em cima de outra (o que pareceria uma "plataforma duplicada") ---------- */
+function separarPlataformasFlutuantes(L) {
+  const flut = L.platforms.filter(p => p.type === 5 || p.type === 7);
+  for (let i = 0; i < flut.length; i++) {
+    for (let j = i + 1; j < flut.length; j++) {
+      const a = flut[i], b = flut[j];
+      const sobrepoe = a.x < b.x + b.w && a.x + a.w > b.x && Math.abs(a.y - b.y) < 18;
+      if (sobrepoe) b.y -= 64;   // empurra a segunda um degrau pra cima
+    }
+  }
+  return L;
+}
+
+/* ---------- rede de segurança: garante uma quantidade mínima de inimigos
+   por fase — com o sorteio de trechos perto de bandeira, algumas fases
+   acabavam saindo bem mais vazias que o previsto pela taxa configurada ---------- */
+function garantirInimigosMinimos(L, def) {
+  if (L.bossType) return L;
+  const minimo = Math.max(4, Math.round(L.width / 850));
+  if (L.enemies.length >= minimo) return L;
+  const rnd = mulberry32((def.seed || 7) * 17 + 3);
+  const RI = (a, b) => Math.floor(a + rnd() * (b - a + 0.999));
+  const kinds = def.kinds || ['walker'];
+  const pontos = L.checkpoints.map(c => c.x).concat([60]);
+  const longeDosPontos = (a, b) => pontos.every(p => b < p - ZONA_SEGURA || a > p + ZONA_SEGURA);
+  const candidatos = L.platforms.filter(p => p.type === 0 && p.w > 260 && p.x > 500);
+  const embaralhados = candidatos.map(p => ({ p, k: rnd() })).sort((x, y) => x.k - y.k).map(o => o.p);
+  for (const seg of embaralhados) {
+    if (L.enemies.length >= minimo) break;
+    const a = seg.x + 90, b = seg.x + seg.w - 90;
+    if (b - a < 80 || !longeDosPontos(a, b)) continue;
+    if (L.enemies.some(e => Math.abs(e.x - (a + b) / 2) < 140)) continue;   // já tem vizinho ali
+    const kind = kinds[Math.floor(rnd() * kinds.length) % kinds.length];
+    spawnEnemy(L, kind, Math.round(a + (b - a) * (0.3 + rnd() * 0.4)), a, b, RI);
+  }
+  return L;
+}
+
 /* ---------- monta todas as fases ---------- */
 const levels = LEVEL_DEFS.map((d, i) => {
   if (d.boss) return genBossLevel(d, i + 1);
-  if (d.underwater) return esconderSegredo(afastarInimigosDasBandeiras(genOceanLevel(d, i + 1)), d);
-  return esconderSegredo(afastarInimigosDasBandeiras(genRunLevel(d, i + 1)), d);
+  if (d.underwater) return separarPlataformasFlutuantes(esconderSegredo(garantirInimigosMinimos(afastarInimigosDasBandeiras(genOceanLevel(d, i + 1)), d), d));
+  return separarPlataformasFlutuantes(esconderSegredo(garantirInimigosMinimos(afastarInimigosDasBandeiras(genRunLevel(d, i + 1)), d), d));
 });
 const LEVEL_COUNT = levels.length;
 const SEGREDOS_TOTAL = levels.filter(L => L.secret).length;
@@ -2578,10 +2647,17 @@ function drawTerrain() {
   const B = BIOMES[level.biome];
   // no modo paisagem, boa parte da largura desenhada fica cortada fora da
   // tela pelo zoom — estreitar a janela de desenho aqui economiza processamento
-  // sem cortar nada que já não estivesse escondido
-  const visW = (ZOOM_PAISAGEM_ATIVO && state !== 'map' && state !== 'menu') ? VW / ZOOM_PAISAGEM : VW;
-  const folga = (VW - visW) / 2;
-  const left = camera.x + folga - 60, right = camera.x + VW - folga + 60;
+  // sem cortar nada que já não estivesse escondido. A origem do zoom se move
+  // com o gato, então a janela visível também precisa seguir essa origem.
+  let left, right;
+  if (ZOOM_PAISAGEM_ATIVO && state !== 'map' && state !== 'menu') {
+    const origemX = (zoomOrigemXPercent / 100) * VW;
+    const srcEsq = origemX * (1 - 1 / ZOOM_PAISAGEM);
+    const srcDir = origemX + (VW - origemX) / ZOOM_PAISAGEM;
+    left = camera.x + srcEsq - 60; right = camera.x + srcDir + 60;
+  } else {
+    left = camera.x - 60; right = camera.x + VW + 60;
+  }
 
   for (const p of level.platforms) {
     if (p.x > right || p.x + p.w < left) continue;
@@ -3237,6 +3313,23 @@ function drawEnemy(e) {
       ctx.beginPath(); ctx.arc(0, 3, 5, 0.2, Math.PI - 0.2); ctx.stroke();
       break;
     }
+    case 'crab': {                                      // caranguejo da praia
+      ctx.scale(face, 1);
+      const passo = Math.sin(e.t * 0.5) * 3;
+      ctx.strokeStyle = '#c9502b'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-9, 2); ctx.lineTo(-15 + passo, 9); ctx.moveTo(-4, 5); ctx.lineTo(-8 + passo, 12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(9, 2); ctx.lineTo(15 - passo, 9); ctx.moveTo(4, 5); ctx.lineTo(8 - passo, 12); ctx.stroke();
+      ctx.fillStyle = '#e2703f'; ctx.beginPath(); ctx.ellipse(0, 0, 15, 10, 0, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = '#c9502b'; ctx.beginPath(); ctx.ellipse(0, -2, 11, 6.4, 0, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = '#c9502b'; ctx.lineWidth = 3.4; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-11, -2); ctx.lineTo(-19, -9 - passo * 0.4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(11, -2); ctx.lineTo(19, -9 - passo * 0.4); ctx.stroke();
+      ctx.fillStyle = '#e2703f';
+      ctx.beginPath(); ctx.ellipse(-20, -10 - passo * 0.4, 5, 4, 0.5, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(20, -10 - passo * 0.4, 5, 4, -0.5, 0, 6.2832); ctx.fill();
+      eyes(-4, 4, -6, 2.6);
+      break;
+    }
     case 'flame': {                                    // duende de fogo
       const f = Math.sin(e.t * 0.3) * 2;
       ctx.fillStyle = 'rgba(255,140,40,0.30)'; ctx.beginPath(); ctx.arc(0, 0, 20 + f, 0, 6.2832); ctx.fill();
@@ -3562,6 +3655,16 @@ function drawPlayer() {
     ctx.strokeStyle = dark; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(-6, -3); ctx.lineTo(-4, 1); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-1, -4); ctx.lineTo(1, 0); ctx.stroke();
+  }
+
+  // golinha rosa: mostra na hora que o gato pegou a bola de pelo (poder de atirar)
+  if (p.hasBall) {
+    ctx.fillStyle = '#ff8fb1'; ctx.strokeStyle = '#a63d5f'; ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(-4, -2); ctx.lineTo(10, -4); ctx.lineTo(9, 3); ctx.lineTo(-3, 4);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(10, -4); ctx.lineTo(15, -6); ctx.lineTo(13, 0); ctx.closePath();
+    ctx.fill(); ctx.stroke();
   }
 
   // cabeça
