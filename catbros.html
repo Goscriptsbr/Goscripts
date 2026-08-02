@@ -670,6 +670,13 @@ const BIOMES = {
     dirt: '#3a3350', dirtDark: '#231e3380', top: '#5b4f7d', topLight: '#7a6aa3',
     oneway: '#8e63c9', onewayDark: '#5c3b8c', deco: ['torch', 'pillar', 'window'],
     particle: 'embers', hazard: 'lava'
+  },
+  ossos: {
+    name: 'Reino dos Ossos', sky: ['#120a08', '#3a1810', '#6b2a12'], sun: '#ffb066', night: true,
+    far: '#241008', mid: '#3a1710', near: '#4a2013',
+    dirt: '#5c4030', dirtDark: '#3a281d80', top: '#8a7060', topLight: '#b0917a',
+    oneway: '#8a6a4a', onewayDark: '#5c452e', deco: ['rock', 'torch', 'crystalRed'],
+    particle: 'embers', hazard: 'lava'
   }
 };
 BIOMES.ice.dirtDark = '#4d6b8380';
@@ -680,7 +687,8 @@ const WORLDS = [
   { name: 'MUNDO 3 — GELO',     biome: 'ice',     color: '#8fd8f2' },
   { name: 'MUNDO 4 — OCEANO',   biome: 'ocean',   color: '#0d6e95' },
   { name: 'MUNDO 5 — VULCÃO',   biome: 'volcano', color: '#c23a10' },
-  { name: 'MUNDO 6 — CÉU',      biome: 'sky',     color: '#6f9fe0' }
+  { name: 'MUNDO 6 — CÉU',      biome: 'sky',     color: '#6f9fe0' },
+  { name: 'MUNDO 7 — REINO DOS OSSOS', biome: 'ossos', color: '#8a6a4a' }
 ];
 
 /* =========================================================
@@ -714,8 +722,8 @@ const LEVEL_DEFS = [
   { boss: 'octopus', name: 'Covil do Polvo', biome: 'ocean' },
 
   // ---------- MUNDO 5 : VULCÃO ----------
-  { name: 'Encosta do Vulcão', biome: 'volcano', width: 4800, seed: 444, maxGap: 118, enemyRate: 0.9, kinds: ['walker', 'flame'] },
-  { name: 'Rio de Lava',       biome: 'volcano', width: 4900, seed: 555, maxGap: 122, enemyRate: 1.0, kinds: ['flame', 'flyer', 'spiky'], movers: 3, firebars: 2 },
+  { name: 'Encosta do Vulcão', biome: 'volcano', width: 4800, seed: 444, maxGap: 118, enemyRate: 0.9, kinds: ['caoOsso', 'flame'] },
+  { name: 'Rio de Lava',       biome: 'volcano', width: 4900, seed: 555, maxGap: 122, enemyRate: 1.0, kinds: ['caoOsso', 'flame', 'flyer', 'spiky'], movers: 3, firebars: 2 },
   { name: 'Castelo Sombrio',   biome: 'castle',  width: 5100, seed: 666, maxGap: 122, enemyRate: 1.1, kinds: ['runner', 'bat', 'spiky'], movers: 2, firebars: 3 },
   { boss: 'robot', name: 'Gato Robô Maligno', biome: 'castle' },
 
@@ -728,7 +736,18 @@ const LEVEL_DEFS = [
     kinds: ['jumper', 'spiky', 'flyer'], movers: 3, spikeRate: 0.4 },
   { name: 'Portão Dourado',   biome: 'sky', width: 5200, seed: 2424, maxGap: 122, enemyRate: 1.1,
     kinds: ['runner', 'flyer', 'bat', 'spiky'], movers: 4, spikeRate: 0.5 },
-  { boss: 'king', name: 'O Gato Rei', biome: 'sky' }
+  { boss: 'king', name: 'O Gato Rei', biome: 'sky' },
+
+  // ---------- MUNDO 7 : REINO DOS OSSOS (desbloqueia depois de vencer o Gato Rei) ----------
+  { name: 'Portão da Necrópole',    biome: 'ossos', width: 4800, seed: 3131, maxGap: 118, enemyRate: 1.0,
+    kinds: ['esqueleto', 'bat', 'spiky'], firebars: 1 },
+  { name: 'Catacumbas Esquecidas',  biome: 'ossos', width: 4900, seed: 3232, maxGap: 122, enemyRate: 1.0,
+    kinds: ['esqueleto', 'runner', 'spiky'], movers: 2, firebars: 2 },
+  { name: 'Salão dos Crânios',      biome: 'ossos', width: 5000, seed: 3333, maxGap: 122, enemyRate: 1.1,
+    kinds: ['esqueleto', 'flyer', 'bat'], spikeRate: 0.4, firebars: 2 },
+  { name: 'Trono Amaldiçoado',      biome: 'ossos', width: 5200, seed: 3434, maxGap: 122, enemyRate: 1.1,
+    kinds: ['esqueleto', 'runner', 'bat', 'spiky'], movers: 3, spikeRate: 0.5, firebars: 3 },
+  { boss: 'rei_ossos', name: 'Rei dos Ossos', biome: 'ossos' }
 ];
 
 /* =========================================================
@@ -930,6 +949,8 @@ function spawnEnemy(L, kind, x, minX, maxX, RI) {
     case 'spiky':    Object.assign(base, { y: GROUND_Y - 32, w: 34, h: 32, vx: 0.9, stompable: false }); break;
     case 'snowball': Object.assign(base, { y: GROUND_Y - 30, w: 30, h: 30, vx: 2.1, stompable: true }); break;
     case 'crab':     Object.assign(base, { y: GROUND_Y - 26, w: 32, h: 26, vx: 2.4, stompable: true }); break;
+    case 'caoOsso':  Object.assign(base, { y: GROUND_Y - 32, w: 34, h: 32, vx: 1.4, stompable: true }); break;
+    case 'esqueleto':Object.assign(base, { y: GROUND_Y - 36, w: 28, h: 36, vx: 1.0, stompable: true, atkT: RI(40, 100) }); break;
     case 'flame':    Object.assign(base, { y: GROUND_Y - 34, w: 30, h: 34, vx: 1.2, stompable: true, hopT: 0 }); break;
     case 'flyer':    Object.assign(base, { y: GROUND_Y - 190, w: 34, h: 28, vx: 1.5, stompable: true, amp: 48, baseY: GROUND_Y - 190 }); break;
     case 'bat':      Object.assign(base, { y: GROUND_Y - 230, w: 32, h: 26, vx: 1.7, stompable: true, amp: 62, baseY: GROUND_Y - 230 }); break;
@@ -961,7 +982,8 @@ const BOSS_INFO = {
   yeti:    { hp: 4, name: 'Yeti das Neves' },
   octopus: { hp: 5, name: 'Polvo Colossal' },
   robot:   { hp: 6, name: 'Gato Robô Maligno' },
-  king:    { hp: 7, name: 'O Gato Rei' }
+  king:    { hp: 7, name: 'O Gato Rei' },
+  rei_ossos: { hp: 8, name: 'Rei dos Ossos' }
 };
 
 function genBossLevel(def, id) {
@@ -1113,7 +1135,7 @@ const levels = LEVEL_DEFS.map((d, i) => {
 const LEVEL_COUNT = levels.length;
 const SEGREDOS_TOTAL = levels.filter(L => L.secret).length;
 // mundos podem ter tamanhos diferentes: o Céu tem 5 fases
-const FASES_POR_MUNDO = [4, 4, 4, 4, 4, 5];
+const FASES_POR_MUNDO = [4, 4, 4, 4, 4, 5, 5];
 const MUNDO_DA_FASE = [], POS_NO_MUNDO = [];
 (function () {
   let n = 0;
@@ -1208,7 +1230,7 @@ const Musica = {
   atual: null, pedido: null, timer: null, passo: 0, quando: 0, ganho: null,
   retomar() { if (this.pedido && !this.timer) { const n = this.pedido; this.atual = null; this.tocar(n); } },
   faixaDoBioma(bioma) {
-    return FAIXAS[bioma] ? bioma : (bioma === 'beach' ? 'grass' : bioma === 'castle' ? 'volcano' : 'grass');
+    return FAIXAS[bioma] ? bioma : (bioma === 'beach' ? 'grass' : (bioma === 'castle' || bioma === 'ossos') ? 'volcano' : 'grass');
   },
   tocar(nome) {
     this.pedido = nome;
@@ -1389,7 +1411,7 @@ function popup(x, y, text, color) { popups.push({ x, y, text, color: color || '#
 const SHOP_ITEMS = [
   { id: 'life',   ic: 'vida', label: '+1 Vida',        price: 40,  repeat: true },
   { id: 'life5',  ic: 'vida', label: '+5 Vidas',       price: 170, repeat: true },
-  { id: 'cape',   ic: 'capa', label: 'Capa de voo',    price: 130, desc: 'Começa toda fase podendo voar' },
+  { id: 'cape',   ic: 'capa', label: 'Capa de voo',    price: 130, desc: 'Voa até apanhar de algo — depois precisa comprar de novo' },
   { id: 'double', ic: 'pulo2', label: 'Pulo duplo',     price: 150 },
   { id: 'magnet', ic: 'ima', label: 'Ímã de moedas',  price: 110 },
   { id: 'ninja',  ic: 'ninja', label: 'Gato Ninja',     price: 200, char: true },
@@ -1411,7 +1433,7 @@ function renderShop() {
       owned = unlocks.chars[it.id];
       if (owned) right = (unlocks.current === it.id) ? 'EQUIPADO' : 'EQUIPAR';
     } else if (it.id === 'double') { owned = unlocks.doubleJump; if (owned) right = 'ATIVO'; }
-    else if (it.id === 'cape') { owned = unlocks.startCape; if (owned) right = 'ATIVO'; }
+    else if (it.id === 'cape') { owned = inventarioAtual.cape; if (owned) right = 'ATIVO'; }
     else if (it.id === 'magnet') { owned = unlocks.magnet; if (owned) right = 'ATIVO'; }
     if (owned && (!it.char || unlocks.current === it.id)) b.classList.add('owned');
     b.innerHTML = '<span class="lbl"><span class="emoji">' + IC(it.ic, 26) + '</span>' + it.label + '</span><span class="price">' + right + '</span>';
@@ -1434,7 +1456,7 @@ function buy(it) {
     SFX.power(); renderShop(); updateHUD(); saveGame(); return;
   }
   if (it.id === 'double' && unlocks.doubleJump) { shopError('Você já tem esse poder!'); return; }
-  if (it.id === 'cape' && unlocks.startCape) { shopError('Você já tem esse poder!'); return; }
+  if (it.id === 'cape' && inventarioAtual.cape) { shopError('Você já tem esse poder!'); return; }
   if (it.id === 'magnet' && unlocks.magnet) { shopError('Você já tem esse poder!'); return; }
   if (coins < it.price) { shopError('Faltam ' + (it.price - coins) + ' moedas'); return; }
 
@@ -1442,7 +1464,10 @@ function buy(it) {
   if (it.id === 'life') lives++;
   if (it.id === 'life5') lives += 5;
   if (it.id === 'double') { unlocks.doubleJump = true; showTutorial('double'); }
-  if (it.id === 'cape') unlocks.startCape = true;
+  if (it.id === 'cape') {
+    inventarioAtual.cape = true;
+    if (player) { player.hasCape = true; player.flyEnergy = FLY_MAX; }
+  }
   if (it.id === 'magnet') unlocks.magnet = true;
   if (it.char) { unlocks.chars[it.id] = true; unlocks.current = it.id; }
   SFX.power(); renderShop(); updateHUD(); saveGame();
@@ -1493,8 +1518,9 @@ const FAIXAS_MAPA = [];                       // limites de cada faixa de mundo
 const MAP_HEIGHT = FAIXAS_MAPA[FAIXAS_MAPA.length - 1].y1 + 140;
 
 let mapCursor = 0, mapAvatar = { x: 0, y: 0 }, mapCam = 0, mapMoveCd = 0;
+let renascerNoCheckpoint = null;   // { levelIndex, checkpointX } guardado quando o gato morre, pra voltar direto no lugar certo se escolher a mesma fase de novo
 
-function showMap() {
+function showMap(cursorInicial) {
   Musica.tocar('menu');
   state = 'map';
   hideMessage(); showUI(false);
@@ -1502,7 +1528,7 @@ function showMap() {
   $('btnSound').style.display = 'flex';
   $('btnPause').style.display = 'none';
   $('btnShoot').style.visibility = 'hidden';
-  mapCursor = clamp(unlocks.maxLevel, 0, LEVEL_COUNT - 1);
+  mapCursor = clamp(cursorInicial !== undefined ? cursorInicial : unlocks.maxLevel, 0, LEVEL_COUNT - 1);
   mapAvatar.x = mapNodes[mapCursor].x; mapAvatar.y = mapNodes[mapCursor].y;
   mapCam = clamp(mapAvatar.y - VH / 2, 0, MAP_HEIGHT - VH);
   keys.left = keys.right = keys.jump = false; keys.jumpHeld = false;
@@ -1552,7 +1578,7 @@ function loadLevel(index, fromCheckpoint) {
   player = {
     x: checkpointX, y: spawnY, w: 24, h: 34, vx: 0, vy: 0,
     onGround: false, facing: 1, coyote: 0, inWater: false, swimT: 0,
-    hasCape: unlocks.startCape || inventarioAtual.cape, hasBall: inventarioAtual.ball, flyEnergy: FLY_MAX,
+    hasCape: inventarioAtual.cape, hasBall: inventarioAtual.ball, flyEnergy: FLY_MAX,
     anim: 0, squash: 1, stretch: 1, ridePlat: null
   };
   const limCam = limitesCameraX();
@@ -1628,14 +1654,18 @@ function loseLife() {
   if (player) { player.vx = 0; player.vy = -9.5; }
   shake = 6;
   lives--; SFX.lose(); updateHUD();
-  if (lives > 0) { setTimeout(() => loadLevel(levelIndex, true), 820); }
+  if (lives > 0) {
+    renascerNoCheckpoint = { levelIndex, checkpointX };
+    setTimeout(() => showMap(levelIndex), 820);
+  }
   else {
     state = 'gameover'; showUI(false);
     $('btnPause').style.display = 'none';
-    showMessage('FIM DE JOGO<br><span style="font-size:15px;font-weight:700">Suas vidas acabaram.<br>Toque para voltar ao menu</span>');
+    showMessage('FIM DE JOGO<br><span style="font-size:15px;font-weight:700">Suas vidas acabaram.<br>Toque para voltar ao mapa</span>');
     unlocks.maxLevel = Math.max(0, unlocks.maxLevel);   // progresso do mapa é preservado
-    lives = 5; saveGame();
-    canvas.onclick = () => { canvas.onclick = null; backToMenu(); };
+    lives = 5; renascerNoCheckpoint = null; inventarioAtual = { cape: false, ball: false }; saveGame();
+    const faseDaMorte = levelIndex;
+    canvas.onclick = () => { canvas.onclick = null; showMap(faseDaMorte); };
   }
 }
 function hurtPlayer() {
@@ -1927,7 +1957,7 @@ function updatePlayer(dt, solids, oneways) {
       if (d < magnetR) { c.x += dx / d * 3.2 * dt; c.y += dy / d * 3.2 * dt; }
     }
     if (hit(p, c)) {
-      level.coins.splice(i, 1); coins += 5; SFX.coin();
+      level.coins.splice(i, 1); coins += 1; SFX.coin();
       sparkle(c.x + 10, c.y + 10, '#ffd93b'); sparkle(c.x + 10, c.y + 6, '#fff');
       updateHUD();
     }
@@ -2163,6 +2193,16 @@ function updateEnemies(dt, solids) {
         e.hopT -= dt;
         if (e.hopT <= 0 && e.onGround) { e.vy = e.kind === 'flame' ? -7.5 : -9; e.hopT = e.kind === 'flame' ? 55 : 75; e.onGround = false; }
       }
+      if (e.kind === 'esqueleto') {
+        // reage ao gato: joga um osso quando ele chega perto
+        e.atkT -= dt;
+        if (e.atkT <= 0 && Math.abs(player.x - (e.x + e.w / 2)) < 260 && Math.abs(player.y - e.y) < 140) {
+          e.atkT = 130;
+          const dir = Math.sign(player.x - e.x) || 1;
+          bossShots.push({ x: e.x + e.w / 2 - 6, y: e.y + 8, w: 12, h: 12, vx: dir * 3.4, vy: -1.6, color: '#eaf0f5', grav: true, life: 150 });
+          SFX.shoot();
+        }
+      }
       e.vy += GRAVITY * dt;
       if (e.vy > MAX_FALL) e.vy = MAX_FALL;
       e.x += e.vx * dt; e.y += e.vy * dt;
@@ -2322,6 +2362,26 @@ function updateBoss(e, dt, solids) {
       }
       break;
     }
+    case 'rei_ossos': {
+      /* O REI DOS OSSOS: patrulha jogando ossos em leque, depois avança numa investida veloz */
+      e.y = e.baseY + Math.sin(e.t * 0.05) * 20;
+      if (e.phase === 0) {
+        e.x += e.vx * rage * dt;
+        if (e.x < e.minX || e.x + e.w > e.maxX) { e.vx *= -1; e.x = clamp(e.x, e.minX, e.maxX - e.w); }
+        if (e.atk <= 0) {
+          e.atk = 90 / rage; e.phase = 1; e.dashT = 32;
+          for (let k = -1; k <= 1; k++) bossShoot(e, dir * 3.2 + k * 0.9, k * 1.5, '#eaf0f5', false);
+          SFX.boss();
+        }
+      } else {
+        e.dashT -= dt;
+        e.x += dir * 4.6 * rage * dt;
+        e.x = clamp(e.x, e.minX, e.maxX - e.w);
+        if (Math.random() < 0.35) particles.push({ x: e.x + e.w / 2, y: e.y + e.h - 6, vx: (Math.random() - .5) * 2, vy: -Math.random(), life: 1, size: Math.random() * 3 + 2, color: '#c9bc9c', g: 0.02 });
+        if (e.dashT <= 0) e.phase = 0;
+      }
+      break;
+    }
   }
 }
 
@@ -2392,6 +2452,12 @@ function updateMap(dt) {
     // o toque era jogado fora enquanto ele andava. Agora entra sempre.
     if (mapCursor <= unlocks.maxLevel) {
       mapAvatar.x = t.x; mapAvatar.y = t.y;
+      if (renascerNoCheckpoint && renascerNoCheckpoint.levelIndex === mapCursor) {
+        checkpointX = renascerNoCheckpoint.checkpointX;
+        renascerNoCheckpoint = null;
+        loadLevel(mapCursor, true); return;
+      }
+      renascerNoCheckpoint = null;
       checkpointX = 60; loadLevel(mapCursor, false); return;
     }
     SFX.hurt();                       // fase trancada: avisa em vez de ignorar
@@ -2638,6 +2704,32 @@ function drawBackground() {
       ctx.fillStyle = '#211045'; ctx.fillRect(26, 0, 42, VH);
       ctx.fillStyle = '#0d0722'; for (let y = 0; y < VH; y += 42) ctx.fillRect(20, y, 54, 4);
     });
+  }
+  else if (bio === 'ossos') {
+    // lua avermelhada
+    ctx.fillStyle = 'rgba(255,225,200,0.92)';
+    ctx.beginPath(); ctx.arc(288, 78, 24, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(255,140,60,0.35)';
+    ctx.beginPath(); ctx.arc(288, 78, 36, 0, 6.2832); ctx.fill();
+    // estrelas fracas
+    for (let i = 0; i < 30; i++) {
+      const x = ((i * 67) % 360 - camera.x * 0.04) % 380; const sx = x < 0 ? x + 380 : x;
+      const y = (i * 37) % 220;
+      ctx.fillStyle = 'rgba(255,220,200,' + (0.18 + Math.abs(Math.sin(T() / 900 + i)) * 0.35) + ')';
+      ctx.fillRect(sx, y, 2, 2);
+    }
+    // arcos de costela gigantes ao longe
+    repeatProp(0.18, 260, () => {
+      ctx.strokeStyle = '#241008'; ctx.lineWidth = 11; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-6, VH); ctx.quadraticCurveTo(30, 200, 66, 190); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(138, VH); ctx.quadraticCurveTo(102, 200, 66, 190); ctx.stroke();
+    });
+    // colinas escuras próximas
+    repeatProp(0.40, 190, () => {
+      ctx.fillStyle = '#3a1710';
+      ctx.beginPath(); ctx.moveTo(-10, VH); ctx.lineTo(45, 360); ctx.lineTo(100, VH); ctx.fill();
+    });
+    hills('#4a2013', 500, 14, 0.02, 0.66, 1.0);
   }
 
   // partículas de ambiente
@@ -3356,6 +3448,49 @@ function drawEnemy(e) {
       eyes(-4, 4, -6, 2.6);
       break;
     }
+    case 'caoOsso': {                                    // cachorro de ossos do vulcão, com olhos de fogo
+      ctx.scale(face, 1);
+      ctx.strokeStyle = '#d8cdb0'; ctx.lineWidth = 3.6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-13, -2); ctx.quadraticCurveTo(-20, -6 + wob, -22, -12 + wob); ctx.stroke();
+      ctx.fillStyle = '#c9bc9c';
+      ctx.beginPath(); ctx.arc(-6 + wob, 14, 4, 0, 6.2832); ctx.arc(7 - wob, 14, 4, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = '#e8dcc0';
+      ctx.beginPath(); ctx.ellipse(0, 2, 14, 9, 0, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = '#b8ab8c'; ctx.lineWidth = 1.1;
+      for (let k = -5; k <= 5; k += 4) { ctx.beginPath(); ctx.moveTo(-11, k); ctx.lineTo(11, k); ctx.stroke(); }
+      ctx.fillStyle = '#e8dcc0';
+      ctx.beginPath(); ctx.arc(9, -7, 8, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = '#c9bc9c';
+      ctx.beginPath(); ctx.ellipse(15, -4, 5, 4, 0, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = '#3a2413'; ctx.beginPath(); ctx.arc(19, -5, 1.6, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = '#ff6b2b';
+      ctx.beginPath(); ctx.arc(7, -8, 2.2, 0, 6.2832); ctx.arc(12, -8, 2.2, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(255,110,40,.45)';
+      ctx.beginPath(); ctx.arc(7, -8, 4, 0, 6.2832); ctx.arc(12, -8, 4, 0, 6.2832); ctx.fill();
+      break;
+    }
+    case 'esqueleto': {                                  // guerreiro de ossos das catacumbas
+      const balan = Math.sin(e.t * 0.2) * 3;
+      ctx.strokeStyle = '#e8e2d0'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-4, 6); ctx.lineTo(-6 + balan, 16); ctx.moveTo(4, 6); ctx.lineTo(6 - balan, 16); ctx.stroke();
+      ctx.fillStyle = '#f0ead8';
+      ctx.beginPath(); ctx.ellipse(0, -2, 9, 12, 0, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = '#c9c0a8'; ctx.lineWidth = 1.3;
+      for (let k = -6; k <= 6; k += 4) { ctx.beginPath(); ctx.moveTo(-7, k); ctx.lineTo(7, k); ctx.stroke(); }
+      ctx.strokeStyle = '#f0ead8'; ctx.lineWidth = 3.6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(7, -4); ctx.lineTo(13, 2 + balan); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-7, -4); ctx.lineTo(-13, 2 - balan); ctx.stroke();
+      ctx.fillStyle = '#f5f0e0';
+      ctx.beginPath(); ctx.arc(0, -16, 8.4, 0, 6.2832); ctx.fill();
+      ctx.fillRect(-5, -11, 10, 5);
+      ctx.fillStyle = '#ff6b2b';
+      ctx.beginPath(); ctx.arc(-3.2, -17, 2.1, 0, 6.2832); ctx.arc(3.2, -17, 2.1, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(255,120,40,.45)';
+      ctx.beginPath(); ctx.arc(-3.2, -17, 4, 0, 6.2832); ctx.arc(3.2, -17, 4, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = '#c9c0a8';
+      ctx.fillRect(-3, -9, 6, 2);
+      break;
+    }
     case 'flame': {                                    // duende de fogo
       const f = Math.sin(e.t * 0.3) * 2;
       ctx.fillStyle = 'rgba(255,140,40,0.30)'; ctx.beginPath(); ctx.arc(0, 0, 20 + f, 0, 6.2832); ctx.fill();
@@ -3596,6 +3731,38 @@ function drawBoss(e) {
     ctx.beginPath(); ctx.moveTo(34, -4 + kv); ctx.lineTo(41, 34 + kv); ctx.stroke();
     ctx.fillStyle = '#7fd4ff';
     ctx.beginPath(); ctx.arc(33, -11 + kv, 6 + brilho * 4, 0, 6.2832); ctx.fill();
+  }
+
+  if (e.boss === 'rei_ossos') {
+    const rv = Math.sin(e.t * 0.07) * 4;
+    const brasa = 0.5 + Math.abs(Math.sin(T() / 240)) * 0.5;
+    ctx.globalAlpha = 0.22 * brasa;                          // brilho sinistro
+    ctx.fillStyle = '#ff6b2b';
+    ctx.beginPath(); ctx.arc(0, 6 + rv, 60, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = blink ? '#fff' : '#c9bc9c'; ctx.lineWidth = 7; ctx.lineCap = 'round';   // pernas
+    ctx.beginPath(); ctx.moveTo(-14, 20 + rv); ctx.lineTo(-18 + wob, 44 + rv); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14, 20 + rv); ctx.lineTo(18 - wob, 44 + rv); ctx.stroke();
+    ctx.fillStyle = blink ? '#fff' : '#eee6d0';               // caixa torácica
+    ctx.beginPath(); ctx.ellipse(0, 8 + rv, 32, 26, 0, 0, 6.2832); ctx.fill();
+    ctx.strokeStyle = '#c9bc9c'; ctx.lineWidth = 2;
+    for (let k = -16; k <= 16; k += 9) { ctx.beginPath(); ctx.moveTo(-28, k + 8 + rv); ctx.lineTo(28, k + 8 + rv); ctx.stroke(); }
+    ctx.strokeStyle = blink ? '#fff' : '#eee6d0'; ctx.lineWidth = 6; ctx.lineCap = 'round';   // braços com cajado
+    ctx.beginPath(); ctx.moveTo(-30, 2 + rv); ctx.lineTo(-50, -12 + wob); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(30, 2 + rv); ctx.lineTo(50, -12 - wob); ctx.stroke();
+    ctx.fillStyle = blink ? '#fff' : '#f5f0e0';               // crânio
+    ctx.beginPath(); ctx.arc(0, -22 + rv, 26, 0, 6.2832); ctx.fill();
+    ctx.fillRect(-16, -16 + rv, 32, 10);
+    ctx.fillStyle = '#ff6b2b';
+    ctx.beginPath(); ctx.arc(-10, -24 + rv, 5.4, 0, 6.2832); ctx.arc(10, -24 + rv, 5.4, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(255,110,40,.55)';
+    ctx.beginPath(); ctx.arc(-10, -24 + rv, 9, 0, 6.2832); ctx.arc(10, -24 + rv, 9, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = '#c9bc9c'; ctx.fillRect(-9, -11 + rv, 18, 4);
+    ctx.fillStyle = '#f5f0e0'; ctx.strokeStyle = '#c9bc9c'; ctx.lineWidth = 1.6;   // coroa de ossos
+    ctx.beginPath();
+    ctx.moveTo(-22, -40 + rv); ctx.lineTo(-22, -58 + rv); ctx.lineTo(-10, -46 + rv); ctx.lineTo(0, -64 + rv);
+    ctx.lineTo(10, -46 + rv); ctx.lineTo(22, -58 + rv); ctx.lineTo(22, -40 + rv);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
   }
 }
 
