@@ -1757,6 +1757,9 @@ function maquinaDecideMaoOnze() {
         let user = null;
         let matchId = null;
         let channelMatch = null, channelHand = null, channelQueue1 = null, channelQueue2 = null;
+        let heartbeatInterval = null, watchdogInterval = null;
+        const HEARTBEAT_MS = 8000;
+        const WATCHDOG_MS = 10000;
         let ultimoEstadoTruco = null;
 
         // --- Elementos ---
@@ -1895,9 +1898,34 @@ function maquinaDecideMaoOnze() {
             window.__ultimoMatchRow = matchRow;
             window.__minhaMao = handRow ? handRow.cartas : [];
             renderizarTudo(matchRow);
+
+            iniciarHeartbeat();
+        }
+
+        function iniciarHeartbeat() {
+            pararHeartbeat();
+            // Avisa o servidor que estou online, periodicamente.
+            heartbeatInterval = setInterval(() => {
+                if (!matchId) return;
+                sb.functions.invoke('truco-game', { body: { acao: 'heartbeat', matchId } }).catch(() => {});
+            }, HEARTBEAT_MS);
+            // De tempos em tempos, pergunta ao servidor se o oponente sumiu
+            // por tempo demais. O servidor decide sozinho se concede a
+            // vitória (com base no último heartbeat dele) — o cliente só
+            // avisa que gostaria de reivindicar.
+            watchdogInterval = setInterval(() => {
+                if (!matchId || !window.__ultimoMatchRow || window.__ultimoMatchRow.status === 'finalizado') return;
+                sb.functions.invoke('truco-game', { body: { acao: 'reivindicar_desistencia', matchId } }).catch(() => {});
+            }, WATCHDOG_MS);
+        }
+
+        function pararHeartbeat() {
+            if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
+            if (watchdogInterval) { clearInterval(watchdogInterval); watchdogInterval = null; }
         }
 
         function encerrarCanaisPartida() {
+            pararHeartbeat();
             if (channelMatch) { sb.removeChannel(channelMatch); channelMatch = null; }
             if (channelHand) { sb.removeChannel(channelHand); channelHand = null; }
         }
@@ -1992,8 +2020,17 @@ function maquinaDecideMaoOnze() {
             el.maoOnzeOverlay.style.display = 'none';
 
             if (m.status === 'finalizado') {
-                const vencedor = m.vencedor_final === meuId ? 'VOCÊ VENCEU!' : 'O OPONENTE VENCEU!';
-                el.mensagemTruco.textContent = `FIM DE JOGO! ${vencedor} Placar: ${m.placar_p1} x ${m.placar_p2}`;
+                const souVencedor = m.vencedor_final === meuId;
+                let mensagemFim;
+                if (m.finalizado_por_abandono) {
+                    mensagemFim = souVencedor
+                        ? 'O oponente saiu da partida! Você venceu por W.O.'
+                        : 'Você desistiu da partida.';
+                } else {
+                    mensagemFim = souVencedor ? 'VOCÊ VENCEU!' : 'O OPONENTE VENCEU!';
+                    mensagemFim = `FIM DE JOGO! ${mensagemFim} Placar: ${m.placar_p1} x ${m.placar_p2}`;
+                }
+                el.mensagemTruco.textContent = mensagemFim;
                 el.botaoTruco.style.display = 'none';
                 el.fimJogoControles.style.display = 'block';
                 el.fimJogoControles.innerHTML = '<button id="botao-jogar-novamente" onclick="TrucoOnline.novaPartida()">Buscar Nova Partida</button>';
