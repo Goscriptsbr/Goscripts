@@ -245,7 +245,7 @@
     }
   }
 </style>
-</head>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1020"><meta name="mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="icon-192.png"></head>
 <body>
 <div id="fitter">
 <div id="gameWrapper">
@@ -4918,7 +4918,7 @@ function pintaMenu() {
   window.drawEnemy = function (e) {
     if (e.kind === 'boss' || (!ENEMY[e.kind] && e.kind !== 'flame')) return origDrawEnemy(e);
     // sombra de contato
-    if (GROUND_KINDS[e.kind] && !e.dead) {
+    if (GROUND_KINDS[e.kind] && !e.dead && !MIN) {
       ctx.fillStyle = 'rgba(0,0,0,.22)';
       ctx.beginPath(); ctx.ellipse(e.x + e.w / 2, GROUND_Y + 1, e.w * .45, 3, 0, 0, TAU); ctx.fill();
     }
@@ -5414,6 +5414,7 @@ function pintaMenu() {
      PARTE 2 — JOGO+  (fases maiores, inimigos inteligentes, chefões novos,
      molas, plataformas que caem, combo de pisões e otimizações)
      ========================================================================= */
+  let MIN = false, HALF = false;
   function star5(g, x, y, r, fill, line) {
     g.beginPath();
     for (let q = 0; q < 10; q++) { const a = -PI / 2 + q * PI / 5, rr = (q % 2 === 0) ? r : r * .45; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
@@ -6086,7 +6087,7 @@ function pintaMenu() {
     if (e.kind === 'boss') return drawBossHD(e);
     const sp = ENEMY2[e.kind];
     if (!sp) return prevDrawEnemy(e);
-    if (e.kind !== 'fantasma' && !e.dead) {
+    if (e.kind !== 'fantasma' && !e.dead && !MIN) {
       ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(e.x + e.w / 2, GROUND_Y + 1, e.w * .45, 3, 0, 0, TAU); ctx.fill();
     }
     ctx.save();
@@ -6687,6 +6688,7 @@ function pintaMenu() {
     // céu
     if (!d.skyG) { d.skyG = ctx.createLinearGradient(0, 0, 0, VH); d.skyG.addColorStop(0, d.sky[0]); d.skyG.addColorStop(.55, d.sky[1]); d.skyG.addColorStop(1, d.sky[2]); }
     ctx.fillStyle = d.skyG; ctx.fillRect(0, 0, VW, VH);
+    if (MIN) { const n = d.layers.length; for (let i = Math.max(0, n - 2); i < n; i++) stamp(d.layers[i][1], d.layers[i][0]); return; }
     if (d.stars) { stamp(d.stars, .01); }
     if (d.moonC) { const m = d.moon, S = m.r * 4; ctx.drawImage(d.moonC, m.pos[0] - S / 2 - camera.x * .004, m.pos[1] - S / 2, S, S); }
     if (d.sunPos) {
@@ -6780,7 +6782,7 @@ function pintaMenu() {
       ctx.fillStyle = 'rgba(40,16,12,.5)';
       for (let i = 0; i < 6; i++) { const cx0 = 360 - camera.x * .03, k = ((t / 3500 + i / 6) % 1); const px = ((cx0 + Math.sin(k * 4 + i) * 40 + k * 90) % (VW + 400) + VW + 400) % (VW + 400) - 200; ctx.beginPath(); ctx.arc(px, 250 - k * 170, 20 + k * 34, 0, TAU); ctx.fill(); }
     }
-    ctx.drawImage(overlay(bio), 0, 0);
+    if (!MODO_LEVE) ctx.drawImage(overlay(bio), 0, 0);
   };
   function drawSea(d, t) {
     for (let i = 0; i < 6; i++) {
@@ -6800,8 +6802,84 @@ function pintaMenu() {
     }
   }
 
+  /* =========================================================================
+     GOVERNADOR DE DESEMPENHO
+     - corrige o "modo leve automático" do jogo, que se desfazia sozinho
+     - dentro de app/WebView/iframe já começa no modo leve
+     - se continuar pesado, desce mais degraus: econômico (menos pixels e
+       cenário simples) e, por último, desenho a 30 quadros
+     ========================================================================= */
+  let forceLeve = false;
+  const embutido = (() => {
+    try { if (window.top !== window.self) return true; } catch (e) { return true; }
+    const ua = (navigator.userAgent || '');
+    return /; wv\)/.test(ua) || (/Android/.test(ua) && /Version\/4\.0/.test(ua));
+  })();
+
+  window.aplicarQualidade = function () {
+    MODO_LEVE = (QUALIDADE === 'leve') || (QUALIDADE === 'auto' && (forceLeve || celularFraco()));
+    if (!MODO_LEVE || QUALIDADE === 'alta') { MIN = false; HALF = false; }
+    window.setupCanvas();
+    if (typeof level !== 'undefined' && level && typeof buildAmbient === 'function') buildAmbient();
+    _gradCache = {}; SCN.key = '';
+  };
+  window.setupCanvas = function () {
+    const teto = (MODO_LEVE || ZOOM_PAISAGEM_ATIVO) ? 1 : 2;
+    let dpr = Math.min(window.devicePixelRatio || 1, teto);
+    if (MIN) dpr = Math.min(dpr, 1) * .75;
+    canvas.width = Math.round(VW * dpr); canvas.height = Math.round(VH * dpr);
+    canvas.style.width = VW + 'px'; canvas.style.height = VH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+  };
+  const prevBuildAmbient = window.buildAmbient;
+  window.buildAmbient = function () { prevBuildAmbient(); if (MIN && ambient) ambient.length = Math.floor(ambient.length * .4); };
+
+  if (embutido && QUALIDADE === 'auto') { forceLeve = true; }
+  window.aplicarQualidade();
+
+  const fbuf = []; let esfria = 0, quadro = 0;
+  function avisa(txt) { try { popup(player ? player.x - 30 : 100, player ? player.y - 50 : 100, txt, '#7fd4ff'); } catch (e) { } }
+  function governa(ms) {
+    if (ms <= 0 || ms > 500) return;
+    if (state === 'pause' || state === 'shop' || state === 'tutorial') { fbuf.length = 0; return; }
+    if (esfria > 0) { esfria--; return; }
+    fbuf.push(ms);
+    if (fbuf.length < 70) return;
+    const s = fbuf.slice().sort((a, b) => a - b), med = s[s.length >> 1]; fbuf.length = 0;
+    if (QUALIDADE === 'alta' || med <= 24) return;
+    if (!MODO_LEVE) { forceLeve = true; window.aplicarQualidade(); avisa('MODO LEVE'); }
+    else if (!MIN) { MIN = true; window.setupCanvas(); window.buildAmbient && buildAmbient(); SCN.key = ''; avisa('MODO ECONÔMICO'); }
+    else if (!HALF) { HALF = true; avisa('MODO 30 FPS'); }
+    esfria = 150;
+  }
+
+  window.gameLoop = function (time) {
+    if (!lastTime) lastTime = time;
+    let dt = (time - lastTime) / 16.667;
+    const ms = time - lastTime;
+    lastTime = time;
+    if (dt > 2.5) dt = 2.5;
+    if (dt < 0) dt = 0;
+    governa(ms);
+    try {
+      ajustarOrigemZoomPaisagem();
+      update(dt);
+      if (!HALF || (quadro++ & 1)) draw();
+    } catch (err) {
+      if (!window._erroMostrado) {
+        window._erroMostrado = true;
+        try { showMessage('Ops, algo falhou<br><span style="font-size:12px;font-weight:700">' + (err && err.message ? err.message : err) + '</span>'); } catch (e) { }
+      }
+      console.error(err);
+    }
+    rafId = requestAnimationFrame(gameLoop);
+  };
+  window.__perf = () => ({ embutido, forceLeve, MODO_LEVE, MIN, HALF });
+
 })();
 
 </script>
+<script>try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0&&window.top===window.self)navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}</script>
 </body>
 </html>
