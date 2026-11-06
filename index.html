@@ -4,745 +4,645 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoScripts - Soluções Digitais</title>
-    
+    <meta name="description" content="Sistemas e sites para o seu negócio. Pague uma única vez, sem mensalidades: o projeto é 100% seu.">
+    <meta name="theme-color" content="#07090f">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         /* --- 1. Variáveis e Reset --- */
         :root {
-            --primary: #3b82f6; 
-            --primary-hover: #2563eb;
-            --secondary: #8b5cf6;
-            --dark-bg: #000000;
-            --card-bg: rgba(22, 27, 34, 0.6); 
-            --text-main: #f0f6fc;
-            --text-muted: #8b949e;
-            --border: rgba(240, 246, 252, 0.1); 
+            --bg: #07090f;
+            --surface: #0e1220;
+            --surface-2: #131830;
+            --line: rgba(255, 255, 255, 0.08);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #eef1f8;
+            --muted: #98a2b8;
+            --accent: #4f8cff;
+            --accent-2: #22d3ee;
             --whatsapp: #25d366;
-            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --radius: 18px;
+            --font-display: 'Space Grotesk', 'Inter', sans-serif;
+            --font-body: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, monospace;
         }
 
-        html {
-            scroll-behavior: smooth;
-            scroll-padding-top: 80px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: transparent; /* Deixando transparente para ver o fundo fixo */
-            color: var(--text-main);
-            line-height: 1.6;
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
             overflow-x: hidden;
-            overscroll-behavior: none;
+            -webkit-font-smoothing: antialiased;
         }
 
-        a { text-decoration: none; color: inherit; }
+        /* Fundo: brilho suave no topo + grade discreta */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(900px 500px at 80% -10%, rgba(79, 140, 255, 0.18), transparent 60%),
+                radial-gradient(700px 420px at 0% 10%, rgba(34, 211, 238, 0.08), transparent 60%),
+                linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 64px 64px,
+                linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 64px 64px;
+            -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 35%, transparent 85%);
+                    mask-image: linear-gradient(to bottom, #000 0%, #000 35%, transparent 85%);
+            opacity: 0.9;
+        }
+
+        a { color: inherit; text-decoration: none; }
         ul { list-style: none; }
+        img { max-width: 100%; display: block; }
 
-        /* --- FUNDO ANIMADO GERAL (SITE INTEIRO) --- */
-        .site-bg-container {
-            position: fixed; /* Fixa no fundo da tela */
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -1; /* Joga para trás de tudo */
-            background: var(--dark-bg);
-            overflow: hidden;
+        .container { width: min(1140px, 92%); margin: 0 auto; }
+
+        section { padding: 6.5rem 0; }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--accent-2);
+            letter-spacing: 0.04em;
+            margin-bottom: 1rem;
+        }
+        .eyebrow::before {
+            content: '';
+            width: 22px; height: 1px;
+            background: var(--accent-2);
         }
 
-        .gradient-blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.25;
-            will-change: transform;
+        .section-head { max-width: 640px; margin-bottom: 3rem; }
+        .section-head h2 {
+            font-family: var(--font-display);
+            font-size: clamp(1.9rem, 4vw, 2.7rem);
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.8rem;
+        }
+        .section-head p { color: var(--muted); font-size: 1.08rem; }
+
+        /* --- 2. Botões --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 0.9rem 1.6rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.97rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, button:focus-visible {
+            outline: 2px solid var(--accent-2);
+            outline-offset: 3px;
         }
 
-        .blob1 {
-            width: 70vmax;
-            height: 70vmax;
-            background: radial-gradient(circle, #2a7de1 0%, transparent 60%);
-            top: -30%;
-            left: -20%;
-            animation: float1 22s ease-in-out infinite alternate;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #3b6fe0);
+            color: #fff;
+            box-shadow: 0 8px 24px -8px rgba(79, 140, 255, 0.7);
         }
+        .btn-primary:hover { box-shadow: 0 12px 30px -8px rgba(79, 140, 255, 0.85); }
 
-        .blob2 {
-            width: 60vmax;
-            height: 60vmax;
-            background: radial-gradient(circle, #00c6ff 0%, transparent 60%);
-            bottom: -25%;
-            right: -15%;
-            animation: float2 26s ease-in-out infinite alternate;
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--line-strong);
+            color: var(--text);
         }
+        .btn-ghost:hover { background: rgba(255, 255, 255, 0.07); }
 
-        @keyframes float1 {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-            100% { transform: translate(8%, 5%) scale(1.15) rotate(10deg); }
-        }
-
-        @keyframes float2 {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-            100% { transform: translate(-10%, -8%) scale(1.1) rotate(-10deg); }
-        }
-
-        .grid-bg {
-            position: absolute;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
-        }
-
-        .particles-canvas {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .site-overlay {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%);
-            z-index: 2;
-            pointer-events: none;
-        }
-        
-        .site-noise {
-            position: absolute;
-            inset: 0;
-            opacity: 0.015;
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)"/></svg>');
-            z-index: 3;
-            pointer-events: none;
-        }
-
-        /* --- 2. Elementos de Layout --- */
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-
-        .section-title {
-            text-align: center;
-            margin-bottom: 3.5rem;
-            position: relative;
-        }
-
-        .section-title h2 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #fff 0%, #00c6ff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.75rem;
-        }
-
-        .section-title p {
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
-            font-size: 1.1rem;
-        }
-
-        section { padding: 6rem 0; position: relative; }
-
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease-out;
-        }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
+        .btn-whatsapp {
+            background: var(--whatsapp);
+            color: #06210f;
+            box-shadow: 0 8px 24px -10px rgba(37, 211, 102, 0.8);
         }
 
         /* --- 3. Navbar --- */
         .navbar {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            top: 0; left: 0; right: 0;
             z-index: 1000;
-            border-bottom: 1px solid var(--border);
-            padding: 1.2rem 0;
-            transition: all 0.3s ease;
+            padding: 1rem 0;
+            transition: background 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
+            border-bottom: 1px solid transparent;
         }
-
         .navbar.scrolled {
-            padding: 0.8rem 0;
-            box-shadow: 0 4px 30px rgba(0, 198, 255, 0.1);
+            background: rgba(7, 9, 15, 0.82);
+            -webkit-backdrop-filter: blur(14px);
+                    backdrop-filter: blur(14px);
+            border-color: var(--line);
+            padding: 0.7rem 0;
         }
-
-        .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .nav-container { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 
         .logo {
-            font-size: 1.6rem;
-            font-weight: 800;
-            font-family: 'Poppins', sans-serif;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            letter-spacing: -0.5px;
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.02em;
         }
-
-        .logo i {
-            background: linear-gradient(45deg, #2a7de1, #00c6ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2.5rem;
-        }
-
-        .nav-links a {
+        .logo-mark {
+            width: 34px; height: 34px;
+            display: grid; place-items: center;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #05101f;
             font-size: 0.95rem;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 2rem; }
+        .nav-links a:not(.btn) {
+            color: var(--muted);
+            font-size: 0.94rem;
             font-weight: 500;
-            color: var(--text-muted);
-            transition: color 0.3s ease;
-            position: relative;
+            transition: color 0.2s ease;
+        }
+        .nav-links a:not(.btn):hover { color: var(--text); }
+        .nav-links .btn { padding: 0.6rem 1.15rem; font-size: 0.9rem; }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--line-strong);
+            color: var(--text);
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
         }
 
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -5px;
-            left: 0;
-            background-color: #00c6ff;
-            transition: width 0.3s ease;
-        }
-
-        .nav-links a:hover { color: #fff; }
-        .nav-links a:hover::after { width: 100%; }
-
-        /* --- 4. Hero Section --- */
-        header {
-            height: 100vh;
-            min-height: 600px;
-            position: relative;
-            display: flex;
+        /* --- 4. Hero --- */
+        .hero { padding: 10rem 0 5rem; }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 3.5rem;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            overflow: hidden;
-            
-            /* SUA IMAGEM DE FUNDO DO CABEÇALHO AQUI */
-            background-image: url('URL_DA_SUA_IMAGEM_AQUI');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
         }
 
-        /* Camada escura apenas em cima da imagem do Header para o texto ficar legível */
-        header::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.65);
-            z-index: 1;
-        }
-
-        .hero-content { 
-            z-index: 10; 
-            position: relative; 
-        }
-
-        .hero-content h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 800;
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.1;
+        .badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 0.4rem 0.9rem;
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 0.82rem;
+            color: var(--muted);
             margin-bottom: 1.5rem;
-            letter-spacing: -1px;
+        }
+        .badge .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--whatsapp);
+            box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.18);
         }
 
-        /* TEXTO GLOW */
-        .glow-text {
-            background: linear-gradient(to right, #2a7de1, #56a8ff, #00c6ff);
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5.6vw, 4.2rem);
+            line-height: 1.05;
+            letter-spacing: -0.035em;
+            margin-bottom: 1.4rem;
+        }
+        .hero h1 .grad {
+            background: linear-gradient(120deg, var(--accent), var(--accent-2));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(0,198,255,0.5), 0 0 40px rgba(42,125,225,0.4), 0 0 80px rgba(42,125,225,0.2);
-            animation: glowPulse 3s ease-in-out infinite alternate;
-            display: inline-block;
         }
-
-        @keyframes glowPulse {
-            0% { filter: drop-shadow(0 0 10px rgba(0,198,255,0.3)); }
-            100% { filter: drop-shadow(0 0 25px rgba(0,198,255,0.7)); }
+        .hero-sub {
+            color: var(--muted);
+            font-size: 1.15rem;
+            max-width: 540px;
+            margin-bottom: 2.2rem;
+            min-height: 3.6em;
         }
-
-        .hero-content p {
-            font-size: 1.25rem;
-            color: rgba(255,255,255,0.7);
-            max-width: 750px;
-            margin: 0 auto 3rem auto;
-            min-height: 60px;
-        }
-
         .typing-cursor {
             display: inline-block;
-            width: 3px;
-            height: 1.2em;
-            background-color: #00c6ff;
-            vertical-align: middle;
-            animation: blink 0.8s step-end infinite;
+            width: 2px; height: 1.1em;
+            background: var(--accent-2);
+            vertical-align: text-bottom;
+            margin-left: 2px;
+            animation: blink 0.9s step-end infinite;
         }
-
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* BOTÃO */
-        .btn-glow {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: linear-gradient(to right, #2a7de1, #00c6ff);
-            color: #fff;
-            padding: 1.2rem 3rem;
-            border-radius: 2rem;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-            font-size: 1.1rem;
-            transition: var(--transition);
-            box-shadow: 0 0 30px rgba(0,198,255,0.4);
-            border: 1px solid rgba(255,255,255,0.2);
-            cursor: pointer;
-            position: relative;
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-bottom: 2.4rem; }
+
+        .hero-points { display: flex; flex-wrap: wrap; gap: 0.6rem 1.6rem; color: var(--muted); font-size: 0.92rem; }
+        .hero-points li { display: flex; align-items: center; gap: 8px; }
+        .hero-points i { color: var(--accent-2); font-size: 0.8rem; }
+
+        /* Janela de código */
+        .code-window {
+            background: linear-gradient(180deg, var(--surface-2), var(--surface));
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7), 0 0 80px -30px rgba(79, 140, 255, 0.5);
             overflow: hidden;
-            animation: pulseBtn 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-
-        .btn-glow::after {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transform: skewX(-20deg);
-            animation: shine 3s ease-in-out infinite;
+        .code-bar {
+            display: flex; align-items: center; gap: 7px;
+            padding: 0.85rem 1.1rem;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.02);
         }
-
-        .btn-glow:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 50px rgba(0,198,255,0.6);
+        .code-bar span { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+        .code-bar span:nth-child(2) { background: #febc2e; }
+        .code-bar span:nth-child(3) { background: #28c840; }
+        .code-bar small { margin-left: auto; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+        .code-body {
+            padding: 1.4rem 1.4rem 1.6rem;
+            font-family: var(--font-mono);
+            font-size: 0.86rem;
+            line-height: 1.9;
+            color: #c9d3ea;
+            overflow-x: auto;
         }
+        .code-body .k { color: #c792ea; }
+        .code-body .f { color: #82aaff; }
+        .code-body .s { color: #a5e8a0; }
+        .code-body .c { color: #5d6b8a; }
+        .code-body .n { color: #22d3ee; }
 
-        @keyframes pulseBtn {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0,198,255,0.7); }
-            50% { transform: scale(1.03); box-shadow: 0 0 0 15px rgba(0,198,255,0); }
-        }
-
-        @keyframes shine {
-            0% { left: -100%; }
-            50%, 100% { left: 200%; }
-        }
-
-        /* --- 5. Serviços --- */
-        .services-grid {
+        /* --- 5. Diferenciais --- */
+        .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            position: relative;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.1rem;
         }
-
-        .card {
-            background: rgba(20, 20, 25, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
+        .feature {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 1.8rem 1.5rem;
+            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
         }
-
-        .card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom right, rgba(42,125,225,0.1), transparent);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            border-color: rgba(0, 198, 255, 0.3);
-            box-shadow: 0 15px 40px -10px rgba(0, 198, 255, 0.2);
-        }
-
-        .card:hover::after { opacity: 1; }
-
-        .card i {
-            font-size: 1.8rem;
-            color: #00c6ff;
-            margin-bottom: 1.5rem;
-            background: rgba(0, 198, 255, 0.1);
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .feature:hover { transform: translateY(-5px); border-color: rgba(79, 140, 255, 0.5); }
+        .feature .ico {
+            width: 46px; height: 46px;
+            display: grid; place-items: center;
             border-radius: 12px;
-            transition: var(--transition);
-            position: relative;
-            z-index: 2;
+            background: rgba(79, 140, 255, 0.12);
+            color: var(--accent);
+            font-size: 1.15rem;
+            margin-bottom: 1.2rem;
         }
-
-        .card:hover i {
-            background: linear-gradient(45deg, #2a7de1, #00c6ff);
-            color: #fff;
-            transform: scale(1.1) rotate(5deg);
-        }
-
-        .card h3 { font-size: 1.35rem; margin-bottom: 0.75rem; color: var(--text-main); position: relative; z-index: 2;}
-        .card p { font-size: 1rem; color: var(--text-muted); position: relative; z-index: 2;}
+        .feature h3 { font-family: var(--font-display); font-size: 1.12rem; margin-bottom: 0.5rem; letter-spacing: -0.01em; }
+        .feature p { color: var(--muted); font-size: 0.95rem; }
 
         /* --- 6. Portfólio --- */
-        .carousel-wrapper {
-            position: relative;
-            border-radius: 16px;
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.4rem;
+        }
+        .project {
+            display: block;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
             overflow: hidden;
-            border: 1px solid var(--border);
-            height: 500px; 
-            background: rgba(13, 17, 23, 0.8); /* Fundo com leve transparência */
-            backdrop-filter: blur(5px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
         }
-
-        .carousel-images {
-            display: flex;
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-            height: 100%;
+        .project:hover {
+            transform: translateY(-6px);
+            border-color: rgba(79, 140, 255, 0.5);
+            box-shadow: 0 25px 50px -25px rgba(79, 140, 255, 0.5);
         }
-
-        .carousel-images a {
-            min-width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at center, rgba(22, 27, 34, 0.8) 0%, rgba(13, 17, 23, 0.9) 100%);
-            position: relative;
+        .project-thumb {
+            aspect-ratio: 16 / 9;
+            background: #0b1d4a;
+            display: grid; place-items: center;
+            overflow: hidden;
         }
-
-        .carousel-images img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 40px;
-            opacity: 0.8;
-            transition: var(--transition);
+        .project-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .project-thumb.logo img { object-fit: contain; padding: 10%; }
+        .project:hover .project-thumb img { transform: scale(1.05); }
+        .project-info {
+            display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+            padding: 1.1rem 1.3rem;
+            border-top: 1px solid var(--line);
         }
-        
-        .carousel-images a:hover img { 
-            transform: scale(1.08); 
-            opacity: 1; 
-            filter: drop-shadow(0 0 20px rgba(0,198,255,0.2));
+        .project-info h3 { font-family: var(--font-display); font-size: 1.05rem; letter-spacing: -0.01em; }
+        .project-info small { color: var(--muted); font-family: var(--font-mono); font-size: 0.76rem; }
+        .project-info i {
+            color: var(--muted);
+            transition: transform 0.25s ease, color 0.25s ease;
         }
-
-        .nav-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(22, 27, 34, 0.8);
-            backdrop-filter: blur(5px);
-            color: #fff;
-            border: 1px solid var(--border);
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 10;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-        .nav-btn:hover { background: #00c6ff; border-color: #00c6ff; box-shadow: 0 0 15px rgba(0,198,255,0.5);}
-        .prev { left: 20px; }
-        .next { right: 20px; }
+        .project:hover .project-info i { color: var(--accent-2); transform: translate(3px, -3px); }
 
         /* --- 7. Contato --- */
-        .contact-layout {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 4rem;
-            align-items: start;
-        }
+        .contact-layout { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 3rem; align-items: start; }
 
-        .contact-info-box {
-            background: rgba(20, 20, 25, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.2rem;
-            border: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            gap: 1.2rem;
-            transition: var(--transition);
+        .contact-item {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1.1rem 1.3rem;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            margin-bottom: 0.9rem;
+            transition: border-color 0.2s ease;
         }
-        
-        .contact-info-box:hover {
-            border-color: rgba(0, 198, 255, 0.3);
-            transform: translateX(10px);
+        .contact-item:hover { border-color: rgba(79, 140, 255, 0.5); }
+        .contact-item .ico {
+            width: 44px; height: 44px;
+            display: grid; place-items: center;
+            border-radius: 11px;
+            background: rgba(34, 211, 238, 0.1);
+            color: var(--accent-2);
+            font-size: 1.1rem;
+            flex-shrink: 0;
         }
+        .contact-item h4 { font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+        .contact-item p { font-weight: 600; word-break: break-word; }
 
-        .contact-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(0, 198, 255, 0.1);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #00c6ff;
-            font-size: 1.2rem;
+        .quick-box {
+            margin-top: 1.4rem;
+            padding: 1.8rem;
+            border: 1px dashed var(--line-strong);
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.02);
         }
+        .quick-box h3 { font-family: var(--font-display); font-size: 1.15rem; margin-bottom: 0.4rem; }
+        .quick-box p { color: var(--muted); font-size: 0.93rem; margin-bottom: 1.2rem; }
+        .quick-box .btn { width: 100%; }
 
         .form-box {
-            background: rgba(20, 20, 25, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 3rem;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            background: linear-gradient(180deg, var(--surface-2), var(--surface));
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            padding: 2.2rem;
+            box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);
         }
-
+        .form-box label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--muted); margin-bottom: 0.4rem; }
         .form-input {
             width: 100%;
-            padding: 1rem 1.2rem;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            color: #fff;
-            margin-bottom: 1.5rem;
+            padding: 0.9rem 1.05rem;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--line-strong);
+            border-radius: 11px;
+            color: var(--text);
             font-family: inherit;
-            transition: var(--transition);
+            font-size: 0.97rem;
+            margin-bottom: 1.2rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+        .form-input::placeholder { color: #5d6985; }
+        .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(79, 140, 255, 0.18); }
+        textarea.form-input { resize: vertical; min-height: 140px; }
+        .form-box .btn { width: 100%; }
 
-        .form-input:focus {
-            outline: none;
-            border-color: #00c6ff;
-            box-shadow: 0 0 15px rgba(0, 198, 255, 0.2);
-            background: #000;
-        }
+        /* --- 8. Rodapé --- */
+        footer { border-top: 1px solid var(--line); padding: 2.4rem 0; color: var(--muted); font-size: 0.9rem; }
+        .footer-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
 
-        textarea.form-input { resize: vertical; min-height: 150px; }
-
-        footer {
-            background: rgba(0, 0, 0, 0.6); /* Leve transparência */
-            backdrop-filter: blur(10px);
-            padding: 3rem 0;
-            border-top: 1px solid var(--border);
-            text-align: center;
-            color: var(--text-muted);
-        }
-
-        /* --- 8. Botão WhatsApp --- */
+        /* --- 9. WhatsApp flutuante --- */
         .whatsapp-float {
             position: fixed;
-            bottom: 30px;
-            left: 30px;
-            width: 65px;
-            height: 65px;
+            right: 22px; bottom: 22px;
+            width: 58px; height: 58px;
+            display: grid; place-items: center;
             background: var(--whatsapp);
             color: #fff;
+            font-size: 30px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 35px;
-            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.4);
-            z-index: 2000;
-            transition: var(--transition);
-            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 12px 28px -8px rgba(37, 211, 102, 0.7);
+            z-index: 1500;
+            transition: transform 0.2s ease;
+        }
+        .whatsapp-float:hover { transform: scale(1.08); }
+
+        /* --- 10. Animação de entrada --- */
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.active { opacity: 1; transform: none; }
+
+        /* --- 11. Responsivo --- */
+        @media (max-width: 960px) {
+            .hero-grid { grid-template-columns: 1fr; }
+            .features { grid-template-columns: repeat(2, 1fr); }
+            .contact-layout { grid-template-columns: 1fr; }
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+        @media (max-width: 760px) {
+            section { padding: 4.5rem 0; }
+            .hero { padding: 7.5rem 0 3rem; }
+            .menu-toggle { display: grid; place-items: center; }
+            .nav-links {
+                position: absolute;
+                top: 100%; left: 4%; right: 4%;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.2rem;
+                padding: 0.8rem;
+                background: rgba(14, 18, 32, 0.97);
+                border: 1px solid var(--line-strong);
+                border-radius: 14px;
+                opacity: 0; visibility: hidden; transform: translateY(-8px);
+                transition: all 0.2s ease;
+            }
+            .nav-links.open { opacity: 1; visibility: visible; transform: none; }
+            .nav-links a:not(.btn) { padding: 0.8rem 0.9rem; border-radius: 10px; }
+            .nav-links a:not(.btn):hover { background: rgba(255, 255, 255, 0.05); }
+            .nav-links .btn { margin-top: 0.4rem; }
+            .navbar { background: rgba(7, 9, 15, 0.82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+            .features { grid-template-columns: 1fr; }
+            .portfolio-grid { grid-template-columns: 1fr; }
+            .form-box { padding: 1.5rem; }
+            .hero-actions .btn { flex: 1 1 100%; }
+            .whatsapp-float { right: 16px; bottom: 16px; width: 54px; height: 54px; font-size: 27px; }
         }
 
-        .whatsapp-float:hover { 
-            transform: scale(1.1) rotate(10deg); 
-            animation-play-state: paused;
-        }
-
-        @media (max-width: 768px) {
-            .navbar { padding: 1rem; }
-            .nav-links { display: none; } 
-            .hero-content h1 { font-size: 2.2rem; }
-            .contact-layout { grid-template-columns: 1fr; gap: 2rem;}
-            .whatsapp-float { bottom: 20px; left: 20px; width: 55px; height: 55px; font-size: 28px;}
-            .form-box { padding: 2rem 1.5rem; }
-            .carousel-wrapper { height: 350px; }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+            .reveal { opacity: 1; transform: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="site-bg-container">
-        <div class="grid-bg"></div>
-        <div class="blob1 gradient-blob"></div>
-        <div class="blob2 gradient-blob"></div>
-        <canvas id="particles" class="particles-canvas"></canvas>
-        <div class="site-overlay"></div>
-        <div class="site-noise"></div>
-    </div>
-
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
-            <div class="logo"><i class="fas fa-terminal"></i> GoScripts</div>
-            <ul class="nav-links">
+            <a href="#home" class="logo" aria-label="GoScripts - início">
+                <span class="logo-mark"><i class="fas fa-terminal"></i></span> GoScripts
+            </a>
+            <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-links">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-links" id="nav-links">
                 <li><a href="#home">Início</a></li>
                 <li><a href="#services">Serviços</a></li>
                 <li><a href="#portfolio">Portfólio</a></li>
                 <li><a href="#contact">Contato</a></li>
+                <li><a href="#contact" class="btn btn-primary">Solicitar orçamento</a></li>
             </ul>
         </div>
     </nav>
 
-    <header id="home">
-        <div class="container hero-content">
+    <header class="hero" id="home">
+        <div class="container hero-grid">
             <div class="reveal">
-                <h1>Sistemas e sites para<br><span class="glow-text">o seu negócio</span></h1>
-                <p><span id="typewriter"></span><span class="typing-cursor"></span></p>
-                <a href="#contact" class="btn-glow">
-                    Solicitar Orçamento <i class="fas fa-arrow-right" style="margin-left:8px"></i>
-                </a>
+                <div class="badge"><span class="dot"></span> Sem mensalidades · pagamento único</div>
+                <h1>Sistemas e sites para <span class="grad">o seu negócio</span></h1>
+                <p class="hero-sub"><span id="typewriter"></span><span class="typing-cursor"></span></p>
+                <div class="hero-actions">
+                    <a href="#contact" class="btn btn-primary">Solicitar orçamento <i class="fas fa-arrow-right"></i></a>
+                    <a href="#portfolio" class="btn btn-ghost">Ver projetos</a>
+                </div>
+                <ul class="hero-points">
+                    <li><i class="fas fa-check"></i> O código é seu</li>
+                    <li><i class="fas fa-check"></i> Funciona em qualquer tela</li>
+                    <li><i class="fas fa-check"></i> Pronto para o Google</li>
+                </ul>
+            </div>
+
+            <div class="code-window reveal" style="transition-delay: 0.15s;" aria-hidden="true">
+                <div class="code-bar"><span></span><span></span><span></span><small>seu-projeto.js</small></div>
+<pre class="code-body"><span class="c">// seu site, do seu jeito</span>
+<span class="k">const</span> projeto = {
+  cliente: <span class="s">"você"</span>,
+  mensalidade: <span class="n">0</span>,
+  responsivo: <span class="n">true</span>,
+  codigoSeu: <span class="n">true</span>
+};
+
+<span class="f">publicar</span>(projeto);
+<span class="c">// ✔ no ar, sem aluguel</span></pre>
             </div>
         </div>
     </header>
 
     <main>
-        <section class="container">
-            <div class="section-title reveal">
-                <h2>Por que escolher a GoScripts?</h2>
-                <p>Esqueça aluguéis de sites. Aqui você paga uma única vez e o código é seu.</p>
-            </div>
-            
-            <div class="services-grid" id="services">
-                <div class="card reveal">
-                    <i class="fas fa-hand-holding-dollar"></i>
-                    <h3>Sem Mensalidades</h3>
-                    <p>Diferente das agências tradicionais, não cobramos mensalidade para manter seu site. O projeto é 100% seu.</p>
+        <section id="services">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow">Por que a GoScripts</span>
+                    <h2>Esqueça aluguéis de sites.</h2>
+                    <p>Aqui você paga uma única vez e o código é seu.</p>
                 </div>
-                <div class="card reveal" style="transition-delay: 0.1s;">
-                    <i class="fas fa-paint-brush"></i>
-                    <h3>Design Premium</h3>
-                    <p>Layouts exclusivos e modernos pensados na identidade da sua marca para converter mais clientes.</p>
-                </div>
-                <div class="card reveal" style="transition-delay: 0.2s;">
-                    <i class="fas fa-mobile-alt"></i>
-                    <h3>100% Responsivo</h3>
-                    <p>Seu site perfeito e fluido em qualquer tela: Computadores, Tablets e Celulares.</p>
-                </div>
-                <div class="card reveal" style="transition-delay: 0.3s;">
-                    <i class="fas fa-rocket"></i>
-                    <h3>SEO Otimizado</h3>
-                    <p>Estrutura de código leve e moderna para que o Google encontre sua empresa rapidamente.</p>
+
+                <div class="features">
+                    <article class="feature reveal">
+                        <div class="ico"><i class="fas fa-hand-holding-dollar"></i></div>
+                        <h3>Sem Mensalidades</h3>
+                        <p>Diferente das agências tradicionais, não cobramos mensalidade para manter seu site. O projeto é 100% seu.</p>
+                    </article>
+                    <article class="feature reveal" style="transition-delay: 0.08s;">
+                        <div class="ico"><i class="fas fa-paint-brush"></i></div>
+                        <h3>Design Premium</h3>
+                        <p>Layouts exclusivos e modernos pensados na identidade da sua marca para converter mais clientes.</p>
+                    </article>
+                    <article class="feature reveal" style="transition-delay: 0.16s;">
+                        <div class="ico"><i class="fas fa-mobile-alt"></i></div>
+                        <h3>100% Responsivo</h3>
+                        <p>Seu site perfeito e fluido em qualquer tela: Computadores, Tablets e Celulares.</p>
+                    </article>
+                    <article class="feature reveal" style="transition-delay: 0.24s;">
+                        <div class="ico"><i class="fas fa-rocket"></i></div>
+                        <h3>SEO Otimizado</h3>
+                        <p>Estrutura de código leve e moderna para que o Google encontre sua empresa rapidamente.</p>
+                    </article>
                 </div>
             </div>
         </section>
 
         <section id="portfolio">
             <div class="container">
-                <div class="section-title reveal">
+                <div class="section-head reveal">
+                    <span class="eyebrow">Portfólio</span>
                     <h2>Nosso Portfólio</h2>
                     <p>Projetos recentes entregues com excelência.</p>
                 </div>
 
-                <div class="carousel-wrapper reveal">
-                    <div class="carousel-images" id="carousel-images">
-                        <a href="http://gruposoul.online/" target="_blank">
-                            <img src="https://gozgames.neocities.org/Logo%20horizontal%20-%20fundo%20azul.png" alt="Grupo Soul">
-                        </a>
-                        <a href="https://gruposoulbr.com/" target="_blank">
-                            <img src="https://gozgames.neocities.org/Si%CC%81mbolo%20-%20fundo%20azul.png" alt="Grupo Soul BR">
-                        </a>
-                        <a href="https://uniaogesso.neocities.org/" target="_blank">
-                            <img src="https://uniaogesso.neocities.org/Imagem/IMG-20240831-WA0033.jpg" alt="União Gesso">
-                        </a>
-                        <a href="https://goscripts.com.br/games" target="_blank">
-                            <img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="GozGames">
-                        </a>
-                    </div>
-                    <button class="nav-btn prev" onclick="moveSlide(-1)"><i class="fas fa-chevron-left"></i></button>
-                    <button class="nav-btn next" onclick="moveSlide(1)"><i class="fas fa-chevron-right"></i></button>
+                <div class="portfolio-grid">
+                    <a class="project reveal" href="http://gruposoul.online/" target="_blank" rel="noopener">
+                        <div class="project-thumb logo"><img src="https://gozgames.neocities.org/Logo%20horizontal%20-%20fundo%20azul.png" alt="Grupo Soul" loading="lazy"></div>
+                        <div class="project-info">
+                            <div><h3>Grupo Soul</h3><small>gruposoul.online</small></div>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </a>
+                    <a class="project reveal" href="https://gruposoulbr.com/" target="_blank" rel="noopener" style="transition-delay: 0.08s;">
+                        <div class="project-thumb logo"><img src="https://gozgames.neocities.org/Si%CC%81mbolo%20-%20fundo%20azul.png" alt="Grupo Soul BR" loading="lazy"></div>
+                        <div class="project-info">
+                            <div><h3>Grupo Soul BR</h3><small>gruposoulbr.com</small></div>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </a>
+                    <a class="project reveal" href="https://uniaogesso.neocities.org/" target="_blank" rel="noopener">
+                        <div class="project-thumb"><img src="https://uniaogesso.neocities.org/Imagem/IMG-20240831-WA0033.jpg" alt="União Gesso" loading="lazy"></div>
+                        <div class="project-info">
+                            <div><h3>União Gesso</h3><small>uniaogesso.neocities.org</small></div>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </a>
+                    <a class="project reveal" href="https://goscripts.com.br/games" target="_blank" rel="noopener" style="transition-delay: 0.08s;">
+                        <div class="project-thumb"><img src="https://gozgames.neocities.org/Imagens/2c927993-015f-4a24-ae88-ec77ad6006d1.jpg" alt="GozGames" loading="lazy"></div>
+                        <div class="project-info">
+                            <div><h3>GozGames</h3><small>goscripts.com.br/games</small></div>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </a>
                 </div>
             </div>
         </section>
 
-        <section id="contact" style="background: transparent;">
+        <section id="contact">
             <div class="container">
-                <div class="section-title reveal">
+                <div class="section-head reveal">
+                    <span class="eyebrow">Contato</span>
                     <h2>Vamos Conversar?</h2>
                     <p>Transforme sua ideia em realidade hoje mesmo.</p>
                 </div>
 
                 <div class="contact-layout">
                     <div class="reveal">
-                        <div class="contact-info-box">
-                            <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
-                            <div>
-                                <h4>WhatsApp</h4>
-                                <p style="color:var(--text-muted)">(19) 98828-3178</p>
-                            </div>
+                        <div class="contact-item">
+                            <div class="ico"><i class="fab fa-whatsapp"></i></div>
+                            <div><h4>WhatsApp</h4><p>(19) 98828-3178</p></div>
                         </div>
-                        <div class="contact-info-box">
-                            <div class="contact-icon"><i class="far fa-envelope"></i></div>
-                            <div>
-                                <h4>E-mail</h4>
-                                <p style="color:var(--text-muted)">goscriptsbr@gmail.com</p>
-                            </div>
+                        <div class="contact-item">
+                            <div class="ico"><i class="far fa-envelope"></i></div>
+                            <div><h4>E-mail</h4><p>goscriptsbr@gmail.com</p></div>
                         </div>
-                        
-                        <div style="margin-top: 2rem; padding: 2.5rem; border: 1px dashed rgba(0, 198, 255, 0.4); border-radius: 16px; text-align: center; background: rgba(0, 198, 255, 0.05); backdrop-filter: blur(10px);">
-                            <h3 style="margin-bottom: 1rem; color: #fff;">Prefere atendimento imediato?</h3>
-                            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Nossa equipe está online agora para tirar suas dúvidas.</p>
-                            <a href="https://wa.me/5519988283178" class="btn-glow" style="background: var(--whatsapp); width: 100%; border: none; box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2); animation: none; padding: 1rem;">
+
+                        <div class="quick-box">
+                            <h3>Prefere atendimento imediato?</h3>
+                            <p>Nossa equipe está online agora para tirar suas dúvidas.</p>
+                            <a href="https://wa.me/5519988283178" class="btn btn-whatsapp" target="_blank" rel="noopener">
                                 <i class="fab fa-whatsapp"></i> Chamar no WhatsApp
                             </a>
                         </div>
                     </div>
 
-                    <div class="form-box reveal" style="transition-delay: 0.2s;">
+                    <div class="form-box reveal" style="transition-delay: 0.12s;">
                         <form id="contact-form" onsubmit="return sendEmail(event)">
-                            <input type="text" id="nome" class="form-input" placeholder="Seu Nome Completo" required>
-                            <input type="email" id="email" class="form-input" placeholder="Seu melhor E-mail" required>
+                            <label for="nome">Nome</label>
+                            <input type="text" id="nome" class="form-input" placeholder="Seu nome completo" autocomplete="name" required>
+                            <label for="email">E-mail</label>
+                            <input type="email" id="email" class="form-input" placeholder="Seu melhor e-mail" autocomplete="email" required>
+                            <label for="mensagem">Mensagem</label>
                             <textarea id="mensagem" class="form-input" placeholder="Conte um pouco sobre o seu projeto..." required></textarea>
-                            <button type="submit" class="btn-glow" style="width: 100%; justify-content: center; padding: 1rem; animation:none;">Enviar Mensagem <i class="fas fa-paper-plane"></i></button>
+                            <button type="submit" class="btn btn-primary">Enviar mensagem <i class="fas fa-paper-plane"></i></button>
                         </form>
                     </div>
                 </div>
@@ -751,174 +651,68 @@
     </main>
 
     <footer>
-        <div class="container">
-            <span style="font-size: 1.5rem; font-weight: 800; font-family:'Poppins', sans-serif; color:#fff; display:block; margin-bottom:10px; letter-spacing: -0.5px;"><i class="fas fa-terminal" style="color:#00c6ff"></i> GoScripts.</span>
-            <p>&copy; 2025 GoScripts Soluções Digitais. Todos os direitos reservados.</p>
+        <div class="container footer-inner">
+            <a href="#home" class="logo"><span class="logo-mark"><i class="fas fa-terminal"></i></span> GoScripts</a>
+            <p>&copy; <span id="year">2025</span> GoScripts Soluções Digitais. Todos os direitos reservados.</p>
         </div>
     </footer>
 
-    <a href="https://wa.me/5519988283178" class="whatsapp-float" target="_blank" aria-label="WhatsApp">
+    <a href="https://wa.me/5519988283178" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
         <i class="fab fa-whatsapp"></i>
     </a>
 
     <script>
-        // --- 1. Navbar Scroll Effect ---
+        // --- 1. Navbar: efeito ao rolar + menu mobile ---
         const navbar = document.getElementById('navbar');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
+        const navLinks = document.getElementById('nav-links');
+        const menuToggle = document.getElementById('menu-toggle');
+
+        function onScroll() { navbar.classList.toggle('scrolled', window.scrollY > 20); }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+
+        menuToggle.addEventListener('click', () => {
+            const open = navLinks.classList.toggle('open');
+            menuToggle.setAttribute('aria-expanded', open);
+            menuToggle.querySelector('i').className = open ? 'fas fa-xmark' : 'fas fa-bars';
         });
+        navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+            navLinks.classList.remove('open');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            menuToggle.querySelector('i').className = 'fas fa-bars';
+        }));
 
-        // --- 2. Animação do Canvas (Partículas da Propaganda) ---
-        const canvas = document.getElementById('particles');
-        const ctx = canvas.getContext('2d', { alpha: true });
-        let particles = [];
-        let width = 0, height = 0;
-        const isMobile = window.innerWidth < 768;
-        const particleCount = isMobile ? 40 : 80;
-        const maxDist = isMobile ? 100 : 140;
-
-        function resize() {
-            width = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-            height = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-            initParticles();
-        }
-
-        function initParticles() {
-            particles = [];
-            const w = canvas.offsetWidth;
-            const h = canvas.offsetHeight;
-            for (let i = 0; i < particleCount; i++) {
-                particles.push({
-                    x: Math.random() * w,
-                    y: Math.random() * h,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    r: Math.random() * 1.5 + 0.5
-                });
-            }
-        }
-
-        function animateParticles() {
-            const w = canvas.offsetWidth;
-            const h = canvas.offsetHeight;
-            ctx.clearRect(0, 0, w, h);
-            
-            // Atualiza as posições
-            particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-                if (p.x < 0 || p.x > w) p.vx *= -1;
-                if (p.y < 0 || p.y > h) p.vy *= -1;
-            });
-
-            // Conexões
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const a = particles[i], b = particles[j];
-                    const dx = a.x - b.x, dy = a.y - b.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist < maxDist) {
-                        const opacity = (1 - dist / maxDist) * 0.15;
-                        const gradient = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-                        gradient.addColorStop(0, `rgba(42,125,225,${opacity})`);
-                        gradient.addColorStop(1, `rgba(0,198,255,${opacity})`);
-                        ctx.strokeStyle = gradient;
-                        ctx.beginPath();
-                        ctx.moveTo(a.x, a.y);
-                        ctx.lineTo(b.x, b.y);
-                        ctx.stroke();
-                    }
-                }
-            }
-
-            // Desenha as partículas
-            particles.forEach(p => {
-                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
-                gradient.addColorStop(0, 'rgba(0,198,255,0.8)');
-                gradient.addColorStop(0.5, 'rgba(42,125,225,0.4)');
-                gradient.addColorStop(1, 'rgba(42,125,225,0)');
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.fillStyle = 'rgba(180,220,255,0.9)';
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            requestAnimationFrame(animateParticles);
-        }
-
-        window.addEventListener('resize', resize);
-        resize();
-        animateParticles();
-
-        // --- 3. Máquina de Escrever ---
+        // --- 2. Máquina de escrever ---
         const textToType = "Melhor preço do mercado. Transformando suas ideias em sites e sistemas incríveis.";
-        const typeWriterElement = document.getElementById('typewriter');
+        const typeEl = document.getElementById('typewriter');
         let typeIndex = 0;
-
         function typeWriter() {
             if (typeIndex < textToType.length) {
-                typeWriterElement.innerHTML += textToType.charAt(typeIndex);
-                typeIndex++;
-                setTimeout(typeWriter, 40);
+                typeEl.textContent += textToType.charAt(typeIndex++);
+                setTimeout(typeWriter, 35);
             }
         }
-        setTimeout(typeWriter, 500);
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            typeEl.textContent = textToType;
+        } else {
+            setTimeout(typeWriter, 500);
+        }
 
-        // --- 4. Intersection Observer (Scroll Fade-in) ---
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.15
-        };
-
-        const observer = new IntersectionObserver((entries, observer) => {
+        // --- 3. Animação de entrada ao rolar ---
+        const observer = new IntersectionObserver((entries, obs) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
-                    observer.unobserve(entry.target); 
+                    obs.unobserve(entry.target);
                 }
             });
-        }, observerOptions);
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-        document.querySelectorAll('.reveal').forEach((el) => {
-            observer.observe(el);
-        });
+        // --- 4. Ano do rodapé ---
+        document.getElementById('year').textContent = new Date().getFullYear();
 
-        // --- 5. Carrossel ---
-        let currentIndex = 0;
-        const slidesContainer = document.getElementById('carousel-images');
-        const slides = slidesContainer.querySelectorAll('a');
-        const totalSlides = slides.length;
-        let autoSlideInterval;
-
-        function updateCarousel() {
-            slidesContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
-        }
-        function moveSlide(direction) {
-            currentIndex += direction;
-            if (currentIndex >= totalSlides) currentIndex = 0;
-            if (currentIndex < 0) currentIndex = totalSlides - 1;
-            updateCarousel();
-            resetInterval();
-        }
-        function resetInterval() {
-            clearInterval(autoSlideInterval);
-            autoSlideInterval = setInterval(() => moveSlide(1), 5000);
-        }
-        resetInterval();
-
-        // --- 6. Envio de Email ---
+        // --- 5. Envio de e-mail ---
         function sendEmail(e) {
             e.preventDefault();
             const nome = document.getElementById('nome').value;
