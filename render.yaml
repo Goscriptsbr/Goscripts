@@ -6,4 +6,5 @@ services:
     rootDir: servidor
     buildCommand: npm install
     startCommand: node server.js
+    branch: sinucou
     autoDeploy: true
