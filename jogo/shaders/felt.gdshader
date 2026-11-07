@@ -142,6 +142,36 @@ void fragment() {
 		col += accent.rgb * smoothstep(1.8, 0.4, abs(rr - 92.0)) * 0.6;
 		col += accent.rgb * smoothstep(1.2, 0.3, abs(rr - 82.0)) * 0.35;
 		col += accent.rgb * smoothstep(1.5, 0.3, abs(edge - 18.0)) * 0.45;
+	} else if (pat == 8) {
+		// pôr do sol: céu em degradê, sol baixo com halo e reflexo na água
+		float hy = UV.y;
+		vec3 sky = mix(accent.rgb, accent2.rgb, smoothstep(0.0, 0.62, hy));
+		sky = mix(sky, c_dark.rgb, smoothstep(0.62, 1.0, hy));
+		col = mix(col, sky, 0.78);
+		vec2 sp = vec2(size.x * 0.5, size.y * 0.58);
+		float sd = length(px - sp);
+		col += vec3(1.0, 0.85, 0.5) * smoothstep(70.0, 62.0, sd) * 0.55 * step(px.y, sp.y + 2.0);
+		col += accent.rgb * smoothstep(260.0, 0.0, sd) * 0.22;
+		float rip = smoothstep(0.62, 0.66, hy) * (0.5 + 0.5 * sin(px.y * 0.9 + fbm(px * 0.03) * 6.0));
+		col += vec3(1.0, 0.8, 0.45) * rip * smoothstep(110.0, 0.0, abs(px.x - sp.x)) * 0.25;
+	} else if (pat == 9) {
+		// oceano profundo: cáusticas suaves de luz na água
+		vec2 w = px * 0.007;
+		float c1 = fbm(w + vec2(fbm(w * 1.2 + 2.0), fbm(w * 1.2 + 7.0)) * 1.2);
+		float c2 = abs(sin(c1 * 8.0));
+		float caus = smoothstep(0.55, 1.0, 1.0 - c2) * 0.22;
+		col = mix(col, accent2.rgb * 0.7, smoothstep(0.3, 0.8, c1) * 0.35);
+		col += accent.rgb * caus * (0.35 + 0.65 * light);
+		col += accent.rgb * stars(px, 46.0, 0.08) * 0.25;
+	} else if (pat == 10) {
+		// carbono: trama de fibra em sarja, fina e escura, com brilho no centro
+		vec2 g = floor(px / 9.0);
+		float tw = mod(g.x + g.y, 4.0) < 2.0 ? 1.0 : 0.0;
+		vec2 f = fract(px / 9.0);
+		float sh = tw > 0.5 ? smoothstep(0.0, 1.0, f.x) : smoothstep(0.0, 1.0, f.y);
+		col *= 0.86 + 0.22 * sh;
+		col += accent.rgb * smoothstep(0.9, 0.0, d) * 0.07;
+		col += accent.rgb * smoothstep(1.4, 0.3, abs(edge - 16.0)) * 0.5;
 	}
 	// textura de pano: fina e suave (sem chiado)
 	float mid = vnoise(px * 0.35) - 0.5;

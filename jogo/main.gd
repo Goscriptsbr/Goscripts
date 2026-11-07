@@ -8,7 +8,7 @@ const FxScript := preload("res://fx.gd")
 const R := 13.0
 const HW := 500.0
 const HH := 250.0
-const APP_VERSION := 50  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 51  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -40,6 +40,9 @@ const FELTS := [
 	{"id": "campeao", "name": "Campeão", "price": 0, "pass": 10, "light": Color("16323a"), "dark": Color("04090c"), "pat": 7, "accent": Color("37e0ff"), "accent2": Color("ffd34a"), "tag": "Exclusiva do Passe"},
 	{"id": "esmeralda", "name": "Esmeralda", "price": 0, "pass": 40, "light": Color("0f5a3c"), "dark": Color("03170f"), "pat": 7, "accent": Color("d4af37"), "accent2": Color("ffffff"), "tag": "Exclusiva do Passe"},
 	{"id": "ametista", "name": "Cristal Ametista", "price": 0, "pass": 70, "light": Color("8a63e0"), "dark": Color("2a1260"), "pat": 6, "accent": Color("f3e8ff"), "accent2": Color("ffd6ff"), "tag": "Exclusiva do Passe"},
+	{"id": "pordosol", "name": "Pôr do Sol", "price": 850, "light": Color("3a1a3c"), "dark": Color("140818"), "pat": 8, "accent": Color("ff8a3d"), "accent2": Color("7b2f7a"), "tag": "Céu laranja e sol na água"},
+	{"id": "oceano_m", "name": "Oceano Profundo", "price": 900, "light": Color("0d5f86"), "dark": Color("031a2e"), "pat": 9, "accent": Color("9ff6ff"), "accent2": Color("0a3f66"), "tag": "Luz dançando na água"},
+	{"id": "carbono_m", "name": "Fibra de Carbono", "price": 650, "light": Color("3a3f47"), "dark": Color("101216"), "pat": 10, "accent": Color("e63946"), "accent2": Color("ffffff"), "tag": "Trama de carbono e borda vermelha"},
 	{"id": "royal", "name": "Ouro Real", "price": 1200, "light": Color("2a1540"), "dark": Color("0b0614"), "pat": 7, "accent": Color("e3b341"), "accent2": Color("ffffff"), "tag": "Treliça dourada"},
 ]
 # aim = tamanho da projeção da mira | pow = força máxima | prec = precisão | spin = controle de efeito
