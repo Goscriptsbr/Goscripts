@@ -1226,7 +1226,14 @@ func _autoplay(delta: float) -> void:
 		if not auto_done:
 			auto_done = true
 			print("TNET ", netmode, " placar=", score, " vencedor=", winner, " envios=", game.net.tsends, " bytes=", game.net.tbytes, " tempo=", int(t))
-			get_tree().create_timer(1.5).timeout.connect(func(): get_tree().quit())
+			if OS.get_cmdline_user_args().has("--backlobby"):
+				var gm = game
+				get_tree().create_timer(1.0).timeout.connect(func(): _quit())
+				gm.get_tree().create_timer(4.0).timeout.connect(func():
+					print("BACK tela=", gm.ui.cur, " lobby=", gm.ui.in_lobby(), " membros=", (gm.ui.lobby.get("members", []) as Array).size())
+					gm.get_tree().quit())
+			else:
+				get_tree().create_timer(1.5).timeout.connect(func(): get_tree().quit())
 		return
 	if phase == "respond" and asker == 1:
 		act_respond(["aceita", "corre", "aumenta"][randi() % 3] if pending < 12 else "aceita")

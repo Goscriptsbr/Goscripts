@@ -1201,6 +1201,9 @@ func lobby_update(m: Dictionary) -> void:
 		_lobby_paint()
 		_online_btn_refresh()
 		return
+	# no meio de uma partida: só guarda o lobby (volta para ele quando a partida acabar)
+	if game.net.active or (truco_node != null and is_instance_valid(truco_node)) or (game.mode == game.Mode.ONLINE and game.st != game.St.MENU):
+		return
 	game.net_game = str(m.get("game", "sinuca"))
 	game.net_team = bool(m.get("four", true))
 	if not lobby_leader():
@@ -1230,12 +1233,82 @@ func lobby_update(m: Dictionary) -> void:
 		elif (m.members as Array).size() < 2:
 			online_status("Lobby criado! Chame amigos em AMIGOS • CONVIDAR (botão CHAMAR P/ LOBBY).")
 		elif game.net_team:
-			online_status("%d no lobby. JOGAR AGORA começa já (a IA completa) ou PROCURE adversários." % (m.members as Array).size())
+			online_status("%d no lobby. Toque no nome (⇄) para trocar de time. JOGAR AGORA começa já (a IA completa)." % (m.members as Array).size())
 		else:
 			online_status("Toque em JOGAR 1x1 para jogar contra seu amigo.")
 	else:
 		online_status("Você está no lobby de %s. %s" % [_lobby_name(str(m.leader)), "Procurando adversários..." if bool(m.get("searching", false)) else "Esperando o dono começar a partida."])
 	_online_btn_refresh()
+
+
+var update_seen := false
+
+
+# o servidor diz qual é a versão mais nova; se for maior que a nossa, oferece baixar
+func check_update(info: Dictionary) -> void:
+	var nv: int = int(info.get("versao", 0))
+	if nv <= game.APP_VERSION or update_seen or str(info.get("url", "")) == "":
+		return
+	if game.net.active or (truco_node != null and is_instance_valid(truco_node)) or game.st != game.St.MENU:
+		return  # não atrapalha no meio de uma partida; aparece na próxima vez que conectar
+	update_seen = true
+	show_update(nv, str(info.url), str(info.get("notas", "")))
+
+
+func show_update(nv: int, url: String, notas: String) -> void:
+	close_modal()
+	modal_layer = Control.new()
+	modal_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(modal_layer)
+	var dimr := ColorRect.new()
+	dimr.color = Color(0, 0, 0, 0.72)
+	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(dimr)
+	var cc := CenterContainer.new()
+	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(cc)
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.05, 0.1, 0.97), 28, Color("3ddc84"), 3, 24))
+	cc.add_child(p)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	p.add_child(margin(vb, 24))
+	vb.add_child(mk_lbl("NOVA VERSÃO DO SINUCOU!", 36, Color("3ddc84"), 8))
+	if notas != "":
+		var nl := mk_lbl(notas, 18, Color(1, 1, 1, 0.85), 2)
+		nl.custom_minimum_size = Vector2(640, 0)
+		nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vb.add_child(nl)
+	var steps := PanelContainer.new()
+	steps.add_theme_stylebox_override("panel", sbox(Color(1, 1, 1, 0.05), 16, Color(1, 1, 1, 0.15), 1, 0))
+	vb.add_child(steps)
+	var sl := mk_lbl("1.  Toque em BAIXAR (abre o navegador)\n2.  Quando terminar, toque no arquivo Sinucou.apk\n3.  Se aparecer \"fontes desconhecidas\", toque em Configurações e\n     ative \"Permitir desta fonte\"\n4.  Toque em ATUALIZAR  (seus tacos e moedas continuam)", 17, Color.WHITE, 2)
+	sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	steps.add_child(margin(sl, 14))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_child(row)
+	var ok := mk_btn("BAIXAR AGORA", 260, 64, GREEN, 24)
+	ok.pressed.connect(func():
+		OS.shell_open(url)
+		close_modal())
+	row.add_child(ok)
+	var no := mk_btn("DEPOIS", 180, 64, GRAY, 22)
+	no.pressed.connect(close_modal)
+	row.add_child(no)
+
+
+# fim da partida com lobby: volta todo mundo para a tela do lobby
+func back_to_lobby() -> void:
+	game.net_game = str(lobby.get("game", "sinuca"))
+	game.net_team = bool(lobby.get("four", true))
+	online_mode = "world"
+	_keep_search = true
+	show_screen("online")
+	_keep_search = false
+	lobby_update(lobby.duplicate())
 
 
 func _lobby_name(code: String) -> String:
@@ -1262,13 +1335,28 @@ func _lobby_paint() -> void:
 	for o in lobby.members:
 		var lead: bool = str(o.code) == str(lobby.leader)
 		var me: bool = str(o.code) == game.my_code()
-		var chip := PanelContainer.new()
-		chip.add_theme_stylebox_override("panel", sbox(Color("1d5c9e") if me else Color("16897f"), 14, Color("ffe066") if lead else Color(1, 1, 1, 0.3), 2, 0))
 		var nm := str(o.name)
 		if nm.length() > 12:
 			nm = nm.substr(0, 11) + "…"
-		chip.add_child(margin(mk_lbl(("♛ " if lead else "") + (nm + " (você)" if me else nm), 15, Color.WHITE, 2), 6))
-		lobby_row.add_child(chip)
+		var four_l: bool = bool(lobby.get("four", true))
+		var my_t := 0
+		for o2 in lobby.members:
+			if str(o2.code) == game.my_code():
+				my_t = int(o2.get("team", 0))
+		var same: bool = int(o.get("team", 0)) == my_t
+		var ccol: Color = (Color("1d5c9e") if same else Color("a83232")) if four_l else Color("16897f")
+		var txt: String = ("♛ " if lead else "") + (nm + " (você)" if me else nm)
+		if lobby_leader() and four_l and not lead:
+			# o dono toca no nome para mudar o amigo de time
+			var cb := mk_btn(txt + "  ⇄", 0, 36, ccol, 15)
+			var oc := str(o.code)
+			cb.pressed.connect(func(): game.net.world_send({"t": "lteam", "code": oc}))
+			lobby_row.add_child(cb)
+		else:
+			var chip := PanelContainer.new()
+			chip.add_theme_stylebox_override("panel", sbox(ccol, 14, Color("ffe066") if lead else Color(1, 1, 1, 0.3), 2, 0))
+			chip.add_child(margin(mk_lbl(txt, 15, Color.WHITE, 2), 6))
+			lobby_row.add_child(chip)
 	if lobby_leader():
 		var lv := mk_btn("SAIR", 90, 36, Color("7a2a2a"), 15)
 		lv.pressed.connect(_lobby_leave)
@@ -1352,7 +1440,16 @@ func _draw_seats() -> void:
 		for k in ms.size():
 			if str(ms[k].code) == game.my_code():
 				mi = k
-		var absd: Array = [0, 2, 1, 3] if four else [0, 1, 0, 1]
+		# lugar de cada um: time do dono nos lugares 0 e 2, o outro time em 1 e 3
+		var absd: Array = []
+		var used := [0, 0]
+		for k in ms.size():
+			if four:
+				var tm: int = int(ms[k].get("team", 0))
+				absd.append([0, 2][mini(used[0], 1)] if tm == 0 else [1, 3][mini(used[1], 1)])
+				used[tm] += 1
+			else:
+				absd.append(k % 2)
 		for k in ms.size():
 			var vs: int = (int(absd[k]) - int(absd[mi]) + 4) % 4 if four else (k - mi + 2) % 2
 			if k != mi:
@@ -1607,47 +1704,78 @@ func _online_back() -> void:
 # ---------------------------------------------------------------- amigos
 func _build_amigos() -> void:
 	var v := mk_screen("amigos", 10)
-	v.add_child(mk_lbl("AMIGOS", 50, Color("f4c542"), 10))
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 14)
-	top.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_child(top)
+	add_bg("amigos", "res://assets/menu_bg.jpg", 0.25)
+	var hd := Control.new()
+	hd.custom_minimum_size = Vector2(700, 60)
+	hd.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		hd.draw_string_outline(f, Vector2(0, 48), "AMIGOS", HORIZONTAL_ALIGNMENT_CENTER, hd.size.x, 50, 10, Color("3a2402"))
+		hd.draw_string(f, Vector2(0, 48), "AMIGOS", HORIZONTAL_ALIGNMENT_CENTER, hd.size.x, 50, Color("f7c33a")))
+	v.add_child(hd)
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 18)
+	body.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_child(body)
+	# ---- coluna esquerda: seu código e adicionar amigo
+	var lp := PanelContainer.new()
+	lp.custom_minimum_size = Vector2(360, 470)
+	lp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.88), 26, Color(1, 1, 1, 0.18), 2, 12))
+	body.add_child(lp)
+	var lv := VBoxContainer.new()
+	lv.add_theme_constant_override("separation", 10)
+	lp.add_child(margin(lv, 18))
+	lv.add_child(_section("SEU CÓDIGO"))
 	var cp := PanelContainer.new()
-	cp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.09, 0.9), 18, Color("f4c542"), 2, 6))
-	top.add_child(cp)
-	var cl := mk_lbl("", 22, Color.WHITE, 3)
+	cp.add_theme_stylebox_override("panel", sbox(Color(0.12, 0.09, 0.02, 0.9), 18, Color("f4c542"), 2, 6))
+	lv.add_child(cp)
+	var cl := mk_lbl("", 30, Color("ffe066"), 3)
 	cl.name = "MyCode"
 	cp.add_child(margin(cl, 10))
+	lv.add_child(mk_lbl("Mande esse código para seus amigos te acharem.", 15, Color(1, 1, 1, 0.6), 2))
+	lv.add_child(_section("ADICIONAR AMIGO"))
 	friend_edit = LineEdit.new()
-	friend_edit.placeholder_text = "nome ou código do amigo"
+	friend_edit.placeholder_text = "nome ou código"
 	friend_edit.max_length = 16
-	friend_edit.custom_minimum_size = Vector2(300, 52)
+	friend_edit.custom_minimum_size = Vector2(320, 56)
 	friend_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	friend_edit.add_theme_font_size_override("font_size", 24)
 	friend_edit.add_theme_stylebox_override("normal", sbox(Color(0.02, 0.05, 0.09, 0.95), 14, Color(1, 1, 1, 0.35), 2, 0))
 	friend_edit.add_theme_stylebox_override("focus", sbox(Color(0.02, 0.05, 0.09, 0.95), 14, Color("5aa9ff"), 3, 0))
-	top.add_child(friend_edit)
+	lv.add_child(friend_edit)
 	friend_edit.text_submitted.connect(func(_t): _friend_search())
-	var sb := mk_btn("BUSCAR", 140, 52, BLUE, 20)
+	var sb := mk_btn("BUSCAR PELO NOME", 320, 54, BLUE, 20)
 	sb.pressed.connect(_friend_search)
-	top.add_child(sb)
-	var ab := mk_btn("PEDIR POR CÓDIGO", 200, 52, GREEN, 16)
+	lv.add_child(sb)
+	var ab := mk_btn("PEDIR PELO CÓDIGO", 320, 54, GREEN, 20)
 	ab.pressed.connect(_friend_add)
-	top.add_child(ab)
+	lv.add_child(ab)
+	var sp := Control.new()
+	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	lv.add_child(sp)
+	var back := mk_btn("◀  VOLTAR", 320, 56, GRAY, 24)
+	back.pressed.connect(func(): show_screen("online" if _came_from_online else "main"))
+	lv.add_child(back)
+	# ---- coluna direita: resultados da busca + lista de amigos (rola com o dedo)
+	var rp := PanelContainer.new()
+	rp.custom_minimum_size = Vector2(780, 470)
+	rp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.88), 26, Color(1, 1, 1, 0.18), 2, 12))
+	body.add_child(rp)
+	var sc := ScrollContainer.new()
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	rp.add_child(margin(sc, 14))
+	friends_scroll = sc
+	var inner := VBoxContainer.new()
+	inner.add_theme_constant_override("separation", 10)
+	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(inner)
 	search_box = VBoxContainer.new()
 	search_box.add_theme_constant_override("separation", 6)
-	v.add_child(search_box)
-	var sc := ScrollContainer.new()
-	sc.custom_minimum_size = Vector2(900, 300)
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	v.add_child(sc)
+	inner.add_child(search_box)
 	friends_box = VBoxContainer.new()
 	friends_box.add_theme_constant_override("separation", 8)
-	friends_box.custom_minimum_size = Vector2(880, 0)
-	sc.add_child(friends_box)
-	var back := mk_btn("◀  VOLTAR", 240, 56, GRAY, 26)
-	back.pressed.connect(func(): show_screen("online" if _came_from_online else "main"))
-	v.add_child(back)
+	friends_box.custom_minimum_size = Vector2(740, 0)
+	inner.add_child(friends_box)
 	# convite (aparece por cima de qualquer tela)
 	invite_panel = PanelContainer.new()
 	invite_panel.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.09, 0.96), 24, Color("f4c542"), 3, 16))
@@ -1665,7 +1793,7 @@ var cur_prev := ""
 func _amigos_open() -> void:
 	var cl: Label = screens["amigos"].find_child("MyCode", true, false)
 	if cl != null:
-		cl.text = "SEU CÓDIGO:  %s" % game.my_code()
+		cl.text = game.my_code()
 	game.net.connect_server()
 	_friends_render([])
 	if search_box != null:
@@ -1937,50 +2065,69 @@ func _friends_render(list: Array) -> void:
 			on_list.append([f, p])
 		else:
 			off_list.append([f, p])
-	for pair in on_list + off_list:
+	if not on_list.is_empty():
+		friends_box.add_child(_flist_head("ONLINE  •  %d" % on_list.size(), Color("3ddc84")))
+	for k in on_list.size() + off_list.size():
+		if k == on_list.size() and not off_list.is_empty():
+			friends_box.add_child(_flist_head("OFFLINE  •  %d" % off_list.size(), Color(1, 1, 1, 0.5)))
+		var pair: Array = on_list[k] if k < on_list.size() else off_list[k - on_list.size()]
 		var f: Dictionary = pair[0]
 		var p: Dictionary = pair[1]
 		var online := bool(p.get("online", false))
 		var status := str(p.get("status", "offline")) if online else "offline"
-		var row := PanelContainer.new()
-		row.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.06, 0.1, 0.9), 18, Color("3ddc84") if online else Color(1, 1, 1, 0.15), 2, 4))
-		friends_box.add_child(row)
-		var hb := HBoxContainer.new()
-		hb.add_theme_constant_override("separation", 12)
-		row.add_child(margin(hb, 10))
-		var dot := Control.new()
-		dot.custom_minimum_size = Vector2(24, 40)
 		var dc := Color("3ddc84") if online else Color(0.5, 0.5, 0.55)
 		if status == "jogando":
 			dc = Color("ffb020")
-		dot.draw.connect(func(): dot.draw_circle(Vector2(12, 20), 9, dc))
-		hb.add_child(dot)
+		var row := PanelContainer.new()
+		row.add_theme_stylebox_override("panel", sbox(Color(0.05, 0.09, 0.15, 0.95) if online else Color(0.03, 0.05, 0.08, 0.85), 18, dc if online else Color(1, 1, 1, 0.1), 2, 4))
+		friends_box.add_child(row)
+		var hb := HBoxContainer.new()
+		hb.add_theme_constant_override("separation", 10)
+		row.add_child(margin(hb, 8))
+		# avatar com a inicial e a bolinha de status
+		var av := Control.new()
+		av.custom_minimum_size = Vector2(52, 52)
+		var nm := str(f.name)
+		var hue := float(hash(str(f.code)) % 360) / 360.0
+		var acol := Color.from_hsv(hue, 0.55, 0.75 if online else 0.4)
+		av.draw.connect(func():
+			av.draw_circle(Vector2(26, 26), 24, acol)
+			av.draw_arc(Vector2(26, 26), 24, 0, TAU, 32, Color(1, 1, 1, 0.5), 2.0)
+			var fnt: Font = ThemeDB.fallback_font
+			av.draw_string(fnt, Vector2(0, 36), nm.substr(0, 1).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 52, 28, Color.WHITE)
+			av.draw_circle(Vector2(44, 44), 8, Color(0.03, 0.05, 0.08))
+			av.draw_circle(Vector2(44, 44), 6, dc))
+		hb.add_child(av)
 		var nv := VBoxContainer.new()
-		nv.custom_minimum_size = Vector2(330, 0)
 		nv.add_theme_constant_override("separation", -2)
+		nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		nv.alignment = BoxContainer.ALIGNMENT_CENTER
 		hb.add_child(nv)
-		var nl := mk_lbl(str(f.name), 22, Color.WHITE, 2)
+		var nl := mk_lbl(nm, 22, Color.WHITE if online else Color(1, 1, 1, 0.7), 2)
 		nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		nv.add_child(nl)
-		var sl := mk_lbl("%s  •  %s" % [str(f.code), {"online": "ONLINE", "procurando": "PROCURANDO PARTIDA", "jogando": "JOGANDO AGORA"}.get(status, "OFFLINE")], 15, dc)
+		var sl := mk_lbl("%s  •  %s" % [{"online": "ONLINE", "procurando": "PROCURANDO PARTIDA", "jogando": "JOGANDO AGORA"}.get(status, "OFFLINE"), str(f.code)], 14, dc)
 		sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		nv.add_child(sl)
 		var can := online and status != "jogando"
-		for g in [["sinuca", "x1 SINUCA", GREEN], ["truco", "x1 TRUCO", Color("b8323a")]]:
-			var ib := mk_btn(g[1], 150, 48, g[2] if can else GRAY, 16)
-			ib.disabled = not can
-			ib.pressed.connect(_invite.bind(str(f.code), g[0], false))
-			hb.add_child(ib)
-		var inl := false
-		for o in lobby.get("members", []):
-			if str(o.code) == str(f.code):
-				inl = true
-		var lb := mk_btn("NO LOBBY ✓" if inl else "CHAMAR P/ LOBBY", 200, 48, Color("16897f") if can and not inl else GRAY, 16)
-		lb.disabled = not can or inl
-		lb.pressed.connect(_invite.bind(str(f.code), "", true))
-		hb.add_child(lb)
-		var rb := mk_btn("X", 48, 48, Color("5a2a2a"), 18)
-		rb.pressed.connect(_friend_remove.bind(str(f.code)))
+		if can:
+			for g in [["sinuca", "x1 SINUCA", GREEN], ["truco", "x1 TRUCO", Color("b8323a")]]:
+				var ib := mk_btn(g[1], 118, 46, g[2], 15)
+				ib.pressed.connect(_invite.bind(str(f.code), g[0], false))
+				hb.add_child(ib)
+			var inl := false
+			for o in lobby.get("members", []):
+				if str(o.code) == str(f.code):
+					inl = true
+			var lb := mk_btn("NO LOBBY ✓" if inl else "LOBBY +", 118, 46, GRAY if inl else Color("8e44ad"), 15)
+			lb.disabled = inl
+			lb.pressed.connect(_invite.bind(str(f.code), "", true))
+			hb.add_child(lb)
+		elif status == "jogando":
+			hb.add_child(mk_lbl("em partida...", 15, Color("ffb020"), 2))
+		var rb := mk_btn("✕", 46, 46, Color("4a2228"), 18)
+		var fcode := str(f.code)
+		rb.pressed.connect(func(): confirm("REMOVER AMIGO?", "Tirar %s da sua lista de amigos?" % nm, "REMOVER", _friend_remove.bind(fcode), "CANCELAR", func(): pass))
 		hb.add_child(rb)
 	if not fout.is_empty():
 		friends_box.add_child(mk_lbl("PEDIDOS ENVIADOS (esperando aceitar)", 15, Color(1, 1, 1, 0.6), 2))
@@ -1996,6 +2143,12 @@ func _friends_render(list: Array) -> void:
 			var oc := mk_btn("CANCELAR", 150, 42, GRAY, 16)
 			oc.pressed.connect(_friend_cancel.bind(str(o.code)))
 			oh.add_child(oc)
+
+
+func _flist_head(t: String, col: Color) -> Label:
+	var l := mk_lbl(t, 15, col, 2)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	return l
 
 
 func _invite(code: String, g: String, to_lobby: bool) -> void:
@@ -2132,7 +2285,10 @@ func close_truco() -> void:
 		truco_node.queue_free()
 	truco_node = null
 	game.paused = false
-	show_screen("truco")
+	if in_lobby():
+		back_to_lobby()
+	else:
+		show_screen("truco")
 
 
 func _set_diff(i: int) -> void:
@@ -2625,8 +2781,17 @@ func _process(delta: float) -> void:
 				n.queue_redraw()
 
 
+var friends_scroll: ScrollContainer
+var _synth_release := false
+
+
+# arrastar o dedo em cima dos botões rola a lista (e não aperta o botão)
 func _input(e: InputEvent) -> void:
 	var sv: ScrollContainer = shop_scroll if (cur == "shop" or cur == "inv") else (pass_scroll if cur == "passe" else null)
+	var vert := false
+	if cur == "amigos" and not has_modal():
+		sv = friends_scroll
+		vert = true
 	if sv == null:
 		return
 	if e is InputEventScreenTouch:
@@ -2639,11 +2804,35 @@ func _input(e: InputEvent) -> void:
 			if drag_moved > 14.0:
 				swallow_click = true
 	elif e is InputEventScreenDrag and e.index == drag_id:
-		drag_moved += absf(e.relative.x) + absf(e.relative.y) * 0.3
-		sv.scroll_horizontal -= int(e.relative.x)
+		var was := drag_moved
+		if vert:
+			drag_moved += absf(e.relative.y) + absf(e.relative.x) * 0.3
+			sv.scroll_vertical -= int(e.relative.y)
+		else:
+			drag_moved += absf(e.relative.x) + absf(e.relative.y) * 0.3
+			sv.scroll_horizontal -= int(e.relative.x)
+		if was <= 14.0 and drag_moved > 14.0:
+			# virou rolagem: solta o botão que o dedo apertou, longe dele, para ele não disparar
+			# o botão só desiste se o "mouse" sair de cima dele antes de soltar
+			var mv := InputEventMouseMotion.new()
+			mv.position = Vector2(-5000, -5000)
+			mv.global_position = mv.position
+			mv.button_mask = MOUSE_BUTTON_MASK_LEFT
+			_synth_release = true
+			get_viewport().push_input(mv)
+			_synth_release = false
+			var rel := InputEventMouseButton.new()
+			rel.button_index = MOUSE_BUTTON_LEFT
+			rel.pressed = false
+			rel.position = Vector2(-5000, -5000)
+			rel.global_position = rel.position
+			_synth_release = true
+			get_viewport().push_input(rel)
+			_synth_release = false
+			swallow_click = true
 		if drag_moved > 14.0:
 			get_viewport().set_input_as_handled()
-	elif e is InputEventMouseButton and not e.pressed and swallow_click:
+	elif e is InputEventMouseButton and not e.pressed and swallow_click and not _synth_release:
 		swallow_click = false
 		get_viewport().set_input_as_handled()
 
@@ -2674,14 +2863,22 @@ func _shop_tab(t: String) -> void:
 
 
 func _stat_row(label: String, val: int) -> Control:
+	# barra contínua + porcentagem (cada ponto do taco = 20%)
 	var c := Control.new()
-	c.custom_minimum_size = Vector2(184, 20)
+	c.custom_minimum_size = Vector2(212, 20)
 	var f: Font = ThemeDB.fallback_font
+	var pct: int = clampi(val, 0, 5) * 20
 	var fn := func():
-		c.draw_string(f, Vector2(0, 15), label, HORIZONTAL_ALIGNMENT_LEFT, 90, 15, Color(1, 1, 1, 0.85))
-		for i in 5:
-			var col := Color("4cd37b") if i < val else Color(1, 1, 1, 0.14)
-			c.draw_rect(Rect2(96 + i * 17, 4, 14, 12), col, true)
+		c.draw_string(f, Vector2(0, 15), label, HORIZONTAL_ALIGNMENT_LEFT, 74, 14, Color(1, 1, 1, 0.85))
+		var bx := 76.0
+		var bw := 92.0
+		c.draw_rect(Rect2(bx, 5, bw, 11), Color(1, 1, 1, 0.12), true)
+		var col := Color("4cd37b") if pct >= 60 else (Color("f4c542") if pct >= 40 else Color("e0733a"))
+		if pct > 0:
+			c.draw_rect(Rect2(bx, 5, bw * float(pct) / 100.0, 11), col, true)
+		for k in range(1, 5):
+			c.draw_line(Vector2(bx + bw * k / 5.0, 5), Vector2(bx + bw * k / 5.0, 16), Color(0, 0, 0, 0.35), 1.0)
+		c.draw_string(f, Vector2(bx + bw + 6, 15), "%d%%" % pct, HORIZONTAL_ALIGNMENT_LEFT, 40, 14, Color.WHITE)
 	c.draw.connect(fn)
 	return c
 

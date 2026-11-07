@@ -8,6 +8,7 @@ const FxScript := preload("res://fx.gd")
 const R := 13.0
 const HW := 500.0
 const HH := 250.0
+const APP_VERSION := 50  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -55,7 +56,7 @@ const CUES := [
 	{"id": "lenda", "name": "Raio Dourado", "price": 0, "pass": 30, "shaft": Color("fbf1d0"), "butt": Color("1a1206"), "butt2": Color("ffcf3a"), "accent": Color("fff2a6"), "ring": Color("ffd34a"), "wrap": Color("120c04"), "pat": 5, "shine": 1, "aim": 4, "pow": 3, "prec": 3, "spin": 3, "fx": "storm"},
 	{"id": "cometa", "name": "Cometa", "price": 0, "pass": 50, "shaft": Color("f2f6ff"), "butt": Color("0a1c3a"), "butt2": Color("3de0ff"), "accent": Color("ffffff"), "ring": Color("bfe9ff"), "wrap": Color("06101e"), "pat": 2, "shine": 1, "aim": 5, "pow": 4, "prec": 5, "spin": 5, "fx": "ice"},
 	{"id": "imperador", "name": "Imperador", "price": 0, "pass": 100, "shaft": Color("fbf3dc"), "butt": Color("2a0a3a"), "butt2": Color("e3b341"), "accent": Color("fff2a6"), "ring": Color("ffd34a"), "wrap": Color("140620"), "pat": 5, "shine": 1, "aim": 5, "pow": 5, "prec": 5, "spin": 5, "fx": "storm"},
-	{"id": "pedro", "name": "Taco do Pedro", "price": 0, "gift": true, "theme": 8, "glow": Color("3df0ff"), "shaft": Color("f3efe2"), "butt": Color("0d2a24"), "accent": Color("ffffff"), "ring": Color("ffd34a"), "wrap": Color("0d2a24"), "pat": 0, "aim": 3, "pow": 3, "prec": 3, "spin": 3, "fx": "math", "impact": "math"},
+	{"id": "pedro", "name": "Taco do Pedro", "price": 900, "theme": 8, "glow": Color("3df0ff"), "shaft": Color("f3efe2"), "butt": Color("0d2a24"), "accent": Color("ffffff"), "ring": Color("ffd34a"), "wrap": Color("0d2a24"), "pat": 0, "aim": 3, "pow": 3, "prec": 3, "spin": 3, "fx": "math", "impact": "math"},
 	{"id": "galaxia_taco", "name": "Galáxia", "price": 2000, "shaft": Color("f2eef8"), "butt": Color("1a0b3a"), "butt2": Color("8f3dff"), "accent": Color("ffffff"), "ring": Color("c9a8ff"), "wrap": Color("0a0618"), "pat": 4, "aim": 4, "pow": 4, "prec": 4, "spin": 4, "fx": "galaxy"},
 ]
 
@@ -756,7 +757,7 @@ func _ready() -> void:
 					ui.friend_edit.text = qq
 					ui._friend_search())
 			if a == "--fakefriends":
-				save.friends = [{"code": "BBBBBB", "name": "Pedro"}, {"code": "CCCCCC", "name": "Lucas"}, {"code": "DDDDDD", "name": "Ana"}]
+				save.friends = [{"code": "BBBBBB", "name": "Pedro"}, {"code": "CCCCCC", "name": "Lucas"}, {"code": "DDDDDD", "name": "Ana"}, {"code": "EEEEEE", "name": "Bruna"}, {"code": "FFFFFF", "name": "Carlos"}, {"code": "GGGGGG", "name": "Duda"}, {"code": "HHHHHH", "name": "Rafa"}, {"code": "JJJJJJ", "name": "Tio Zé"}]
 			if a.begins_with("--overtest="):
 				var pr := a.substr(11).split(",")
 				mode = Mode.ONLINE
@@ -766,6 +767,31 @@ func _ready() -> void:
 				ui.show_over()
 				print("OVERTEST seat=", net_seat, " time_vencedor=", winner, " -> ", ui.over_title.text)
 				get_tree().quit()
+			if a == "--scrolltest" or a == "--taptest":
+				var steps := 12 if a == "--scrolltest" else 0
+				get_tree().create_timer(1.5).timeout.connect(func():
+					var p0 := Vector2(1348, 520)
+					var ev := InputEventScreenTouch.new()
+					ev.index = 0
+					ev.position = p0
+					ev.pressed = true
+					Input.parse_input_event(ev)
+					for k in steps:
+						await get_tree().process_frame
+						var dr := InputEventScreenDrag.new()
+						dr.index = 0
+						dr.relative = Vector2(0, -15)
+						dr.position = p0 + Vector2(0, -15 * (k + 1))
+						Input.parse_input_event(dr)
+					await get_tree().process_frame
+					var up := InputEventScreenTouch.new()
+					up.index = 0
+					up.position = p0 + Vector2(0, -15 * steps)
+					up.pressed = false
+					Input.parse_input_event(up)
+					await get_tree().create_timer(0.5).timeout
+					print("SCROLLTEST rolou=", ui.friends_scroll.scroll_vertical, " modal=", ui.has_modal(), " amigos=", save.friends.size())
+					get_tree().quit())
 			if a == "--lobbyask":
 				get_tree().create_timer(0.3).timeout.connect(func(): ui.lobby_create_ask(""))
 			if a.begins_with("--rewardtest="):
@@ -799,8 +825,6 @@ func load_save() -> void:
 		save.owned.append("galaxia_taco")
 	if str(save.cue) == "galaxia":
 		save.cue = "galaxia_taco"
-	if not save.owned.has("pedro"):
-		save.owned.append("pedro")
 
 
 func write_save() -> void:
@@ -1226,7 +1250,10 @@ func go_menu() -> void:
 	st = St.MENU
 	rack()
 	attract_kick()
-	ui.show_screen("main")
+	if ui.in_lobby():
+		ui.back_to_lobby()
+	else:
+		ui.show_screen("main")
 
 
 func rack() -> void:
@@ -2953,11 +2980,12 @@ func _draw_overlay() -> void:
 		overlay.draw_arc(endp, R, 0, TAU, 28, Color(1, 1, 1, 0.9), 2.0)
 		if h.ball != null:
 			var tdir: Vector2 = (h.ball.pos - endp).normalized()
+			# linha amarela do caminho da bola: proporcional à MIRA do taco (20% = curtinha, 100% = longa)
 			var ast := float(cue_def().aim) if human_turn() else 1.0
-			overlay.draw_line(h.ball.pos, h.ball.pos + tdir * (55.0 + 45.0 * ast), Color("ffe066"), 2.5)
+			overlay.draw_line(h.ball.pos, h.ball.pos + tdir * (34.0 * ast), Color("ffe066"), 2.5)
 			var cd := dir - tdir * dir.dot(tdir)
 			if cd.length() > 0.05:
-				overlay.draw_line(endp, endp + cd.normalized() * (30.0 + 22.0 * ast), Color(1, 1, 1, 0.5), 2.0)
+				overlay.draw_line(endp, endp + cd.normalized() * (14.0 * ast), Color(1, 1, 1, 0.5), 2.0)
 	if ball_in_hand:
 		var pul := 0.5 + 0.5 * sin(sim_t * 6.0 * 1.0)
 		overlay.draw_arc(cue.pos, R + 10.0 + pul * 6.0, 0, TAU, 32, Color(1.0, 0.88, 0.4, 0.9), 3.0)

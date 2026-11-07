@@ -120,7 +120,7 @@ function onMsg(c, op, payload) {
       c.name = String(m.name || "Jogador").slice(0, 15);
       clients.set(code, c);
       remember(c);
-      sendJ(c, { t: "welcome", code, online: clients.size });
+      sendJ(c, { t: "welcome", code, online: clients.size, app: appVersion() });
       const box = mailbox.get(code);
       if (box) {
         mailbox.delete(code);
@@ -134,13 +134,14 @@ function onMsg(c, op, payload) {
       const g = GAMES.includes(m.game) ? m.game : "sinuca";
       const p = c.party;
       if (p && p.leader !== c) return; // no lobby só o líder procura
+      if (p && p.members.some((o) => o.room)) return sendLobby(p, "Espere todos voltarem da partida.");
       unqueue(c);
       if (p) {
         p.game = g.replace("4", "");
         p.four = g.endsWith("4");
         if (!p.four) {
           // 1x1 com a dupla do lobby: joga um contra o outro
-          if (p.members.length === 2) { const ms = p.members.slice(); endParty(p); matchN(ms, g); return; }
+          if (p.members.length === 2) { const ms = p.members.slice(); matchN(ms, g); return; }
           sendLobby(p, "No 1 contra 1 o lobby precisa ter só 2 jogadores.");
           return;
         }
@@ -161,6 +162,23 @@ function onMsg(c, op, payload) {
       break;
     }
     case "lleave": leaveParty(c); break;
+    case "lteam": { // dono troca um amigo de time
+      const p = c.party;
+      if (!p || p.leader !== c || !p.four) break;
+      const o = p.members.find((x) => x.code === m.code);
+      if (!o || o === p.leader) break;
+      const to = teamOf(p, o) === 0 ? 1 : 0;
+      if (teamCount(p, to) >= 2) {
+        // time cheio: troca de lugar com alguém de lá
+        const other = p.members.find((x) => x !== p.leader && teamOf(p, x) === to);
+        if (!other) return sendLobby(p, "Esse time já está cheio.");
+        p.team.set(other.code, 1 - to);
+      }
+      p.team.set(o.code, to);
+      if (queueOf(c)) { unqueue(c); setStatus(c, "online"); }
+      sendLobby(p);
+      break;
+    }
     case "lcreate": { // cria um lobby de amigos (sem procurar partida ainda)
       if (!c.code || c.room) return;
       unqueue(c); setStatus(c, "online");
@@ -179,6 +197,7 @@ function onMsg(c, op, payload) {
     case "lstart": { // líder começa já: só com quem está no lobby, a IA completa os lugares vazios
       const p = c.party;
       if (!p || p.leader !== c || c.room) break;
+      if (p.members.some((o) => o.room)) return sendLobby(p, "Espere todos voltarem da partida.");
       unqueue(c);
       if (!p.four) {
         if (p.members.length !== 2) return sendLobby(p, "Para o 1 contra 1 precisa ter 2 no lobby.");
@@ -269,6 +288,8 @@ function onMsg(c, op, payload) {
           f.party = p;
         }
         if (p.members.length >= (p.four ? 4 : 2)) return sendJ(c, { t: "invite_fail", msg: "O lobby já está cheio" });
+        if (!p.team) p.team = new Map();
+        p.team.set(c.code, teamCount(p, 0) < 2 ? 0 : 1);
         p.members.push(c);
         c.party = p;
         // se o líder estava numa fila 1x1, para a busca (o lobby é para 2x2)
@@ -309,7 +330,8 @@ function matchSeats(seats, game) {
     const i = seats.findIndex((p) => p);
     [seats[0], seats[i]] = [seats[i], seats[0]];
   }
-  for (const p of list) { unqueue(p); if (p.party) endParty(p.party); }
+  // o lobby continua existindo durante a partida: no fim todos voltam para ele
+  for (const p of list) unqueue(p);
   const room = { id: nextRoom++, members: list.slice(), game, seats: game.endsWith("4") ? 4 : 2 };
   const players = [];
   seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; players.push({ peer: i + 1, name: p.name, code: p.code }); } });
@@ -336,10 +358,18 @@ function sendLobby(p, msg) {
   const q = queueOf(p.leader);
   const d = {
     t: "lobby", leader: p.leader.code, game: p.game, four: p.four, searching: !!q,
-    members: p.members.map((o) => ({ code: o.code, name: o.name })), msg: msg || "",
+    members: p.members.map((o) => ({ code: o.code, name: o.name, team: teamOf(p, o) })), msg: msg || "",
   };
   for (const o of p.members) sendJ(o, d);
 }
+
+// time de cada um no lobby 2x2: 0 = time do dono, 1 = adversários (o dono escolhe)
+function teamOf(p, o) {
+  if (o === p.leader) return 0;
+  if (!p.team) p.team = new Map();
+  return p.team.get(o.code) ?? 0;
+}
+function teamCount(p, t) { return p.members.filter((o) => teamOf(p, o) === t).length; }
 
 function endParty(p) {
   for (const o of p.members) if (o.party === p) o.party = null;
@@ -389,7 +419,16 @@ function seatUnits(units) {
   const sorted = units.slice().sort((a, b) => unitSize(b) - unitSize(a));
   for (const u of sorted) {
     const ms = unitMembers(u);
-    if (ms.length >= 3) { // líder e o 1º amigo juntos; o resto do outro lado
+    if (u.party) {
+      // lobby: cada um no time que o dono escolheu
+      const p = u.party;
+      const mine = seats[0] == null && seats[2] == null ? [[0, 2], [1, 3]] : [[1, 3], [0, 2]];
+      for (const o of ms) {
+        const pref = mine[teamOf(p, o)].concat([0, 1, 2, 3]);
+        const s = pref.find((k) => seats[k] == null);
+        seats[s] = o;
+      }
+    } else if (ms.length >= 3) {
       [0, 2, 1, 3].forEach((s, i) => { if (ms[i]) seats[s] = ms[i]; });
     } else if (ms.length === 2) {
       const pair = seats[0] == null && seats[2] == null ? [0, 2] : [1, 3];
@@ -433,15 +472,20 @@ function leaveRoom(c) {
   r.members = r.members.filter((p) => p !== c);
   const left = c.peer;
   c.room = null; c.peer = 0; c.status = "online";
+  const parties = new Set();
+  if (c.party) parties.add(c.party);
   if (wasHost || r.members.length < 2 && r.seats === 2 || r.members.length < 1) {
     // sem anfitrião (ou 1x1 sem adversário): a partida acaba para todos
     for (const p of r.members) {
       p.room = null; p.peer = 0; p.status = "online";
+      if (p.party) parties.add(p.party);
       if (!p.socket.destroyed) sendJ(p, { t: "peer_left", peer: left, end: true });
     }
     r.members = [];
-    return;
   }
+  // quem estava num lobby volta para ele
+  for (const p of parties) if (p.members.length) sendLobby(p, "Partida encerrada. Vocês voltaram ao lobby!");
+  if (!r.members.length) return;
   // 2x2: os outros continuam (o anfitrião coloca a IA no lugar)
   for (const p of r.members) if (!p.socket.destroyed) sendJ(p, { t: "peer_left", peer: left, end: false });
 }
@@ -488,7 +532,16 @@ setInterval(() => {
   }
 }, 30000);
 
+// versão mais nova do app (o app compara com a dele e oferece atualizar)
+function appVersion() {
+  try { return JSON.parse(fs.readFileSync(__dirname + "/versao.json", "utf8")); } catch (e) { return {}; }
+}
+
 const server = http.createServer((req, res) => {
+  if (req.url === "/versao") {
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    return res.end(JSON.stringify(appVersion()));
+  }
   res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
   res.end("Servidor Sinuca/Truco GoScripts no ar. Jogadores online: " + clients.size + "\n");
 });

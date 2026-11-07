@@ -260,6 +260,8 @@ func _world_msg(m: Dictionary) -> void:
 		"welcome":
 			server_ok = true
 			was_ok = true
+			if game.ui != null and m.has("app"):
+				game.ui.check_update(m.app)
 			# reenvia pedidos de amizade pendentes (o servidor não guarda nada)
 			for o in game.save.get("f_out", []):
 				world_send({"t": "fsend", "kind": "req", "to": str(o.code)})
@@ -275,8 +277,6 @@ func _world_msg(m: Dictionary) -> void:
 				peer.close()
 				peer = null
 			relay = RelayPeer.new()
-			if game.ui != null:
-				game.ui.lobby = {}
 			var pl: Array = m.get("players", [])
 			var ids := []
 			for p in pl:
