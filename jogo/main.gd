@@ -8,7 +8,7 @@ const FxScript := preload("res://fx.gd")
 const R := 13.0
 const HW := 500.0
 const HH := 250.0
-const APP_VERSION := 51  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 52  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -795,6 +795,11 @@ func _ready() -> void:
 					await get_tree().create_timer(0.5).timeout
 					print("SCROLLTEST rolou=", ui.friends_scroll.scroll_vertical, " modal=", ui.has_modal(), " amigos=", save.friends.size())
 					get_tree().quit())
+			if a == "--updtest":
+				get_tree().create_timer(0.5).timeout.connect(func():
+					ui.show_update(99, "http://127.0.0.1:18080/raw", "teste")
+					ui._update_download("http://127.0.0.1:18080/raw"))
+				get_tree().create_timer(60.0).timeout.connect(func(): get_tree().quit())
 			if a == "--lobbyask":
 				get_tree().create_timer(0.3).timeout.connect(func(): ui.lobby_create_ask(""))
 			if a.begins_with("--rewardtest="):

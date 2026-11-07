@@ -1283,21 +1283,81 @@ func show_update(nv: int, url: String, notas: String) -> void:
 	var steps := PanelContainer.new()
 	steps.add_theme_stylebox_override("panel", sbox(Color(1, 1, 1, 0.05), 16, Color(1, 1, 1, 0.15), 1, 0))
 	vb.add_child(steps)
-	var sl := mk_lbl("1.  Toque em BAIXAR (abre o navegador)\n2.  Quando terminar, toque no arquivo Sinucou.apk\n3.  Se aparecer \"fontes desconhecidas\", toque em Configurações e\n     ative \"Permitir desta fonte\"\n4.  Toque em ATUALIZAR  (seus tacos e moedas continuam)", 17, Color.WHITE, 2)
+	var sl := mk_lbl("1.  Toque em ATUALIZAR AGORA e espere a barra encher\n2.  Se o Android pedir, permita o Sinucou \"instalar apps\" e volte\n3.  Toque em ATUALIZAR na tela do Android\n     (seus tacos, moedas e amigos continuam)", 17, Color.WHITE, 2)
 	sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	steps.add_child(margin(sl, 14))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(row)
-	var ok := mk_btn("BAIXAR AGORA", 260, 64, GREEN, 24)
+	upd_bar = ProgressBar.new()
+	upd_bar.custom_minimum_size = Vector2(600, 26)
+	upd_bar.show_percentage = true
+	upd_bar.visible = false
+	upd_bar.add_theme_stylebox_override("background", sbox(Color(0, 0, 0, 0.55), 10))
+	upd_bar.add_theme_stylebox_override("fill", sbox(GREEN, 10))
+	upd_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vb.add_child(upd_bar)
+	upd_lbl = mk_lbl("", 16, Color(1, 1, 1, 0.75), 2)
+	vb.add_child(upd_lbl)
+	var ok := mk_btn("ATUALIZAR AGORA", 300, 64, GREEN, 24)
 	ok.pressed.connect(func():
-		OS.shell_open(url)
-		close_modal())
+		ok.disabled = true
+		_update_download(url))
 	row.add_child(ok)
-	var no := mk_btn("DEPOIS", 180, 64, GRAY, 22)
-	no.pressed.connect(close_modal)
+	var web := mk_btn("PELO NAVEGADOR", 220, 64, BLUE, 18)
+	web.pressed.connect(func(): OS.shell_open(url))
+	row.add_child(web)
+	var no := mk_btn("DEPOIS", 160, 64, GRAY, 22)
+	no.pressed.connect(func():
+		if upd_req != null:
+			upd_req.cancel_request()
+			upd_req.queue_free()
+			upd_req = null
+		close_modal())
 	row.add_child(no)
+
+
+var upd_req: HTTPRequest
+var upd_bar: ProgressBar
+var upd_lbl: Label
+const UPD_FILE := "user://update.apk"
+
+
+# baixa o APK novo dentro do próprio jogo e abre a instalação do Android
+func _update_download(url: String) -> void:
+	if upd_req != null:
+		upd_req.queue_free()
+	upd_req = HTTPRequest.new()
+	upd_req.download_file = UPD_FILE
+	upd_req.max_redirects = 10
+	upd_req.timeout = 600.0
+	add_child(upd_req)
+	upd_req.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, _b: PackedByteArray):
+		var rq := upd_req
+		upd_req = null
+		if rq != null:
+			rq.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+			if upd_lbl != null and is_instance_valid(upd_lbl):
+				upd_lbl.text = "Não consegui baixar (erro %d/%d). Tente PELO NAVEGADOR." % [result, code]
+			return
+		if upd_bar != null and is_instance_valid(upd_bar):
+			upd_bar.value = 100
+		if upd_lbl != null and is_instance_valid(upd_lbl):
+			upd_lbl.text = "Pronto! Abrindo a instalação..."
+		var path := ProjectSettings.globalize_path(UPD_FILE)
+		if OS.get_cmdline_user_args().has("--updtest"):
+			print("UPDTEST baixou ", FileAccess.get_file_as_bytes(UPD_FILE).size(), " bytes em ", path)
+			return
+		OS.shell_open(path))
+	var err := upd_req.request(url)
+	if err != OK:
+		upd_lbl.text = "Não consegui começar o download. Tente PELO NAVEGADOR."
+		return
+	upd_bar.visible = true
+	upd_bar.value = 0
+	upd_lbl.text = "Baixando..."
 
 
 # fim da partida com lobby: volta todo mundo para a tela do lobby
@@ -2748,6 +2808,11 @@ func _shop_nudge(dir: int) -> void:
 
 
 func _process(delta: float) -> void:
+	if upd_req != null and upd_bar != null and is_instance_valid(upd_bar):
+		var tot := upd_req.get_body_size()
+		if tot > 0:
+			upd_bar.value = 100.0 * float(upd_req.get_downloaded_bytes()) / float(tot)
+			upd_lbl.text = "Baixando...  %.1f de %.1f MB" % [upd_req.get_downloaded_bytes() / 1048576.0, tot / 1048576.0]
 	presence_t += delta
 	if presence_t > 15.0:
 		presence_t = 0.0
