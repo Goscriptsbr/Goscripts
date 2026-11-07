@@ -1,6 +1,6 @@
 shader_type canvas_item;
 // Tacos do mês: arte no taco inteiro, animada e com brilho em volta.
-// theme: 0 fênix, 1 trovão, 2 samurai, 3 lobo da lua, 4 tsunami, 5 esmeralda, 6 vulcão, 7 aurora
+// theme: 0 fênix, 1 trovão, 2 samurai, 3 lobo da lua, 4 tsunami, 5 esmeralda, 6 vulcão, 7 aurora, 8 pedro, 9 cometa, 10 imperador
 
 uniform int theme = 0;
 uniform float pad = 2.2;     // altura do retângulo / altura do corpo do taco (sobra = brilho)
@@ -173,6 +173,46 @@ vec3 art(int th, vec2 P, float t, out float e) {
 		float flow = smoothstep(0.62, 0.85, fbm(vec2(P.x * 0.45 - t * 0.9, P.y * 0.9)));
 		c += vec3(1.0, 0.32, 0.02) * crack * 1.6 + vec3(1.0, 0.62, 0.12) * flow;
 		e = crack * 1.2 + flow;
+	} else if (th == 9) {
+		// COMETA: espaço profundo, cometas cruzando o taco com cauda de íons azul
+		c = mix(vec3(0.01, 0.01, 0.05), vec3(0.05, 0.09, 0.26), 0.5 + 0.4 * P.y + 0.2 * fbm(P * vec2(0.3, 1.0)));
+		c += vec3(0.75, 0.85, 1.0) * twinkle(P * vec2(1.8, 2.6), 0.3, t) * 0.9;
+		e = twinkle(P * vec2(1.8, 2.6), 0.3, t) * 0.6;
+		for (int k = 0; k < 2; k++) {
+			float fk = float(k);
+			float hx = mod(t * (5.5 + fk * 2.0) + fk * 23.0, ulen + 18.0) - 9.0;
+			float hy = sin(t * 0.7 + fk * 2.4) * 0.35 + (fk - 0.5) * 0.5;
+			float dx = hx - P.x;
+			float dy = P.y - hy;
+			float head = exp(-(dx * dx * 2.2 + dy * dy * 26.0));
+			float tail = step(0.0, dx) * exp(-dx * 0.22) * exp(-dy * dy * (14.0 + dx * 0.4 * 0.0) / (1.0 + dx * 0.12));
+			float ion = step(0.0, dx) * exp(-dx * 0.1) * smoothstep(0.08, 0.0, abs(dy + sin(dx * 0.9 - t * 6.0) * 0.06 * dx * 0.2)) * 0.6;
+			c += vec3(1.0, 0.98, 0.9) * head * 1.6 + vec3(0.35, 0.7, 1.0) * tail * 0.9 + vec3(0.6, 0.9, 1.0) * ion;
+			e += head * 1.2 + tail * 0.8 + ion;
+		}
+		float rim = smoothstep(0.05, 0.0, abs(abs(P.y) - 0.86));
+		c = mix(c, vec3(0.7, 0.9, 1.0), rim * 0.8);
+		e += rim * 0.4;
+	} else if (th == 10) {
+		// IMPERADOR: veludo roxo, arabescos de ouro, rubis pulsando e coroas
+		c = mix(vec3(0.12, 0.02, 0.18), vec3(0.32, 0.06, 0.42), 0.5 + 0.5 * sin(P.x * 0.6 + P.y * 1.5) * 0.4 + fbm(P * vec2(0.6, 2.0)) * 0.4);
+		float sc1 = abs(P.y - 0.55 * sin(P.x * 1.15));
+		float sc2 = abs(P.y + 0.55 * sin(P.x * 1.15));
+		float gold = smoothstep(0.07, 0.0, min(sc1, sc2));
+		vec2 cl = vec2(fract(P.x * 1.15 / 3.14159) - 0.5, P.y);
+		float curl = smoothstep(0.06, 0.0, abs(length(cl * vec2(2.2, 1.0)) - 0.3));
+		float ruby_d = length(vec2((fract(P.x * 1.15 / 6.28318 + 0.25) - 0.5) * 6.0, P.y * 1.4));
+		float ruby = smoothstep(0.42, 0.32, ruby_d);
+		float rp = 0.6 + 0.4 * sin(t * 2.5 + floor(P.x * 1.15 / 6.28318) * 1.7);
+		vec3 gc = mix(vec3(0.85, 0.6, 0.15), vec3(1.0, 0.92, 0.55), 0.5 + 0.5 * sin(P.x * 2.0 - t * 2.0));
+		c = mix(c, gc, max(gold, curl * 0.8));
+		c = mix(c, mix(vec3(0.55, 0.0, 0.08), vec3(1.0, 0.25, 0.35), rp), ruby);
+		c += vec3(1.0, 0.8, 0.85) * smoothstep(0.18, 0.0, length(vec2((fract(P.x * 1.15 / 6.28318 + 0.25) - 0.5) * 6.0 + 0.12, P.y * 1.4 + 0.12))) * ruby * 0.8;
+		float sweep = smoothstep(0.5, 0.0, abs(fract(P.x * 0.04 - t * 0.25) - 0.5) * 12.0 - 2.0);
+		c += vec3(1.0, 0.9, 0.6) * sweep * (gold + curl) * 0.6;
+		float rim = smoothstep(0.06, 0.0, abs(abs(P.y) - 0.86));
+		c = mix(c, vec3(1.0, 0.85, 0.35), rim);
+		e = gold * 0.5 + curl * 0.3 + ruby * rp * 0.7 + sweep * 0.3 + rim * 0.3;
 	} else if (th == 8) {
 		// lousa com números de pi e operações que deslizam
 		c = mix(vec3(0.03, 0.12, 0.1), vec3(0.05, 0.2, 0.17), vnoise(P * vec2(1.5, 3.0)) * 0.6);
@@ -250,6 +290,27 @@ vec3 grip(int th, vec2 P, float t, out float e) {
 		float n = fbm(vec2(P.x * 0.9, P.y * 1.8));
 		c = vec3(0.07, 0.04, 0.035) + vec3(1.0, 0.35, 0.03) * smoothstep(0.05, 0.0, abs(n - 0.5)) * (0.8 + 0.4 * sin(t * 4.0 + P.x * 0.5));
 		e = smoothstep(0.05, 0.0, abs(n - 0.5));
+	} else if (th == 9) {
+		// cristal de gelo em hexágonos com brilho azul
+		vec2 q = P * vec2(1.3, 2.0);
+		vec2 h1 = mod(q, vec2(1.0, 1.732)) - vec2(0.5, 0.866);
+		vec2 h2 = mod(q + vec2(0.5, 0.866), vec2(1.0, 1.732)) - vec2(0.5, 0.866);
+		vec2 hh = dot(h1, h1) < dot(h2, h2) ? h1 : h2;
+		float hd = max(abs(hh.x) * 0.866 + abs(hh.y) * 0.5, abs(hh.y));
+		float ln = smoothstep(0.06, 0.0, abs(hd - 0.45));
+		c = mix(vec3(0.08, 0.16, 0.34), vec3(0.45, 0.75, 1.0), smoothstep(0.45, 0.0, hd) * 0.6);
+		float sh = 0.5 + 0.5 * sin(t * 2.0 + floor(q.x) * 1.3 + floor(q.y) * 2.1);
+		c += vec3(0.6, 0.9, 1.0) * ln * (0.5 + 0.5 * sh);
+		e = ln * 0.6 + sh * 0.1;
+	} else if (th == 10) {
+		// couro roxo capitonê com tachinhas de ouro
+		float dd = abs(fract(P.x * 0.55 + P.y * 0.5) - 0.5) + abs(fract(P.x * 0.55 - P.y * 0.5) - 0.5);
+		c = vec3(0.22, 0.04, 0.3) * (0.55 + 0.9 * smoothstep(0.0, 0.5, dd));
+		float seam = smoothstep(0.05, 0.0, abs(dd - 0.5));
+		c = mix(c, vec3(0.95, 0.75, 0.3), seam * 0.7);
+		float stud = smoothstep(0.14, 0.07, dd);
+		c = mix(c, vec3(1.0, 0.88, 0.45) * (0.8 + 0.4 * sin(t * 3.0 + P.x)), stud);
+		e = seam * 0.3 + stud * 0.5;
 	} else if (th == 8) {
 		vec2 g = abs(fract(P * vec2(1.6, 2.2)) - 0.5);
 		float ln = smoothstep(0.06, 0.0, min(g.x, g.y) - 0.0);

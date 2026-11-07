@@ -8,7 +8,7 @@ const FxScript := preload("res://fx.gd")
 const R := 13.0
 const HW := 500.0
 const HH := 250.0
-const APP_VERSION := 53  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 54  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -58,8 +58,8 @@ const CUES := [
 	{"id": "dragao", "name": "Dragão", "price": 1000, "shaft": Color("f0d9a8"), "butt": Color("4a0808"), "butt2": Color("ff3d1f"), "accent": Color("ffd26a"), "ring": Color("d6a93c"), "wrap": Color("1a0808"), "pat": 2, "aim": 4, "pow": 5, "prec": 4, "spin": 4, "fx": "dragon"},
 	{"id": "cristal", "name": "Cristal", "price": 1300, "shaft": Color("f6f6f2"), "butt": Color("2a8fd6"), "butt2": Color("eafaff"), "accent": Color("9fe3ff"), "ring": Color("dff6ff"), "wrap": Color("0c1c2a"), "pat": 2, "aim": 5, "pow": 4, "prec": 5, "spin": 4, "fx": "ice"},
 	{"id": "lenda", "name": "Raio Dourado", "price": 0, "pass": 30, "shaft": Color("fbf1d0"), "butt": Color("1a1206"), "butt2": Color("ffcf3a"), "accent": Color("fff2a6"), "ring": Color("ffd34a"), "wrap": Color("120c04"), "pat": 5, "shine": 1, "aim": 4, "pow": 3, "prec": 3, "spin": 3, "fx": "storm"},
-	{"id": "cometa", "name": "Cometa", "price": 0, "pass": 50, "shaft": Color("f2f6ff"), "butt": Color("0a1c3a"), "butt2": Color("3de0ff"), "accent": Color("ffffff"), "ring": Color("bfe9ff"), "wrap": Color("06101e"), "pat": 2, "shine": 1, "aim": 5, "pow": 4, "prec": 5, "spin": 5, "fx": "ice"},
-	{"id": "imperador", "name": "Imperador", "price": 0, "pass": 100, "shaft": Color("fbf3dc"), "butt": Color("2a0a3a"), "butt2": Color("e3b341"), "accent": Color("fff2a6"), "ring": Color("ffd34a"), "wrap": Color("140620"), "pat": 5, "shine": 1, "aim": 5, "pow": 5, "prec": 5, "spin": 5, "fx": "storm"},
+	{"id": "cometa", "name": "Cometa", "price": 0, "pass": 50, "theme": 9, "glow": Color("5fb4ff"), "shaft": Color("eef4ff"), "butt": Color("0a1c3a"), "butt2": Color("3de0ff"), "accent": Color("ffffff"), "ring": Color("bfe9ff"), "wrap": Color("06101e"), "pat": 2, "shine": 1, "aim": 5, "pow": 4, "prec": 5, "spin": 5, "fx": "comet", "rare": "LENDÁRIO"},
+	{"id": "imperador", "name": "Imperador", "price": 0, "pass": 100, "theme": 10, "glow": Color("ffc93c"), "shaft": Color("fbf3dc"), "butt": Color("2a0a3a"), "butt2": Color("e3b341"), "accent": Color("fff2a6"), "ring": Color("ffd34a"), "wrap": Color("140620"), "pat": 5, "shine": 1, "aim": 5, "pow": 5, "prec": 5, "spin": 5, "fx": "crown", "rare": "MÍTICO"},
 	{"id": "pedro", "name": "Taco do Pedro", "price": 900, "theme": 8, "glow": Color("3df0ff"), "shaft": Color("f3efe2"), "butt": Color("0d2a24"), "accent": Color("ffffff"), "ring": Color("ffd34a"), "wrap": Color("0d2a24"), "pat": 0, "aim": 3, "pow": 3, "prec": 3, "spin": 3, "fx": "math", "impact": "math"},
 	{"id": "galaxia_taco", "name": "Galáxia", "price": 2000, "shaft": Color("f2eef8"), "butt": Color("1a0b3a"), "butt2": Color("8f3dff"), "accent": Color("ffffff"), "ring": Color("c9a8ff"), "wrap": Color("0a0618"), "pat": 4, "aim": 4, "pow": 4, "prec": 4, "spin": 4, "fx": "galaxy"},
 ]

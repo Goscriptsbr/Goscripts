@@ -86,6 +86,10 @@ static func draw(cn, ca, kind: String, t: float, ang: float, sc: float) -> void:
 			_aurora(cn, ca, t, ax, pp, sc)
 		"math":
 			_math(cn, ca, t, ax, pp, sc)
+		"comet":
+			_comet(cn, ca, t, ax, pp, sc)
+		"crown":
+			_crown(cn, ca, t, ax, pp, sc)
 
 
 static func _dragon(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
@@ -512,3 +516,60 @@ static func _math(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void
 		var col: Color = [Color(0.4, 1.0, 1.0), Color(1.0, 0.85, 0.3), Color(1, 1, 1), Color(1.0, 0.45, 0.6)][i % 4]
 		col.a = tw
 		cn.draw_text(p, syms[i], int(15.0 * sc), col)
+
+
+# COMETA: uma bola de luz orbitando a ponta com cauda azul e poeira de estrelas
+static func _comet(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var c := pt(ax, pp, sc, 22.0, 0.0)
+	ca.draw_circle(c, 26.0 * sc, Color(0.3, 0.6, 1.0, 0.10 + 0.04 * sin(t * 2.0)))
+	for k in 2:
+		var ph := t * (2.2 + k * 0.7) + k * PI
+		var tail := PackedVector2Array()
+		for i in 18:
+			var a := ph - float(i) * 0.09
+			var r := 20.0 + 3.0 * sin(a * 2.0)
+			tail.append(c + (ax * cos(a) * r + pp * sin(a) * r * 0.55) * sc)
+		for i in range(tail.size() - 1):
+			var f := 1.0 - float(i) / tail.size()
+			ca.draw_line(tail[i], tail[i + 1], Color(0.45, 0.8, 1.0, 0.55 * f), (6.0 * f + 1.0) * sc)
+			ca.draw_line(tail[i], tail[i + 1], Color(0.9, 0.97, 1.0, 0.8 * f), (2.0 * f + 0.5) * sc)
+		var hd: Vector2 = tail[0]
+		ca.draw_circle(hd, 7.0 * sc, Color(0.6, 0.85, 1.0, 0.35))
+		cn.draw_circle(hd, 3.6 * sc, Color(1.0, 1.0, 0.95))
+	# núcleo: pequeno planeta gelado
+	cn.draw_circle(c, 7.5 * sc, Color("123a7a"))
+	cn.draw_circle(c + Vector2(-1.5, -1.5) * sc, 5.5 * sc, Color("3d8bff"))
+	cn.draw_circle(c + Vector2(-2.6, -2.8) * sc, 2.2 * sc, Color(1, 1, 1, 0.7))
+	for i in 12:
+		var life := fposmod(t * 0.4 + float(i) / 12.0, 1.0)
+		var p := pt(ax, pp, sc, 6.0 + life * 70.0, (hsh(float(i)) - 0.5) * 40.0 * (0.3 + life))
+		sparkle(ca, p, (1.2 + (1.0 - life) * 2.8) * sc, Color(0.8, 0.95, 1.0, 0.9 * (1.0 - life)))
+
+
+# IMPERADOR: coroa de ouro flutuando, joias brilhando e chuva de faíscas douradas
+static func _crown(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var bob := sin(t * 2.0) * 2.0
+	var u0 := 16.0 + bob
+	ca.draw_circle(pt(ax, pp, sc, u0 + 12.0, 0.0), 24.0 * sc, Color(1.0, 0.8, 0.3, 0.14 + 0.06 * sin(t * 3.0)))
+	# a coroa fica "em pé" apontando para fora da ponta do taco
+	var base := [Vector2(u0, -13), Vector2(u0 + 7, -13), Vector2(u0 + 7, 13), Vector2(u0, 13)]
+	cn.draw_colored_polygon(poly(ax, pp, sc, base), Color("b8860b"))
+	var top := [Vector2(u0 + 7, -13), Vector2(u0 + 24, -16), Vector2(u0 + 13, -7), Vector2(u0 + 27, 0), Vector2(u0 + 13, 7), Vector2(u0 + 24, 16), Vector2(u0 + 7, 13)]
+	cn.draw_colored_polygon(poly(ax, pp, sc, top), Color("f2c230"))
+	cn.draw_polyline(poly(ax, pp, sc, top + [top[0]]), Color("fff1a8"), 1.4 * sc)
+	cn.draw_line(pt(ax, pp, sc, u0 + 3.5, -13), pt(ax, pp, sc, u0 + 3.5, 13), Color("ffe58a"), 1.6 * sc)
+	# joias nas pontas e na faixa
+	var gems := [[Vector2(u0 + 24, -16), Color("ff2d55")], [Vector2(u0 + 27, 0), Color("3ddc84")], [Vector2(u0 + 24, 16), Color("4f8bff")], [Vector2(u0 + 3.5, 0), Color("ff2d55")]]
+	for i in gems.size():
+		var gp: Vector2 = pt(ax, pp, sc, gems[i][0].x, gems[i][0].y)
+		var gc: Color = gems[i][1]
+		var tw := 0.5 + 0.5 * sin(t * 4.0 + i * 1.7)
+		ca.draw_circle(gp, (4.0 + tw * 3.0) * sc, Color(gc.r, gc.g, gc.b, 0.35))
+		cn.draw_circle(gp, 2.6 * sc, gc)
+		cn.draw_circle(gp + Vector2(-0.8, -0.8) * sc, 1.0 * sc, Color(1, 1, 1, 0.8))
+	# faíscas douradas caindo
+	for i in 14:
+		var life := fposmod(t * 0.35 + float(i) / 14.0, 1.0)
+		var p := pt(ax, pp, sc, u0 + 30.0 + hsh(float(i)) * 30.0 - life * 10.0, (hsh(float(i) + 3.0) - 0.5) * 50.0)
+		var tw2 := 0.5 + 0.5 * sin(t * 6.0 + float(i))
+		sparkle(ca, p, (1.4 + tw2 * 2.6) * sc, Color(1.0, 0.86, 0.4, 0.85 * (1.0 - life)))
