@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: sinucou
+    runtime: node
+    plan: free
+    rootDir: servidor
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true

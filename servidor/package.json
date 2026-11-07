@@ -1,0 +1,9 @@
+{
+  "name": "sinuca-servidor",
+  "version": "1.0.0",
+  "description": "Servidor de encontro (fila, amigos e repasse) do Sinuca/Truco GoScripts",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED"
+}

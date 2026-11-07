@@ -1,0 +1,6 @@
+jogo/.godot/
+jogo/build/
+servidor/node_modules/
+servidor/dados.json*
+*.keystore
+*.jks
