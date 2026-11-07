@@ -16,7 +16,10 @@ var searching := false
 var my_id := 0
 var beacon_t := 0.0
 # internet: servidor de encontro no Render (fila, amigos e repasse)
-const SERVER_URL := "wss://sinuca-goscripts.onrender.com"
+# servidores em ordem: o novo (conta GoScripts) primeiro; se não responder, usa o antigo
+const SERVERS := ["wss://sinucou.onrender.com", "wss://sinuca-goscripts.onrender.com"]
+var srv_i := 0
+var was_ok := false
 const RelayPeer := preload("res://relay_peer.gd")
 var ws: WebSocketPeer
 var ws_state := -1
@@ -144,7 +147,11 @@ func server_url() -> String:
 		if a.begins_with("--server="):
 			return a.substr(9)
 	var s := str(game.save.get("server", ""))
-	return s if s != "" else SERVER_URL
+	var lst: Array = SERVERS
+	for a2 in OS.get_cmdline_user_args():
+		if a2.begins_with("--servers="):
+			lst = a2.substr(10).split(",")
+	return s if s != "" else str(lst[srv_i % lst.size()])
 
 
 func connect_server() -> void:
@@ -155,6 +162,7 @@ func connect_server() -> void:
 	ws.outbound_buffer_size = 1 << 20
 	hello_sent = false
 	server_ok = false
+	was_ok = false
 	world_t = 0.0
 	ws.connect_to_url(server_url())
 
@@ -226,6 +234,10 @@ func _world_poll(delta: float) -> void:
 		elif relay != null and pk.size() >= 1:
 			relay.push(int(pk[0]), pk.slice(1))
 	if stt == WebSocketPeer.STATE_CLOSED and ws_state != WebSocketPeer.STATE_CLOSED:
+		if not was_ok:
+			# nem chegou a conectar: tenta o próximo servidor da lista logo em seguida
+			srv_i = (srv_i + 1) % SERVERS.size()
+			retry_t = retry_wait
 		server_ok = false
 		queued = false
 		if relay != null:
@@ -247,6 +259,7 @@ func _world_msg(m: Dictionary) -> void:
 	match str(m.get("t", "")):
 		"welcome":
 			server_ok = true
+			was_ok = true
 			# reenvia pedidos de amizade pendentes (o servidor não guarda nada)
 			for o in game.save.get("f_out", []):
 				world_send({"t": "fsend", "kind": "req", "to": str(o.code)})
