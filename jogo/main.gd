@@ -8,7 +8,7 @@ const FxScript := preload("res://fx.gd")
 const R := 13.0
 const HW := 500.0
 const HH := 250.0
-const APP_VERSION := 52  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 53  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -43,6 +43,7 @@ const FELTS := [
 	{"id": "pordosol", "name": "Pôr do Sol", "price": 850, "light": Color("3a1a3c"), "dark": Color("140818"), "pat": 8, "accent": Color("ff8a3d"), "accent2": Color("7b2f7a"), "tag": "Céu laranja e sol na água"},
 	{"id": "oceano_m", "name": "Oceano Profundo", "price": 900, "light": Color("0d5f86"), "dark": Color("031a2e"), "pat": 9, "accent": Color("9ff6ff"), "accent2": Color("0a3f66"), "tag": "Luz dançando na água"},
 	{"id": "carbono_m", "name": "Fibra de Carbono", "price": 650, "light": Color("3a3f47"), "dark": Color("101216"), "pat": 10, "accent": Color("e63946"), "accent2": Color("ffffff"), "tag": "Trama de carbono e borda vermelha"},
+	{"id": "arcoiris", "name": "Arco-Íris Neon", "price": 1500, "light": Color("1c1236"), "dark": Color("06040f"), "pat": 1, "accent": Color("ff4fd8"), "accent2": Color("ffffff"), "edge": "rainbow", "tag": "Luzes animadas nas bordas"},
 	{"id": "royal", "name": "Ouro Real", "price": 1200, "light": Color("2a1540"), "dark": Color("0b0614"), "pat": 7, "accent": Color("e3b341"), "accent2": Color("ffffff"), "tag": "Treliça dourada"},
 ]
 # aim = tamanho da projeção da mira | pow = força máxima | prec = precisão | spin = controle de efeito
@@ -2963,6 +2964,7 @@ func quad(a: Vector2, b: Vector2, wa: float, wb: float, col: Color, off: Vector2
 
 
 func _draw_overlay() -> void:
+	_draw_edge_fx()
 	if st == St.AIM and mode != Mode.TRAIN and human_turn() and groups[turn] != -1:
 		# destaca as bolas que o jogador da vez pode acertar
 		var pul := 0.5 + 0.5 * sin(sim_t * 5.0)
@@ -2998,6 +3000,36 @@ func _draw_overlay() -> void:
 		var pul := 0.5 + 0.5 * sin(sim_t * 6.0 * 1.0)
 		overlay.draw_arc(cue.pos, R + 10.0 + pul * 6.0, 0, TAU, 32, Color(1.0, 0.88, 0.4, 0.9), 3.0)
 		overlay.draw_arc(cue.pos, R + 22.0 + pul * 6.0, 0, TAU, 32, Color(1.0, 0.88, 0.4, 0.35), 2.0)
+
+
+# mesa decorativa: faixa de luz colorida correndo pelas bordas (desviando das caçapas)
+func _draw_edge_fx() -> void:
+	if str(felt_def().get("edge", "")) != "rainbow":
+		return
+	var e := 7.0
+	var segs := [
+		[Vector2(-HW + 44, -HH + e), Vector2(-34, -HH + e)], [Vector2(34, -HH + e), Vector2(HW - 44, -HH + e)],
+		[Vector2(HW - e, -HH + 44), Vector2(HW - e, HH - 44)],
+		[Vector2(HW - 44, HH - e), Vector2(34, HH - e)], [Vector2(-34, HH - e), Vector2(-HW + 44, HH - e)],
+		[Vector2(-HW + e, HH - 44), Vector2(-HW + e, -HH + 44)],
+	]
+	var dist := 0.0
+	for sg in segs:
+		var a0: Vector2 = sg[0]
+		var a1: Vector2 = sg[1]
+		var ln := a0.distance_to(a1)
+		var n := int(ln / 12.0)
+		for k in n:
+			var p0 := a0.lerp(a1, float(k) / n)
+			var p1 := a0.lerp(a1, float(k + 1) / n)
+			var s := dist + ln * float(k) / n
+			var hue := fposmod(s / 520.0 - fx_t * 0.22, 1.0)
+			var pulse := 0.55 + 0.45 * sin(s * 0.035 - fx_t * 6.0)
+			var c := Color.from_hsv(hue, 0.85, 1.0, 0.85 * pulse)
+			overlay.draw_line(p0, p1, Color(c.r, c.g, c.b, 0.22 * pulse), 16.0)
+			overlay.draw_line(p0, p1, Color(c.r, c.g, c.b, 0.4 * pulse), 8.0)
+			overlay.draw_line(p0, p1, c.lightened(0.3), 3.5)
+		dist += ln
 
 
 func _draw_cue_fx(additive: bool) -> void:
