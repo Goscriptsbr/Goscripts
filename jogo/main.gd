@@ -8,7 +8,8 @@ const FxScript := preload("res://fx.gd")
 const R := 13.0
 const HW := 500.0
 const HH := 250.0
-const APP_VERSION := 54  # sobe a cada APK novo (igual ao versao.json do servidor)
+var splash_node: Node = null
+const APP_VERSION := 55  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -679,6 +680,7 @@ func _ready() -> void:
 			var sp: CanvasLayer = load("res://splash.gd").new()
 			add_child(sp)
 			sp.start(self)
+			splash_node = sp
 		if not has_screen and FileAccess.file_exists(MATCH_FILE):
 			get_tree().create_timer(4.4 if not args.has("--nosplash") else 0.3).timeout.connect(_offer_resume)
 		for a in args:
@@ -1795,6 +1797,9 @@ func clear_match() -> void:
 
 
 func _offer_resume() -> void:
+	if splash_node != null and is_instance_valid(splash_node):
+		get_tree().create_timer(0.5).timeout.connect(_offer_resume)
+		return
 	if in_match() or not FileAccess.file_exists(MATCH_FILE):
 		return
 	if ui.truco_node != null and is_instance_valid(ui.truco_node):
@@ -2991,7 +2996,8 @@ func _draw_overlay() -> void:
 		if h.ball != null:
 			var tdir: Vector2 = (h.ball.pos - endp).normalized()
 			# linha amarela do caminho da bola: proporcional à MIRA do taco (20% = curtinha, 100% = longa)
-			var ast := float(cue_def().aim) if human_turn() else 1.0
+			# a mira mostrada é sempre a do taco de quem está jogando (igual para quem assiste)
+			var ast := float(turn_cue_def().aim)
 			overlay.draw_line(h.ball.pos, h.ball.pos + tdir * (34.0 * ast), Color("ffe066"), 2.5)
 			var cd := dir - tdir * dir.dot(tdir)
 			if cd.length() > 0.05:

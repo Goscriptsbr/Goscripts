@@ -18,6 +18,12 @@ var parts: Array = []
 var vw := 1280.0
 var snd_p: AudioStreamPlayer
 var logo_mat: ShaderMaterial
+# carregamento: só começa a animação depois de preparar os gráficos (evita travadinha no texto)
+var loading := true
+var load_t := 0.0
+var load_frames := 0
+var warm: Control
+var load_c: Control
 
 
 func start(g: Node2D) -> void:
@@ -52,6 +58,52 @@ func start(g: Node2D) -> void:
 		snd_p.play()
 	for i in 46:
 		parts.append({"x": randf(), "y": randf(), "s": randf_range(10.0, 40.0), "r": randf_range(1.5, 4.5), "p": randf() * TAU})
+	_build_warmup()
+	load_c = _layer()
+	load_c.draw.connect(_draw_loading)
+	if snd_p != null:
+		snd_p.stop()
+
+
+# desenha uma vez, quase invisível, tudo que tem shader pesado: o celular compila agora, no carregamento
+func _build_warmup() -> void:
+	warm = Control.new()
+	warm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	warm.modulate.a = 0.02
+	root.add_child(warm)
+	root.move_child(warm, 0)
+	for sp in ["ball", "cue", "cue_mythic", "felt", "logo_fx", "wood"]:
+		var r := ColorRect.new()
+		r.size = Vector2(48, 48)
+		r.position = Vector2(-40, -40)
+		var mt := ShaderMaterial.new()
+		mt.shader = load("res://shaders/%s.gdshader" % sp)
+		r.material = mt
+		warm.add_child(r)
+	var tx := TextureRect.new()
+	tx.texture = logo_tex
+	tx.size = Vector2(32, 32)
+	tx.position = Vector2(-40, -40)
+	warm.add_child(tx)
+	var lb := Label.new()
+	lb.text = NAME_TXT + " SINUCOU 0123456789 ÁÉÍÓÚÇÃÕ"
+	lb.position = Vector2(-400, -60)
+	lb.add_theme_font_size_override("font_size", 64)
+	warm.add_child(lb)
+
+
+func _draw_loading() -> void:
+	if not loading:
+		return
+	var vh := 720.0
+	load_c.draw_rect(Rect2(0, 0, vw, vh), Color("02050d"))
+	var cx := vw / 2.0
+	var a0 := load_t * 5.0
+	load_c.draw_arc(Vector2(cx, vh * 0.5), 26.0, a0, a0 + 4.2, 32, Color(0.2, 0.85, 1.0, 0.9), 5.0)
+	var p := clampf(load_t / 1.2, 0.0, 1.0)
+	load_c.draw_rect(Rect2(cx - 120, vh * 0.5 + 56, 240, 6), Color(1, 1, 1, 0.12))
+	load_c.draw_rect(Rect2(cx - 120, vh * 0.5 + 56, 240 * p, 6), Color(0.2, 0.85, 1.0, 0.9))
+	load_c.draw_string(font, Vector2(cx - 150, vh * 0.5 + 100), "Carregando...", HORIZONTAL_ALIGNMENT_CENTER, 300, 22, Color(1, 1, 1, 0.7))
 
 
 func _layer() -> Control:
@@ -63,12 +115,26 @@ func _layer() -> Control:
 
 
 func _on_input(e: InputEvent) -> void:
-	if e is InputEventMouseButton and e.pressed and t > 0.6:
+	if e is InputEventMouseButton and e.pressed and t > 0.6 and not loading:
 		t = maxf(t, TOTAL - 0.45)
 
 
 func _process(delta: float) -> void:
-	t += delta
+	vw = get_viewport().get_visible_rect().size.x
+	if loading:
+		# espera alguns quadros lisos seguidos (gráficos prontos) ou no máximo 3 s
+		load_t += minf(delta, 0.1)
+		load_frames = load_frames + 1 if delta < 0.04 else 0
+		load_c.queue_redraw()
+		if (load_frames >= 12 and load_t > 0.5) or load_t > 3.0:
+			loading = false
+			warm.queue_free()
+			load_c.queue_redraw()
+			if snd_p != null:
+				snd_p.play()
+		return
+	# um quadro lento não faz a animação "pular"
+	t += minf(delta, 1.0 / 30.0)
 	vw = get_viewport().get_visible_rect().size.x
 	if snd_p != null and t > TOTAL - 0.45:
 		snd_p.volume_db = linear_to_db(maxf(0.001, (TOTAL - t) / 0.45))
