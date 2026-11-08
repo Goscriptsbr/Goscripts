@@ -29,6 +29,9 @@ var mic_bus := -1
 var voice_buf := PackedByteArray()
 var voice_send_t := 0.0
 var listeners := {}  # peer -> {player, playback}
+var talk_t0 := 0.0
+var hint_txt := ""
+var hint_t := 0.0
 
 
 func setup(g: Node2D) -> void:
@@ -155,6 +158,13 @@ func _process(delta: float) -> void:
 		mic_btn.visible = bool(game.save.get("voice_mic", true))
 		panel.reset_size()
 		panel.position = Vector2(112, y0 - 10)
+		# primeira vez que o botão de voz aparece: explica que é segurar
+		if mic_btn.visible and not bool(game.save.get("voice_tip", false)):
+			game.save["voice_tip"] = true
+			game.write_save()
+			_hint("Segure o botão VOZ enquanto fala.\nSolte para parar.", 6.0)
+	if hint_t > 0.0:
+		hint_t -= delta
 	for i in range(bubbles.size() - 1, -1, -1):
 		bubbles[i].t += delta
 		if bubbles[i].t > (1.2 if bubbles[i].voice else 3.5):
@@ -241,6 +251,21 @@ func _anchor(a: int) -> Vector2:
 
 func _draw_bubbles() -> void:
 	var f: Font = ThemeDB.fallback_font
+	if active and (talking or hint_t > 0.0) and mic_btn.visible:
+		var ht: String = "GRAVANDO... solte para parar" if talking else hint_txt
+		var lines := ht.split("\n")
+		var hw := 0.0
+		for ln in lines:
+			hw = maxf(hw, f.get_string_size(ln, HORIZONTAL_ALIGNMENT_LEFT, -1, 19).x)
+		var hr := Rect2(mic_btn.position + Vector2(98, 29 - 16 - 13 * lines.size()), Vector2(hw + 32, 18 + 26 * lines.size()))
+		var ha := 1.0 if talking else clampf(hint_t / 0.4, 0.0, 1.0)
+		var hc := Color(0.75, 0.12, 0.12, 0.95 * ha) if talking else Color(0.98, 0.78, 0.2, 0.97 * ha)
+		var mid := mic_btn.position + Vector2(84, 29)
+		draw_c.draw_colored_polygon(PackedVector2Array([mid + Vector2(2, 0), hr.position + Vector2(1, hr.size.y / 2 - 10), hr.position + Vector2(1, hr.size.y / 2 + 10)]), hc)
+		draw_c.draw_style_box(game.ui.sbox(hc, 14, Color(0, 0, 0, 0.3 * ha), 2, 4), hr)
+		var tcol := Color(1, 1, 1, ha) if talking else Color(0.12, 0.08, 0, ha)
+		for i in lines.size():
+			draw_c.draw_string(f, hr.position + Vector2(16, 34 + 26 * i), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 19, tcol)
 	for b in bubbles:
 		var p := _anchor(int(b.abs))
 		var pop := 1.0 + 0.2 * maxf(0.0, 1.0 - float(b.t) * 6.0)
@@ -293,6 +318,8 @@ func _talk_start() -> void:
 	capture.clear_buffer()
 	mic_player.play()
 	talking = true
+	talk_t0 = clock
+	hint_t = 0.0
 	voice_buf.clear()
 	add(multiplayer.get_unique_id(), "", true)
 
@@ -304,6 +331,17 @@ func _talk_stop() -> void:
 	if mic_player != null:
 		mic_player.stop()
 	_flush_voice()
+	# só tocou rápido: avisa que precisa segurar
+	if clock - talk_t0 < 0.4:
+		for i in range(bubbles.size() - 1, -1, -1):
+			if bubbles[i].voice and int(bubbles[i].abs) == abs_seat(multiplayer.get_unique_id()):
+				bubbles.remove_at(i)
+		_hint("Para falar, SEGURE o botão VOZ\nenquanto fala e solte no fim.", 4.0)
+
+
+func _hint(t: String, dur: float) -> void:
+	hint_txt = t
+	hint_t = dur
 
 
 func _voice_pump(delta: float) -> void:
