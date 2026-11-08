@@ -559,7 +559,8 @@ setInterval(() => {
 // o app baixa o APK daqui do servidor (/apk); o servidor busca no GitHub e guarda uma cópia
 const https = require("https");
 const APK_FILE = "/tmp/sinucou.apk";
-let apkReady = 0; // versão que já está guardada
+let apkReady = ""; // link (fixo no commit) do APK que já está guardado
+// o link do versao.json aponta para o commit exato do APK: o cache do GitHub nunca entrega um APK velho
 let apkBusy = false;
 function versionFile() {
   try { return JSON.parse(fs.readFileSync(__dirname + "/versao.json", "utf8")); } catch (e) { return {}; }
@@ -585,7 +586,7 @@ function fetchTo(url, dest, hops, cb) {
 }
 function refreshApk(tries) {
   const v = versionFile();
-  if (!v.versao || !v.apk || apkReady === v.versao || apkBusy) return;
+  if (!v.versao || !v.apk || apkReady === v.apk || apkBusy) return;
   apkBusy = true;
   fetchTo(v.apk, APK_FILE, 0, (err) => {
     apkBusy = false;
@@ -594,7 +595,7 @@ function refreshApk(tries) {
       if ((tries || 0) < 20) setTimeout(() => refreshApk((tries || 0) + 1), 15000);
       return;
     }
-    apkReady = v.versao;
+    apkReady = v.apk;
     console.log("APK v" + v.versao + " pronto: " + fs.statSync(APK_FILE).size + " bytes");
   });
 }
@@ -604,7 +605,7 @@ setInterval(() => refreshApk(0), 10 * 60 * 1000);
 const server = http.createServer((req, res) => {
   if (req.url.startsWith("/apk")) {
     const v = versionFile();
-    if (apkReady && fs.existsSync(APK_FILE)) {
+    if (apkReady && apkReady === v.apk && fs.existsSync(APK_FILE)) {
       const size = fs.statSync(APK_FILE).size;
       res.writeHead(200, {
         "Content-Type": "application/vnd.android.package-archive",
