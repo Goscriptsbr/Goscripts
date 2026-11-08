@@ -149,8 +149,14 @@ static func draw_face(ci: CanvasItem, r: Rect2, c: Dictionary, st: Dictionary, m
 		var key := rk * 10 + s
 		if not face_tex.has(key):
 			face_tex[key] = load("res://cards/face_%d_%d.png" % [rk, s])
-		var ar := Rect2(r.position.x + r.size.x * 0.26, r.position.y + r.size.y * 0.07, r.size.x * 0.48, r.size.y * 0.86)
-		ci.draw_texture_rect(face_tex[key], ar, false)
+		# recorta só o retrato (sem a borda e os naipes do canto da arte) e mantém a proporção, sem esticar
+		var tex: Texture2D = face_tex[key]
+		var ts := tex.get_size()
+		var src := Rect2(ts.x * 0.15, ts.y * 0.085, ts.x * 0.7, ts.y * 0.83)
+		var aw := r.size.x * 0.56
+		var ah := minf(aw * src.size.y / src.size.x, r.size.y * 0.86)
+		var ar := Rect2(r.position.x + (r.size.x - aw) / 2.0, r.position.y + (r.size.y - ah) / 2.0, aw, ah)
+		ci.draw_texture_rect_region(tex, ar, src)
 		ci.draw_rect(ar, Color(frame.r, frame.g, frame.b, 0.9) if frame.a > 0.0 else Color(0, 0, 0, 0.35), false, maxf(1.0, r.size.x * 0.012))
 	elif rk == 7:
 		# Ás: naipe grande no meio (o de espadas com moldura, como o baralho de verdade)
