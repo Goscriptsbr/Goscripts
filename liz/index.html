@@ -329,7 +329,7 @@
     $('feito-emoji').textContent = vao.length ? '🎉' : '💌';
     $('feito-titulo').textContent = vao.length ? 'Oba! Presença confirmada!' : 'Resposta recebida!';
     $('feito-sub').textContent = vao.length
-      ? 'A Liz vai adorar ter vocês lá. Até dia 20/12! Não esqueçam a lembrancinha 🎁'
+      ? 'A Liz vai adorar ter vocês lá. Até dia 20/12!'
       : 'Que pena que não vão poder ir. Obrigado por avisar 💛';
     $('resumo').innerHTML = dados.convidados.map(c =>
       `<div>${c.resposta === 'sim' ? '✅' : c.resposta === 'nao' ? '❌' : '⏳'} ${esc(c.nome)}</div>`).join('');
