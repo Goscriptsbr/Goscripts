@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Liz faz 1 aninho! 🎈</title>
+<meta name="description" content="Você está convidado para o aniversário de 1 ano da Liz — 20 de dezembro, às 14h.">
+<meta property="og:title" content="Liz faz 1 aninho! 🎈">
+<meta property="og:description" content="Domingo, 20 de dezembro de 2026, às 14h. Confirme sua presença pelo link.">
+<meta property="og:image" content="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgFvMYNn-IUm1A1sSnn-TJ2nkhi_g5Qr409lj5aIpg84X_0o_PMKIbm-A6_FV1wRv7-PS2qagP032ZTonNzAw1kltKecVyKUNd055kcehjFZVW7DSfZeIzuxMJ0_EpzL6OSiVHmrgmfdQx5/s1600/Branca-de-Neve-Cute-03.png">
+<meta name="theme-color" content="#1d5fd1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --azul:#1d5fd1; --azul-esc:#123f91; --azul-claro:#e3edff;
+    --verm:#e63946; --verm-claro:#ffe3e5;
+    --amar:#ffc93c; --amar-claro:#fff4d3;
+    --creme:#fffaf0; --tinta:#1f2a44; --suave:#5b6785;
+    --verde:#1f9d55;
+    --raio:22px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Nunito',system-ui,sans-serif; color:var(--tinta);
+    background:var(--creme); min-height:100vh; overflow-x:hidden;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(255,201,60,.35) 0 60px, transparent 61px),
+      radial-gradient(circle at 92% 18%, rgba(29,95,209,.15) 0 90px, transparent 91px),
+      radial-gradient(circle at 5% 70%, rgba(230,57,70,.12) 0 80px, transparent 81px),
+      radial-gradient(circle at 95% 85%, rgba(255,201,60,.3) 0 70px, transparent 71px);
+  }
+  h1,h2,h3,.fred{font-family:'Fredoka',system-ui,sans-serif}
+  .wrap{max-width:520px;margin:0 auto;padding:18px 16px 60px;position:relative;z-index:1}
+
+  /* confete */
+  .confete{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .confete i{position:absolute;top:-20px;width:10px;height:14px;border-radius:3px;opacity:.85;animation:cai linear infinite}
+  @keyframes cai{to{transform:translateY(110vh) rotate(540deg)}}
+
+  /* topo */
+  .hero{text-align:center;padding:10px 0 6px;position:relative}
+  .baloes{display:flex;justify-content:center;gap:6px;height:150px;margin-bottom:-12px}
+  .balao{width:64px;height:80px;border-radius:50% 50% 48% 52%/58% 58% 42% 42%;position:relative;animation:flutua 4s ease-in-out infinite;box-shadow:inset -8px -10px 0 rgba(0,0,0,.08)}
+  .balao::before{content:"";position:absolute;width:14px;height:10px;left:50%;bottom:-6px;transform:translateX(-50%);background:inherit;clip-path:polygon(50% 0,0 100%,100% 100%)}
+  .balao::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:70px;background:rgba(31,42,68,.25);transform:translateX(-50%)}
+  .balao span{position:absolute;top:14px;left:14px;width:12px;height:20px;border-radius:50%;background:rgba(255,255,255,.55);transform:rotate(25deg)}
+  .personagem{position:relative;width:min(230px,62vw);margin:0 auto -6px;z-index:2;animation:flutua 5s ease-in-out infinite}
+  .personagem img{width:100%;height:auto;display:block;filter:drop-shadow(0 10px 14px rgba(31,42,68,.22))}
+  .b1{background:var(--verm);margin-top:30px;animation-delay:-1s}
+  .b2{background:var(--amar);width:72px;height:90px}
+  .b3{background:var(--azul);margin-top:24px;animation-delay:-2s}
+  @keyframes flutua{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+
+  .convidado-por{font-weight:700;color:var(--suave);letter-spacing:.06em;text-transform:uppercase;font-size:.78rem;margin-top:22px}
+  .nome{font-family:'Fredoka';font-weight:700;font-size:5.2rem;line-height:.95;color:var(--azul);
+        text-shadow:4px 4px 0 var(--amar), 8px 8px 0 rgba(230,57,70,.25);letter-spacing:-.02em;margin:6px 0 2px}
+  .idade{display:inline-flex;align-items:center;gap:10px;font-family:'Fredoka';font-weight:600;font-size:1.6rem;color:var(--verm)}
+  .idade b{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--verm);color:#fff;font-size:2rem;box-shadow:0 4px 0 #b52532}
+
+  /* cartões */
+  .card{background:#fff;border-radius:var(--raio);padding:20px;margin-top:18px;
+        box-shadow:0 2px 0 rgba(31,42,68,.06),0 12px 30px -12px rgba(31,42,68,.18);position:relative}
+  .card.listrado{border-top:8px solid transparent;
+        border-image:repeating-linear-gradient(90deg,var(--azul) 0 22px,var(--amar) 22px 44px,var(--verm) 44px 66px) 8}
+  .info{display:grid;gap:14px}
+  .linha{display:flex;gap:14px;align-items:flex-start}
+  .ico{flex:0 0 44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem}
+  .ico.a{background:var(--azul-claro)} .ico.v{background:var(--verm-claro)} .ico.y{background:var(--amar-claro)}
+  .linha small{display:block;color:var(--suave);font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+  .linha strong{font-size:1.08rem;display:block;line-height:1.3}
+  .linha .det{color:var(--suave);font-size:.95rem;margin-top:2px}
+  .botoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .btn{appearance:none;border:0;cursor:pointer;font:700 1rem 'Nunito',sans-serif;border-radius:14px;padding:12px 16px;
+       display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:transform .12s, box-shadow .12s}
+  .btn:active{transform:translateY(2px)}
+  .btn.sec{background:var(--azul-claro);color:var(--azul-esc);flex:1}
+  .btn.pri{background:var(--azul);color:#fff;box-shadow:0 4px 0 var(--azul-esc);width:100%;font-size:1.1rem;padding:15px}
+  .btn.pri:active{box-shadow:0 2px 0 var(--azul-esc)}
+  .btn[disabled]{opacity:.6;pointer-events:none}
+
+  .contagem{display:flex;justify-content:center;gap:10px;margin-top:18px}
+  .contagem div{background:#fff;border-radius:16px;padding:10px 0;width:76px;text-align:center;box-shadow:0 4px 0 rgba(31,42,68,.08)}
+  .contagem b{display:block;font-family:'Fredoka';font-size:1.7rem;color:var(--azul);line-height:1.1}
+  .contagem span{font-size:.72rem;color:var(--suave);font-weight:700;text-transform:uppercase}
+  .mensagem{white-space:pre-line;text-align:center;color:var(--suave);font-size:1rem;margin-top:14px}
+
+  /* RSVP */
+  .rsvp h2{font-size:1.5rem;color:var(--azul-esc)}
+  .rsvp .sub{color:var(--suave);margin:4px 0 16px}
+  .pessoa{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px dashed #e3e7f0}
+  .pessoa:first-of-type{border-top:0}
+  .pessoa .pn{flex:1;font-weight:700;font-size:1.05rem;line-height:1.25}
+  .pessoa .pn em{display:inline-block;font-style:normal;font-size:.7rem;background:var(--amar-claro);color:#8a6100;border-radius:99px;padding:2px 8px;margin-left:4px;vertical-align:middle}
+  .opc{display:flex;gap:6px}
+  .opc button{appearance:none;border:2px solid #e3e7f0;background:#fff;border-radius:12px;padding:9px 11px;font:700 .9rem 'Nunito',sans-serif;cursor:pointer;color:var(--suave);min-width:76px}
+  .opc button.on.sim{background:var(--verde);border-color:var(--verde);color:#fff}
+  .opc button.on.nao{background:var(--verm);border-color:var(--verm);color:#fff}
+  .opc button[disabled]{cursor:default}
+  label.rot{display:block;font-weight:700;margin:16px 0 6px}
+  textarea{width:100%;border:2px solid #e3e7f0;border-radius:14px;padding:12px;font:1rem 'Nunito',sans-serif;resize:vertical;min-height:80px;color:var(--tinta)}
+  textarea:focus{outline:none;border-color:var(--azul)}
+  .aviso{border-radius:14px;padding:12px 14px;margin-top:14px;font-weight:600}
+  .aviso.erro{background:var(--verm-claro);color:#9b1c27}
+  .aviso.ok{background:#e1f6ea;color:#14663a}
+  .aviso.info{background:var(--amar-claro);color:#7a5600}
+  .feito{text-align:center;padding:6px 0}
+  .feito .big{font-size:3.2rem}
+  .feito h2{margin:6px 0}
+  .resumo{text-align:left;margin:14px 0;background:var(--creme);border-radius:14px;padding:12px 14px}
+  .resumo div{padding:3px 0}
+  .carregando{text-align:center;color:var(--suave);padding:20px 0}
+  .rodape{text-align:center;color:var(--suave);font-size:.8rem;margin-top:26px}
+  .oculto{display:none!important}
+  @media (max-width:380px){ .nome{font-size:4.4rem} .opc button{min-width:66px;padding:8px} }
+  @media (prefers-reduced-motion:reduce){ .balao,.confete i{animation:none} .confete{display:none} }
+</style>
+</head>
+<body>
+<div class="confete" id="confete" aria-hidden="true"></div>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="baloes" id="baloes" aria-hidden="true">
+      <div class="balao b1"><span></span></div>
+      <div class="balao b2"><span></span></div>
+      <div class="balao b3"><span></span></div>
+    </div>
+    <div class="personagem" id="personagem">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgFvMYNn-IUm1A1sSnn-TJ2nkhi_g5Qr409lj5aIpg84X_0o_PMKIbm-A6_FV1wRv7-PS2qagP032ZTonNzAw1kltKecVyKUNd055kcehjFZVW7DSfZeIzuxMJ0_EpzL6OSiVHmrgmfdQx5/s1600/Branca-de-Neve-Cute-03.png" alt="Ilustração do tema da festa da Liz" loading="eager"
+           onload="document.getElementById('baloes').classList.add('oculto')"
+           onerror="document.getElementById('personagem').classList.add('oculto')">
+    </div>
+    <p class="convidado-por">Você está convidado para o aniversário da</p>
+    <h1 class="nome">Liz</h1>
+    <div class="idade">faz <b>1</b> aninho!</div>
+  </header>
+
+  <div class="contagem" id="contagem" aria-label="Contagem regressiva">
+    <div><b id="cd-d">–</b><span>dias</span></div>
+    <div><b id="cd-h">–</b><span>horas</span></div>
+    <div><b id="cd-m">–</b><span>min</span></div>
+  </div>
+
+  <section class="card listrado">
+    <div class="info">
+      <div class="linha"><div class="ico a">📅</div><div><small>Quando</small><strong>Domingo, 20 de dezembro de 2026</strong></div></div>
+      <div class="linha"><div class="ico y">🕑</div><div><small>Horário</small><strong>A partir das 14h</strong></div></div>
+      <div class="linha"><div class="ico v">📍</div><div><small>Onde</small><strong id="ev-local">Local a confirmar</strong><div class="det" id="ev-end"></div></div></div>
+    </div>
+    <p class="mensagem oculto" id="ev-msg"></p>
+    <div class="botoes">
+      <a class="btn sec oculto" id="btn-mapa" target="_blank" rel="noopener">🗺️ Ver no mapa</a>
+      <a class="btn sec" id="btn-agenda" target="_blank" rel="noopener">🗓️ Salvar na agenda</a>
+    </div>
+  </section>
+
+  <section class="card rsvp" id="rsvp">
+    <div class="carregando" id="carregando">Carregando seu convite… 🎈</div>
+
+    <!-- sem link de família -->
+    <div id="sem-token" class="oculto">
+      <h2>Confirme sua presença</h2>
+      <p class="sub">Para confirmar, abra o link que você recebeu pelo WhatsApp. Ele é exclusivo da sua família 💛</p>
+    </div>
+
+    <!-- link inválido -->
+    <div id="invalido" class="oculto">
+      <h2>Ops! Convite não encontrado</h2>
+      <p class="sub">Confira se o link foi copiado inteiro. Se não der certo, fale com os pais da Liz.</p>
+    </div>
+
+    <!-- formulário -->
+    <form id="form" class="oculto" novalidate>
+      <h2 id="saudacao">Olá!</h2>
+      <p class="sub" id="prazo-txt">Confirme a presença de cada pessoa até 05/12.</p>
+      <div id="lista"></div>
+      <label class="rot" for="recado">Deixe um recadinho para a Liz (opcional)</label>
+      <textarea id="recado" maxlength="500" placeholder="Parabéns, Liz! 🎉"></textarea>
+      <div id="msg-form"></div>
+      <div style="margin-top:16px"><button class="btn pri" id="enviar" type="submit">Enviar confirmação</button></div>
+    </form>
+
+    <!-- resposta enviada -->
+    <div id="feito" class="feito oculto">
+      <div class="big" id="feito-emoji">🎉</div>
+      <h2 id="feito-titulo">Resposta enviada!</h2>
+      <p class="sub" id="feito-sub"></p>
+      <div class="resumo" id="resumo"></div>
+      <button class="btn sec" id="alterar" type="button" style="width:100%">✏️ Alterar resposta</button>
+    </div>
+  </section>
+
+  <p class="rodape">Feito com 💙💛❤️ para a Liz</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+  const FESTA = new Date('2026-12-20T14:00:00-03:00');
+  const $ = id => document.getElementById(id);
+  const show = (el, on) => el.classList.toggle('oculto', !on);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ---------- confete ----------
+  (function(){
+    const cores = ['#1d5fd1','#e63946','#ffc93c'];
+    const box = $('confete');
+    for (let i = 0; i < 22; i++){
+      const p = document.createElement('i');
+      p.style.left = Math.random()*100 + 'vw';
+      p.style.background = cores[i % 3];
+      p.style.animationDuration = (7 + Math.random()*8) + 's';
+      p.style.animationDelay = (-Math.random()*15) + 's';
+      p.style.transform = 'rotate(' + (Math.random()*360) + 'deg)';
+      box.appendChild(p);
+    }
+  })();
+
+  // ---------- contagem ----------
+  function contagem(){
+    let ms = FESTA - new Date();
+    if (ms <= 0){ $('contagem').innerHTML = '<div style="width:auto;padding:10px 18px"><b>É hoje! 🎂</b></div>'; return; }
+    const d = Math.floor(ms/864e5); ms -= d*864e5;
+    const h = Math.floor(ms/36e5);  ms -= h*36e5;
+    const m = Math.floor(ms/6e4);
+    $('cd-d').textContent = d; $('cd-h').textContent = h; $('cd-m').textContent = m;
+  }
+  contagem(); setInterval(contagem, 30000);
+
+  // ---------- agenda ----------
+  function linkAgenda(ev){
+    const p = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: 'Aniversário de 1 ano da Liz 🎈',
+      dates: '20261220T170000Z/20261220T210000Z',
+      details: 'Festa de 1 aninho da Liz!',
+      location: [ev && ev.local, ev && ev.endereco].filter(Boolean).join(' - ')
+    });
+    $('btn-agenda').href = 'https://calendar.google.com/calendar/render?' + p.toString();
+  }
+  linkAgenda(null);
+
+  function mostrarEvento(ev){
+    if (!ev) return;
+    if (ev.local) $('ev-local').textContent = ev.local;
+    $('ev-end').textContent = ev.endereco || '';
+    if (ev.mensagem){ $('ev-msg').textContent = ev.mensagem; show($('ev-msg'), true); }
+    const mapa = ev.mapa_url || (ev.endereco ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ev.endereco) : '');
+    if (mapa){ $('btn-mapa').href = mapa; show($('btn-mapa'), true); }
+    linkAgenda(ev);
+  }
+
+  function dataPrazo(iso){
+    try { return new Date(iso).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', timeZone:'America/Sao_Paulo'}); }
+    catch(e){ return '05/12'; }
+  }
+
+  // ---------- Supabase ----------
+  const cfg = window.LIZ_CONFIG;
+  const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, { auth: { persistSession: false } });
+  const token = (new URLSearchParams(location.search).get('f') || '').trim();
+  let dados = null;
+  let escolhas = {};
+
+  async function iniciar(){
+    if (!token){
+      const { data } = await sb.rpc('get_evento');
+      mostrarEvento(data);
+      show($('carregando'), false); show($('sem-token'), true);
+      return;
+    }
+    const { data, error } = await sb.rpc('get_convite', { p_token: token });
+    show($('carregando'), false);
+    if (error){ $('carregando').textContent = 'Não foi possível carregar agora. Tente de novo em instantes.'; show($('carregando'), true); return; }
+    if (!data){ show($('invalido'), true); return; }
+    receber(data);
+    if (data.respondido_em) telaFeito(); else telaForm();
+  }
+
+  function receber(data){
+    dados = data;
+    mostrarEvento(data.evento);
+    escolhas = {};
+    data.convidados.forEach(c => { if (c.resposta) escolhas[c.id] = c.resposta; });
+  }
+
+  function telaForm(){
+    show($('feito'), false); show($('form'), true);
+    $('saudacao').textContent = 'Olá, ' + dados.familia + '! 👋';
+    const prazo = dataPrazo(dados.prazo);
+    $('prazo-txt').textContent = dados.prazo_encerrado
+      ? 'O prazo para confirmar terminou em ' + prazo + '. Se precisar mudar algo, fale com os pais da Liz.'
+      : 'Marque quem vai e quem não vai. Confirme até ' + prazo + ', por favor 💛';
+    $('recado').value = dados.recado || '';
+    $('recado').disabled = dados.prazo_encerrado;
+    $('enviar').classList.toggle('oculto', dados.prazo_encerrado);
+    $('msg-form').innerHTML = '';
+    const lista = $('lista');
+    lista.innerHTML = dados.convidados.map(c => `
+      <div class="pessoa" data-id="${c.id}">
+        <div class="pn">${esc(c.nome)}${c.crianca ? '<em>criança</em>' : ''}</div>
+        <div class="opc">
+          <button type="button" class="sim" data-v="sim" aria-pressed="false">✓ Vou</button>
+          <button type="button" class="nao" data-v="nao" aria-pressed="false">✗ Não vou</button>
+        </div>
+      </div>`).join('') || '<p class="sub">Nenhum convidado cadastrado nesse convite.</p>';
+    lista.querySelectorAll('.pessoa').forEach(row => {
+      const id = row.dataset.id;
+      row.querySelectorAll('button').forEach(b => {
+        b.disabled = dados.prazo_encerrado;
+        b.addEventListener('click', () => { escolhas[id] = b.dataset.v; pintar(row); });
+      });
+      pintar(row);
+    });
+  }
+
+  function pintar(row){
+    const v = escolhas[row.dataset.id];
+    row.querySelectorAll('button').forEach(b => {
+      const on = b.dataset.v === v;
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+    });
+  }
+
+  function telaFeito(){
+    show($('form'), false); show($('feito'), true);
+    const vao = dados.convidados.filter(c => c.resposta === 'sim');
+    $('feito-emoji').textContent = vao.length ? '🎉' : '💌';
+    $('feito-titulo').textContent = vao.length ? 'Oba! Presença confirmada!' : 'Resposta recebida!';
+    $('feito-sub').textContent = vao.length
+      ? 'A Liz vai adorar ter vocês lá. Até dia 20/12!'
+      : 'Que pena que não vão poder ir. Obrigado por avisar 💛';
+    $('resumo').innerHTML = dados.convidados.map(c =>
+      `<div>${c.resposta === 'sim' ? '✅' : c.resposta === 'nao' ? '❌' : '⏳'} ${esc(c.nome)}</div>`).join('')
+      + (dados.recado ? `<div style="margin-top:8px;color:var(--suave)">💬 ${esc(dados.recado)}</div>` : '');
+    show($('alterar'), !dados.prazo_encerrado);
+  }
+
+  $('alterar').addEventListener('click', telaForm);
+
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const faltam = dados.convidados.filter(c => !escolhas[c.id]);
+    if (faltam.length){
+      $('msg-form').innerHTML = `<div class="aviso erro">Falta marcar: ${faltam.map(c => esc(c.nome)).join(', ')}</div>`;
+      return;
+    }
+    const btn = $('enviar');
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    const respostas = Object.entries(escolhas).map(([id, resposta]) => ({ id, resposta }));
+    const { data, error } = await sb.rpc('responder', { p_token: token, p_respostas: respostas, p_recado: $('recado').value.trim() });
+    btn.disabled = false; btn.textContent = 'Enviar confirmação';
+    if (error){
+      const txt = /prazo_encerrado/.test(error.message) ? 'O prazo para confirmar já terminou. Fale com os pais da Liz.'
+                : 'Não deu para enviar agora. Verifique sua internet e tente de novo.';
+      $('msg-form').innerHTML = `<div class="aviso erro">${txt}</div>`;
+      return;
+    }
+    receber(data);
+    telaFeito();
+    window.scrollTo({ top: $('rsvp').offsetTop - 10, behavior: 'smooth' });
+  });
+
+  iniciar().catch(() => {
+    $('carregando').textContent = 'Não foi possível carregar agora. Tente de novo em instantes.';
+  });
+})();
+</script>
+</body>
+</html>

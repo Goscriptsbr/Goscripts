@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel · Aniversário da Liz</title>
+<meta name="theme-color" content="#1d5fd1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --azul:#1d5fd1; --azul-esc:#123f91; --azul-claro:#e3edff;
+    --verm:#e63946; --verm-claro:#ffe3e5;
+    --amar:#ffc93c; --amar-claro:#fff4d3;
+    --verde:#1f9d55; --verde-claro:#e1f6ea;
+    --fundo:#f5f7fc; --tinta:#1f2a44; --suave:#5b6785; --linha:#e3e7f0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Nunito',system-ui,sans-serif;background:var(--fundo);color:var(--tinta);min-height:100vh}
+  h1,h2,h3{font-family:'Fredoka',system-ui,sans-serif}
+  .oculto{display:none!important}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px 90px}
+  .faixa{height:6px;background:repeating-linear-gradient(90deg,var(--azul) 0 30px,var(--amar) 30px 60px,var(--verm) 60px 90px)}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 14px}
+  header.top h1{font-size:1.45rem;color:var(--azul-esc)}
+  header.top h1 span{color:var(--verm)}
+  .btn{appearance:none;border:0;cursor:pointer;font:700 .95rem 'Nunito',sans-serif;border-radius:12px;padding:10px 14px;
+       display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:inherit;white-space:nowrap}
+  .btn:active{transform:translateY(1px)}
+  .btn.pri{background:var(--azul);color:#fff}
+  .btn.sec{background:var(--azul-claro);color:var(--azul-esc)}
+  .btn.zap{background:#25d366;color:#fff}
+  .btn.perigo{background:var(--verm-claro);color:#9b1c27}
+  .btn.leve{background:transparent;color:var(--suave);padding:8px 10px}
+  .btn.peq{padding:7px 10px;font-size:.85rem;border-radius:10px}
+  .btn[disabled]{opacity:.6;pointer-events:none}
+  .card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 1px 0 rgba(31,42,68,.05),0 8px 24px -14px rgba(31,42,68,.25)}
+  input,textarea,select{width:100%;border:2px solid var(--linha);border-radius:12px;padding:11px 12px;font:1rem 'Nunito',sans-serif;color:var(--tinta);background:#fff}
+  input:focus,textarea:focus{outline:none;border-color:var(--azul)}
+  label{display:block;font-weight:700;font-size:.88rem;margin:12px 0 5px}
+  .aviso{border-radius:12px;padding:10px 12px;margin-top:12px;font-weight:600;font-size:.92rem}
+  .aviso.erro{background:var(--verm-claro);color:#9b1c27}
+  .aviso.ok{background:var(--verde-claro);color:#14663a}
+
+  /* login */
+  .login{max-width:380px;margin:12vh auto 0}
+  .login h1{text-align:center;color:var(--azul);font-size:2rem}
+  .login p{text-align:center;color:var(--suave);margin:4px 0 14px}
+
+  /* números */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .stat{background:#fff;border-radius:16px;padding:12px 10px;text-align:center;box-shadow:0 4px 0 rgba(31,42,68,.05);cursor:pointer;border:2px solid transparent}
+  .stat.ativo{border-color:var(--azul)}
+  .stat b{display:block;font-family:'Fredoka';font-size:1.8rem;line-height:1.1}
+  .stat span{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--suave)}
+  .stat small{display:block;font-size:.72rem;color:var(--suave);margin-top:2px}
+  .stat.s-sim b{color:var(--verde)} .stat.s-nao b{color:var(--verm)} .stat.s-pend b{color:#c08a00} .stat.s-tot b{color:var(--azul)}
+  @media (max-width:520px){ .stats{grid-template-columns:repeat(2,1fr)} }
+
+  .barra{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
+  .barra input{flex:1;min-width:160px}
+
+  /* famílias */
+  .fam{margin-top:10px}
+  .fam-top{display:flex;align-items:flex-start;gap:10px}
+  .fam-top h3{font-size:1.12rem;flex:1;line-height:1.25}
+  .fam-top .quando{font-family:'Nunito',sans-serif;font-size:.75rem;color:var(--suave);font-weight:600;display:block;margin-top:2px}
+  .tag{font-size:.72rem;font-weight:800;border-radius:99px;padding:3px 9px;white-space:nowrap}
+  .tag.ok{background:var(--verde-claro);color:#14663a} .tag.pend{background:var(--amar-claro);color:#7a5600}
+  .pessoas{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .chip{appearance:none;border:2px solid var(--linha);background:#fff;border-radius:99px;padding:5px 11px;font:700 .88rem 'Nunito',sans-serif;cursor:pointer;color:var(--tinta)}
+  .chip.sim{background:var(--verde-claro);border-color:#9fd9b8;color:#14663a}
+  .chip.nao{background:var(--verm-claro);border-color:#f3a8ae;color:#9b1c27}
+  .chip.pend{background:#fff;border-style:dashed;color:var(--suave)}
+  .chip i{font-style:normal;font-size:.72rem;opacity:.75}
+  .recado{background:var(--fundo);border-radius:12px;padding:8px 11px;font-size:.92rem;color:var(--suave);margin-bottom:10px;white-space:pre-line}
+  .acoes{display:flex;gap:6px;flex-wrap:wrap}
+  .dica{color:var(--suave);font-size:.82rem;margin-top:8px}
+  .vazio{text-align:center;color:var(--suave);padding:30px 10px}
+
+  .fab{position:fixed;right:16px;bottom:18px;z-index:5;box-shadow:0 8px 20px -6px rgba(29,95,209,.6);padding:14px 18px;font-size:1rem;border-radius:16px}
+
+  /* modal */
+  .fundo-modal{position:fixed;inset:0;background:rgba(20,28,48,.45);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+  .modal{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px 22px}
+  @media (min-width:600px){ .fundo-modal{align-items:center} .modal{border-radius:22px} }
+  .modal h2{font-size:1.3rem;color:var(--azul-esc);display:flex;justify-content:space-between;align-items:center}
+  .linha-p{display:flex;gap:6px;align-items:center;margin-top:8px}
+  .linha-p input[type=text]{flex:1}
+  .linha-p .cri{display:flex;align-items:center;gap:4px;font-size:.82rem;font-weight:700;color:var(--suave);margin:0;white-space:nowrap}
+  .linha-p .cri input{width:18px;height:18px}
+  .rodape-modal{display:flex;gap:8px;margin-top:18px}
+  .rodape-modal .btn{flex:1;padding:13px}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;font-size:.92rem}
+</style>
+</head>
+<body>
+<div class="faixa"></div>
+
+<!-- LOGIN -->
+<div id="tela-login" class="wrap oculto">
+  <div class="login card">
+    <h1>Liz 🎈</h1>
+    <p>Painel de confirmações</p>
+    <form id="form-login">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" autocomplete="current-password" required>
+      <div id="msg-login"></div>
+      <button class="btn pri" style="width:100%;margin-top:16px;padding:13px" type="submit">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="tela-painel" class="wrap oculto">
+  <header class="top">
+    <h1>Aniversário da <span>Liz</span> 🎈</h1>
+    <div style="display:flex;gap:4px">
+      <button class="btn leve" id="btn-config" title="Dados da festa">⚙️</button>
+      <button class="btn leve" id="btn-sair">Sair</button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat s-sim" data-filtro="sim"><b id="n-sim">0</b><span>Vão</span><small id="n-sim-det"></small></div>
+    <div class="stat s-nao" data-filtro="nao"><b id="n-nao">0</b><span>Não vão</span></div>
+    <div class="stat s-pend" data-filtro="pend"><b id="n-pend">0</b><span>Sem resposta</span></div>
+    <div class="stat s-tot ativo" data-filtro="todos"><b id="n-tot">0</b><span>Convidados</span><small id="n-fam"></small></div>
+  </div>
+
+  <div class="barra">
+    <input id="busca" type="search" placeholder="🔎 Buscar família ou pessoa">
+    <button class="btn sec" id="btn-csv">⬇️ Planilha</button>
+  </div>
+
+  <div id="lista-fam"></div>
+  <p class="dica">Toque no nome de uma pessoa para mudar a resposta dela manualmente.</p>
+
+  <button class="btn pri fab" id="btn-nova">＋ Família</button>
+</div>
+
+<!-- MODAL FAMÍLIA -->
+<div class="fundo-modal oculto" id="modal-fam">
+  <form class="modal" id="form-fam">
+    <h2><span id="titulo-fam">Nova família</span><button type="button" class="btn leve" data-fechar>✕</button></h2>
+    <label for="f-nome">Nome da família (aparece no convite)</label>
+    <input id="f-nome" type="text" placeholder="Ex.: Família Silva" required>
+    <label for="f-tel">WhatsApp (opcional, com DDD)</label>
+    <input id="f-tel" type="tel" placeholder="Ex.: 11 98765-4321">
+    <label>Pessoas convidadas</label>
+    <div id="f-pessoas"></div>
+    <button type="button" class="btn sec peq" id="f-add" style="margin-top:10px">＋ Adicionar pessoa</button>
+    <div id="msg-fam"></div>
+    <div class="rodape-modal">
+      <button type="button" class="btn perigo oculto" id="f-excluir">Excluir</button>
+      <button type="submit" class="btn pri" id="f-salvar">Salvar</button>
+    </div>
+  </form>
+</div>
+
+<!-- MODAL FESTA -->
+<div class="fundo-modal oculto" id="modal-ev">
+  <form class="modal" id="form-ev">
+    <h2>Dados da festa <button type="button" class="btn leve" data-fechar>✕</button></h2>
+    <label for="e-local">Nome do local</label>
+    <input id="e-local" type="text" placeholder="Ex.: Buffet Pequenos Sonhos">
+    <label for="e-end">Endereço</label>
+    <input id="e-end" type="text" placeholder="Rua, número, bairro, cidade">
+    <label for="e-mapa">Link do Google Maps (opcional)</label>
+    <input id="e-mapa" type="url" placeholder="https://maps.app.goo.gl/...">
+    <label for="e-msg">Mensagem no convite (opcional)</label>
+    <textarea id="e-msg" rows="3" placeholder="Ex.: Venha com roupa confortável!"></textarea>
+    <label for="e-prazo">Prazo para confirmar</label>
+    <input id="e-prazo" type="datetime-local">
+    <div id="msg-ev"></div>
+    <div class="rodape-modal"><button type="submit" class="btn pri">Salvar</button></div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+  const cfg = window.LIZ_CONFIG;
+  const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+  const $ = id => document.getElementById(id);
+  const show = (el, on) => el.classList.toggle('oculto', !on);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const toast = (t) => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2200); };
+
+  let familias = [];
+  let filtro = 'todos';
+  let editando = null;
+
+  // ---------- login ----------
+  async function checar(){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session){ show($('tela-login'), true); show($('tela-painel'), false); return; }
+    const { data: admin } = await sb.rpc('is_admin');
+    if (!admin){
+      await sb.auth.signOut();
+      show($('tela-login'), true); show($('tela-painel'), false);
+      $('msg-login').innerHTML = '<div class="aviso erro">Esse e-mail não tem acesso ao painel.</div>';
+      return;
+    }
+    show($('tela-login'), false); show($('tela-painel'), true);
+    carregar();
+  }
+
+  $('form-login').addEventListener('submit', async e => {
+    e.preventDefault();
+    $('msg-login').innerHTML = '';
+    const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('senha').value });
+    if (error){ $('msg-login').innerHTML = '<div class="aviso erro">E-mail ou senha incorretos.</div>'; return; }
+    checar();
+  });
+  $('btn-sair').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+  // ---------- dados ----------
+  async function carregar(){
+    const { data, error } = await sb.from('familias')
+      .select('*, convidados(*)')
+      .order('nome', { ascending: true });
+    if (error){ $('lista-fam').innerHTML = '<div class="aviso erro">Erro ao carregar: ' + esc(error.message) + '</div>'; return; }
+    familias = data.map(f => ({ ...f, convidados: (f.convidados || []).sort((a,b) => a.ordem - b.ordem || a.criado_em.localeCompare(b.criado_em)) }));
+    desenhar();
+  }
+
+  function contar(){
+    const todos = familias.flatMap(f => f.convidados);
+    const sim = todos.filter(c => c.resposta === 'sim');
+    const cri = sim.filter(c => c.crianca).length;
+    $('n-sim').textContent = sim.length;
+    $('n-sim-det').textContent = sim.length ? `${sim.length - cri} ${sim.length - cri === 1 ? 'adulto' : 'adultos'} · ${cri} ${cri === 1 ? 'criança' : 'crianças'}` : '';
+    $('n-nao').textContent = todos.filter(c => c.resposta === 'nao').length;
+    $('n-pend').textContent = todos.filter(c => !c.resposta).length;
+    $('n-tot').textContent = todos.length;
+    $('n-fam').textContent = familias.length + (familias.length === 1 ? ' família' : ' famílias');
+  }
+
+  function linkDe(f){ return cfg.conviteUrl + '?f=' + f.token; }
+
+  function textoZap(f){
+    return `Oi, ${f.nome}! 🎈\nA Liz vai fazer 1 aninho e vocês estão convidados!\n📅 Domingo, 20/12, às 14h\n\nConfirme a presença de cada um por aqui:\n${linkDe(f)}`;
+  }
+  function linkZap(f){
+    let tel = (f.telefone || '').replace(/\D/g, '');
+    if (tel && tel.length <= 11) tel = '55' + tel;
+    return 'https://wa.me/' + (tel || '') + '?text=' + encodeURIComponent(textoZap(f));
+  }
+
+  function desenhar(){
+    contar();
+    const q = $('busca').value.trim().toLowerCase();
+    const passa = f => {
+      if (q && !(f.nome.toLowerCase().includes(q) || f.convidados.some(c => c.nome.toLowerCase().includes(q)))) return false;
+      if (filtro === 'sim')  return f.convidados.some(c => c.resposta === 'sim');
+      if (filtro === 'nao')  return f.convidados.some(c => c.resposta === 'nao');
+      if (filtro === 'pend') return f.convidados.some(c => !c.resposta);
+      return true;
+    };
+    const lista = familias.filter(passa);
+    if (!familias.length){
+      $('lista-fam').innerHTML = '<div class="card vazio">Nenhuma família ainda.<br>Toque em <b>＋ Família</b> para começar 🎈</div>';
+      return;
+    }
+    if (!lista.length){ $('lista-fam').innerHTML = '<div class="card vazio">Nada encontrado.</div>'; return; }
+
+    $('lista-fam').innerHTML = lista.map(f => {
+      const quando = f.respondido_em ? 'respondeu em ' + new Date(f.respondido_em).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+      const respondeu = f.convidados.length && f.convidados.every(c => c.resposta);
+      return `
+      <div class="card fam" data-id="${f.id}">
+        <div class="fam-top">
+          <h3>${esc(f.nome)}<span class="quando">${quando}</span></h3>
+          <span class="tag ${respondeu ? 'ok' : 'pend'}">${respondeu ? 'Respondeu' : 'Pendente'}</span>
+        </div>
+        <div class="pessoas">
+          ${f.convidados.map(c => `<button class="chip ${c.resposta || 'pend'}" data-c="${c.id}">
+              ${c.resposta === 'sim' ? '✅' : c.resposta === 'nao' ? '❌' : '⏳'} ${esc(c.nome)}${c.crianca ? ' <i>criança</i>' : ''}</button>`).join('')
+            || '<span class="dica">Sem pessoas cadastradas</span>'}
+        </div>
+        ${f.recado ? `<div class="recado">💬 ${esc(f.recado)}</div>` : ''}
+        <div class="acoes">
+          <a class="btn zap peq" href="${linkZap(f)}" target="_blank" rel="noopener">WhatsApp</a>
+          <button class="btn sec peq" data-copiar>🔗 Copiar link</button>
+          <a class="btn sec peq" href="${linkDe(f)}" target="_blank" rel="noopener">👁️ Ver</a>
+          <button class="btn sec peq" data-editar>✏️ Editar</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('busca').addEventListener('input', desenhar);
+  document.querySelectorAll('.stat').forEach(s => s.addEventListener('click', () => {
+    filtro = s.dataset.filtro;
+    document.querySelectorAll('.stat').forEach(x => x.classList.toggle('ativo', x === s));
+    desenhar();
+  }));
+
+  $('lista-fam').addEventListener('click', async e => {
+    const card = e.target.closest('.fam'); if (!card) return;
+    const f = familias.find(x => x.id === card.dataset.id);
+    const chip = e.target.closest('.chip');
+    if (chip){
+      const c = f.convidados.find(x => x.id === chip.dataset.c);
+      const prox = c.resposta === null ? 'sim' : c.resposta === 'sim' ? 'nao' : null;
+      const { error } = await sb.from('convidados').update({ resposta: prox, respondido_em: prox ? new Date().toISOString() : null }).eq('id', c.id);
+      if (error){ toast('Erro ao salvar'); return; }
+      c.resposta = prox; desenhar();
+      return;
+    }
+    if (e.target.closest('[data-copiar]')){
+      const link = linkDe(f);
+      try { await navigator.clipboard.writeText(link); toast('Link copiado!'); }
+      catch(_) { prompt('Copie o link:', link); }
+      return;
+    }
+    if (e.target.closest('[data-editar]')) abrirFamilia(f);
+  });
+
+  // ---------- modal família ----------
+  function linhaPessoa(p = {}){
+    const d = document.createElement('div');
+    d.className = 'linha-p';
+    if (p.id) d.dataset.id = p.id;
+    d.innerHTML = `<input type="text" placeholder="Nome da pessoa" value="${esc(p.nome || '')}">
+      <label class="cri"><input type="checkbox" ${p.crianca ? 'checked' : ''}> criança</label>
+      <button type="button" class="btn leve peq" title="Remover">✕</button>`;
+    d.querySelector('button').addEventListener('click', () => d.remove());
+    return d;
+  }
+
+  function abrirFamilia(f){
+    editando = f || null;
+    $('titulo-fam').textContent = f ? 'Editar família' : 'Nova família';
+    $('f-nome').value = f ? f.nome : '';
+    $('f-tel').value = f ? f.telefone : '';
+    $('msg-fam').innerHTML = '';
+    const box = $('f-pessoas'); box.innerHTML = '';
+    (f ? f.convidados : [{}, {}]).forEach(p => box.appendChild(linhaPessoa(p)));
+    show($('f-excluir'), !!f);
+    show($('modal-fam'), true);
+    if (!f) $('f-nome').focus();
+  }
+  $('btn-nova').addEventListener('click', () => abrirFamilia(null));
+  $('f-add').addEventListener('click', () => { const l = linhaPessoa(); $('f-pessoas').appendChild(l); l.querySelector('input').focus(); });
+
+  document.querySelectorAll('[data-fechar]').forEach(b => b.addEventListener('click', () => show(b.closest('.fundo-modal'), false)));
+  document.querySelectorAll('.fundo-modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) show(m, false); }));
+
+  $('form-fam').addEventListener('submit', async e => {
+    e.preventDefault();
+    const nome = $('f-nome').value.trim();
+    const telefone = $('f-tel').value.trim();
+    const pessoas = [...$('f-pessoas').querySelectorAll('.linha-p')]
+      .map((d, i) => ({ id: d.dataset.id || null, nome: d.querySelector('input[type=text]').value.trim(), crianca: d.querySelector('input[type=checkbox]').checked, ordem: i }))
+      .filter(p => p.nome);
+    if (!nome){ $('msg-fam').innerHTML = '<div class="aviso erro">Coloque o nome da família.</div>'; return; }
+    if (!pessoas.length){ $('msg-fam').innerHTML = '<div class="aviso erro">Adicione pelo menos uma pessoa.</div>'; return; }
+
+    const btn = $('f-salvar'); btn.disabled = true; btn.textContent = 'Salvando…';
+    try {
+      let famId;
+      if (editando){
+        famId = editando.id;
+        let r = await sb.from('familias').update({ nome, telefone }).eq('id', famId);
+        if (r.error) throw r.error;
+        const manter = pessoas.filter(p => p.id).map(p => p.id);
+        const remover = editando.convidados.filter(c => !manter.includes(c.id)).map(c => c.id);
+        if (remover.length){ r = await sb.from('convidados').delete().in('id', remover); if (r.error) throw r.error; }
+        for (const p of pessoas.filter(p => p.id)){
+          r = await sb.from('convidados').update({ nome: p.nome, crianca: p.crianca, ordem: p.ordem }).eq('id', p.id);
+          if (r.error) throw r.error;
+        }
+      } else {
+        const r = await sb.from('familias').insert({ nome, telefone }).select().single();
+        if (r.error) throw r.error;
+        famId = r.data.id;
+      }
+      const novos = pessoas.filter(p => !p.id).map(p => ({ familia_id: famId, nome: p.nome, crianca: p.crianca, ordem: p.ordem }));
+      if (novos.length){ const r = await sb.from('convidados').insert(novos); if (r.error) throw r.error; }
+      show($('modal-fam'), false);
+      toast(editando ? 'Família atualizada' : 'Família criada! Agora é só enviar o link 🎈');
+      await carregar();
+    } catch(err){
+      $('msg-fam').innerHTML = '<div class="aviso erro">Erro ao salvar: ' + esc(err.message) + '</div>';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar';
+    }
+  });
+
+  $('f-excluir').addEventListener('click', async () => {
+    if (!editando || !confirm(`Excluir "${editando.nome}" e todas as respostas dessa família?`)) return;
+    const { error } = await sb.from('familias').delete().eq('id', editando.id);
+    if (error){ $('msg-fam').innerHTML = '<div class="aviso erro">' + esc(error.message) + '</div>'; return; }
+    show($('modal-fam'), false); toast('Família excluída'); carregar();
+  });
+
+  // ---------- dados da festa ----------
+  function paraLocal(iso){
+    // mostra a data/hora no fuso de Brasília no campo datetime-local
+    const d = new Date(new Date(iso).getTime() - 3 * 3600e3);
+    return d.toISOString().slice(0, 16);
+  }
+  $('btn-config').addEventListener('click', async () => {
+    $('msg-ev').innerHTML = '';
+    const { data, error } = await sb.from('evento').select('*').eq('id', 1).single();
+    if (error){ toast('Erro ao carregar'); return; }
+    $('e-local').value = data.local; $('e-end').value = data.endereco; $('e-mapa').value = data.mapa_url;
+    $('e-msg').value = data.mensagem; $('e-prazo').value = paraLocal(data.prazo);
+    show($('modal-ev'), true);
+  });
+  $('form-ev').addEventListener('submit', async e => {
+    e.preventDefault();
+    const prazo = $('e-prazo').value ? $('e-prazo').value + ':00-03:00' : '2026-12-05T23:59:59-03:00';
+    const { error } = await sb.from('evento').update({
+      local: $('e-local').value.trim(), endereco: $('e-end').value.trim(),
+      mapa_url: $('e-mapa').value.trim(), mensagem: $('e-msg').value.trim(), prazo
+    }).eq('id', 1);
+    if (error){ $('msg-ev').innerHTML = '<div class="aviso erro">' + esc(error.message) + '</div>'; return; }
+    show($('modal-ev'), false); toast('Dados da festa salvos');
+  });
+
+  // ---------- planilha ----------
+  $('btn-csv').addEventListener('click', () => {
+    const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    const linhas = [['Família','Convidado','Criança','Resposta','Recado','Link'].map(q).join(';')];
+    familias.forEach(f => f.convidados.forEach(c => linhas.push([
+      f.nome, c.nome, c.crianca ? 'Sim' : 'Não',
+      c.resposta === 'sim' ? 'Vai' : c.resposta === 'nao' ? 'Não vai' : 'Sem resposta',
+      f.recado, linkDe(f)
+    ].map(q).join(';'))));
+    const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'convidados-liz.csv'; a.click();
+  });
+
+  checar();
+})();
+</script>
+</body>
+</html>
