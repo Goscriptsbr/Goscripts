@@ -262,7 +262,7 @@ func _resolve_round() -> void:
 	# mostra as cartas abertas e quem ganhou a rodada antes de recolher
 	round_win = -1 if tie else best_seat
 	phase = "showround"
-	say("Rodada empatou (cangou)!" if tie else "%s fez a rodada." % seat_name(best_seat))
+	say("Rodada empatou (amarrou)!" if tie else "%s fez a rodada." % seat_name(best_seat))
 	_refresh()
 	_later(2.2 if not sim else 0.0, _finish_round.bind(tie, best_seat))
 
@@ -910,6 +910,16 @@ func seat_pos(seat: int) -> Vector2:
 	return c + [Vector2(0, 80), Vector2(170, -8), Vector2(0, -95), Vector2(-170, -8)][seat]
 
 
+# ponto embaixo da placa do jogador (para o balão do chat)
+func plate_anchor(seat: int) -> Vector2:
+	if seat == 0:
+		return Vector2(96 + 110, size.y - 128)
+	var hp := seat_hand_pos(seat)
+	if n == 4 and seat != 2:
+		return hp + Vector2(0, -150 + 52)
+	return hp + Vector2(84 + 100, -40 + 56)
+
+
 func seat_hand_pos(seat: int) -> Vector2:
 	if n == 2 or seat == 2:
 		return Vector2(size.x / 2.0, 92)
@@ -1083,7 +1093,7 @@ func _draw() -> void:
 			draw_string(f, Vector2(cr.get_center().x - 52, cr.end.y + 15), "GANHOU", HORIZONTAL_ALIGNMENT_CENTER, 104, 18, Color("3a2a00"))
 	if phase == "showround" and round_win == -1:
 		draw_style_box(ui.sbox(Color("bbbbbb"), 12, Color("333333"), 2), Rect2(w / 2.0 - 80, h / 2.0 - 30, 160, 40))
-		draw_string(f, Vector2(w / 2.0 - 80, h / 2.0 - 2), "CANGOU!", HORIZONTAL_ALIGNMENT_CENTER, 160, 24, Color("222222"))
+		draw_string(f, Vector2(w / 2.0 - 80, h / 2.0 - 2), "AMARROU!", HORIZONTAL_ALIGNMENT_CENTER, 160, 24, Color("222222"))
 	# minha mão
 	var mine: Array = hands[0] if not hands.is_empty() else []
 	var my_turn := phase == "play" and turn == 0
@@ -1133,58 +1143,15 @@ func _suit(ci: CanvasItem, c: Vector2, sz: float, s: int, col: Color) -> void:
 		ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, sz * 0.1), c + Vector2(sz * 0.35, sz), c + Vector2(-sz * 0.35, sz)]), col)
 
 
+const CARDS = preload("res://cards.gd")
+
+
 func draw_card_on(ci: CanvasItem, r: Rect2, c: Dictionary, face: bool, hl: bool) -> void:
-	var rad := int(r.size.x * 0.1)
-	ci.draw_style_box(ui.sbox(Color(0, 0, 0, 0.35), rad), Rect2(r.position + Vector2(3, 5), r.size))
+	var st: Dictionary = CARDS.style(str(game.save.get("deck", "classico")))
 	if not face or c.is_empty():
-		ci.draw_style_box(ui.sbox(Color("143a6b"), rad, Color("f4f4f4"), maxi(2, int(r.size.x * 0.04))), r)
-		var inner := r.grow(-r.size.x * 0.12)
-		ci.draw_style_box(ui.sbox(Color("1d4f8f"), maxi(2, rad - 3), Color("f4c542"), 1), inner)
-		var cc := inner.get_center()
-		var d := inner.size.x * 0.28
-		ci.draw_colored_polygon(PackedVector2Array([cc + Vector2(0, -d * 1.3), cc + Vector2(d, 0), cc + Vector2(0, d * 1.3), cc + Vector2(-d, 0)]), Color(0.96, 0.77, 0.26, 0.85))
-		ci.draw_string(ThemeDB.fallback_font, cc + Vector2(-d, d * 0.3), "GS", HORIZONTAL_ALIGNMENT_CENTER, d * 2.0, int(d * 0.9), Color("143a6b"))
+		CARDS.draw_back(ci, r, st)
 		return
-	var man := is_manilha(c)
-	var border := Color("f4c542") if man else (Color("ffe066") if hl else Color(0.2, 0.2, 0.2, 0.5))
-	ci.draw_style_box(ui.sbox(Color("fbfaf4"), rad, border, 4 if (man or hl) else 1), r)
-	var red: bool = int(c.s) == 0 or int(c.s) == 2
-	var col := Color("c0262d") if red else Color("161616")
-	var fs := int(r.size.x * 0.26)
-	var f: Font = ThemeDB.fallback_font
-	var rk := int(c.r)
-	if rk >= 4 and rk <= 6:
-		var key := rk * 10 + int(c.s)
-		if not face_tex.has(key):
-			face_tex[key] = load("res://cards/face_%d_%d.png" % [rk, int(c.s)])
-		var ar := Rect2(r.position.x + r.size.x * 0.19, r.position.y + r.size.y * 0.05, r.size.x * 0.62, r.size.y * 0.9)
-		ci.draw_texture_rect(face_tex[key], ar, false)
-		var fs2 := int(r.size.x * 0.2)
-		ci.draw_string(f, r.position + Vector2(r.size.x * 0.03, fs2 * 1.05), RANKS[rk], HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, col)
-		_suit(ci, r.position + Vector2(r.size.x * 0.1, fs2 * 1.6), r.size.x * 0.06, int(c.s), col)
-		ci.draw_string(f, r.end - Vector2(r.size.x * 0.03 + fs2 * 0.6, fs2 * 0.2), RANKS[rk], HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, col)
-		_draw_manilha_tag(ci, r, c)
-		return
-	fs = int(r.size.x * 0.2)
-	ci.draw_string(f, r.position + Vector2(r.size.x * 0.05, fs * 1.05), RANKS[int(c.r)], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
-	_suit(ci, r.position + Vector2(r.size.x * 0.12, fs * 1.6), r.size.x * 0.065, int(c.s), col)
-	# naipes no meio, no mesmo arranjo do baralho de verdade
-	var PIPS := {7: [[0, 0]], 8: [[0, -1], [0, 1]], 9: [[0, -1], [0, 0], [0, 1]], 0: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-		1: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 2: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
-		3: [[-1, -1], [1, -1], [0, -0.5], [-1, 0], [1, 0], [-1, 1], [1, 1]]}
-	var rkk := int(c.r)
-	var area := Rect2(r.position.x + r.size.x * 0.34, r.position.y + r.size.y * 0.22, r.size.x * 0.32, r.size.y * 0.56)
-	if rkk == 7:
-		var big := r.size.x * (0.3 if int(c.s) == 1 else 0.24)
-		if int(c.s) == 1:
-			ci.draw_arc(r.get_center(), r.size.x * 0.33, 0, TAU, 40, Color(0.1, 0.1, 0.1, 0.5), maxf(1.0, r.size.x * 0.012))
-		_suit(ci, r.get_center(), big, int(c.s), col)
-	else:
-		var ps: Array = PIPS.get(rkk, [[0, 0]])
-		var psz := r.size.x * 0.095
-		for pp in ps:
-			_suit(ci, area.get_center() + Vector2(float(pp[0]) * area.size.x * 0.5, float(pp[1]) * area.size.y * 0.5), psz, int(c.s), col)
-	ci.draw_string(f, r.end - Vector2(r.size.x * 0.05 + fs * 0.62, fs * 0.2), RANKS[int(c.r)], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+	CARDS.draw_face(ci, r, c, st, is_manilha(c), hl)
 	_draw_manilha_tag(ci, r, c)
 
 

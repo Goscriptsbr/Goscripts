@@ -125,7 +125,10 @@ function onMsg(c, op, payload) {
       if (box) {
         mailbox.delete(code);
         saveSoon();
-        for (const x of box) sendJ(c, { t: "fmsg", kind: x.kind, from: x.from, name: x.name });
+        for (const x of box) {
+          if (x.kind === "pm") sendJ(c, { t: "pm", from: x.from, name: x.name, txt: x.txt, ts: x.ts });
+          else sendJ(c, { t: "fmsg", kind: x.kind, from: x.from, name: x.name });
+        }
       }
       break;
     }
@@ -263,6 +266,26 @@ function onMsg(c, op, payload) {
         mailbox.set(to, box);
       }
       sendJ(c, { t: "fsent", kind, to: String(m.to || "").toUpperCase(), delivered: !!(f && f !== c) });
+      break;
+    }
+    case "pm": { // mensagem para um amigo (se estiver offline, fica guardada)
+      const to = String(m.to || "").toUpperCase();
+      const txt = String(m.txt || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
+      if (!c.code || !txt || !/^[A-Z0-9]{4,8}$/.test(to) || to === c.code) return;
+      const now = Date.now();
+      if (c.pmT && now - c.pmT < 700) return; // sem flood
+      c.pmT = now;
+      const f = clients.get(to);
+      const msg = { from: c.code, name: c.name, txt, ts: now };
+      if (f) sendJ(f, { t: "pm", ...msg });
+      else {
+        const box = mailbox.get(to) || [];
+        box.push({ kind: "pm", ...msg });
+        while (box.length > 80) box.shift();
+        mailbox.set(to, box);
+        saveSoon();
+      }
+      sendJ(c, { t: "pm_ok", to, delivered: !!f, ts: now });
       break;
     }
     case "invite": {

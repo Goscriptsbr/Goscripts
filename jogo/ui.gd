@@ -314,7 +314,7 @@ func refresh_top() -> void:
 	grana_lbl.text = str(int(s.get("grana", 0)))
 	if spin_top_btn != null:
 		_set_badge(spin_top_btn, "!" if game.can_spin() else "")
-		var nin: int = game.save.get("f_in", []).size()
+		var nin: int = game.save.get("f_in", []).size() + unread_total()
 		_set_badge(fr_btn, str(nin) if nin > 0 else "")
 		var pp: int = game.pass_pending()
 		_set_badge(pass_top_btn, str(pp) if pp > 0 else "")
@@ -2007,6 +2007,158 @@ func _friend_cancel(c: String) -> void:
 
 
 # mensagens de amizade vindas de outro jogador
+# ---------------------------------------------------------------- conversa com amigos
+const PM_QUICK := ["Bora jogar?", "Entra no lobby!", "Já vou!", "Agora não dá", "Kkkkkk", "Boa partida!"]
+var pm_code := ""
+var pm_name := ""
+var pm_list: VBoxContainer
+var pm_scroll: ScrollContainer
+var pm_edit: LineEdit
+
+
+func unread_total() -> int:
+	var tot := 0
+	for k in game.save.get("chat_unread", {}).keys():
+		tot += int(game.save.chat_unread[k])
+	return tot
+
+
+func _pm_store(code: String, me: bool, txt: String, ts: int) -> void:
+	if not game.save.has("chats"):
+		game.save.chats = {}
+	var arr: Array = game.save.chats.get(code, [])
+	arr.append({"me": me, "txt": txt, "ts": ts})
+	while arr.size() > 60:
+		arr.pop_front()
+	game.save.chats[code] = arr
+
+
+func got_pm(code: String, nm: String, txt: String, ts: int) -> void:
+	_pm_store(code, false, txt, ts)
+	if pm_code == code and has_modal():
+		_pm_render()
+	else:
+		if not game.save.has("chat_unread"):
+			game.save.chat_unread = {}
+		game.save.chat_unread[code] = int(game.save.chat_unread.get(code, 0)) + 1
+		say("Mensagem de %s: %s" % [nm, txt])
+		if cur == "amigos":
+			friends_refresh()
+	game.write_save()
+	refresh_top()
+
+
+func open_pm(code: String, nm: String) -> void:
+	close_modal()
+	pm_code = code
+	pm_name = nm
+	if game.save.has("chat_unread"):
+		game.save.chat_unread.erase(code)
+		game.write_save()
+		refresh_top()
+	modal_layer = Control.new()
+	modal_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(modal_layer)
+	var dimr := ColorRect.new()
+	dimr.color = Color(0, 0, 0, 0.6)
+	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(dimr)
+	var cc := CenterContainer.new()
+	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(cc)
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.05, 0.1, 0.97), 26, Color("2f7fd6"), 3, 20))
+	cc.add_child(p)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	p.add_child(margin(vb, 18))
+	var hr := HBoxContainer.new()
+	vb.add_child(hr)
+	var tl := mk_lbl("Conversa com " + nm, 28, Color("f4c542"), 4)
+	tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	hr.add_child(tl)
+	var xb := mk_btn("FECHAR", 130, 48, GRAY, 18)
+	xb.pressed.connect(func():
+		pm_code = ""
+		close_modal()
+		if cur == "amigos":
+			friends_refresh())
+	hr.add_child(xb)
+	pm_scroll = ScrollContainer.new()
+	pm_scroll.custom_minimum_size = Vector2(760, 300)
+	pm_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	pm_scroll.add_theme_stylebox_override("panel", sbox(Color(0, 0, 0, 0.3), 16))
+	vb.add_child(pm_scroll)
+	pm_list = VBoxContainer.new()
+	pm_list.add_theme_constant_override("separation", 6)
+	pm_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pm_scroll.add_child(pm_list)
+	var qr := HBoxContainer.new()
+	qr.add_theme_constant_override("separation", 6)
+	vb.add_child(qr)
+	for q in PM_QUICK:
+		var qb := mk_btn(q, 0, 40, Color("24304a"), 15)
+		qb.pressed.connect(func(): _pm_send(q))
+		qr.add_child(qb)
+	var er := HBoxContainer.new()
+	er.add_theme_constant_override("separation", 8)
+	vb.add_child(er)
+	pm_edit = LineEdit.new()
+	pm_edit.placeholder_text = "escreva uma mensagem..."
+	pm_edit.max_length = 120
+	pm_edit.custom_minimum_size = Vector2(620, 52)
+	pm_edit.add_theme_font_size_override("font_size", 20)
+	pm_edit.text_submitted.connect(func(_t): _pm_send(pm_edit.text))
+	er.add_child(pm_edit)
+	var sb := mk_btn("ENVIAR", 130, 52, GREEN, 20)
+	sb.pressed.connect(func(): _pm_send(pm_edit.text))
+	er.add_child(sb)
+	_pm_render()
+
+
+func _pm_send(txt: String) -> void:
+	txt = txt.strip_edges().left(120)
+	if txt == "" or pm_code == "":
+		return
+	if not game.net.server_ok:
+		say("Sem conexão com o servidor agora.")
+		return
+	game.net.world_send({"t": "pm", "to": pm_code, "txt": txt})
+	_pm_store(pm_code, true, txt, int(Time.get_unix_time_from_system() * 1000))
+	game.write_save()
+	if pm_edit != null and is_instance_valid(pm_edit):
+		pm_edit.text = ""
+	_pm_render()
+
+
+func _pm_render() -> void:
+	if pm_list == null or not is_instance_valid(pm_list):
+		return
+	for ch in pm_list.get_children():
+		ch.queue_free()
+	var arr: Array = game.save.get("chats", {}).get(pm_code, [])
+	if arr.is_empty():
+		pm_list.add_child(mk_lbl("Nenhuma mensagem ainda. Mande um oi!", 18, Color(1, 1, 1, 0.5), 2))
+	for msg in arr:
+		var me: bool = bool(msg.me)
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_END if me else BoxContainer.ALIGNMENT_BEGIN
+		pm_list.add_child(row)
+		var bub := PanelContainer.new()
+		bub.add_theme_stylebox_override("panel", sbox(Color("1d6b45") if me else Color("2a3346"), 14))
+		var l := mk_lbl(str(msg.txt), 19, Color.WHITE, 0)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size = Vector2(minf(520.0, 30.0 + str(msg.txt).length() * 11.0), 0)
+		bub.add_child(margin(l, 8))
+		row.add_child(bub)
+	await get_tree().process_frame
+	if pm_scroll != null and is_instance_valid(pm_scroll):
+		pm_scroll.scroll_vertical = 100000
+
+
 func friend_msg(kind: String, c: String, nm: String) -> void:
 	match kind:
 		"req":
@@ -2194,6 +2346,13 @@ func _friends_render(list: Array) -> void:
 			hb.add_child(lb)
 		elif status == "jogando":
 			hb.add_child(mk_lbl("em partida...", 15, Color("ffb020"), 2))
+		# conversa (funciona até com o amigo offline: ele recebe quando entrar)
+		var un: int = int(game.save.get("chat_unread", {}).get(str(f.code), 0))
+		var mb := mk_btn("MSG" + (" (%d)" % un if un > 0 else ""), 86 if un == 0 else 104, 46, Color("e67e22") if un > 0 else Color("2f7fd6"), 15)
+		var fc2 := str(f.code)
+		var fn2 := nm
+		mb.pressed.connect(func(): open_pm(fc2, fn2))
+		hb.add_child(mb)
 		var rb := mk_btn("✕", 46, 46, Color("4a2228"), 18)
 		var fcode := str(f.code)
 		rb.pressed.connect(func(): confirm("REMOVER AMIGO?", "Tirar %s da sua lista de amigos?" % nm, "REMOVER", _friend_remove.bind(fcode), "CANCELAR", func(): pass))
@@ -2631,12 +2790,12 @@ func _build_shop() -> void:
 	tabs.add_theme_constant_override("separation", 14)
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(tabs)
-	for k in [["felt", "MESAS"], ["cue", "TACOS"]]:
+	for k in [["felt", "MESAS"], ["cue", "TACOS"], ["deck", "BARALHOS"]]:
 		var b := mk_btn(k[1], 220, 54, GRAY, 26)
 		b.pressed.connect(_shop_tab.bind(k[0]))
 		tab_btns[k[0]] = b
 		tabs.add_child(b)
-	for k in [["cue", "TACOS"], ["felt", "MESAS"]]:
+	for k in [["cue", "TACOS"], ["felt", "MESAS"], ["deck", "BARALHOS"]]:
 		var sb := mk_btn(k[1], 220, 54, GRAY, 26)
 		sb.pressed.connect(_inv_sub.bind(k[0]))
 		inv_btns[k[0]] = sb
@@ -2856,6 +3015,8 @@ func _process(delta: float) -> void:
 
 
 var friends_scroll: ScrollContainer
+var hear_btn: Button
+var micb_btn: Button
 var _synth_release := false
 
 
@@ -2964,12 +3125,14 @@ func _shop_refresh() -> void:
 	var items: Array = []
 	var owned_l: Array = game.save.owned
 	if shop_tab == "inv":
-		for it in (game.CUES + game.MONTHLY if inv_sub == "cue" else game.FELTS):
-			if owned_l.has(it.id):
+		var src: Array = game.CUES + game.MONTHLY if inv_sub == "cue" else (game.DECKS if inv_sub == "deck" else game.FELTS)
+		for it in src:
+			if owned_l.has(it.id) or it.id == "dk_classico":
 				items.append(it)
 	else:
-		for it in (game.FELTS if shop_tab == "felt" else game.CUES):
-			if not owned_l.has(it.id):
+		var src2: Array = game.FELTS if shop_tab == "felt" else (game.DECKS if shop_tab == "deck" else game.CUES)
+		for it in src2:
+			if not owned_l.has(it.id) and it.id != "dk_classico":
 				items.append(it)
 	if items.is_empty():
 		var el := mk_lbl("Você já tem todos os itens desta aba!\nVeja tudo em INVENTÁRIO.", 26, Color(1, 1, 1, 0.8), 4)
@@ -2979,7 +3142,8 @@ func _shop_refresh() -> void:
 		return
 	for it in items:
 		var is_cue: bool = it.has("shaft")
-		var equipped: String = game.save.cue if is_cue else game.save.felt
+		var is_deck: bool = it.has("deck")
+		var equipped: String = game.save.cue if is_cue else ("dk_" + str(game.save.get("deck", "classico")) if is_deck else game.save.felt)
 		var card := PanelContainer.new()
 		card.custom_minimum_size = Vector2(212, 404)
 		card.add_theme_stylebox_override("panel", sbox(NAVY, 22, Color(1, 1, 1, 0.22) if it.id != equipped else GOLD, 3 if it.id != equipped else 5, 10))
@@ -2992,6 +3156,8 @@ func _shop_refresh() -> void:
 		pv.clip_contents = true
 		if is_cue:
 			_cue_preview(pv, it, Vector2(60, 100), 140.0, -40.0, 22.0, 0.85, fx_nodes)
+		elif is_deck:
+			_deck_preview(pv, str(it.deck))
 		else:
 			var wood := ColorRect.new()
 			wood.color = Color("5b3a1e")
@@ -3030,8 +3196,11 @@ func _shop_refresh() -> void:
 			vb.add_child(_stat_row("Precisão", int(it.prec)))
 			vb.add_child(_stat_row("Efeito", int(it.spin)))
 		else:
-			vb.add_child(mk_lbl(it.tag, 16, Color(1, 1, 1, 0.65)))
-		var owned: bool = game.save.owned.has(it.id)
+			var tg := mk_lbl(it.tag, 16, Color(1, 1, 1, 0.65))
+			tg.custom_minimum_size = Vector2(184, 0)
+			tg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			vb.add_child(tg)
+		var owned: bool = game.save.owned.has(it.id) or it.id == "dk_classico"
 		var btn: Button
 		if it.id == equipped:
 			btn = mk_btn("EM USO", 184, 56, GREEN, 24)
@@ -3060,7 +3229,27 @@ func _shop_refresh() -> void:
 		vb.add_child(btn)
 
 
+func _deck_preview(pv: Control, style_id: String) -> void:
+	var CARDS = load("res://cards.gd")
+	var st: Dictionary = CARDS.style(style_id)
+	var dc := Control.new()
+	dc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dc.draw.connect(func():
+		dc.draw_set_transform(Vector2(62, 78), -0.18, Vector2.ONE)
+		CARDS.draw_back(dc, Rect2(-36, -52, 72, 104), st)
+		dc.draw_set_transform(Vector2(120, 78), 0.16, Vector2.ONE)
+		CARDS.draw_face(dc, Rect2(-36, -52, 72, 104), {"r": 6, "s": 2}, st, false, false)
+		dc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE))
+	pv.add_child(dc)
+
+
 func _equip(id: String) -> void:
+	if id.begins_with("dk_"):
+		game.save.deck = id.substr(3)
+		game.write_save()
+		_shop_refresh()
+		return
 	var is_felt := false
 	for f in game.FELTS:
 		if f.id == id:
@@ -3142,6 +3331,10 @@ func _build_settings() -> void:
 	sfx_btn.pressed.connect(_toggle.bind("sfx"))
 	vib_btn = mk_btn("", 420, 76, GREEN, 30)
 	vib_btn.pressed.connect(_toggle.bind("vib"))
+	hear_btn = mk_btn("", 300, 64, GREEN, 22)
+	hear_btn.pressed.connect(_toggle.bind("voice_hear"))
+	micb_btn = mk_btn("", 300, 64, GREEN, 22)
+	micb_btn.pressed.connect(_toggle.bind("voice_mic"))
 	var acc := PanelContainer.new()
 	acc.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	acc.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.09, 0.86), 24, Color(1, 1, 1, 0.22), 2, 8))
@@ -3181,6 +3374,12 @@ func _build_settings() -> void:
 	vib_btn.add_theme_font_size_override("font_size", 24)
 	tg.add_child(sfx_btn)
 	tg.add_child(vib_btn)
+	var tg2 := HBoxContainer.new()
+	tg2.add_theme_constant_override("separation", 16)
+	tg2.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_child(tg2)
+	tg2.add_child(hear_btn)
+	tg2.add_child(micb_btn)
 	var back := mk_btn("VOLTAR", 240, 64, GRAY, 28)
 	back.pressed.connect(show_screen.bind("main"))
 	v.add_child(back)
@@ -3205,7 +3404,7 @@ func _cycle_timer() -> void:
 
 
 func _toggle(k: String) -> void:
-	game.save[k] = not game.save[k]
+	game.save[k] = not bool(game.save.get(k, true))
 	game.write_save()
 	_settings_refresh()
 
@@ -3215,7 +3414,9 @@ func _settings_refresh() -> void:
 		name_edit.text = str(game.save.get("name", ""))
 	sfx_btn.text = "SOM: " + ("LIGADO" if game.save.sfx else "DESLIGADO")
 	vib_btn.text = "VIBRAÇÃO: " + ("LIGADA" if game.save.vib else "DESLIGADA")
-	for pair in [[sfx_btn, game.save.sfx], [vib_btn, game.save.vib]]:
+	hear_btn.text = "OUVIR VOZ: " + ("SIM" if game.save.get("voice_hear", true) else "NÃO")
+	micb_btn.text = "MEU MICROFONE: " + ("SIM" if game.save.get("voice_mic", true) else "NÃO")
+	for pair in [[sfx_btn, game.save.sfx], [vib_btn, game.save.vib], [hear_btn, game.save.get("voice_hear", true)], [micb_btn, game.save.get("voice_mic", true)]]:
 		var b: Button = pair[0]
 		var col: Color = GREEN if pair[1] else GRAY
 		b.add_theme_stylebox_override("normal", sbox(col, 20, col.lightened(0.35), 3, 8))

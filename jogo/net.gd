@@ -336,6 +336,9 @@ func _world_msg(m: Dictionary) -> void:
 		"lobby":
 			if game.ui != null:
 				game.ui.lobby_update(m)
+		"pm":
+			if game.ui != null:
+				game.ui.got_pm(str(m.get("from", "")), str(m.get("name", "")), str(m.get("txt", "")).left(120), int(m.get("ts", 0)))
 		"invite_fail":
 			if game.ui != null:
 				game.ui.say(str(m.get("msg", "Convite não deu certo")))
@@ -434,6 +437,29 @@ func send_shot(d: Dictionary) -> void:
 
 func send_tstate(d: Dictionary) -> void:
 	r_tstate.rpc(d)
+
+
+# ---- chat e voz da partida (vai para todos os outros da mesa)
+func send_chat(txt: String) -> void:
+	if multiplayer.multiplayer_peer != null and active:
+		r_chat.rpc(txt)
+
+
+func send_voice(data: PackedByteArray) -> void:
+	if multiplayer.multiplayer_peer != null and active:
+		r_voice.rpc(data)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func r_chat(txt: String) -> void:
+	if game.chat != null:
+		game.chat.add(multiplayer.get_remote_sender_id(), str(txt).left(40), false)
+
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func r_voice(data: PackedByteArray) -> void:
+	if game.chat != null and data.size() <= 4000:
+		game.chat.got_voice(multiplayer.get_remote_sender_id(), data)
 
 
 var tbytes := 0

@@ -9,7 +9,16 @@ const R := 13.0
 const HW := 500.0
 const HH := 250.0
 var splash_node: Node = null
-const APP_VERSION := 57  # sobe a cada APK novo (igual ao versao.json do servidor)
+var chat: CanvasLayer
+# baralhos do truco (estilo das cartas); o "classico" é de graça
+const DECKS := [
+	{"id": "dk_classico", "deck": "classico", "name": "Clássico", "price": 0, "tag": "O baralho azul de sempre"},
+	{"id": "dk_esmeralda", "deck": "esmeralda", "name": "Esmeralda", "price": 900, "tag": "Verde com detalhes em ouro"},
+	{"id": "dk_neon", "deck": "neon", "name": "Neon", "price": 1000, "tag": "Cartas escuras com brilho neon"},
+	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
+	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
+]
+const APP_VERSION := 58  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -182,7 +191,7 @@ var rot_count := 0
 var ui: CanvasLayer
 var save := {
 	"coins": 150, "wins": 0, "losses": 0, "played": 0, "sfx": true, "vib": true,
-	"felt": "verde", "cue": "classico", "owned": ["verde", "classico"], "timer": 20, "grana": 0, "spin_day": "", "pass_got": [], "spins": 0, "name": "", "truco_wins": 0, "truco_losses": 0, "pcode": "", "friends": [], "f_out": [], "f_in": [], "f_dec": [],
+	"felt": "verde", "cue": "classico", "deck": "classico", "voice_hear": true, "voice_mic": true, "chats": {}, "owned": ["verde", "classico"], "timer": 20, "grana": 0, "spin_day": "", "pass_got": [], "spins": 0, "name": "", "truco_wins": 0, "truco_losses": 0, "pcode": "", "friends": [], "f_out": [], "f_in": [], "f_dec": [],
 }
 var white_tex: ImageTexture
 var atlas_vp: SubViewport
@@ -285,6 +294,9 @@ func _ready() -> void:
 	ui.game = self
 	add_child(ui)
 	ui.build()
+	chat = load("res://chat.gd").new()
+	add_child(chat)
+	chat.setup(self)
 	rack()
 	attract_kick()
 	var args := OS.get_cmdline_user_args()
@@ -803,6 +815,13 @@ func _ready() -> void:
 					ui.show_update(99, "http://127.0.0.1:18080/raw", "teste")
 					ui._update_download("http://127.0.0.1:18080/raw"))
 				get_tree().create_timer(60.0).timeout.connect(func(): get_tree().quit())
+			if a.begins_with("--pmopen="):
+				var pc := a.substr(9)
+				get_tree().create_timer(4.0).timeout.connect(func():
+					ui.open_pm(pc, "Pedro")
+					ui._pm_send("Bora! Cria o lobby que eu entro"))
+			if a.begins_with("--deck="):
+				save.deck = a.substr(7)
 			if a == "--lobbyask":
 				get_tree().create_timer(0.3).timeout.connect(func(): ui.lobby_create_ask(""))
 			if a.begins_with("--rewardtest="):
