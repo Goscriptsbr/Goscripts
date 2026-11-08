@@ -1,5 +1,5 @@
 {
-  "versao": 55,
+  "versao": 57,
   "url": "https://github.com/Goscriptsbr/Goscripts/raw/sinucou-apk/Sinucou.apk",
-  "notas": "Tela de carregamento na abertura (sem travadinha no GoScripts) e a mira de quem está jogando agora aparece igual para quem assiste."
+  "notas": "Atualização pelo app corrigida: agora baixa direto do GitHub sem erro 504."
 }

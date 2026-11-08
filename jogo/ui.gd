@@ -1322,6 +1322,7 @@ var upd_req: HTTPRequest
 var upd_bar: ProgressBar
 var upd_lbl: Label
 const UPD_FILE := "user://update.apk"
+var upd_try := 0
 
 
 # baixa o APK novo dentro do próprio jogo e abre a instalação do Android
@@ -1332,6 +1333,9 @@ func _update_download(url: String) -> void:
 	upd_req.download_file = UPD_FILE
 	upd_req.max_redirects = 10
 	upd_req.timeout = 600.0
+	# sem pedir compactado: o GitHub dava erro 504 tentando compactar o APK inteiro na hora
+	upd_req.accept_gzip = false
+	upd_req.use_threads = true
 	add_child(upd_req)
 	upd_req.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, _b: PackedByteArray):
 		var rq := upd_req
@@ -1339,8 +1343,13 @@ func _update_download(url: String) -> void:
 		if rq != null:
 			rq.queue_free()
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+			if upd_try < 3 and upd_lbl != null and is_instance_valid(upd_lbl):
+				upd_try += 1
+				upd_lbl.text = "O servidor demorou, tentando de novo (%d/3)..." % upd_try
+				get_tree().create_timer(2.0).timeout.connect(func(): _update_download(url))
+				return
 			if upd_lbl != null and is_instance_valid(upd_lbl):
-				upd_lbl.text = "Não consegui baixar (erro %d/%d). Tente PELO NAVEGADOR." % [result, code]
+				upd_lbl.text = "Não consegui baixar (erro %d/%d). Toque em PELO NAVEGADOR." % [result, code]
 			return
 		if upd_bar != null and is_instance_valid(upd_bar):
 			upd_bar.value = 100
@@ -1351,7 +1360,7 @@ func _update_download(url: String) -> void:
 			print("UPDTEST baixou ", FileAccess.get_file_as_bytes(UPD_FILE).size(), " bytes em ", path)
 			return
 		OS.shell_open(path))
-	var err := upd_req.request(url)
+	var err := upd_req.request(url, PackedStringArray(["User-Agent: Sinucou/" + str(game.APP_VERSION), "Accept: */*"]))
 	if err != OK:
 		upd_lbl.text = "Não consegui começar o download. Tente PELO NAVEGADOR."
 		return
