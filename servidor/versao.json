@@ -1,5 +1,5 @@
 {
- "versao": 60,
- "notas": "Aviso para segurar o botão VOZ ao falar. Cartas de figura corrigidas.",
- "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/f936e6445983461b7b6eaec7ffdf5de11119e2d0/Sinucou.apk"
+ "versao": 61,
+ "notas": "Voz mais forte e com medidor; botão TESTAR MIC nos Ajustes. Balão do chat não cobre mais a mesa. Servidor mais tolerante a queda.",
+ "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/b95ea2f9ece2e8ed95650670d87500919356cc86/Sinucou.apk"
 }

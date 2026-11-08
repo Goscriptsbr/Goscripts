@@ -18,7 +18,7 @@ const DECKS := [
 	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
 	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
 ]
-const APP_VERSION := 60  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 61  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -160,6 +160,7 @@ var last_team := -1
 var net: Node
 var net_seat := 0
 var net_wait := false
+var net_wait_t := 0.0
 var net_shot_q := {}
 var shot_ang := 0.0
 var shot_spv := Vector2.ZERO
@@ -167,6 +168,7 @@ var net_pending: Dictionary = {}
 var net_aim_t := 0.0
 var net_auto := false
 var net_auto_t := 0.0
+var net_dbg_t := 0.0
 var net_tgt: Dictionary = {}
 var impacts: Array = []
 var shot_pow := 3
@@ -2325,19 +2327,19 @@ func net_remote_aim(d: Dictionary) -> void:
 	net_tgt = d
 
 
-func net_lost() -> void:
+func net_lost(why: String = "") -> void:
 	var tn = ui.truco_node if ui != null else null
 	if tn != null and is_instance_valid(tn) and tn.netmode != "":
 		var was_over: bool = tn.phase == "over"
 		if not was_over:
 			ui.close_truco()
-			ui.say("O adversário saiu da partida.")
+			ui.say(why if why != "" else "O adversário saiu da partida.")
 		return
 	if mode == Mode.ONLINE and st != St.MENU:
 		var was_over := st == St.OVER
 		go_menu()
 		if not was_over:
-			ui.say("O adversário saiu da partida.")
+			ui.say(why if why != "" else "O adversário saiu da partida.")
 	elif ui != null:
 		ui.online_status("Conexão encerrada.")
 	if net_auto:
@@ -2348,6 +2350,7 @@ func net_lost() -> void:
 func net_tick(delta: float) -> void:
 	if mode != Mode.ONLINE or net == null or not net.active:
 		return
+	net_wait_t = (net_wait_t + delta) if (st == St.ROLL and net_wait) else 0.0
 	if st == St.AIM and shooter() != net_seat and not net_tgt.is_empty():
 		var k := 1.0 - exp(-delta * 16.0)
 		aim_angle = lerp_angle(aim_angle, float(net_tgt.a), k)
@@ -2372,6 +2375,12 @@ func net_tick(delta: float) -> void:
 					aim_angle = (t.pos - cue.pos).angle() + randf_range(-0.08, 0.08)
 				power = 0.55
 				shoot(0.6)
+	if net_auto and OS.get_cmdline_user_args().has("--long"):
+		net_dbg_t += delta
+		if net_dbg_t > 1.0:
+			net_dbg_t = 0.0
+			print("ST seat=", net_seat, " st=", st, " shooter=", shooter(), " bots=", bot_seats, " cue_on=", get_ball(0).on, " cue_vis=", cue_s.visible, " snaps=", net.snaps)
+		return
 	if net_auto and net.snaps >= 8 and st == St.AIM:
 		net_auto_t += delta
 		if net_auto_t > 1.5:
@@ -3222,6 +3231,13 @@ func _draw_hud() -> void:
 				ctext("SUA VEZ", cx, 210, 54, Color(1, 0.9, 0.35, al))
 	if msg_t > 0.0 and st != St.OVER:
 		ctext(msg, cx, 108, 30, Color("ffe066"))
+	if mode == Mode.ONLINE and net_wait_t > 3.0 and st == St.ROLL:
+		# a tacada já parou aqui, mas o resultado vem do anfitrião: deixa claro que é a conexão dele
+		var hn: String = str(seat_names[0]) if net4 and seat_names.size() > 0 else str(players[0])
+		var dots := ".".repeat(1 + int(Time.get_ticks_msec() / 400) % 3)
+		hud.draw_rect(Rect2(cx - 330, 300, 660, 70), Color(0, 0, 0, 0.7), true)
+		ctext("Aguardando %s%s" % [hn, dots], cx, 332, 26, Color.WHITE)
+		ctext("(conexão lenta ou o jogo dele foi minimizado)", cx, 360, 17, Color(1, 1, 1, 0.7))
 	if human_turn():
 		var br := bar_rect()
 		hud.draw_rect(br.grow(5), Color(0, 0, 0, 0.55), true)

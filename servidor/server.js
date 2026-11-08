@@ -502,7 +502,7 @@ function leaveRoom(c) {
     for (const p of r.members) {
       p.room = null; p.peer = 0; p.status = "online";
       if (p.party) parties.add(p.party);
-      if (!p.socket.destroyed) sendJ(p, { t: "peer_left", peer: left, end: true });
+      if (!p.socket.destroyed) sendJ(p, { t: "peer_left", peer: left, end: true, name: c.name || "", host: wasHost });
     }
     r.members = [];
   }
@@ -549,7 +549,9 @@ function drop(c) {
 // derruba conexões mortas
 setInterval(() => {
   for (const c of clients.values()) {
-    if (!c.alive) { drop(c); continue; }
+    // celular com o jogo minimizado ou sinal ruim: dá até ~1 min antes de derrubar
+    if (c.alive) c.miss = 0;
+    else if ((c.miss = (c.miss || 0) + 1) >= 2) { drop(c); continue; }
     c.alive = false;
     sendRaw(c, 9, Buffer.alloc(0));
   }
@@ -600,6 +602,13 @@ function refreshApk(tries) {
   });
 }
 setTimeout(() => refreshApk(0), 2000);
+
+// plano grátis da Render dorme sem acessos: enquanto tem gente conectada, o servidor se chama a cada 10 min
+setInterval(() => {
+  if (!clients.size) return;
+  const u = (process.env.PUBLIC_URL || "https://sinucou.onrender.com") + "/versao";
+  https.get(u, (r) => r.resume()).on("error", () => {});
+}, 10 * 60 * 1000);
 setInterval(() => refreshApk(0), 10 * 60 * 1000);
 
 const server = http.createServer((req, res) => {

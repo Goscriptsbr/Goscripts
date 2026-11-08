@@ -311,7 +311,11 @@ func _world_msg(m: Dictionary) -> void:
 			if active:
 				active = false
 				joined = false
-				game.net_lost()
+				var who := str(m.get("name", ""))
+				if bool(m.get("host", false)) and who != "":
+					game.net_lost("%s (quem criou a sala) saiu ou perdeu a conexão. Partida encerrada." % who)
+				else:
+					game.net_lost()
 		"search":
 			if game.ui != null:
 				game.ui.search_results(str(m.get("q", "")), m.get("list", []))

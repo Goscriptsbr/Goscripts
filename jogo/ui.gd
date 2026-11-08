@@ -3380,6 +3380,22 @@ func _build_settings() -> void:
 	v.add_child(tg2)
 	tg2.add_child(hear_btn)
 	tg2.add_child(micb_btn)
+	var mt := mk_btn("TESTAR MIC", 230, 64, Color("16897f"), 20)
+	mt.button_down.connect(func():
+		if game.chat.mic_test_start():
+			mt.text = "GRAVANDO..."
+		else:
+			say("Permita o MICROFONE para o Sinucou e tente de novo."))
+	mt.button_up.connect(func():
+		var pk: float = game.chat.mic_test_stop()
+		mt.text = "TESTAR MIC"
+		if pk < 0.0:
+			return
+		if pk < 0.003:
+			say("O microfone não captou som. Confira a permissão de MICROFONE do Sinucou nas configurações do Android.")
+		else:
+			say("Microfone OK! Você deve ouvir sua voz agora."))
+	tg2.add_child(mt)
 	var back := mk_btn("VOLTAR", 240, 64, GRAY, 28)
 	back.pressed.connect(show_screen.bind("main"))
 	v.add_child(back)

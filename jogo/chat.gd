@@ -30,6 +30,13 @@ var voice_buf := PackedByteArray()
 var voice_send_t := 0.0
 var listeners := {}  # peer -> {player, playback}
 var talk_t0 := 0.0
+var mic_idle_t := 0.0
+var mic_peak := 0.0
+var mic_level := 0.0
+var mic_gain := 2.0
+var mic_frac := 0.0
+var mic_testing := false
+var test_rec := PackedByteArray()
 var hint_txt := ""
 var hint_t := 0.0
 
@@ -171,6 +178,14 @@ func _process(delta: float) -> void:
 			bubbles.remove_at(i)
 	if talking:
 		_voice_pump(delta)
+	elif mic_testing:
+		test_rec.append_array(_read_mic())
+		if test_rec.size() > VOICE_RATE * 10:
+			mic_test_stop()
+	elif mic_player != null and mic_player.playing:
+		mic_idle_t += delta
+		if mic_idle_t > 8.0:
+			mic_player.stop()
 	if active and game.net_auto and OS.get_cmdline_user_args().has("--chattest"):
 		test_t += delta
 		if test_t > 3.0 and not test_done:
@@ -266,9 +281,17 @@ func _draw_bubbles() -> void:
 		var tcol := Color(1, 1, 1, ha) if talking else Color(0.12, 0.08, 0, ha)
 		for i in lines.size():
 			draw_c.draw_string(f, hr.position + Vector2(16, 34 + 26 * i), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 19, tcol)
+		if talking:
+			# medidor do microfone: se não mexe, o celular não está captando a voz
+			var lv := clampf(sqrt(mic_level * 4.0), 0.0, 1.0)
+			var mr := Rect2(hr.position + Vector2(16, hr.size.y + 6), Vector2(hw, 8))
+			draw_c.draw_rect(mr, Color(0, 0, 0, 0.55))
+			draw_c.draw_rect(Rect2(mr.position, Vector2(hw * lv, 8)), Color("3ddc84"))
 	for b in bubbles:
 		var p := _anchor(int(b.abs))
 		var pop := 1.0 + 0.2 * maxf(0.0, 1.0 - float(b.t) * 6.0)
+		if _truco() == null:
+			pop = 1.0
 		var fade := clampf((3.5 - float(b.t)) / 0.4, 0.0, 1.0) if not b.voice else 1.0
 		var txt: String = ("FALANDO..." if b.voice else str(b.txt))
 		var fs := int(22 * pop)
@@ -278,9 +301,17 @@ func _draw_bubbles() -> void:
 		var vs := get_viewport().get_visible_rect().size
 		var up: bool = p.y > vs.y * 0.6  # placa embaixo: balão em cima dela
 		var r := Rect2(p + (Vector2(-bw / 2.0, -14 - bh) if up else Vector2(-bw / 2.0, 14)), Vector2(bw, bh))
+		var flat: bool = _truco() == null
+		if flat:
+			# sinuca: o balão fica em cima da própria placa do time (no alto da tela), sem cobrir a mesa e as caçapas
+			bw = minf(bw, 400.0)
+			bh = 60.0
+			r = Rect2(Vector2(p.x - bw / 2.0, 9), Vector2(bw, bh))
 		r.position.x = clampf(r.position.x, 8, vs.x - bw - 8)
 		var bg := Color(1, 1, 1, 0.97 * fade) if not b.voice else Color(0.08, 0.55, 0.45, 0.95)
-		if up:
+		if flat:
+			pass
+		elif up:
 			draw_c.draw_colored_polygon(PackedVector2Array([p + Vector2(-10, -16), p + Vector2(10, -16), p + Vector2(0, -2)]), bg)
 		else:
 			draw_c.draw_colored_polygon(PackedVector2Array([p + Vector2(-10, 16), p + Vector2(10, 16), p + Vector2(0, 2)]), bg)
@@ -291,35 +322,56 @@ func _draw_bubbles() -> void:
 
 
 # ---------------------------------------------------------------- voz (segurar para falar)
-func _ensure_mic() -> bool:
-	if capture != null:
+const MIC_PERM := "android.permission.RECORD_AUDIO"
+
+
+func _mic_allowed() -> bool:
+	if OS.get_name() != "Android":
 		return true
-	if OS.get_name() == "Android":
-		OS.request_permissions()
-	mic_bus = AudioServer.get_bus_index("VozMic")
-	if mic_bus < 0:
-		AudioServer.add_bus()
-		mic_bus = AudioServer.bus_count - 1
-		AudioServer.set_bus_name(mic_bus, "VozMic")
-		AudioServer.set_bus_mute(mic_bus, true)
-		AudioServer.add_bus_effect(mic_bus, AudioEffectCapture.new())
-	capture = AudioServer.get_bus_effect(mic_bus, 0)
-	mic_player = AudioStreamPlayer.new()
-	mic_player.stream = AudioStreamMicrophone.new()
-	mic_player.bus = "VozMic"
-	add_child(mic_player)
+	if OS.get_granted_permissions().has(MIC_PERM):
+		return true
+	# pede a permissão (a janela do Android aparece); quem negou precisa liberar nas configurações
+	OS.request_permission(MIC_PERM)
+	_hint("Permita o MICROFONE para o Sinucou\ne depois segure o botão de novo.", 5.0)
+	return false
+
+
+func _ensure_mic() -> bool:
+	if capture == null:
+		mic_bus = AudioServer.get_bus_index("VozMic")
+		if mic_bus < 0:
+			AudioServer.add_bus()
+			mic_bus = AudioServer.bus_count - 1
+			AudioServer.set_bus_name(mic_bus, "VozMic")
+			AudioServer.set_bus_send(mic_bus, "Master")
+			AudioServer.set_bus_mute(mic_bus, true)
+			var cap := AudioEffectCapture.new()
+			cap.buffer_length = 0.5
+			AudioServer.add_bus_effect(mic_bus, cap)
+		capture = AudioServer.get_bus_effect(mic_bus, 0)
+	if mic_player == null:
+		mic_player = AudioStreamPlayer.new()
+		mic_player.stream = AudioStreamMicrophone.new()
+		mic_player.bus = "VozMic"
+		add_child(mic_player)
+	# o microfone fica ligado uns segundos depois de soltar (ligar e desligar toda hora falha em alguns celulares)
+	if not mic_player.playing:
+		mic_player.play()
+	mic_idle_t = 0.0
 	return true
 
 
 func _talk_start() -> void:
-	if not bool(game.save.get("voice_mic", true)):
+	if not bool(game.save.get("voice_mic", true)) or mic_testing:
+		return
+	if not _mic_allowed():
 		return
 	_ensure_mic()
 	capture.clear_buffer()
-	mic_player.play()
 	talking = true
 	talk_t0 = clock
 	hint_t = 0.0
+	mic_peak = 0.0
 	voice_buf.clear()
 	add(multiplayer.get_unique_id(), "", true)
 
@@ -328,15 +380,16 @@ func _talk_stop() -> void:
 	if not talking:
 		return
 	talking = false
-	if mic_player != null:
-		mic_player.stop()
 	_flush_voice()
+	var held := clock - talk_t0
 	# só tocou rápido: avisa que precisa segurar
-	if clock - talk_t0 < 0.4:
+	if held < 0.4:
 		for i in range(bubbles.size() - 1, -1, -1):
 			if bubbles[i].voice and int(bubbles[i].abs) == abs_seat(multiplayer.get_unique_id()):
 				bubbles.remove_at(i)
 		_hint("Para falar, SEGURE o botão VOZ\nenquanto fala e solte no fim.", 4.0)
+	elif held > 1.5 and mic_peak < 0.003:
+		_hint("O microfone não captou som.\nConfira a permissão de MICROFONE do Sinucou.", 5.0)
 
 
 func _hint(t: String, dur: float) -> void:
@@ -344,16 +397,41 @@ func _hint(t: String, dur: float) -> void:
 	hint_t = dur
 
 
-func _voice_pump(delta: float) -> void:
+# lê o que o microfone gravou e devolve em 8 kHz (com ganho automático para a voz não sair baixinha)
+func _read_mic() -> PackedByteArray:
+	var out := PackedByteArray()
+	if capture == null:
+		return out
 	var avail := capture.get_frames_available()
-	if avail > 0:
-		var frames: PackedVector2Array = capture.get_buffer(avail)
-		var step: float = AudioServer.get_mix_rate() / float(VOICE_RATE)
-		var pos := 0.0
-		while int(pos) < frames.size():
-			var v: Vector2 = frames[int(pos)]
-			voice_buf.append(_mulaw((v.x + v.y) * 0.5))
-			pos += step
+	if avail <= 0:
+		return out
+	var frames: PackedVector2Array = capture.get_buffer(avail)
+	var step: float = AudioServer.get_mix_rate() / float(VOICE_RATE)
+	var peak := 0.0
+	for v in frames:
+		peak = maxf(peak, absf((v.x + v.y) * 0.5))
+	mic_peak = maxf(mic_peak, peak)
+	mic_level = maxf(peak, mic_level * 0.85)
+	var want := clampf(0.6 / maxf(peak, 0.01), 1.0, 6.0)
+	mic_gain = lerpf(mic_gain, want, 0.3) if want < mic_gain else lerpf(mic_gain, want, 0.05)
+	# média de cada bloco (filtra o chiado) em vez de pegar uma amostra solta
+	var pos := mic_frac
+	while pos + step <= float(frames.size()):
+		var a := int(pos)
+		var b := int(pos + step)
+		var acc := 0.0
+		for i in range(a, b):
+			acc += (frames[i].x + frames[i].y) * 0.5
+		out.append(_mulaw(acc / float(maxi(1, b - a)) * mic_gain))
+		pos += step
+	mic_frac = pos - float(frames.size())
+	if mic_frac < 0.0:
+		mic_frac = 0.0
+	return out
+
+
+func _voice_pump(delta: float) -> void:
+	voice_buf.append_array(_read_mic())
 	voice_send_t += delta
 	if voice_send_t >= 0.12:
 		voice_send_t = 0.0
@@ -362,6 +440,48 @@ func _voice_pump(delta: float) -> void:
 	for b in bubbles:
 		if b.voice and b.abs == abs_seat(multiplayer.get_unique_id()):
 			b.t = 0.0
+
+
+# ---- teste do microfone nos Ajustes: segura para gravar, solta para ouvir
+func mic_test_start() -> bool:
+	if talking or not _mic_allowed():
+		return false
+	_ensure_mic()
+	capture.clear_buffer()
+	mic_testing = true
+	mic_peak = 0.0
+	test_rec = PackedByteArray()
+	return true
+
+
+func mic_test_stop() -> float:
+	if not mic_testing:
+		return -1.0
+	mic_testing = false
+	test_rec.append_array(_read_mic())
+	_play_local(test_rec)
+	return mic_peak
+
+
+func _play_local(data: PackedByteArray) -> void:
+	if data.is_empty():
+		return
+	var pl := AudioStreamPlayer.new()
+	var gen := AudioStreamGenerator.new()
+	gen.mix_rate = VOICE_RATE
+	gen.buffer_length = float(data.size()) / VOICE_RATE + 0.3
+	pl.stream = gen
+	pl.volume_db = 4.0
+	add_child(pl)
+	pl.play()
+	var pb: AudioStreamGeneratorPlayback = pl.get_stream_playback()
+	var out := PackedVector2Array()
+	out.resize(mini(data.size(), pb.get_frames_available()))
+	for i in out.size():
+		var sm := _unmulaw(data[i])
+		out[i] = Vector2(sm, sm)
+	pb.push_buffer(out)
+	get_tree().create_timer(gen.buffer_length + 0.5).timeout.connect(pl.queue_free)
 
 
 func _flush_voice() -> void:
@@ -381,6 +501,7 @@ func got_voice(peer: int, data: PackedByteArray) -> void:
 		gen.mix_rate = VOICE_RATE
 		gen.buffer_length = 0.6
 		pl.stream = gen
+		pl.volume_db = 4.0
 		add_child(pl)
 		pl.play()
 		listeners[peer] = {"player": pl, "pb": pl.get_stream_playback()}
@@ -396,7 +517,7 @@ func got_voice(peer: int, data: PackedByteArray) -> void:
 
 # compressão µ-law: 1 byte por amostra (voz a 8 kHz = 8 KB/s só enquanto fala)
 static func _mulaw(x: float) -> int:
-	x = clampf(x * 1.6, -1.0, 1.0)
+	x = clampf(x, -1.0, 1.0)
 	var mu := 255.0
 	var y := signf(x) * log(1.0 + mu * absf(x)) / log(1.0 + mu)
 	return clampi(int(round((y + 1.0) * 127.5)), 0, 255)
