@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Liz faz 1 aninho! 🎈</title>
+<title>Liz faz 1 aninho! | Convite</title>
 <meta name="description" content="Você está convidado para o aniversário de 1 ano da Liz — 20 de dezembro, às 14h.">
-<meta property="og:title" content="Liz faz 1 aninho! 🎈">
+<meta property="og:title" content="Liz faz 1 aninho!">
 <meta property="og:description" content="Domingo, 20 de dezembro de 2026, às 14h. Confirme sua presença pelo link.">
 <meta property="og:image" content="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgFvMYNn-IUm1A1sSnn-TJ2nkhi_g5Qr409lj5aIpg84X_0o_PMKIbm-A6_FV1wRv7-PS2qagP032ZTonNzAw1kltKecVyKUNd055kcehjFZVW7DSfZeIzuxMJ0_EpzL6OSiVHmrgmfdQx5/s1600/Branca-de-Neve-Cute-03.png">
 <meta name="theme-color" content="#1d5fd1">
@@ -22,6 +22,7 @@
     --raio:22px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  .i{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.18em}
   html{-webkit-text-size-adjust:100%}
   body{
     font-family:'Nunito',system-ui,sans-serif; color:var(--tinta);
@@ -47,7 +48,7 @@
   .balao::before{content:"";position:absolute;width:14px;height:10px;left:50%;bottom:-6px;transform:translateX(-50%);background:inherit;clip-path:polygon(50% 0,0 100%,100% 100%)}
   .balao::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:70px;background:rgba(31,42,68,.25);transform:translateX(-50%)}
   .balao span{position:absolute;top:14px;left:14px;width:12px;height:20px;border-radius:50%;background:rgba(255,255,255,.55);transform:rotate(25deg)}
-  .personagem{position:relative;width:min(230px,62vw);margin:0 auto -6px;z-index:2;animation:flutua 5s ease-in-out infinite}
+  .personagem{position:relative;width:min(165px,44vw);margin:0 auto -6px;z-index:2;animation:flutua 5s ease-in-out infinite}
   .personagem img{width:100%;height:auto;display:block;filter:drop-shadow(0 10px 14px rgba(31,42,68,.22))}
   .b1{background:var(--verm);margin-top:30px;animation-delay:-1s}
   .b2{background:var(--amar);width:72px;height:90px}
@@ -67,8 +68,8 @@
         border-image:repeating-linear-gradient(90deg,var(--azul) 0 22px,var(--amar) 22px 44px,var(--verm) 44px 66px) 8}
   .info{display:grid;gap:14px}
   .linha{display:flex;gap:14px;align-items:flex-start}
-  .ico{flex:0 0 44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem}
-  .ico.a{background:var(--azul-claro)} .ico.v{background:var(--verm-claro)} .ico.y{background:var(--amar-claro)}
+  .ico{flex:0 0 44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:1.3rem}
+  .ico.a{background:var(--azul-claro);color:var(--azul)} .ico.v{background:var(--verm-claro);color:var(--verm)} .ico.y{background:var(--amar-claro);color:#b07c00}
   .linha small{display:block;color:var(--suave);font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
   .linha strong{font-size:1.08rem;display:block;line-height:1.3}
   .linha .det{color:var(--suave);font-size:.95rem;margin-top:2px}
@@ -95,7 +96,7 @@
   .pessoa .pn{flex:1;font-weight:700;font-size:1.05rem;line-height:1.25}
   .pessoa .pn em{display:inline-block;font-style:normal;font-size:.7rem;background:var(--amar-claro);color:#8a6100;border-radius:99px;padding:2px 8px;margin-left:4px;vertical-align:middle}
   .opc{display:flex;gap:6px}
-  .opc button{appearance:none;border:2px solid #e3e7f0;background:#fff;border-radius:12px;padding:9px 11px;font:700 .9rem 'Nunito',sans-serif;cursor:pointer;color:var(--suave);min-width:76px}
+  .opc button{display:inline-flex;align-items:center;justify-content:center;gap:5px;appearance:none;border:2px solid #e3e7f0;background:#fff;border-radius:12px;padding:9px 11px;font:700 .9rem 'Nunito',sans-serif;cursor:pointer;color:var(--suave);min-width:76px}
   .opc button.on.sim{background:var(--verde);border-color:var(--verde);color:#fff}
   .opc button.on.nao{background:var(--verm);border-color:var(--verm);color:#fff}
   .opc button[disabled]{cursor:default}
@@ -107,10 +108,12 @@
   .aviso.ok{background:#e1f6ea;color:#14663a}
   .aviso.info{background:var(--amar-claro);color:#7a5600}
   .feito{text-align:center;padding:6px 0}
-  .feito .big{font-size:3.2rem}
+  .feito .big{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;margin:0 auto;background:#e1f6ea;color:var(--verde);font-size:2.4rem}
+  .feito .big.nao{background:var(--azul-claro);color:var(--azul)}
   .feito h2{margin:6px 0}
   .resumo{text-align:left;margin:14px 0;background:var(--creme);border-radius:14px;padding:12px 14px}
-  .resumo div{padding:3px 0}
+  .resumo div{padding:4px 0;display:flex;align-items:center;gap:8px;font-weight:600}
+  .resumo .r-sim .i{color:var(--verde)} .resumo .r-nao .i{color:var(--verm)} .resumo .r-pend .i{color:#b07c00}
   .carregando{text-align:center;color:var(--suave);padding:20px 0}
   .rodape{text-align:center;color:var(--suave);font-size:.8rem;margin-top:26px}
   .oculto{display:none!important}
@@ -119,6 +122,7 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol><symbol id="i-cal-plus" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v5M9.5 16.5h5"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol><symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol><symbol id="i-no" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></symbol><symbol id="i-wait" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></symbol></svg>
 <div class="confete" id="confete" aria-hidden="true"></div>
 
 <main class="wrap">
@@ -146,25 +150,25 @@
 
   <section class="card listrado">
     <div class="info">
-      <div class="linha"><div class="ico a">📅</div><div><small>Quando</small><strong>Domingo, 20 de dezembro de 2026</strong></div></div>
-      <div class="linha"><div class="ico y">🕑</div><div><small>Horário</small><strong>A partir das 14h</strong></div></div>
-      <div class="linha"><div class="ico a">🎁</div><div><small>O que levar</small><strong>Somente uma lembrancinha para a Liz</strong></div></div>
-      <div class="linha"><div class="ico v">📍</div><div><small>Onde</small><strong id="ev-local">Salão de Festas Cantinho Meu</strong><div class="det" id="ev-end">R. Sebastião Benedito da Silva, 333 - Jardim Novo II, Mogi Guaçu - SP</div></div></div>
+      <div class="linha"><div class="ico a"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg></div><div><small>Quando</small><strong>Domingo, 20 de dezembro de 2026</strong></div></div>
+      <div class="linha"><div class="ico y"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg></div><div><small>Horário</small><strong>A partir das 14h</strong></div></div>
+      <div class="linha"><div class="ico v"><svg class="i" aria-hidden="true"><use href="#i-gift"/></svg></div><div><small>O que levar</small><strong>Somente uma lembrancinha para a Liz</strong></div></div>
+      <div class="linha"><div class="ico a"><svg class="i" aria-hidden="true"><use href="#i-pin"/></svg></div><div><small>Onde</small><strong id="ev-local">Salão de Festas Cantinho Meu</strong><div class="det" id="ev-end">R. Sebastião Benedito da Silva, 333 - Jardim Novo II, Mogi Guaçu - SP</div></div></div>
     </div>
     <p class="mensagem oculto" id="ev-msg"></p>
     <div class="botoes">
-      <a class="btn sec" id="btn-mapa" href="https://maps.app.goo.gl/KaSEnLjM6C4CzaV87" target="_blank" rel="noopener">🗺️ Ver no mapa</a>
-      <a class="btn sec" id="btn-agenda" target="_blank" rel="noopener">🗓️ Salvar na agenda</a>
+      <a class="btn sec" id="btn-mapa" href="https://maps.app.goo.gl/KaSEnLjM6C4CzaV87" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-map"/></svg> Ver no mapa</a>
+      <a class="btn sec" id="btn-agenda" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-cal-plus"/></svg> Salvar na agenda</a>
     </div>
   </section>
 
   <section class="card rsvp" id="rsvp">
-    <div class="carregando" id="carregando">Carregando seu convite… 🎈</div>
+    <div class="carregando" id="carregando">Carregando seu convite…</div>
 
     <!-- sem link de família -->
     <div id="sem-token" class="oculto">
       <h2>Confirme sua presença</h2>
-      <p class="sub">Para confirmar, abra o link que você recebeu pelo WhatsApp. Ele é exclusivo da sua família 💛</p>
+      <p class="sub">Para confirmar, abra o link que você recebeu pelo WhatsApp. Ele é exclusivo da sua família.</p>
     </div>
 
     <!-- link inválido -->
@@ -184,15 +188,15 @@
 
     <!-- resposta enviada -->
     <div id="feito" class="feito oculto">
-      <div class="big" id="feito-emoji">🎉</div>
+      <div class="big" id="feito-emoji"></div>
       <h2 id="feito-titulo">Resposta enviada!</h2>
       <p class="sub" id="feito-sub"></p>
       <div class="resumo" id="resumo"></div>
-      <button class="btn sec" id="alterar" type="button" style="width:100%">✏️ Alterar resposta</button>
+      <button class="btn sec" id="alterar" type="button" style="width:100%"><svg class="i" aria-hidden="true"><use href="#i-pencil"/></svg> Alterar resposta</button>
     </div>
   </section>
 
-  <p class="rodape">Feito com 💙💛❤️ para a Liz</p>
+  <p class="rodape">Feito com <span style="color:var(--verm)"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg></span> para a Liz</p>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -223,7 +227,7 @@
   // ---------- contagem ----------
   function contagem(){
     let ms = FESTA - new Date();
-    if (ms <= 0){ $('contagem').innerHTML = '<div style="width:auto;padding:10px 18px"><b>É hoje! 🎂</b></div>'; return; }
+    if (ms <= 0){ $('contagem').innerHTML = '<div style="width:auto;padding:10px 18px"><b>É hoje!</b></div>'; return; }
     const d = Math.floor(ms/864e5); ms -= d*864e5;
     const h = Math.floor(ms/36e5);  ms -= h*36e5;
     const m = Math.floor(ms/6e4);
@@ -235,7 +239,7 @@
   function linkAgenda(ev){
     const p = new URLSearchParams({
       action: 'TEMPLATE',
-      text: 'Aniversário de 1 ano da Liz 🎈',
+      text: 'Aniversário de 1 ano da Liz',
       dates: '20261220T170000Z/20261220T210000Z',
       details: 'Festa de 1 aninho da Liz!',
       location: [ev && ev.local, ev && ev.endereco].filter(Boolean).join(' - ')
@@ -289,11 +293,11 @@
 
   function telaForm(){
     show($('feito'), false); show($('form'), true);
-    $('saudacao').textContent = 'Olá, ' + dados.familia + '! 👋';
+    $('saudacao').textContent = 'Olá, ' + dados.familia + '!';
     const prazo = dataPrazo(dados.prazo);
     $('prazo-txt').textContent = dados.prazo_encerrado
       ? 'O prazo para confirmar terminou em ' + prazo + '. Se precisar mudar algo, fale com os pais da Liz.'
-      : 'Marque quem vai e quem não vai. Confirme até ' + prazo + ', por favor 💛';
+      : 'Marque quem vai e quem não vai. Confirme até ' + prazo + ', por favor.';
     $('enviar').classList.toggle('oculto', dados.prazo_encerrado);
     $('msg-form').innerHTML = '';
     const lista = $('lista');
@@ -301,8 +305,8 @@
       <div class="pessoa" data-id="${c.id}">
         <div class="pn">${esc(c.nome)}${c.crianca ? '<em>criança</em>' : ''}</div>
         <div class="opc">
-          <button type="button" class="sim" data-v="sim" aria-pressed="false">✓ Vou</button>
-          <button type="button" class="nao" data-v="nao" aria-pressed="false">✗ Não vou</button>
+          <button type="button" class="sim" data-v="sim" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg> Vou</button>
+          <button type="button" class="nao" data-v="nao" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg> Não vou</button>
         </div>
       </div>`).join('') || '<p class="sub">Nenhum convidado cadastrado nesse convite.</p>';
     lista.querySelectorAll('.pessoa').forEach(row => {
@@ -326,13 +330,14 @@
   function telaFeito(){
     show($('form'), false); show($('feito'), true);
     const vao = dados.convidados.filter(c => c.resposta === 'sim');
-    $('feito-emoji').textContent = vao.length ? '🎉' : '💌';
+    $('feito-emoji').innerHTML = vao.length ? '<svg class="i" aria-hidden="true"><use href="#i-check"/></svg>' : '<svg class="i" aria-hidden="true"><use href="#i-mail"/></svg>';
+    $('feito-emoji').classList.toggle('nao', !vao.length);
     $('feito-titulo').textContent = vao.length ? 'Oba! Presença confirmada!' : 'Resposta recebida!';
     $('feito-sub').textContent = vao.length
       ? 'A Liz vai adorar ter vocês lá. Até dia 20/12!'
-      : 'Que pena que não vão poder ir. Obrigado por avisar 💛';
+      : 'Que pena que não vão poder ir. Obrigado por avisar.';
     $('resumo').innerHTML = dados.convidados.map(c =>
-      `<div>${c.resposta === 'sim' ? '✅' : c.resposta === 'nao' ? '❌' : '⏳'} ${esc(c.nome)}</div>`).join('');
+      `<div class="r-${c.resposta || 'pend'}">${c.resposta === 'sim' ? '<svg class="i" aria-hidden="true"><use href="#i-ok"/></svg>' : c.resposta === 'nao' ? '<svg class="i" aria-hidden="true"><use href="#i-no"/></svg>' : '<svg class="i" aria-hidden="true"><use href="#i-wait"/></svg>'} ${esc(c.nome)}</div>`).join('');
     show($('alterar'), !dados.prazo_encerrado);
   }
 

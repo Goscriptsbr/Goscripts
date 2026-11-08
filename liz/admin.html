@@ -18,6 +18,7 @@
     --fundo:#f5f7fc; --tinta:#1f2a44; --suave:#5b6785; --linha:#e3e7f0;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  .i{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.18em}
   body{font-family:'Nunito',system-ui,sans-serif;background:var(--fundo);color:var(--tinta);min-height:100vh}
   h1,h2,h3{font-family:'Fredoka',system-ui,sans-serif}
   .oculto{display:none!important}
@@ -60,7 +61,9 @@
   @media (max-width:520px){ .stats{grid-template-columns:repeat(2,1fr)} }
 
   .barra{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
-  .barra input{flex:1;min-width:160px}
+  .busca{flex:1;min-width:160px;position:relative}
+  .busca .i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--suave)}
+  .busca input{padding-left:38px}
 
   /* famílias */
   .fam{margin-top:10px}
@@ -70,7 +73,7 @@
   .tag{font-size:.72rem;font-weight:800;border-radius:99px;padding:3px 9px;white-space:nowrap}
   .tag.ok{background:var(--verde-claro);color:#14663a} .tag.pend{background:var(--amar-claro);color:#7a5600}
   .pessoas{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-  .chip{appearance:none;border:2px solid var(--linha);background:#fff;border-radius:99px;padding:5px 11px;font:700 .88rem 'Nunito',sans-serif;cursor:pointer;color:var(--tinta)}
+  .chip{display:inline-flex;align-items:center;gap:5px;appearance:none;border:2px solid var(--linha);background:#fff;border-radius:99px;padding:5px 11px;font:700 .88rem 'Nunito',sans-serif;cursor:pointer;color:var(--tinta)}
   .chip.sim{background:var(--verde-claro);border-color:#9fd9b8;color:#14663a}
   .chip.nao{background:var(--verm-claro);border-color:#f3a8ae;color:#9b1c27}
   .chip.pend{background:#fff;border-style:dashed;color:var(--suave)}
@@ -97,12 +100,13 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol><symbol id="i-no" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></symbol><symbol id="i-wait" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></symbol><symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol></svg>
 <div class="faixa"></div>
 
 <!-- LOGIN -->
 <div id="tela-login" class="wrap oculto">
   <div class="login card">
-    <h1>Liz 🎈</h1>
+    <h1>Liz</h1>
     <p>Painel de confirmações</p>
     <form id="form-login">
       <label for="email">E-mail</label>
@@ -118,10 +122,10 @@
 <!-- PAINEL -->
 <div id="tela-painel" class="wrap oculto">
   <header class="top">
-    <h1>Aniversário da <span>Liz</span> 🎈</h1>
+    <h1>Aniversário da <span>Liz</span></h1>
     <div style="display:flex;gap:4px">
-      <button class="btn leve" id="btn-config" title="Dados da festa">⚙️</button>
-      <button class="btn leve" id="btn-sair">Sair</button>
+      <button class="btn leve" id="btn-config" title="Dados da festa"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg></button>
+      <button class="btn leve" id="btn-sair"><svg class="i" aria-hidden="true"><use href="#i-logout"/></svg> Sair</button>
     </div>
   </header>
 
@@ -133,27 +137,27 @@
   </div>
 
   <div class="barra">
-    <input id="busca" type="search" placeholder="🔎 Buscar família ou pessoa">
-    <button class="btn sec" id="btn-csv">⬇️ Planilha</button>
+    <div class="busca"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><input id="busca" type="search" placeholder="Buscar família ou pessoa"></div>
+    <button class="btn sec" id="btn-csv"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg> Planilha</button>
   </div>
 
   <div id="lista-fam"></div>
   <p class="dica">Toque no nome de uma pessoa para mudar a resposta dela manualmente.</p>
 
-  <button class="btn pri fab" id="btn-nova">＋ Família</button>
+  <button class="btn pri fab" id="btn-nova"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> Família</button>
 </div>
 
 <!-- MODAL FAMÍLIA -->
 <div class="fundo-modal oculto" id="modal-fam">
   <form class="modal" id="form-fam">
-    <h2><span id="titulo-fam">Nova família</span><button type="button" class="btn leve" data-fechar>✕</button></h2>
+    <h2><span id="titulo-fam">Nova família</span><button type="button" class="btn leve" data-fechar><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></h2>
     <label for="f-nome">Nome da família (aparece no convite)</label>
     <input id="f-nome" type="text" placeholder="Ex.: Família Silva" required>
     <label for="f-tel">WhatsApp (opcional, com DDD)</label>
     <input id="f-tel" type="tel" placeholder="Ex.: 11 98765-4321">
     <label>Pessoas convidadas</label>
     <div id="f-pessoas"></div>
-    <button type="button" class="btn sec peq" id="f-add" style="margin-top:10px">＋ Adicionar pessoa</button>
+    <button type="button" class="btn sec peq" id="f-add" style="margin-top:10px"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> Adicionar pessoa</button>
     <div id="msg-fam"></div>
     <div class="rodape-modal">
       <button type="button" class="btn perigo oculto" id="f-excluir">Excluir</button>
@@ -165,7 +169,7 @@
 <!-- MODAL FESTA -->
 <div class="fundo-modal oculto" id="modal-ev">
   <form class="modal" id="form-ev">
-    <h2>Dados da festa <button type="button" class="btn leve" data-fechar>✕</button></h2>
+    <h2>Dados da festa <button type="button" class="btn leve" data-fechar><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></h2>
     <label for="e-local">Nome do local</label>
     <input id="e-local" type="text" placeholder="Ex.: Buffet Pequenos Sonhos">
     <label for="e-end">Endereço</label>
@@ -265,7 +269,7 @@
     };
     const lista = familias.filter(passa);
     if (!familias.length){
-      $('lista-fam').innerHTML = '<div class="card vazio">Nenhuma família ainda.<br>Toque em <b>＋ Família</b> para começar 🎈</div>';
+      $('lista-fam').innerHTML = '<div class="card vazio">Nenhuma família ainda.<br>Toque em <b>+ Família</b> para começar.</div>';
       return;
     }
     if (!lista.length){ $('lista-fam').innerHTML = '<div class="card vazio">Nada encontrado.</div>'; return; }
@@ -281,15 +285,15 @@
         </div>
         <div class="pessoas">
           ${f.convidados.map(c => `<button class="chip ${c.resposta || 'pend'}" data-c="${c.id}">
-              ${c.resposta === 'sim' ? '✅' : c.resposta === 'nao' ? '❌' : '⏳'} ${esc(c.nome)}${c.crianca ? ' <i>criança</i>' : ''}</button>`).join('')
+              ${c.resposta === 'sim' ? '<svg class="i" aria-hidden="true"><use href="#i-ok"/></svg>' : c.resposta === 'nao' ? '<svg class="i" aria-hidden="true"><use href="#i-no"/></svg>' : '<svg class="i" aria-hidden="true"><use href="#i-wait"/></svg>'} ${esc(c.nome)}${c.crianca ? ' <i>criança</i>' : ''}</button>`).join('')
             || '<span class="dica">Sem pessoas cadastradas</span>'}
         </div>
-        ${f.recado ? `<div class="recado">💬 ${esc(f.recado)}</div>` : ''}
+        ${f.recado ? `<div class="recado"><svg class="i" aria-hidden="true"><use href="#i-msg"/></svg> ${esc(f.recado)}</div>` : ''}
         <div class="acoes">
-          <a class="btn zap peq" href="${linkZap(f)}" target="_blank" rel="noopener">WhatsApp</a>
-          <button class="btn sec peq" data-copiar>🔗 Copiar link</button>
-          <a class="btn sec peq" href="${linkDe(f)}" target="_blank" rel="noopener">👁️ Ver</a>
-          <button class="btn sec peq" data-editar>✏️ Editar</button>
+          <a class="btn zap peq" href="${linkZap(f)}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg> WhatsApp</a>
+          <button class="btn sec peq" data-copiar><svg class="i" aria-hidden="true"><use href="#i-link"/></svg> Copiar link</button>
+          <a class="btn sec peq" href="${linkDe(f)}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-eye"/></svg> Ver</a>
+          <button class="btn sec peq" data-editar><svg class="i" aria-hidden="true"><use href="#i-pencil"/></svg> Editar</button>
         </div>
       </div>`;
     }).join('');
@@ -330,7 +334,7 @@
     if (p.id) d.dataset.id = p.id;
     d.innerHTML = `<input type="text" placeholder="Nome da pessoa" value="${esc(p.nome || '')}">
       <label class="cri"><input type="checkbox" ${p.crianca ? 'checked' : ''}> criança</label>
-      <button type="button" class="btn leve peq" title="Remover">✕</button>`;
+      <button type="button" class="btn leve peq" title="Remover"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>`;
     d.querySelector('button').addEventListener('click', () => d.remove());
     return d;
   }
@@ -385,7 +389,7 @@
       const novos = pessoas.filter(p => !p.id).map(p => ({ familia_id: famId, nome: p.nome, crianca: p.crianca, ordem: p.ordem }));
       if (novos.length){ const r = await sb.from('convidados').insert(novos); if (r.error) throw r.error; }
       show($('modal-fam'), false);
-      toast(editando ? 'Família atualizada' : 'Família criada! Agora é só enviar o link 🎈');
+      toast(editando ? 'Família atualizada' : 'Família criada! Agora é só enviar o link.');
       await carregar();
     } catch(err){
       $('msg-fam').innerHTML = '<div class="aviso erro">Erro ao salvar: ' + esc(err.message) + '</div>';
