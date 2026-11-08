@@ -132,7 +132,7 @@
   <div class="stats">
     <div class="stat s-sim" data-filtro="sim"><b id="n-sim">0</b><span>Vão</span><small id="n-sim-det"></small></div>
     <div class="stat s-nao" data-filtro="nao"><b id="n-nao">0</b><span>Não vão</span></div>
-    <div class="stat s-pend" data-filtro="pend"><b id="n-pend">0</b><span>Sem resposta</span></div>
+    <div class="stat s-pend" data-filtro="pend"><b id="n-pend">0</b><span>Sem resposta</span><small id="n-pend-det"></small></div>
     <div class="stat s-tot ativo" data-filtro="todos"><b id="n-tot">0</b><span>Convidados</span><small id="n-fam"></small></div>
   </div>
 
@@ -239,7 +239,11 @@
     const sim = todos.filter(c => c.resposta === 'sim');
     const cri = sim.filter(c => c.crianca).length;
     $('n-sim').textContent = sim.length;
-    $('n-sim-det').textContent = sim.length ? `${sim.length - cri} ${sim.length - cri === 1 ? 'adulto' : 'adultos'} · ${cri} ${cri === 1 ? 'criança' : 'crianças'}` : '';
+    const det = l => { const c = l.filter(x => x.crianca).length, a = l.length - c;
+      return l.length ? `${a} ${a === 1 ? 'adulto' : 'adultos'} · ${c} ${c === 1 ? 'criança' : 'crianças'}` : ''; };
+    const pend = todos.filter(c => !c.resposta);
+    $('n-sim-det').textContent = det(sim);
+    $('n-pend-det').textContent = det(pend);
     $('n-nao').textContent = todos.filter(c => c.resposta === 'nao').length;
     $('n-pend').textContent = todos.filter(c => !c.resposta).length;
     $('n-tot').textContent = todos.length;
