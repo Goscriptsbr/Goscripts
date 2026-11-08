@@ -533,11 +533,69 @@ setInterval(() => {
 }, 30000);
 
 // versão mais nova do app (o app compara com a dele e oferece atualizar)
-function appVersion() {
+// o app baixa o APK daqui do servidor (/apk); o servidor busca no GitHub e guarda uma cópia
+const https = require("https");
+const APK_FILE = "/tmp/sinucou.apk";
+let apkReady = 0; // versão que já está guardada
+let apkBusy = false;
+function versionFile() {
   try { return JSON.parse(fs.readFileSync(__dirname + "/versao.json", "utf8")); } catch (e) { return {}; }
 }
+function appVersion() {
+  const v = versionFile();
+  if (v.versao) v.url = (process.env.PUBLIC_URL || "https://sinucou.onrender.com") + "/apk?v=" + v.versao;
+  return v;
+}
+function fetchTo(url, dest, hops, cb) {
+  if (hops > 8) return cb(new Error("redirects"));
+  (url.startsWith("https") ? https : http).get(url, { headers: { "User-Agent": "sinucou-servidor", "Accept-Encoding": "identity" } }, (r) => {
+    if (r.statusCode >= 300 && r.statusCode < 400 && r.headers.location) {
+      r.resume();
+      return fetchTo(new URL(r.headers.location, url).toString(), dest, hops + 1, cb);
+    }
+    if (r.statusCode !== 200) { r.resume(); return cb(new Error("HTTP " + r.statusCode)); }
+    const out = fs.createWriteStream(dest + ".part");
+    r.pipe(out);
+    out.on("finish", () => { fs.rename(dest + ".part", dest, cb); });
+    out.on("error", cb);
+  }).on("error", cb);
+}
+function refreshApk(tries) {
+  const v = versionFile();
+  if (!v.versao || !v.apk || apkReady === v.versao || apkBusy) return;
+  apkBusy = true;
+  fetchTo(v.apk, APK_FILE, 0, (err) => {
+    apkBusy = false;
+    if (err) {
+      console.log("APK: falhou (" + err.message + "), tentando de novo");
+      if ((tries || 0) < 20) setTimeout(() => refreshApk((tries || 0) + 1), 15000);
+      return;
+    }
+    apkReady = v.versao;
+    console.log("APK v" + v.versao + " pronto: " + fs.statSync(APK_FILE).size + " bytes");
+  });
+}
+setTimeout(() => refreshApk(0), 2000);
+setInterval(() => refreshApk(0), 10 * 60 * 1000);
 
 const server = http.createServer((req, res) => {
+  if (req.url.startsWith("/apk")) {
+    const v = versionFile();
+    if (apkReady && fs.existsSync(APK_FILE)) {
+      const size = fs.statSync(APK_FILE).size;
+      res.writeHead(200, {
+        "Content-Type": "application/vnd.android.package-archive",
+        "Content-Length": size,
+        "Content-Disposition": "attachment; filename=\"Sinucou.apk\"",
+        "Cache-Control": "no-store",
+      });
+      return fs.createReadStream(APK_FILE).pipe(res);
+    }
+    refreshApk(0);
+    // ainda baixando do GitHub: manda direto para lá
+    res.writeHead(302, { Location: v.apk || "https://github.com/Goscriptsbr/Goscripts" });
+    return res.end();
+  }
   if (req.url === "/versao") {
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify(appVersion()));

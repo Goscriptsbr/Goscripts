@@ -1,5 +1,5 @@
 {
   "versao": 57,
-  "url": "https://github.com/Goscriptsbr/Goscripts/raw/sinucou-apk/Sinucou.apk",
-  "notas": "Atualização pelo app corrigida: agora baixa direto do GitHub sem erro 504."
+  "notas": "Atualização pelo app corrigida: agora baixa direto do GitHub sem erro 504.",
+  "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/sinucou-apk/Sinucou.apk"
 }
