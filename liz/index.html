@@ -148,11 +148,12 @@
     <div class="info">
       <div class="linha"><div class="ico a">📅</div><div><small>Quando</small><strong>Domingo, 20 de dezembro de 2026</strong></div></div>
       <div class="linha"><div class="ico y">🕑</div><div><small>Horário</small><strong>A partir das 14h</strong></div></div>
-      <div class="linha"><div class="ico v">📍</div><div><small>Onde</small><strong id="ev-local">Local a confirmar</strong><div class="det" id="ev-end"></div></div></div>
+      <div class="linha"><div class="ico a">🎁</div><div><small>O que levar</small><strong>Somente uma lembrancinha para a Liz</strong></div></div>
+      <div class="linha"><div class="ico v">📍</div><div><small>Onde</small><strong id="ev-local">Salão de Festas Cantinho Meu</strong><div class="det" id="ev-end">R. Sebastião Benedito da Silva, 333 - Jardim Novo II, Mogi Guaçu - SP</div></div></div>
     </div>
     <p class="mensagem oculto" id="ev-msg"></p>
     <div class="botoes">
-      <a class="btn sec oculto" id="btn-mapa" target="_blank" rel="noopener">🗺️ Ver no mapa</a>
+      <a class="btn sec" id="btn-mapa" href="https://maps.app.goo.gl/KaSEnLjM6C4CzaV87" target="_blank" rel="noopener">🗺️ Ver no mapa</a>
       <a class="btn sec" id="btn-agenda" target="_blank" rel="noopener">🗓️ Salvar na agenda</a>
     </div>
   </section>
@@ -177,8 +178,6 @@
       <h2 id="saudacao">Olá!</h2>
       <p class="sub" id="prazo-txt">Confirme a presença de cada pessoa até 05/12.</p>
       <div id="lista"></div>
-      <label class="rot" for="recado">Deixe um recadinho para a Liz (opcional)</label>
-      <textarea id="recado" maxlength="500" placeholder="Parabéns, Liz! 🎉"></textarea>
       <div id="msg-form"></div>
       <div style="margin-top:16px"><button class="btn pri" id="enviar" type="submit">Enviar confirmação</button></div>
     </form>
@@ -201,6 +200,7 @@
 <script>
 (function(){
   const FESTA = new Date('2026-12-20T14:00:00-03:00');
+  const PADRAO = { local: 'Salão de Festas Cantinho Meu', endereco: 'R. Sebastião Benedito da Silva, 333 - Jardim Novo II, Mogi Guaçu - SP', mapa_url: 'https://maps.app.goo.gl/KaSEnLjM6C4CzaV87' };
   const $ = id => document.getElementById(id);
   const show = (el, on) => el.classList.toggle('oculto', !on);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -242,15 +242,14 @@
     });
     $('btn-agenda').href = 'https://calendar.google.com/calendar/render?' + p.toString();
   }
-  linkAgenda(null);
+  linkAgenda(PADRAO);
 
   function mostrarEvento(ev){
-    if (!ev) return;
-    if (ev.local) $('ev-local').textContent = ev.local;
-    $('ev-end').textContent = ev.endereco || '';
+    ev = Object.assign({}, PADRAO, Object.fromEntries(Object.entries(ev || {}).filter(([, v]) => v)));
+    $('ev-local').textContent = ev.local;
+    $('ev-end').textContent = ev.endereco;
     if (ev.mensagem){ $('ev-msg').textContent = ev.mensagem; show($('ev-msg'), true); }
-    const mapa = ev.mapa_url || (ev.endereco ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ev.endereco) : '');
-    if (mapa){ $('btn-mapa').href = mapa; show($('btn-mapa'), true); }
+    $('btn-mapa').href = ev.mapa_url;
     linkAgenda(ev);
   }
 
@@ -295,8 +294,6 @@
     $('prazo-txt').textContent = dados.prazo_encerrado
       ? 'O prazo para confirmar terminou em ' + prazo + '. Se precisar mudar algo, fale com os pais da Liz.'
       : 'Marque quem vai e quem não vai. Confirme até ' + prazo + ', por favor 💛';
-    $('recado').value = dados.recado || '';
-    $('recado').disabled = dados.prazo_encerrado;
     $('enviar').classList.toggle('oculto', dados.prazo_encerrado);
     $('msg-form').innerHTML = '';
     const lista = $('lista');
@@ -332,11 +329,10 @@
     $('feito-emoji').textContent = vao.length ? '🎉' : '💌';
     $('feito-titulo').textContent = vao.length ? 'Oba! Presença confirmada!' : 'Resposta recebida!';
     $('feito-sub').textContent = vao.length
-      ? 'A Liz vai adorar ter vocês lá. Até dia 20/12!'
+      ? 'A Liz vai adorar ter vocês lá. Até dia 20/12! Não esqueçam a lembrancinha 🎁'
       : 'Que pena que não vão poder ir. Obrigado por avisar 💛';
     $('resumo').innerHTML = dados.convidados.map(c =>
-      `<div>${c.resposta === 'sim' ? '✅' : c.resposta === 'nao' ? '❌' : '⏳'} ${esc(c.nome)}</div>`).join('')
-      + (dados.recado ? `<div style="margin-top:8px;color:var(--suave)">💬 ${esc(dados.recado)}</div>` : '');
+      `<div>${c.resposta === 'sim' ? '✅' : c.resposta === 'nao' ? '❌' : '⏳'} ${esc(c.nome)}</div>`).join('');
     show($('alterar'), !dados.prazo_encerrado);
   }
 
@@ -352,7 +348,7 @@
     const btn = $('enviar');
     btn.disabled = true; btn.textContent = 'Enviando…';
     const respostas = Object.entries(escolhas).map(([id, resposta]) => ({ id, resposta }));
-    const { data, error } = await sb.rpc('responder', { p_token: token, p_respostas: respostas, p_recado: $('recado').value.trim() });
+    const { data, error } = await sb.rpc('responder', { p_token: token, p_respostas: respostas });
     btn.disabled = false; btn.textContent = 'Enviar confirmação';
     if (error){
       const txt = /prazo_encerrado/.test(error.message) ? 'O prazo para confirmar já terminou. Fale com os pais da Liz.'

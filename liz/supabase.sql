@@ -25,6 +25,11 @@ create table if not exists public.evento (
   prazo     timestamptz not null default '2026-12-05 23:59:59-03'
 );
 insert into public.evento (id) values (1) on conflict do nothing;
+update public.evento set
+  local    = case when local    = '' then 'Salão de Festas Cantinho Meu' else local end,
+  endereco = case when endereco = '' then 'R. Sebastião Benedito da Silva, 333 - Jardim Novo II, Mogi Guaçu - SP' else endereco end,
+  mapa_url = case when mapa_url = '' then 'https://maps.app.goo.gl/KaSEnLjM6C4CzaV87' else mapa_url end
+where id = 1;
 
 -- Uma linha por família (cada uma tem seu link)
 create table if not exists public.familias (
