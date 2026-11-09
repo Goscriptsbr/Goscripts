@@ -295,7 +295,7 @@
         </div>
         ${f.recado ? `<div class="recado"><svg class="i" aria-hidden="true"><use href="#i-msg"/></svg> ${esc(f.recado)}</div>` : ''}
         <div class="acoes">
-          <a class="btn zap peq" href="${linkZap(f)}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg> WhatsApp</a>
+          <a class="btn zap peq" data-zap href="${linkZap(f)}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg> WhatsApp</a>
           <button class="btn sec peq" data-copiar><svg class="i" aria-hidden="true"><use href="#i-link"/></svg> Copiar link</button>
           <a class="btn sec peq" href="${linkDe(f)}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-eye"/></svg> Ver</a>
           <button class="btn sec peq" data-editar><svg class="i" aria-hidden="true"><use href="#i-pencil"/></svg> Editar</button>
@@ -311,9 +311,23 @@
     desenhar();
   }));
 
+  // Imagem do convite para enviar junto no WhatsApp (celular)
+  let arquivoConvite = null;
+  fetch('convite.jpg?v=' + Date.now()).then(r => r.ok ? r.blob() : null).then(b => {
+    if (b) arquivoConvite = new File([b], 'convite-liz.jpg', { type: 'image/jpeg' });
+  }).catch(() => {});
+  const podeEnviarImagem = () => arquivoConvite && navigator.canShare && navigator.canShare({ files: [arquivoConvite] });
+
   $('lista-fam').addEventListener('click', async e => {
     const card = e.target.closest('.fam'); if (!card) return;
     const f = familias.find(x => x.id === card.dataset.id);
+    if (e.target.closest('[data-zap]') && podeEnviarImagem()){
+      // Abre o compartilhamento do celular com a imagem + mensagem (escolha o WhatsApp e o contato)
+      e.preventDefault();
+      try { await navigator.share({ files: [arquivoConvite], text: textoZap(f) }); }
+      catch (err) { if (err && err.name !== 'AbortError') location.href = linkZap(f); }
+      return;
+    }
     const chip = e.target.closest('.chip');
     if (chip){
       const c = f.convidados.find(x => x.id === chip.dataset.c);
