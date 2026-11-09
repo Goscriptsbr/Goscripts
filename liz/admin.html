@@ -254,7 +254,7 @@
   function linkDe(f){ return cfg.conviteUrl + '?f=' + f.token; }
 
   function textoZap(f){
-    return `Oi, ${f.nome}! 🎈\nA Liz vai fazer 1 aninho e vocês estão convidados!\n📅 Domingo, 20/12, às 14h\n\nConfirme a presença de cada um por aqui:\n${linkDe(f)}`;
+    return `Oi, ${f.nome}! 🎈\n\nA Liz vai fazer 1 aninho e vocês estão convidados!\n\n*Domingo, 20 de dezembro, às 14h*\nSalão de Festas Cantinho Meu, Mogi Guaçu\n\nConfirme a presença de cada um por aqui:\n${linkDe(f)}`;
   }
   function linkZap(f){
     let tel = (f.telefone || '').replace(/\D/g, '');
