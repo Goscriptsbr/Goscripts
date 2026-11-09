@@ -131,7 +131,7 @@
 
   <div class="stats">
     <div class="stat s-sim" data-filtro="sim"><b id="n-sim">0</b><span>Vão</span><small id="n-sim-det"></small></div>
-    <div class="stat s-nao" data-filtro="nao"><b id="n-nao">0</b><span>Não vão</span></div>
+    <div class="stat s-nao" data-filtro="nao"><b id="n-nao">0</b><span>Não vão</span><small id="n-nao-det"></small></div>
     <div class="stat s-pend" data-filtro="pend"><b id="n-pend">0</b><span>Sem resposta</span><small id="n-pend-det"></small></div>
     <div class="stat s-tot ativo" data-filtro="todos"><b id="n-tot">0</b><span>Convidados</span><small id="n-fam"></small></div>
   </div>
@@ -244,6 +244,7 @@
     const pend = todos.filter(c => !c.resposta);
     $('n-sim-det').textContent = det(sim);
     $('n-pend-det').textContent = det(pend);
+    $('n-nao-det').textContent = det(todos.filter(c => c.resposta === 'nao'));
     $('n-nao').textContent = todos.filter(c => c.resposta === 'nao').length;
     $('n-pend').textContent = todos.filter(c => !c.resposta).length;
     $('n-tot').textContent = todos.length;
