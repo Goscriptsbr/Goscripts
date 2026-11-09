@@ -33,6 +33,8 @@
   .btn.pri{background:var(--azul);color:#fff}
   .btn.sec{background:var(--azul-claro);color:var(--azul-esc)}
   .btn.zap{background:#25d366;color:#fff}
+  .btn.insta{background:linear-gradient(45deg,#f9a825,#e1306c 45%,#833ab4);color:#fff}
+  .btn.msgr{background:linear-gradient(45deg,#0084ff,#a033ff);color:#fff}
   .btn.perigo{background:var(--verm-claro);color:#9b1c27}
   .btn.leve{background:transparent;color:var(--suave);padding:8px 10px}
   .btn.peq{padding:7px 10px;font-size:.85rem;border-radius:10px}
@@ -96,11 +98,11 @@
   .linha-p .cri input{width:18px;height:18px}
   .rodape-modal{display:flex;gap:8px;margin-top:18px}
   .rodape-modal .btn{flex:1;padding:13px}
-  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;font-size:.92rem}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;font-size:.92rem;width:max-content;max-width:90vw;text-align:center}
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol><symbol id="i-no" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></symbol><symbol id="i-wait" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></symbol><symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol><symbol id="i-no" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></symbol><symbol id="i-wait" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></symbol><symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol><symbol id="i-insta" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><path d="M17.6 6.4h.01"/></symbol><symbol id="i-msgr" viewBox="0 0 24 24"><path d="M12 2.5C6.5 2.5 2.5 6.5 2.5 11.6c0 2.8 1.2 5.2 3.3 6.8v3.1l3-1.7c1 .3 2.1.4 3.2.4 5.5 0 9.5-4 9.5-9.1S17.5 2.5 12 2.5Z"/><path d="m7.5 13.5 3-3.2 2.4 2 3.6-3.8-3 3.2-2.4-2Z"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol></svg>
 <div class="faixa"></div>
 
 <!-- LOGIN -->
@@ -194,7 +196,7 @@
   const $ = id => document.getElementById(id);
   const show = (el, on) => el.classList.toggle('oculto', !on);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const toast = (t) => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2200); };
+  const toast = (t) => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), t.length > 40 ? 5000 : 2200); };
 
   let familias = [];
   let filtro = 'todos';
@@ -296,6 +298,8 @@
         ${f.recado ? `<div class="recado"><svg class="i" aria-hidden="true"><use href="#i-msg"/></svg> ${esc(f.recado)}</div>` : ''}
         <div class="acoes">
           <a class="btn zap peq" data-zap href="${linkZap(f)}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg> WhatsApp</a>
+          <button class="btn insta peq" data-rede="instagram"><svg class="i" aria-hidden="true"><use href="#i-insta"/></svg> Instagram</button>
+          <button class="btn msgr peq" data-rede="messenger"><svg class="i" aria-hidden="true"><use href="#i-msgr"/></svg> Messenger</button>
           <button class="btn sec peq" data-copiar><svg class="i" aria-hidden="true"><use href="#i-link"/></svg> Copiar link</button>
           <a class="btn sec peq" href="${linkDe(f)}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-eye"/></svg> Ver</a>
           <button class="btn sec peq" data-editar><svg class="i" aria-hidden="true"><use href="#i-pencil"/></svg> Editar</button>
@@ -321,6 +325,22 @@
   $('lista-fam').addEventListener('click', async e => {
     const card = e.target.closest('.fam'); if (!card) return;
     const f = familias.find(x => x.id === card.dataset.id);
+    const rede = e.target.closest('[data-rede]');
+    if (rede){
+      // Instagram e Messenger não aceitam texto junto com a imagem,
+      // então a mensagem vai copiada para colar na conversa.
+      const nomeRede = rede.dataset.rede === 'instagram' ? 'Instagram' : 'Messenger';
+      try { await navigator.clipboard.writeText(textoZap(f)); } catch (_) {}
+      if (podeEnviarImagem()){
+        toast(`Mensagem copiada! Escolha o ${nomeRede}, envie a imagem e cole a mensagem.`);
+        try { await navigator.share({ files: [arquivoConvite], text: textoZap(f) }); }
+        catch (err) { if (err && err.name !== 'AbortError') toast('Não deu para abrir o compartilhamento.'); }
+      } else {
+        toast(`Mensagem copiada! Cole na conversa do ${nomeRede}.`);
+        window.open(rede.dataset.rede === 'instagram' ? 'https://www.instagram.com/direct/inbox/' : 'https://www.messenger.com/', '_blank', 'noopener');
+      }
+      return;
+    }
     if (e.target.closest('[data-zap]') && podeEnviarImagem()){
       // Abre o compartilhamento do celular com a imagem + mensagem (escolha o WhatsApp e o contato)
       e.preventDefault();
