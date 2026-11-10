@@ -168,6 +168,18 @@
   </form>
 </div>
 
+<!-- MODAL MENSAGEM (Instagram / Messenger) -->
+<div class="fundo-modal oculto" id="modal-msg">
+  <div class="modal">
+    <h2><span id="msg-titulo">Mensagem do convite</span><button type="button" class="btn leve" data-fechar><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></h2>
+    <p class="dica" id="msg-passos" style="font-size:.92rem;margin:6px 0 10px"></p>
+    <textarea id="msg-texto" rows="8" readonly></textarea>
+    <div class="rodape-modal">
+      <button type="button" class="btn pri" id="msg-copiar"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg> Copiar mensagem</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FESTA -->
 <div class="fundo-modal oculto" id="modal-ev">
   <form class="modal" id="form-ev">
@@ -327,16 +339,19 @@
     const f = familias.find(x => x.id === card.dataset.id);
     const rede = e.target.closest('[data-rede]');
     if (rede){
-      // Instagram e Messenger não aceitam texto junto com a imagem,
-      // então a mensagem vai copiada para colar na conversa.
+      // Instagram e Messenger cortam o texto que vem junto com a imagem.
+      // Então: envia só a imagem e a mensagem completa fica copiada para colar.
       const nomeRede = rede.dataset.rede === 'instagram' ? 'Instagram' : 'Messenger';
-      try { await navigator.clipboard.writeText(textoZap(f)); } catch (_) {}
+      const texto = textoZap(f);
+      try { await navigator.clipboard.writeText(texto); } catch (_) {}
+      $('msg-titulo').textContent = 'Enviar pelo ' + nomeRede;
+      $('msg-passos').innerHTML = `<b>1.</b> Envie a imagem do convite no ${nomeRede}.<br><b>2.</b> Na mesma conversa, segure no campo de mensagem e toque em <b>Colar</b>. A mensagem abaixo já está copiada.`;
+      $('msg-texto').value = texto;
+      show($('modal-msg'), true);
       if (podeEnviarImagem()){
-        toast(`Mensagem copiada! Escolha o ${nomeRede}, envie a imagem e cole a mensagem.`);
-        try { await navigator.share({ files: [arquivoConvite], text: textoZap(f) }); }
+        try { await navigator.share({ files: [arquivoConvite] }); }
         catch (err) { if (err && err.name !== 'AbortError') toast('Não deu para abrir o compartilhamento.'); }
       } else {
-        toast(`Mensagem copiada! Cole na conversa do ${nomeRede}.`);
         window.open(rede.dataset.rede === 'instagram' ? 'https://www.instagram.com/direct/inbox/' : 'https://www.messenger.com/', '_blank', 'noopener');
       }
       return;
@@ -364,6 +379,12 @@
       return;
     }
     if (e.target.closest('[data-editar]')) abrirFamilia(f);
+  });
+
+  $('msg-copiar').addEventListener('click', async () => {
+    const t = $('msg-texto');
+    try { await navigator.clipboard.writeText(t.value); } catch (_) { t.select(); document.execCommand('copy'); }
+    toast('Mensagem copiada!');
   });
 
   // ---------- modal família ----------
