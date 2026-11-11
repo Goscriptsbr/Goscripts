@@ -1045,12 +1045,13 @@ func _draw() -> void:
 			cc = Color("6fd3ff") if results[i] == 0 else (Color("ff8a8a") if results[i] == 1 else Color("cccccc"))
 		draw_circle(Vector2(240 + i * 20, 100), 6, cc)
 	# vira e monte
-	var vr := Rect2(340, 18, 78, 112)
+	var vr := Rect2(336, 14, 104, 150)
+	# monte meio escondido atrás da vira (não encosta na mão do parceiro em tela mais estreita)
 	for k in 3:
-		draw_card_on(self, Rect2(vr.position + Vector2(96 + k * 2, 4 - k * 2), vr.size), {}, false, false)
+		draw_card_on(self, Rect2(vr.position + Vector2(56 + k * 3, 6 - k * 2), vr.size), {}, false, false)
 	draw_card_on(self, vr, vira, true, false)
-	draw_string(f, Vector2(vr.position.x - 10, vr.end.y + 20), "VIRA  •  manilha: %s" % RANKS[manilha_rank()], HORIZONTAL_ALIGNMENT_LEFT, 260, 16, Color("f4c542"))
-	draw_string(f, Vector2(vr.position.x - 10, vr.end.y + 38), "Zap > Copas > Espada > Ouros", HORIZONTAL_ALIGNMENT_LEFT, 260, 13, Color(1, 1, 1, 0.65))
+	draw_string(f, Vector2(vr.position.x - 10, vr.end.y + 24), "VIRA  •  manilha: %s" % RANKS[manilha_rank()], HORIZONTAL_ALIGNMENT_LEFT, 300, 20, Color("f4c542"))
+	draw_string(f, Vector2(vr.position.x - 10, vr.end.y + 45), "Zap > Copas > Espada > Ouros", HORIZONTAL_ALIGNMENT_LEFT, 300, 15, Color(1, 1, 1, 0.65))
 	# outros jogadores
 	for seat in range(1, n):
 		var hp := seat_hand_pos(seat)
