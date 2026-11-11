@@ -895,19 +895,19 @@ func _process(delta: float) -> void:
 
 
 func card_rect_hand(i: int, cnt: int) -> Rect2:
-	var w := 120.0
-	var hgt := 172.0
-	var gap := 18.0
+	var w := 150.0
+	var hgt := 215.0
+	var gap := 20.0
 	var total := cnt * w + (cnt - 1) * gap
 	var x0 := size.x / 2.0 - total / 2.0
-	return Rect2(x0 + i * (w + gap), size.y - hgt - 24.0, w, hgt)
+	return Rect2(x0 + i * (w + gap), size.y - hgt - 12.0, w, hgt)
 
 
 func seat_pos(seat: int) -> Vector2:
 	var c := Vector2(size.x / 2.0, size.y / 2.0 - 10.0)
 	if n == 2:
-		return c + (Vector2(0, 80) if seat == 0 else Vector2(0, -95))
-	return c + [Vector2(0, 80), Vector2(170, -8), Vector2(0, -95), Vector2(-170, -8)][seat]
+		return c + (Vector2(0, 46) if seat == 0 else Vector2(0, -118))
+	return c + [Vector2(0, 46), Vector2(185, -36), Vector2(0, -118), Vector2(-185, -36)][seat]
 
 
 # ponto embaixo da placa do jogador (para o balão do chat)
@@ -1058,7 +1058,7 @@ func _draw() -> void:
 		var side := n == 4 and seat != 2
 		for i in cnt:
 			var off := (float(i) - (cnt - 1) / 2.0) * 30.0
-			var rr := Rect2(hp + (Vector2(-34, off - 48) if side else Vector2(off - 34, -48)), Vector2(68, 96))
+			var rr := Rect2(hp + (Vector2(-39, off - 55) if side else Vector2(off - 39, -55)), Vector2(78, 110))
 			draw_card_on(self, rr, {}, false, false)
 		var pr: Rect2
 		if side:
@@ -1081,7 +1081,7 @@ func _draw() -> void:
 		var face: bool = p.show and not (p.hid and not ferro) and not p.c.is_empty()
 		if ferro and phase != "resolve" and phase != "showround":
 			face = false
-		var cr := Rect2(cp - Vector2(50, 70), Vector2(100, 140))
+		var cr := Rect2(cp - Vector2(59, 83), Vector2(118, 166))
 		var win: bool = phase == "showround" and round_win == int(p.seat)
 		if win:
 			var pul := 0.5 + 0.5 * sin(t * 6.0)
@@ -1105,12 +1105,12 @@ func _draw() -> void:
 	if my_turn:
 		var tt := "SUA VEZ  •  %ds" % int(ceil(tl)) + ("   (vai ENCOBERTA)" if hidden_next else "")
 		var bw2 := 360.0
-		draw_style_box(ui.sbox(Color(0, 0, 0, 0.5), 14), Rect2(w / 2.0 - bw2 / 2.0, h - 262, bw2, 34))
-		draw_rect(Rect2(w / 2.0 - bw2 / 2.0 + 8, h - 234, (bw2 - 16) * frac, 4), Color("3ddc84") if frac > 0.5 else (Color("ffb020") if frac > 0.25 else Color("ff4040")))
-		draw_string(f, Vector2(0, h - 238), tt, HORIZONTAL_ALIGNMENT_CENTER, w, 20, Color("f4c542"))
+		draw_style_box(ui.sbox(Color(0, 0, 0, 0.5), 14), Rect2(w / 2.0 - bw2 / 2.0, h - 300, bw2, 34))
+		draw_rect(Rect2(w / 2.0 - bw2 / 2.0 + 8, h - 272, (bw2 - 16) * frac, 4), Color("3ddc84") if frac > 0.5 else (Color("ffb020") if frac > 0.25 else Color("ff4040")))
+		draw_string(f, Vector2(0, h - 276), tt, HORIZONTAL_ALIGNMENT_CENTER, w, 20, Color("f4c542"))
 	# balões
 	for b in bubbles:
-		var bp := Vector2(w / 2.0, h - 250)
+		var bp := Vector2(w / 2.0, h - 290)
 		if b.seat != 0:
 			bp = seat_hand_pos(b.seat) + Vector2(0, 92 if n == 2 or b.seat == 2 else -92)
 		var sc := 1.0 + 0.25 * maxf(0.0, 1.0 - b.t * 4.0)
