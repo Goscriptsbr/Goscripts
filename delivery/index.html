@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=202611122016">
+<link rel="stylesheet" href="app.css?v=202611122020">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}
@@ -65,6 +65,24 @@
   .cta h3{font-size:1.5rem;letter-spacing:-.02em;position:relative}
   .cta p{color:#c9c9d1;margin-top:6px;max-width:520px;position:relative}
   .cta .btn{position:relative}
+  .cta-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin-top:16px;position:relative;color:#e4e4ea;font-size:.88rem;font-weight:600}
+  .cta-list li{display:flex;gap:8px;align-items:flex-start}
+  .cta-list .i{color:#FF8A65;margin-top:1px}
+  @media(max-width:600px){.cta-list{grid-template-columns:1fr}.cta{padding:26px 22px}.cta .btn{width:100%}}
+  .how{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:860px){.how{grid-template-columns:1fr 1fr}}
+  @media(max-width:480px){.how{grid-template-columns:1fr}}
+  .step{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;position:relative;box-shadow:var(--sh)}
+  .step .n{position:absolute;top:14px;right:16px;font-weight:800;color:#E6E3DD;font-size:1.6rem}
+  .step .ic{width:42px;height:42px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;margin-bottom:12px}
+  .step h4{font-size:1rem;margin-bottom:4px}
+  .step p{color:var(--muted);font-size:.87rem}
+  .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+  @media(max-width:700px){.roles{grid-template-columns:1fr}}
+  .role{display:flex;gap:12px;align-items:center;padding:14px 16px;transition:box-shadow .15s}
+  .role:hover{box-shadow:var(--sh-lg)}
+  .role .ic{width:42px;height:42px;border-radius:12px;background:var(--bg);display:grid;place-items:center;flex:none}
+  .role p{color:var(--muted);font-size:.82rem}
 </style>
 </head>
 <body>
@@ -84,13 +102,13 @@
     <div>
       <span class="badge b-brand" style="margin-bottom:14px">⚡ Delivery da sua região</span>
       <h1>Bateu a fome?<br><em>Peça em poucos toques.</em></h1>
-      <p>Lanches, pizzas, açaí e porções das lanchonetes perto de você. A taxa de entrega é calculada pela distância — sem surpresa no final.</p>
+      <p>Lanches, pastéis, pizzas, açaí e porções das lanchonetes perto de você. A taxa de entrega é calculada pela distância e aparece antes de pagar — sem surpresa no final.</p>
       <div class="searchbar">
         <label class="in"><span id="ic-search"></span><input id="q" placeholder="Buscar loja ou comida…" autocomplete="off"></label>
         <button class="btn btn-primary" id="btn-buscar">Buscar</button>
       </div>
       <div class="trust">
-        <span id="t1"></span><span id="t2"></span><span id="t3"></span>
+        <span id="t1"></span><span id="t2"></span><span id="t3"></span><span id="t4"></span>
       </div>
     </div>
     <div class="hero-art" aria-hidden="true">
@@ -115,20 +133,30 @@
   <h2 class="sec-title" id="titulo">Lojas</h2>
   <div class="grid" id="lista"></div>
 
+  <h2 class="sec-title">Como funciona</h2>
+  <div class="how" id="how"></div>
+
   <div class="cta">
     <div>
       <h3>Tem uma lanchonete ou fast food?</h3>
-      <p>Cadastre sua loja grátis, monte o cardápio com fotos, defina a taxa por km e receba pedidos com Pix ou cartão na entrega.</p>
+      <p>Cadastre sua loja grátis e comece a receber pedidos hoje. Você controla o cardápio, a taxa de entrega e os seus motoboys pelo celular.</p>
+      <ul class="cta-list" id="cta-list"></ul>
     </div>
     <a class="btn btn-primary" href="painel.html">Cadastrar minha loja</a>
+  </div>
+
+  <div class="roles">
+    <a class="card role" href="conta.html"><span class="ic"></span><div><b>Minha conta</b><p>Endereços salvos e histórico de pedidos</p></div></a>
+    <a class="card role" href="entregador.html"><span class="ic"></span><div><b>Sou entregador</b><p>Entre com o código que a loja te enviou</p></div></a>
+    <a class="card role" href="painel.html"><span class="ic"></span><div><b>Sou lojista</b><p>Painel de pedidos, cardápio e motoboys</p></div></a>
   </div>
 </main>
 
 <footer class="footer">GoPedido · um produto <a href="https://goscripts.com.br" style="font-weight:700">GoScripts</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=202611122016"></script>
-<script src="app.js?v=202611122016"></script>
+<script src="config.js?v=202611122020"></script>
+<script src="app.js?v=202611122020"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -137,9 +165,21 @@
   $('ic-search').innerHTML = ic('search');
   $('btn-loja').innerHTML = ic('store') + '<span>Sou lojista</span>';
   $('btn-conta').innerHTML = ic('user');
+  const ri = document.querySelectorAll('.role .ic'); ['user', 'bike', 'store'].forEach((n, k) => ri[k].innerHTML = ic(n));
   $('t1').innerHTML = ic('check') + 'Pix na hora';
   $('t2').innerHTML = ic('check') + 'Cartão na entrega';
-  $('t3').innerHTML = ic('check') + 'Acompanhe o pedido';
+  $('t3').innerHTML = ic('check') + 'Acompanhe até a sua porta';
+  $('t4').innerHTML = ic('check') + 'Endereços salvos na sua conta';
+  $('how').innerHTML = [
+    ['search', 'Escolha a loja', 'Veja o cardápio, a taxa de entrega e o tempo estimado de cada lanchonete.'],
+    ['pin', 'Informe o endereço', 'Digite o CEP ou use sua localização — rua, bairro e número se preenchem sozinhos.'],
+    ['card', 'Pague do seu jeito', 'Pix na hora com comprovante, ou débito e crédito na maquininha do entregador.'],
+    ['bike', 'Acompanhe a entrega', 'Veja quando a loja aceitou, quando saiu e quem é o entregador a caminho.']
+  ].map(([i, t, d], k) => `<div class="step"><span class="n">${k + 1}</span><div class="ic">${ic(i)}</div><h4>${t}</h4><p>${d}</p></div>`).join('');
+  $('cta-list').innerHTML = [
+    'Cardápio com fotos e categorias', 'Taxa automática por km', 'Pix com QR Code e comprovante obrigatório',
+    'Cartão na entrega', 'Código de acesso para seus motoboys', 'Pedidos com aviso sonoro'
+  ].map(t => `<li>${ic('check')}${t}</li>`).join('');
 
   let lojas = [], filtro = 'todas', busca = '';
   let pos = GP.ls.get('gp_pos');
