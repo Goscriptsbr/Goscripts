@@ -6,7 +6,7 @@
   // ---------- Supabase ----------
   GP.client = (persist) =>
     window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
-      auth: persist ? { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } : { persistSession: false }
+      auth: persist ? { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'gopedido-auth' } : { persistSession: false, storageKey: 'gopedido-pub' }
     });
   GP.publicUrl = (sb, path) => (path ? sb.storage.from('ff-imagens').getPublicUrl(path).data.publicUrl : '');
 
