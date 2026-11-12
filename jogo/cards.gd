@@ -36,35 +36,79 @@ static func sbox(col: Color, rad: int, border := Color(0, 0, 0, 0), bw := 0) -> 
 	return s
 
 
-static func suit(ci: CanvasItem, c: Vector2, sz: float, s: int, col: Color) -> void:
+static var _heart := PackedVector2Array()
+
+
+# contorno de coração (unidade: cabe em -1..1), feito uma vez só
+static func _heart_pts() -> PackedVector2Array:
+	if _heart.is_empty():
+		var n := 48
+		for i in n:
+			var t := TAU * float(i) / float(n)
+			var x := 16.0 * pow(sin(t), 3.0)
+			var y := -(13.0 * cos(t) - 5.0 * cos(2.0 * t) - 2.0 * cos(3.0 * t) - cos(4.0 * t))
+			_heart.append(Vector2(x / 17.0, y / 17.0 - 0.14))
+	return _heart
+
+
+# pé do naipe de espadas e de paus: fino em cima e aberto embaixo
+static func _stem(ci: CanvasItem, c: Vector2, sz: float, f: float, col: Color) -> void:
+	ci.draw_colored_polygon(PackedVector2Array([
+		c + Vector2(-0.07 * sz, 0.2 * sz * f), c + Vector2(0.07 * sz, 0.2 * sz * f),
+		c + Vector2(0.14 * sz, 0.7 * sz * f), c + Vector2(0.4 * sz, sz * f),
+		c + Vector2(-0.4 * sz, sz * f), c + Vector2(-0.14 * sz, 0.7 * sz * f)]), col)
+
+
+# naipes: 0 ouros, 1 espadas, 2 copas, 3 paus. flip = de cabeça para baixo
+static func suit(ci: CanvasItem, c: Vector2, sz: float, s: int, col: Color, flip: bool = false) -> void:
+	var f := -1.0 if flip else 1.0
 	if s == 0:
-		ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -sz), c + Vector2(sz * 0.72, 0), c + Vector2(0, sz), c + Vector2(-sz * 0.72, 0)]), col)
+		# losango com os lados levemente curvados para dentro
+		var w := sz * 0.74
+		ci.draw_colored_polygon(PackedVector2Array([
+			c + Vector2(0, -sz), c + Vector2(w * 0.44, -sz * 0.47), c + Vector2(w, 0), c + Vector2(w * 0.44, sz * 0.47),
+			c + Vector2(0, sz), c + Vector2(-w * 0.44, sz * 0.47), c + Vector2(-w, 0), c + Vector2(-w * 0.44, -sz * 0.47)]), col)
 	elif s == 2:
-		ci.draw_circle(c + Vector2(-sz * 0.42, -sz * 0.25), sz * 0.48, col)
-		ci.draw_circle(c + Vector2(sz * 0.42, -sz * 0.25), sz * 0.48, col)
-		ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-sz * 0.9, -sz * 0.1), c + Vector2(sz * 0.9, -sz * 0.1), c + Vector2(0, sz)]), col)
+		var hp := _heart_pts()
+		var pts := PackedVector2Array()
+		for q in hp:
+			pts.append(c + Vector2(q.x * sz * 1.02, q.y * sz * f))
+		ci.draw_colored_polygon(pts, col)
 	elif s == 1:
-		ci.draw_circle(c + Vector2(-sz * 0.42, sz * 0.2), sz * 0.48, col)
-		ci.draw_circle(c + Vector2(sz * 0.42, sz * 0.2), sz * 0.48, col)
-		ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-sz * 0.9, sz * 0.05), c + Vector2(sz * 0.9, sz * 0.05), c + Vector2(0, -sz)]), col)
-		ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, sz * 0.3), c + Vector2(sz * 0.35, sz), c + Vector2(-sz * 0.35, sz)]), col)
+		# espada: coração invertido com pé
+		var hp2 := _heart_pts()
+		var pts2 := PackedVector2Array()
+		for q in hp2:
+			pts2.append(c + Vector2(q.x * sz * 0.98, (-q.y * 0.9 - 0.12) * sz * f))
+		ci.draw_colored_polygon(pts2, col)
+		_stem(ci, c, sz, f, col)
 	else:
-		ci.draw_circle(c + Vector2(0, -sz * 0.45), sz * 0.42, col)
-		ci.draw_circle(c + Vector2(-sz * 0.45, sz * 0.12), sz * 0.42, col)
-		ci.draw_circle(c + Vector2(sz * 0.45, sz * 0.12), sz * 0.42, col)
-		ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, sz * 0.1), c + Vector2(sz * 0.35, sz), c + Vector2(-sz * 0.35, sz)]), col)
+		ci.draw_circle(c + Vector2(0, -sz * 0.5 * f), sz * 0.43, col)
+		ci.draw_circle(c + Vector2(-sz * 0.5, sz * 0.14 * f), sz * 0.43, col)
+		ci.draw_circle(c + Vector2(sz * 0.5, sz * 0.14 * f), sz * 0.43, col)
+		ci.draw_circle(c + Vector2(0, -sz * 0.05 * f), sz * 0.3, col)
+		_stem(ci, c, sz, f, col)
 
 
 # verso da carta
 static func draw_back(ci: CanvasItem, r: Rect2, st: Dictionary) -> void:
 	var rad := int(r.size.x * 0.1)
-	ci.draw_style_box(sbox(Color(0, 0, 0, 0.35), rad), Rect2(r.position + Vector2(3, 5), r.size))
+	ci.draw_style_box(sbox(Color(0, 0, 0, 0.16), rad + 2), Rect2(r.position + Vector2(1, 2), r.size).grow(2.0))
+	ci.draw_style_box(sbox(Color(0, 0, 0, 0.32), rad), Rect2(r.position + Vector2(3, 5), r.size))
 	ci.draw_style_box(sbox(st.b_bg, rad, st.b_rim, maxi(2, int(r.size.x * 0.04))), r)
 	var inner := r.grow(-r.size.x * 0.11)
 	ci.draw_style_box(sbox(st.b_in, maxi(2, rad - 3), st.b_trim, 1), inner)
 	var pat: int = int(st.b_pat)
 	var lc: Color = st.b_trim
-	if pat == 1:
+	if pat == 0:
+		# clássico: treliça fina, como baralho de verdade
+		var step0 := inner.size.x / 7.0
+		var lc0 := Color(1, 1, 1, 0.14)
+		for k in range(-12, 20):
+			var xa := inner.position.x + k * step0
+			_seg(ci, Vector2(xa, inner.position.y), Vector2(xa + inner.size.y, inner.end.y), inner, lc0, 1.0)
+			_seg(ci, Vector2(xa, inner.end.y), Vector2(xa + inner.size.y, inner.position.y), inner, lc0, 1.0)
+	elif pat == 1:
 		# treliça de losangos (cortada certinho na borda de dentro)
 		var step := inner.size.x / 5.0
 		var lc1 := Color(lc.r, lc.g, lc.b, 0.3)
@@ -89,9 +133,22 @@ static func draw_back(ci: CanvasItem, r: Rect2, st: Dictionary) -> void:
 		while gy < inner.end.y - 1.0:
 			ci.draw_line(Vector2(inner.position.x + 2, gy), Vector2(inner.end.x - 2, gy), Color(st.b_rim.r, st.b_rim.g, st.b_rim.b, 0.25), 1.0)
 			gy += gs
+	# filete interno e quatro losanguinhos nos cantos
+	var in2 := inner.grow(-inner.size.x * 0.07)
+	ci.draw_rect(in2, Color(lc.r, lc.g, lc.b, 0.45), false, 1.0)
+	var cd := inner.size.x * 0.05
+	for cx in [in2.position.x, in2.end.x]:
+		for cy in [in2.position.y, in2.end.y]:
+			var cp := Vector2(float(cx), float(cy))
+			ci.draw_colored_polygon(PackedVector2Array([cp + Vector2(0, -cd), cp + Vector2(cd, 0), cp + Vector2(0, cd), cp + Vector2(-cd, 0)]), Color(lc.r, lc.g, lc.b, 0.9))
+	# medalhão do meio com contorno
 	var cc := inner.get_center()
 	var d := inner.size.x * 0.28
-	ci.draw_colored_polygon(PackedVector2Array([cc + Vector2(0, -d * 1.3), cc + Vector2(d, 0), cc + Vector2(0, d * 1.3), cc + Vector2(-d, 0)]), Color(lc.r, lc.g, lc.b, 0.92))
+	var d2 := d * 1.2
+	ci.draw_colored_polygon(PackedVector2Array([cc + Vector2(0, -d2 * 1.3), cc + Vector2(d2, 0), cc + Vector2(0, d2 * 1.3), cc + Vector2(-d2, 0)]), st.b_bg)
+	ci.draw_colored_polygon(PackedVector2Array([cc + Vector2(0, -d * 1.3), cc + Vector2(d, 0), cc + Vector2(0, d * 1.3), cc + Vector2(-d, 0)]), Color(lc.r, lc.g, lc.b, 0.95))
+	var d3 := d * 0.84
+	ci.draw_polyline(PackedVector2Array([cc + Vector2(0, -d3 * 1.3), cc + Vector2(d3, 0), cc + Vector2(0, d3 * 1.3), cc + Vector2(-d3, 0), cc + Vector2(0, -d3 * 1.3)]), Color(st.b_txt.r, st.b_txt.g, st.b_txt.b, 0.45), 1.0)
 	ci.draw_string(ThemeDB.fallback_font, cc + Vector2(-d, d * 0.3), "GS", HORIZONTAL_ALIGNMENT_CENTER, d * 2.0, int(d * 0.9), st.b_txt)
 
 
@@ -125,14 +182,18 @@ static func _index(ci: CanvasItem, r: Rect2, rk: int, s: int, col: Color) -> voi
 	var fs := int(r.size.x * 0.19)
 	var x0 := r.position.x + r.size.x * 0.035
 	ci.draw_string(f, Vector2(x0, r.position.y + fs * 1.0), RANKS[rk], HORIZONTAL_ALIGNMENT_CENTER, cw, fs, col)
-	suit(ci, Vector2(x0 + cw / 2.0, r.position.y + fs * 1.42), r.size.x * 0.058, s, col)
+	suit(ci, Vector2(x0 + cw / 2.0, r.position.y + fs * 1.47), r.size.x * 0.066, s, col)
 
 
 static func draw_face(ci: CanvasItem, r: Rect2, c: Dictionary, st: Dictionary, manilha: bool, hl: bool) -> void:
 	var rad := int(r.size.x * 0.1)
-	ci.draw_style_box(sbox(Color(0, 0, 0, 0.35), rad), Rect2(r.position + Vector2(3, 5), r.size))
+	ci.draw_style_box(sbox(Color(0, 0, 0, 0.16), rad + 2), Rect2(r.position + Vector2(1, 2), r.size).grow(2.0))
+	ci.draw_style_box(sbox(Color(0, 0, 0, 0.32), rad), Rect2(r.position + Vector2(3, 5), r.size))
 	var border: Color = Color("f4c542") if manilha else (Color("ffe066") if hl else st.edge)
 	var bw := 4 if (manilha or hl) else int(st.ew)
+	if manilha:
+		# brilho dourado em volta da manilha
+		ci.draw_style_box(sbox(Color(0, 0, 0, 0), rad + 3, Color(0.957, 0.773, 0.259, 0.3), 3), r.grow(3.0))
 	ci.draw_style_box(sbox(st.face, rad, border, bw), r)
 	if st.has("face2"):
 		# brilho suave na metade de cima
@@ -144,6 +205,9 @@ static func draw_face(ci: CanvasItem, r: Rect2, c: Dictionary, st: Dictionary, m
 	var frame: Color = st.frame
 	if frame.a > 0.0:
 		ci.draw_style_box(sbox(Color(0, 0, 0, 0), maxi(2, rad - 3), Color(frame.r, frame.g, frame.b, 0.6), 1), r.grow(-r.size.x * 0.06))
+	else:
+		# filete fino por dentro da borda
+		ci.draw_style_box(sbox(Color(0, 0, 0, 0), maxi(2, rad - 3), Color(col.r, col.g, col.b, 0.22), 1), r.grow(-r.size.x * 0.05))
 	if rk >= 4 and rk <= 6:
 		# figura: retrato numa janela entre as colunas dos cantos
 		var key := rk * 10 + s
@@ -168,10 +232,11 @@ static func draw_face(ci: CanvasItem, r: Rect2, c: Dictionary, st: Dictionary, m
 		var PIPS := {0: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 1: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]],
 			2: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]], 3: [[-1, -1], [1, -1], [0, -0.5], [-1, 0], [1, 0], [-1, 1], [1, 1]],
 			8: [[0, -1], [0, 1]], 9: [[0, -1], [0, 0], [0, 1]]}
-		var area := Rect2(r.position.x + r.size.x * 0.34, r.position.y + r.size.y * 0.2, r.size.x * 0.32, r.size.y * 0.6)
-		var psz := r.size.x * 0.085
+		var area := Rect2(r.position.x + r.size.x * 0.37, r.position.y + r.size.y * 0.2, r.size.x * 0.26, r.size.y * 0.6)
+		var psz := r.size.x * 0.088
 		for pp in PIPS.get(rk, [[0, 0]]):
-			suit(ci, area.get_center() + Vector2(float(pp[0]) * area.size.x * 0.5, float(pp[1]) * area.size.y * 0.5), psz, s, col)
+			# os naipes da metade de baixo ficam de cabeça para baixo, como no baralho de verdade
+			suit(ci, area.get_center() + Vector2(float(pp[0]) * area.size.x * 0.5, float(pp[1]) * area.size.y * 0.5), psz, s, col, float(pp[1]) > 0.0)
 	if st.get("glow", false):
 		ci.draw_style_box(sbox(Color(0, 0, 0, 0), rad, Color(col.r, col.g, col.b, 0.35), 2), r.grow(2))
 	# cantos: em cima à esquerda e (de cabeça para baixo) embaixo à direita

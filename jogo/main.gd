@@ -2939,14 +2939,29 @@ func ray_hit(origin: Vector2, dir: Vector2) -> Dictionary:
 
 func cushion(a: Vector2, b: Vector2, nrm: Vector2, ea: float = 12.0, eb: float = 12.0) -> void:
 	var d := (b - a).normalized()
-	var pts := PackedVector2Array([a, b, b + nrm * 27.0 + d * eb, a + nrm * 27.0 - d * ea])
 	var f := felt_def()
 	var base: Color = f.dark.lerp(f.light, 0.2).darkened(0.1)
-	rails.draw_line(a - nrm * 3.0, b - nrm * 3.0, Color(0, 0, 0, 0.28), 8.0)
-	rails.draw_colored_polygon(pts, base)
-	var pts2 := PackedVector2Array([a, b, b + nrm * 9.0 + d * eb * 0.25, a + nrm * 9.0 - d * ea * 0.25])
-	rails.draw_colored_polygon(pts2, base.lightened(0.18))
-	rails.draw_line(a, b, base.lightened(0.45), 2.0)
+	# sombra da tabela no pano
+	rails.draw_line(a - nrm * 2.5, b - nrm * 2.5, Color(0, 0, 0, 0.3), 6.0)
+	rails.draw_line(a - nrm * 6.0, b - nrm * 6.0, Color(0, 0, 0, 0.12), 9.0)
+	# corpo em faixas: borracha clara na frente, escurecendo até a dobra junto da madeira
+	_cband(a, b, nrm, d, ea, eb, 0.0, 27.0, base)
+	_cband(a, b, nrm, d, ea, eb, 0.0, 3.5, base.lightened(0.42))
+	_cband(a, b, nrm, d, ea, eb, 3.5, 7.0, base.lightened(0.26))
+	_cband(a, b, nrm, d, ea, eb, 7.0, 11.0, base.lightened(0.12))
+	_cband(a, b, nrm, d, ea, eb, 17.0, 22.0, base.darkened(0.12))
+	_cband(a, b, nrm, d, ea, eb, 22.0, 27.0, base.darkened(0.3))
+	var hi: Color = base.lightened(0.62)
+	hi.a = 0.95
+	rails.draw_line(a, b, hi, 1.6)
+
+
+# faixa da tabela entre as profundidades t0 e t1 (0 = bico da borracha, 27 = madeira)
+func _cband(a: Vector2, b: Vector2, nrm: Vector2, d: Vector2, ea: float, eb: float, t0: float, t1: float, col: Color) -> void:
+	var pts := PackedVector2Array([
+		a + nrm * t0 - d * (ea * t0 / 27.0), b + nrm * t0 + d * (eb * t0 / 27.0),
+		b + nrm * t1 + d * (eb * t1 / 27.0), a + nrm * t1 - d * (ea * t1 / 27.0)])
+	rails.draw_colored_polygon(pts, col)
 
 
 func _draw_rails() -> void:
@@ -2977,17 +2992,26 @@ func _draw_rails() -> void:
 	for pi in POCK.size():
 		var pk: Vector2 = POCK[pi]
 		var rr := 25.0 if pi < 4 else 21.0
-		rails.draw_circle(pk, rr + 2.0, Color("2a1c11"))
+		# aro de latão com brilho em cima e sombra embaixo, e a boca escurecendo para dentro
+		rails.draw_circle(pk, rr + 5.0, Color("15100b"))
+		rails.draw_arc(pk, rr + 3.6, 0, TAU, 48, Color("8a6a2a"), 2.2)
+		rails.draw_arc(pk, rr + 3.6, PI * 1.05, PI * 1.6, 20, Color(1.0, 0.925, 0.667, 0.75), 2.2)
+		rails.draw_arc(pk, rr + 3.6, PI * 0.1, PI * 0.55, 20, Color(0, 0, 0, 0.45), 2.2)
+		rails.draw_circle(pk, rr + 2.0, Color("1c130c"))
 		rails.draw_circle(pk, rr, Color("0d0a08"))
-		rails.draw_circle(pk, rr - 5.0, Color("050403"))
-		rails.draw_circle(pk, rr - 11.0, Color("010101"))
-		rails.draw_arc(pk, rr + 3.0, 0, TAU, 40, Color(1, 1, 1, 0.08), 1.5)
+		rails.draw_circle(pk, rr - 4.0, Color("070504"))
+		rails.draw_circle(pk, rr - 8.0, Color("030202"))
+		rails.draw_circle(pk, rr - 12.0, Color("000000"))
+		rails.draw_arc(pk, rr - 1.5, PI * 0.15, PI * 0.7, 20, Color(1, 1, 1, 0.1), 2.0)
 
 
 func _diamond(c: Vector2) -> void:
-	var pts := PackedVector2Array([c + Vector2(0, -6), c + Vector2(6, 0), c + Vector2(0, 6), c + Vector2(-6, 0)])
-	rails.draw_colored_polygon(pts, Color("efe8d6"))
-	rails.draw_polyline(PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[0]]), Color(0.35, 0.25, 0.1, 0.8), 1.2)
+	# marcação de madrepérola com aro dourado e sombra
+	rails.draw_colored_polygon(PackedVector2Array([c + Vector2(1, -5.5), c + Vector2(7.5, 1), c + Vector2(1, 8), c + Vector2(-5.5, 1)]), Color(0, 0, 0, 0.4))
+	rails.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -7.5), c + Vector2(7.5, 0), c + Vector2(0, 7.5), c + Vector2(-7.5, 0)]), Color("b88a2e"))
+	rails.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -6), c + Vector2(6, 0), c + Vector2(0, 6), c + Vector2(-6, 0)]), Color("e9dfc8"))
+	rails.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -6), c + Vector2(6, 0), c + Vector2(-6, 0)]), Color("fffaf0"))
+	rails.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -3), c + Vector2(3, 0), c + Vector2(0, 3), c + Vector2(-3, 0)]), Color(0.627, 0.843, 0.922, 0.35))
 
 
 func quad(a: Vector2, b: Vector2, wa: float, wb: float, col: Color, off: Vector2 = Vector2.ZERO) -> void:

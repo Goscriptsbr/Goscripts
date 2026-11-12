@@ -49,6 +49,12 @@ void fragment() {
 	vec2 q = px - size * 0.5;
 	float d = length((UV - 0.5) * vec2(1.0, 1.55));
 	float light = smoothstep(0.95, 0.0, d);
+	// três luminárias sobre a mesa: poças de luz suaves em vez de um único clarão no centro
+	vec2 lu = (UV - 0.5) * vec2(size.x / size.y, 1.0);
+	float lamps = exp(-dot(lu, lu) * 2.6);
+	lamps += exp(-dot(lu - vec2(0.62, 0.0), lu - vec2(0.62, 0.0)) * 2.6);
+	lamps += exp(-dot(lu + vec2(0.62, 0.0), lu + vec2(0.62, 0.0)) * 2.6);
+	light = clamp(light * 0.62 + lamps * 0.34, 0.0, 1.0);
 	vec3 base = mix(c_dark.rgb, c_light.rgb, light);
 	vec3 col = base;
 	float edge = min(min(px.x, size.x - px.x), min(px.y, size.y - px.y));
@@ -177,8 +183,11 @@ void fragment() {
 	float mid = vnoise(px * 0.35) - 0.5;
 	float coarse = fbm(px * 0.02) - 0.5;
 	float weave = sin(px.x * 2.2) * sin(px.y * 2.2) * 0.008;
-	col *= 1.0 + mid * 0.035 + coarse * 0.06 + weave;
-	// sombra das tabelas
-	col *= 0.82 + 0.18 * smoothstep(0.0, 26.0, edge);
+	// pelo do pano penteado no comprimento da mesa
+	float nap = vnoise(vec2(px.x * 0.11, px.y * 0.9)) - 0.5;
+	col *= 1.0 + mid * 0.035 + coarse * 0.06 + weave + nap * 0.02;
+	// sombra das tabelas: mais escura junto da borracha e sumindo aos poucos
+	float rsh = smoothstep(34.0, 6.0, edge);
+	col *= 1.0 - 0.3 * rsh * rsh - 0.08 * smoothstep(90.0, 6.0, edge);
 	COLOR = vec4(col, 1.0);
 }
