@@ -62,7 +62,7 @@ create or replace function public.ff_gera_codigo()
 returns text language plpgsql volatile as $$
 declare
   alfa text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  b bytea := gen_random_bytes(8);
+  b bytea := decode(replace(gen_random_uuid()::text, '-', ''), 'hex');
   r text := '';
   i int;
 begin
