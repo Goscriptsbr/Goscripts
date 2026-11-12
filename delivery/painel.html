@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122021">
+<link rel="stylesheet" href="app.css?v=202611122027">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -32,7 +32,8 @@
   /* app */
   #v-app .topbar .logo{min-width:0;flex:0 1 auto}
   #v-app .topbar .logo b{flex:none}
-  #t-nome{max-width:none!important;min-width:0}
+  .lojasel{min-width:0;flex:0 1 auto;max-width:46vw;border:0;background:transparent;font:inherit;font-weight:800;font-size:1.12rem;letter-spacing:-.02em;color:var(--ink);padding:6px 22px 6px 4px;border-radius:10px;cursor:pointer;-webkit-appearance:none;appearance:none;text-overflow:ellipsis;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717F' stroke-width='3'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 4px center}
+  .lojasel:hover{background-color:var(--bg)}
   @media(max-width:600px){#v-app .topbar .wrap{gap:8px}#sw-txt{display:none}#v-app .icon-btn{width:38px;height:38px}.tabs button{padding:0 10px;flex:1;justify-content:center}.tabs button>span:first-child{display:none}}
   .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 20px;overflow-x:auto}
   .tabs button{height:46px;padding:0 16px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;display:flex;gap:8px;align-items:center;white-space:nowrap}
@@ -130,7 +131,8 @@
 <div id="v-app" class="hide">
   <header class="topbar">
     <div class="wrap">
-      <a class="logo" href="./"><b id="lg3"></b><span class="ellipsis" id="t-nome" style="max-width:38vw">Minha loja</span></a>
+      <a class="logo" href="./" style="flex:none"><b id="lg3"></b></a>
+      <select class="lojasel" id="t-loja" aria-label="Escolher loja"></select>
       <div class="grow"></div>
       <label class="switch" id="sw-wrap" title="Abrir/fechar a loja"><input type="checkbox" id="sw-aberta"><i></i><span id="sw-txt">Fechada</span></label>
       <a class="icon-btn" id="b-ver" target="_blank" rel="noopener" title="Ver minha loja"></a>
@@ -180,7 +182,7 @@
 
     <!-- Minha loja -->
     <section id="tab-loja" class="hide">
-      <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div><b>Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div></div>
+      <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
       <form id="f-loja">
         <div class="formgrid">
           <div class="card pad fs">
@@ -193,6 +195,7 @@
               <input type="file" id="in-capa" accept="image/*" hidden></div>
             <label class="field"><span>Nome da loja</span><input class="input" id="l-nome" maxlength="60" required placeholder="Ex.: Burger do Zé"></label>
             <label class="field"><span>Descrição</span><textarea class="input" id="l-desc" maxlength="240" placeholder="Hambúrgueres artesanais, porções e milkshakes."></textarea></label>
+            <label class="field"><span>CNPJ <span class="muted">(opcional)</span></span><input class="input" id="l-cnpj" inputmode="numeric" placeholder="00.000.000/0000-00"><small id="cnpj-msg"></small></label>
             <label class="field"><span>WhatsApp da loja</span><input class="input" id="l-tel" inputmode="tel" placeholder="(19) 99999-9999"></label>
             <label class="field"><span>Tempo médio de entrega</span><input class="input" id="l-tempo" maxlength="30" placeholder="30–50 min"></label>
             <div class="field"><span>Link da sua loja</span>
@@ -265,8 +268,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122021"></script>
-<script src="app.js?v=202611122021"></script>
+<script src="config.js?v=202611122027"></script>
+<script src="app.js?v=202611122027"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -290,7 +293,7 @@
   $('pv-logo').innerHTML = ic('image'); $('pv-capa').innerHTML = ic('image');
   GP.phoneMask($('l-tel'));
 
-  let user = null, loja = null, prods = [], pedidos = [], conhecidos = null, ofiltro = 'abertos', timer = null;
+  let user = null, loja = null, lojas = [], prods = [], pedidos = [], conhecidos = null, ofiltro = 'abertos', timer = null;
 
   // ================= AUTENTICAÇÃO =================
   let modo = 'in', recovering = false;
@@ -350,18 +353,48 @@
     if (recovering) return;
     user = session.user;
     $('v-auth').classList.add('hide'); $('v-app').classList.remove('hide');
-    const { data, error } = await sb.from('ff_lojas').select('*').eq('dono', user.id).maybeSingle();
+    const { data, error } = await sb.from('ff_lojas').select('*').eq('dono', user.id).order('criado_em');
     if (error) return GP.toast(GP.err(error), 'err');
-    loja = data;
-    fillLoja();
-    if (!loja) { setTabsLocked(true); go('loja'); $('welcome').classList.remove('hide'); return; }
-    setTabsLocked(false); applyHeader();
+    lojas = data || [];
+    if (!lojas.length) return novaLoja(true);
+    const salva = GP.ls.get('gp_loja_sel');
+    await abrirLoja(lojas.find(l => l.id === salva) || lojas[0]);
+  }
+
+  // ================= VÁRIAS LOJAS =================
+  function renderLojaSel() {
+    $('t-loja').innerHTML = lojas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('')
+      + (loja ? '' : '<option value="" selected>Nova loja</option>')
+      + '<option value="__nova">+ Cadastrar outra loja</option>';
+    $('t-loja').value = loja ? loja.id : '';
+  }
+  async function abrirLoja(l) {
+    loja = l; GP.ls.set('gp_loja_sel', l.id);
+    prods = []; pedidos = []; conhecidos = null; codigo = null;
+    $('orders').innerHTML = ''; $('plist').innerHTML = '';
+    $('welcome').classList.add('hide');
+    fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel();
     await loadProds();
     go('pedidos');
     await loadPedidos();
     clearInterval(timer);
     timer = setInterval(() => { if (!document.hidden) loadPedidos(); }, 15000);
   }
+  function novaLoja(primeira) {
+    clearInterval(timer);
+    loja = null; prods = []; pedidos = []; conhecidos = null; codigo = null;
+    fillLoja(); renderLojaSel(); setTabsLocked(true); go('loja');
+    $('welcome').classList.remove('hide');
+    $('w-tit').textContent = primeira ? 'Bem-vindo! Vamos configurar sua loja.' : 'Cadastrar uma nova loja';
+    $('w-cancel').classList.toggle('hide', !lojas.length);
+    window.scrollTo(0, 0);
+  }
+  $('t-loja').onchange = (e) => {
+    const v = e.target.value;
+    if (v === '__nova') return novaLoja(false);
+    const l = lojas.find(x => x.id === v); if (l) abrirLoja(l);
+  };
+  $('w-cancel').onclick = () => { const l = lojas.find(x => x.id === GP.ls.get('gp_loja_sel')) || lojas[0]; if (l) abrirLoja(l); };
 
   // ================= ABAS =================
   function setTabsLocked(v) { document.querySelectorAll('#tabs [data-t]').forEach(b => { if (b.dataset.t !== 'loja') b.disabled = v; }); $('sw-wrap').classList.toggle('hide', v); $('b-ver').classList.toggle('hide', v); }
@@ -373,7 +406,7 @@
   $('tabs').onclick = (e) => { const b = e.target.closest('[data-t]'); if (b) go(b.dataset.t); };
 
   function applyHeader() {
-    $('t-nome').textContent = loja.nome;
+    renderLojaSel();
     $('sw-aberta').checked = loja.aberta; $('sw-txt').textContent = loja.aberta ? 'Aberta' : 'Fechada';
     $('b-ver').href = 'loja.html?l=' + encodeURIComponent(loja.slug);
     $('l-link').textContent = cfg.siteUrl + 'loja.html?l=' + loja.slug;
@@ -398,7 +431,8 @@
   let codigo = null;
   const fmtCod = (c) => c ? c.slice(0, 4) + '-' + c.slice(4) : '';
   async function loadCodigo(novo) {
-    const { data, error } = await sb.rpc('ff_codigo_entregador', { p_novo: !!novo });
+    if (!loja) return;
+    const { data, error } = await sb.rpc('ff_codigo_entregador', { p_loja: loja.id, p_novo: !!novo });
     if (error) { $('moto').innerHTML = `<span class="small">Acesso do motoboy indisponível: ${esc(GP.err(error))}</span>`; return; }
     codigo = data; renderCodigo();
   }
@@ -448,7 +482,7 @@
       : `<div class="box">COBRAR NA ENTREGA<br>${p.pagamento === 'debito' ? 'CARTÃO DE DÉBITO' : 'CARTÃO DE CRÉDITO'}<br><span class="big">${brl(p.total)}</span><br><small>levar maquininha</small></div>`;
     const itens = p.ff_pedido_itens.map(i => `<div class="it"><span><b>${i.qtd}x</b> ${e(i.nome)}</span><span>${brl(i.preco * i.qtd)}</span></div>${i.obs ? `<div class="obs">&gt; ${e(i.obs)}</div>` : ''}`).join('');
     const viaEntrega = `<section class="via">
-      <div class="c"><div class="loja">${e(L.nome)}</div>${L.telefone ? `<div>${e(L.telefone)}</div>` : ''}</div>
+      <div class="c"><div class="loja">${e(L.nome)}</div>${L.cnpj ? `<div>CNPJ ${e(GP.fmtCnpj(L.cnpj))}</div>` : ''}${L.telefone ? `<div>${e(L.telefone)}</div>` : ''}</div>
       ${linha}<div class="c"><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div class="tag">VIA DA ENTREGA</div></div>${linha}
       <div><b>CLIENTE:</b> ${e(p.cliente_nome)}</div><div><b>TEL:</b> ${e(p.cliente_telefone)}</div>
       ${linha}<div><b>ENTREGAR EM:</b></div><div class="end">${e(p.endereco)}</div>${p.complemento ? `<div class="end">${e(p.complemento)}</div>` : ''}
@@ -556,7 +590,7 @@
           <div class="sum-row small"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
           <div class="sum-row small"><span>Entrega</span><span>${brl(p.taxa_entrega)}</span></div>
           <div class="sum-row total" style="font-size:1rem"><span>Total</span><span>${brl(p.total)}</span></div>
-          <div class="row" style="margin-top:10px;gap:8px">
+          <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
             <span class="badge ${p.pagamento === 'pix' ? 'b-ok' : 'b-warn'}">${p.pagamento === 'pix' ? 'Pix' : p.pagamento === 'debito' ? 'Débito na entrega' : 'Crédito na entrega'}</span>
             ${p.comprovante_path ? `<button class="btn btn-soft btn-sm" data-comp="${esc(p.comprovante_path)}">${ic('receipt')}Ver comprovante</button>` : ''}
             <button class="btn btn-ghost btn-sm" data-print="${p.id}" style="margin-left:auto">${ic('receipt')}Imprimir</button>
@@ -716,6 +750,7 @@
     lojaPos = l.lat != null ? { lat: l.lat, lng: l.lng } : null;
     setPv('pv-logo', lojaImg); setPv('pv-capa', lojaCapa);
     $('l-nome').value = l.nome || ''; $('l-desc').value = l.descricao || ''; $('l-tel').value = l.telefone || '';
+    $('l-cnpj').value = l.cnpj ? GP.fmtCnpj(l.cnpj) : ''; cnpjMsg();
     $('l-tempo').value = l.tempo_entrega || '30–50 min'; $('l-end').value = l.endereco || '';
     $('l-taxakm').value = money(l.taxa_km); $('l-taxamin').value = money(l.taxa_minima);
     $('l-raio').value = Number(l.raio_km) ? String(l.raio_km).replace('.', ',') : ''; $('l-min').value = money(l.pedido_minimo);
@@ -756,6 +791,15 @@
   }
   $('l-pixchave').addEventListener('input', () => { mascaraPix(); pixPrev(); });
   $('l-pixtipo').addEventListener('change', () => { mascaraPix(); pixPrev(); });
+  function cnpjMsg() {
+    const v = $('l-cnpj').value, d = GP.digits(v);
+    if (!d) { $('cnpj-msg').innerHTML = ''; $('l-cnpj').style.borderColor = ''; return true; }
+    const ok = d.length === 14 && GP.cnpjValido(d);
+    $('l-cnpj').style.borderColor = ok ? 'var(--ok)' : (d.length === 14 ? 'var(--bad)' : '');
+    $('cnpj-msg').innerHTML = ok ? '<span style="color:var(--ok);font-weight:700">✓ CNPJ válido</span>' : d.length === 14 ? '<span style="color:var(--bad);font-weight:700">⚠ Esse CNPJ não é válido. Confira os números.</span>' : '';
+    return ok;
+  }
+  $('l-cnpj').addEventListener('input', (e) => { e.target.value = GP.fmtCnpj(e.target.value); cnpjMsg(); });
   const togglePix = () => $('pix-cfg').style.display = $('l-pix').checked ? '' : 'none';
   $('l-pix').onchange = togglePix;
   const coord = () => $('l-coord').textContent = lojaPos ? `📍 ${lojaPos.lat.toFixed(5)}, ${lojaPos.lng.toFixed(5)} — arraste o pino para ajustar.` : 'Toque no mapa para marcar onde fica a loja.';
@@ -782,13 +826,14 @@
     e.preventDefault();
     const nome = $('l-nome').value.trim();
     if (!nome) return GP.toast('Informe o nome da loja.', 'err');
+    if (GP.digits($('l-cnpj').value) && !cnpjMsg()) { $('l-cnpj').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('CNPJ inválido. Corrija ou deixe em branco.', 'err'); }
     if (!lojaPos) { GP.toast('Marque a localização da loja no mapa.', 'err'); $('l-map').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     const pix = $('l-pix').checked;
     if (pix && !$('l-pixchave').value.trim()) return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err');
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }
     if (!pix && !$('l-deb').checked && !$('l-cred').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
     const row = {
-      nome, descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
+      nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
       endereco: $('l-end').value.trim(), lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
       taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value), raio_km: num($('l-raio').value), pedido_minimo: num($('l-min').value),
       aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked,
@@ -804,14 +849,16 @@
     }
     b.disabled = false; b.textContent = t;
     if (res.error) return GP.toast(GP.err(res.error), 'err');
-    const primeira = !loja;
-    loja = res.data; fillLoja(); applyHeader(); setTabsLocked(false);
-    $('welcome').classList.add('hide');
-    if (primeira) {
+    if (!loja) {
+      lojas.push(res.data);
+      await abrirLoja(res.data);
+      go('cardapio');
       GP.toast('Loja criada! Agora monte seu cardápio.', 'ok');
-      await loadProds(); go('cardapio'); await loadPedidos();
-      clearInterval(timer); timer = setInterval(() => { if (!document.hidden) loadPedidos(); }, 15000);
-    } else GP.toast('Alterações salvas', 'ok');
+    } else {
+      loja = res.data; lojas = lojas.map(l => l.id === loja.id ? loja : l);
+      fillLoja(); applyHeader();
+      GP.toast('Alterações salvas', 'ok');
+    }
   };
 
   boot();

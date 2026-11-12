@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122021">
+<link rel="stylesheet" href="app.css?v=202611122027">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -200,8 +200,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122021"></script>
-<script src="app.js?v=202611122021"></script>
+<script src="config.js?v=202611122027"></script>
+<script src="app.js?v=202611122027"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -231,6 +231,7 @@
   else $('s-logo').textContent = loja.nome.trim()[0].toUpperCase();
   $('s-nome').textContent = loja.nome;
   $('s-desc').textContent = loja.descricao || '';
+  if (loja.cnpj) $('s-desc').insertAdjacentHTML('afterend', `<p class="small muted" style="margin:-6px 0 12px">CNPJ ${esc(GP.fmtCnpj(loja.cnpj))}</p>`);
   const pags = [loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito'].filter(Boolean);
   $('s-chips').innerHTML = [
     `<span class="badge ${loja.aberta ? 'b-ok' : 'b-off'}"><i class="dot"></i>${loja.aberta ? 'Aberta agora' : 'Fechada'}</span>`,

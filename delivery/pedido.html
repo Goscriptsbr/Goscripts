@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=202611122021">
+<link rel="stylesheet" href="app.css?v=202611122027">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -50,8 +50,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=202611122021"></script>
-<script src="app.js?v=202611122021"></script>
+<script src="config.js?v=202611122027"></script>
+<script src="app.js?v=202611122027"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -107,7 +107,7 @@
       <div class="card pad" style="margin-top:14px">
         <div class="store-mini">
           <div class="lg" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : esc(l.nome.trim()[0])}</div>
-          <div class="grow"><b>${esc(l.nome)}</b><div class="small muted">${esc(new Date(p.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))}</div></div>
+          <div class="grow"><b>${esc(l.nome)}</b>${l.cnpj ? `<div class="small muted">CNPJ ${esc(GP.fmtCnpj(l.cnpj))}</div>` : ''}<div class="small muted">${esc(new Date(p.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))}</div></div>
           ${l.telefone ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="${GP.wa(l.telefone, msg)}">${ic('chat')}WhatsApp</a>` : ''}
         </div>
         <div class="divider"></div>

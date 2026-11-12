@@ -245,6 +245,8 @@
     const calc = (n) => { const w = n === 12 ? [5,4,3,2,9,8,7,6,5,4,3,2] : [6,5,4,3,2,9,8,7,6,5,4,3,2]; let t = 0; for (let k = 0; k < n; k++) t += +d[k] * w[k]; const r = t % 11; return r < 2 ? 0 : 11 - r; };
     return calc(12) === +d[12] && calc(13) === +d[13];
   };
+  GP.cnpjValido = (v) => cnpjValido(GP.digits(v));
+  GP.fmtCnpj = (v) => { const d = GP.digits(v).slice(0, 14); return d.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2'); };
   // Confere se a chave combina com o tipo escolhido
   GP.pixValida = (tipo, chave) => {
     const k = String(chave || '').trim(), d = GP.digits(k);
