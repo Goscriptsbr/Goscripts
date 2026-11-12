@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cardápio · GoPedido</title>
+<meta name="theme-color" content="#F2451C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  body{padding-bottom:100px}
+  .cover{height:220px;background:linear-gradient(135deg,#FFB199,#F2451C) center/cover;position:relative}
+  .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35))}
+  @media(max-width:600px){.cover{height:160px}}
+  .head{position:relative;margin-top:-56px;z-index:2}
+  .head .card{padding:20px;display:flex;gap:18px;align-items:flex-start}
+  .head .lg{width:92px;height:92px;border-radius:22px;background:#fff center/cover;border:1px solid var(--line);flex:none;display:grid;place-items:center;font-size:2rem;font-weight:800;color:var(--brand);box-shadow:var(--sh)}
+  .head h1{font-size:clamp(1.4rem,3vw,1.9rem);letter-spacing:-.03em;line-height:1.1}
+  .head .desc{color:var(--ink-2);margin:6px 0 12px}
+  .head .chips{display:flex;flex-wrap:wrap;gap:8px}
+  @media(max-width:600px){.head .card{flex-direction:column;gap:12px}.head .lg{width:76px;height:76px;margin-top:-50px}}
+  .alert{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:600;font-size:.9rem;display:flex;gap:10px;align-items:center}
+  .alert.off{background:#F1F0ED;color:var(--ink-2)}
+
+  .catnav{position:sticky;top:64px;z-index:30;background:var(--bg);padding:12px 0;margin-top:16px;border-bottom:1px solid var(--line)}
+  .catnav .in{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .catnav .in::-webkit-scrollbar{display:none}
+  .catnav .chip{cursor:pointer;flex:none}
+  .catnav .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .catnav .search{flex:none;display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--muted)}
+  .catnav .search input{border:0;outline:0;background:none;width:130px;font-size:.84rem;color:var(--ink)}
+
+  .cat h2{font-size:1.15rem;font-weight:800;margin:26px 0 12px;letter-spacing:-.01em;scroll-margin-top:130px}
+  .prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  @media(max-width:400px){.prods{grid-template-columns:1fr}}
+  .prod{display:flex;gap:14px;padding:14px;cursor:pointer;transition:box-shadow .15s,transform .15s;text-align:left;width:100%}
+  .prod:hover{box-shadow:var(--sh-lg);transform:translateY(-2px)}
+  .prod .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+  .prod h3{font-size:.98rem;font-weight:700}
+  .prod p{color:var(--muted);font-size:.85rem;margin:4px 0 10px}
+  .prod .pr{margin-top:auto;font-weight:800}
+  .prod .ph{width:108px;height:108px;border-radius:14px;background:#F1EFEA center/cover;flex:none;position:relative}
+  .prod .ph .add{position:absolute;right:6px;bottom:6px;width:32px;height:32px;border-radius:10px;background:#fff;color:var(--brand);display:grid;place-items:center;box-shadow:var(--sh)}
+  .prod .inbag{display:inline-flex;margin-left:8px}
+  .prod.off{opacity:.5;pointer-events:none}
+
+  .bagbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:50;width:min(560px,calc(100% - 28px));height:60px;border-radius:18px;background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:0 10px 0 18px;box-shadow:0 14px 34px rgba(242,69,28,.4);font-weight:700;transition:transform .25s}
+  .bagbar.hidden{transform:translate(-50%,140%)}
+  .bagbar .n{background:rgba(255,255,255,.22);border-radius:10px;min-width:30px;height:30px;display:grid;place-items:center;font-size:.88rem}
+  .bagbar .go{margin-left:auto;background:#fff;color:var(--brand-2);height:42px;padding:0 16px;border-radius:12px;display:flex;align-items:center;gap:6px}
+
+  /* modal produto */
+  .pm-img{height:240px;background:#F1EFEA center/cover;flex:none}
+  .pm-close{position:absolute;right:12px;top:12px;z-index:3;width:38px;height:38px;border-radius:12px;background:#fff;display:grid;place-items:center;box-shadow:var(--sh)}
+
+  /* checkout */
+  .steps{display:flex;gap:6px;padding:12px 18px 0}
+  .steps i{flex:1;height:4px;border-radius:4px;background:var(--line)}
+  .steps i.on{background:var(--brand)}
+  .bag-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center}
+  .bag-item:last-child{border-bottom:0}
+  .bag-item .th{width:54px;height:54px;border-radius:12px;background:#F1EFEA center/cover;flex:none}
+  .fee{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--bg);margin-top:12px;font-size:.9rem}
+  .fee.bad{background:var(--bad-soft);color:var(--bad)}
+  .fee.ok{background:var(--ok-soft);color:#0d6b41}
+  .pixbox{border:1.5px dashed #F7A58C;background:#FFF9F6;border-radius:16px;padding:16px;margin-top:4px}
+  .pixbox .qr{width:200px;height:200px;margin:6px auto 10px;background:#fff;border-radius:12px;padding:6px;border:1px solid var(--line)}
+  .pixbox .qr svg{width:100%;height:100%}
+  .keyrow{display:flex;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 12px;margin-top:8px}
+  .keyrow code{flex:1;min-width:0;font-family:ui-monospace,Menlo,monospace;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .drop{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px;border:1.5px dashed var(--line);border-radius:14px;background:#fff;cursor:pointer;text-align:center;margin-top:14px;transition:border .15s}
+  .drop:hover{border-color:var(--brand)}
+  .drop.done{border-style:solid;border-color:var(--ok);background:var(--ok-soft);color:#0d6b41}
+  .drop .ic{width:44px;height:44px;border-radius:14px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center}
+  .drop.done .ic{background:#fff;color:var(--ok)}
+  .lock{display:flex;gap:8px;align-items:center;justify-content:center;color:var(--muted);font-size:.8rem;margin-top:10px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="icon-btn" href="./" id="b-back" aria-label="Voltar"></a>
+    <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
+    <div class="grow"></div>
+    <button class="btn btn-ghost btn-sm" id="b-bag"></button>
+  </div>
+</header>
+
+<div id="page">
+  <div class="cover" id="cover"></div>
+  <div class="wrap head">
+    <div class="card">
+      <div class="lg" id="s-logo"></div>
+      <div class="grow">
+        <h1 id="s-nome"><span class="sk" style="display:block;height:30px;width:220px"></span></h1>
+        <p class="desc" id="s-desc"></p>
+        <div class="chips" id="s-chips"></div>
+        <div id="s-alert"></div>
+      </div>
+    </div>
+  </div>
+  <nav class="catnav"><div class="wrap in" id="catnav"></div></nav>
+  <main class="wrap" id="menu"></main>
+</div>
+
+<button class="bagbar hidden" id="bagbar">
+  <span class="n" id="bb-n">0</span><span id="bb-t">Ver sacola</span>
+  <span class="go"><span id="bb-v">R$ 0,00</span><span id="bb-ic"></span></span>
+</button>
+
+<div class="overlay" id="ov"></div>
+
+<!-- Modal do produto -->
+<div class="sheet modal" id="pm" role="dialog" aria-modal="true">
+  <button class="pm-close" id="pm-x" aria-label="Fechar"></button>
+  <div class="pm-img" id="pm-img"></div>
+  <div class="sheet-body">
+    <h3 id="pm-nome" style="font-size:1.3rem;letter-spacing:-.02em"></h3>
+    <p id="pm-desc" class="muted" style="margin:6px 0 10px"></p>
+    <p id="pm-preco" style="font-weight:800;font-size:1.1rem"></p>
+    <label class="field" style="margin-top:16px"><span>Alguma observação?</span>
+      <textarea class="input" id="pm-obs" maxlength="200" placeholder="Ex.: sem cebola, ponto da carne…" style="min-height:70px"></textarea></label>
+  </div>
+  <div class="sheet-foot row">
+    <div class="qty"><button id="pm-m" aria-label="Menos"></button><span id="pm-q">1</span><button id="pm-p" aria-label="Mais"></button></div>
+    <button class="btn btn-primary grow" id="pm-add"></button>
+  </div>
+</div>
+
+<!-- Checkout -->
+<aside class="sheet tall" id="co" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <button class="icon-btn" id="co-back" aria-label="Voltar"></button>
+    <h3 id="co-title">Sua sacola</h3>
+    <button class="icon-btn" id="co-x" aria-label="Fechar"></button>
+  </div>
+  <div class="steps"><i id="st1"></i><i id="st2"></i><i id="st3"></i></div>
+  <div class="sheet-body">
+    <!-- 1. sacola -->
+    <section id="step1">
+      <div id="bag-list"></div>
+      <div class="divider"></div>
+      <div class="sum-row"><span>Subtotal</span><b id="s1-sub"></b></div>
+      <div class="sum-row muted small"><span>Taxa de entrega</span><span>calculada no próximo passo</span></div>
+      <p class="small muted" id="s1-min" style="margin-top:8px"></p>
+    </section>
+
+    <!-- 2. entrega -->
+    <section id="step2" class="hide">
+      <label class="field"><span>Seu nome</span><input class="input" id="c-nome" autocomplete="name" maxlength="80" placeholder="Como devemos te chamar?"></label>
+      <label class="field"><span>WhatsApp</span><input class="input" id="c-tel" inputmode="tel" autocomplete="tel" placeholder="(19) 99999-9999"></label>
+      <label class="field"><span>Endereço de entrega</span><input class="input" id="c-end" autocomplete="street-address" maxlength="200" placeholder="Rua, número e bairro"></label>
+      <label class="field"><span>Complemento <span class="muted">(opcional)</span></span><input class="input" id="c-comp" maxlength="120" placeholder="Apto, bloco, ponto de referência"></label>
+
+      <div class="row between" style="margin:6px 0 8px">
+        <b class="small">Localização para entrega</b>
+        <button class="btn btn-soft btn-sm" id="c-geo"></button>
+      </div>
+      <div class="map" id="c-map"></div>
+      <p class="small muted" style="margin-top:6px">Toque no mapa ou arraste o pino até a sua porta.</p>
+      <div id="c-fee"></div>
+      <label class="field" style="margin-top:14px"><span>Observação do pedido <span class="muted">(opcional)</span></span>
+        <textarea class="input" id="c-obs" maxlength="300" placeholder="Ex.: troco, interfone quebrado…" style="min-height:64px"></textarea></label>
+    </section>
+
+    <!-- 3. pagamento -->
+    <section id="step3" class="hide">
+      <b class="small" style="display:block;margin-bottom:10px">Como você quer pagar?</b>
+      <div id="pay-opts"></div>
+      <div id="pix-area" class="hide">
+        <div class="pixbox">
+          <div class="center"><b>Pague <span id="pix-val"></span> com Pix</b><p class="small muted">Escaneie o QR Code ou use o copia e cola</p></div>
+          <div class="qr" id="pix-qr"></div>
+          <button class="btn btn-dark btn-block btn-sm" id="pix-copy-cc"></button>
+          <div class="keyrow">
+            <div class="grow"><div class="small muted" id="pix-tipo">Chave Pix</div><code id="pix-key"></code></div>
+            <button class="btn btn-ghost btn-sm" id="pix-copy-key"></button>
+          </div>
+          <p class="small muted" style="margin-top:8px" id="pix-nome"></p>
+        </div>
+        <input type="file" id="pix-file" accept="image/*,application/pdf" hidden>
+        <label class="drop" for="pix-file" id="pix-drop"></label>
+        <div class="lock" id="pix-lock"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="sum-row"><span>Subtotal</span><span id="s3-sub"></span></div>
+      <div class="sum-row"><span>Entrega <span class="muted small" id="s3-dist"></span></span><span id="s3-fee"></span></div>
+      <div class="sum-row total"><span>Total</span><span id="s3-tot"></span></div>
+    </section>
+  </div>
+  <div class="sheet-foot">
+    <button class="btn btn-primary btn-block" id="co-next">Continuar</button>
+  </div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(async () => {
+  const { $, esc, brl, km, ic } = GP;
+  const sb = GP.client(false);
+  $('lg').innerHTML = ic('bag'); $('b-back').innerHTML = ic('left');
+  $('pm-x').innerHTML = ic('x'); $('pm-m').innerHTML = ic('minus'); $('pm-p').innerHTML = ic('plus');
+  $('co-x').innerHTML = ic('x'); $('co-back').innerHTML = ic('left'); $('bb-ic').innerHTML = ic('right');
+  $('c-geo').innerHTML = ic('locate') + 'Usar minha localização';
+  $('pix-copy-cc').innerHTML = ic('copy') + 'Copiar código Pix (copia e cola)';
+  $('pix-copy-key').innerHTML = ic('copy') + 'Copiar';
+  GP.phoneMask($('c-tel'));
+
+  const slug = new URLSearchParams(location.search).get('l');
+  const fail = (t, d) => { $('page').innerHTML = `<div class="wrap"><div class="empty" style="padding-top:90px"><div class="big">${ic('store')}</div><h4>${t}</h4><p>${d}</p><a class="btn btn-primary" href="./" style="margin-top:18px">Ver outras lojas</a></div></div>`; };
+  if (!slug) return fail('Loja não informada', 'Abra a loja pela página inicial.');
+
+  const { data: loja, error } = await sb.from('ff_lojas').select('*').eq('slug', slug).eq('ativa', true).maybeSingle();
+  if (error) return fail('Não foi possível abrir a loja', esc(GP.err(error)));
+  if (!loja) return fail('Loja não encontrada', 'O link pode estar errado ou a loja saiu do ar.');
+  const { data: prods } = await sb.from('ff_produtos').select('*').eq('loja_id', loja.id).order('ordem').order('nome');
+  const P = {}; (prods || []).forEach(p => P[p.id] = p);
+  document.title = `${loja.nome} · GoPedido`;
+
+  // ---------- Cabeçalho ----------
+  if (loja.capa_url || loja.imagem_url) $('cover').style.backgroundImage = `url('${loja.capa_url || loja.imagem_url}')`;
+  if (loja.imagem_url) $('s-logo').style.backgroundImage = `url('${loja.imagem_url}')`;
+  else $('s-logo').textContent = loja.nome.trim()[0].toUpperCase();
+  $('s-nome').textContent = loja.nome;
+  $('s-desc').textContent = loja.descricao || '';
+  const pags = [loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito'].filter(Boolean);
+  $('s-chips').innerHTML = [
+    `<span class="badge ${loja.aberta ? 'b-ok' : 'b-off'}"><i class="dot"></i>${loja.aberta ? 'Aberta agora' : 'Fechada'}</span>`,
+    `<span class="chip">${ic('clock')}${esc(loja.tempo_entrega)}</span>`,
+    `<span class="chip">${ic('bike')}${Number(loja.taxa_km) ? brl(loja.taxa_km) + '/km' : 'Entrega grátis'}${Number(loja.taxa_minima) ? ' · mín. ' + brl(loja.taxa_minima) : ''}</span>`,
+    Number(loja.pedido_minimo) ? `<span class="chip">Pedido mín. ${brl(loja.pedido_minimo)}</span>` : '',
+    pags.length ? `<span class="chip">${ic('card')}${pags.join(' · ')}</span>` : ''
+  ].join('');
+  if (!loja.aberta) $('s-alert').innerHTML = `<div class="alert off">${ic('clock')}A loja está fechada agora. Você pode ver o cardápio, mas os pedidos estão pausados.</div>`;
+
+  // ---------- Cardápio ----------
+  const cats = [];
+  (prods || []).forEach(p => { if (!cats.includes(p.categoria)) cats.push(p.categoria); });
+  let busca = '';
+  function renderMenu() {
+    const q = busca.toLowerCase();
+    const lst = (prods || []).filter(p => !q || (p.nome + ' ' + p.descricao).toLowerCase().includes(q));
+    if (!lst.length) {
+      $('menu').innerHTML = `<div class="empty"><div class="big">${ic('menu')}</div><h4>${prods && prods.length ? 'Nada encontrado' : 'Cardápio em preparação'}</h4><p>${prods && prods.length ? 'Tente outro termo.' : 'Esta loja ainda não cadastrou produtos.'}</p></div>`;
+      return;
+    }
+    $('menu').innerHTML = cats.map((c, i) => {
+      const ps = lst.filter(p => p.categoria === c);
+      if (!ps.length) return '';
+      return `<section class="cat"><h2 id="cat-${i}">${esc(c)}</h2><div class="prods">${ps.map(p => {
+        const n = qtdNo(p.id);
+        return `<button class="card prod ${p.disponivel ? '' : 'off'}" data-p="${p.id}">
+          <div class="tx"><h3>${esc(p.nome)}${n ? `<span class="badge b-brand inbag">${n}×</span>` : ''}</h3>
+          <p class="clamp2">${esc(p.descricao)}</p>
+          <div class="pr">${p.disponivel ? brl(p.preco) : '<span class="muted">Indisponível</span>'}</div></div>
+          <div class="ph" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${p.imagem_url ? '' : `<span style="position:absolute;inset:0;display:grid;place-items:center;color:#c9c5bc">${ic('image')}</span>`}<span class="add">${ic('plus')}</span></div>
+        </button>`;
+      }).join('')}</div></section>`;
+    }).join('');
+  }
+  $('catnav').innerHTML = `<label class="search">${ic('search')}<input id="m-q" placeholder="Buscar no cardápio"></label>` +
+    cats.map((c, i) => `<button class="chip" data-c="${i}">${esc(c)}</button>`).join('');
+  $('catnav').onclick = (e) => {
+    const b = e.target.closest('[data-c]'); if (!b) return;
+    const h = $('cat-' + b.dataset.c); if (h) h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('#catnav .chip').forEach(x => x.classList.toggle('on', x === b));
+  };
+  $('m-q').addEventListener('input', (e) => { busca = e.target.value.trim(); renderMenu(); });
+  $('menu').onclick = (e) => { const b = e.target.closest('[data-p]'); if (b) openProd(P[b.dataset.p]); };
+
+  // ---------- Sacola ----------
+  const KEY = 'gp_bag_' + loja.id;
+  let bag = (GP.ls.get(KEY, []) || []).filter(it => P[it.id] && P[it.id].disponivel);
+  const qtdNo = (id) => bag.filter(i => i.id === id).reduce((s, i) => s + i.qtd, 0);
+  const subtotal = () => bag.reduce((s, i) => s + Number(P[i.id].preco) * i.qtd, 0);
+  const count = () => bag.reduce((s, i) => s + i.qtd, 0);
+  function saveBag() {
+    GP.ls.set(KEY, bag);
+    const n = count();
+    $('bb-n').textContent = n; $('bb-v').textContent = brl(subtotal());
+    $('bagbar').classList.toggle('hidden', n === 0 || $('co').classList.contains('on'));
+    $('b-bag').innerHTML = ic('bag') + `<span>${n ? brl(subtotal()) : 'Sacola'}</span>`;
+    renderMenu();
+  }
+
+  // Modal produto
+  let cur = null, curQ = 1;
+  const ov = $('ov');
+  const openSheet = (el) => { el.classList.add('on'); ov.classList.add('on'); document.body.style.overflow = 'hidden'; };
+  const closeAll = () => { ['pm', 'co'].forEach(id => $(id).classList.remove('on')); ov.classList.remove('on'); document.body.style.overflow = ''; saveBag(); };
+  ov.onclick = closeAll; $('pm-x').onclick = closeAll; $('co-x').onclick = closeAll;
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+  function openProd(p) {
+    cur = p; curQ = 1;
+    $('pm-img').style.backgroundImage = p.imagem_url ? `url('${p.imagem_url}')` : '';
+    $('pm-img').style.display = p.imagem_url ? '' : 'none';
+    $('pm-nome').textContent = p.nome; $('pm-desc').textContent = p.descricao || '';
+    $('pm-preco').textContent = brl(p.preco); $('pm-obs').value = '';
+    updProd(); openSheet($('pm'));
+  }
+  function updProd() {
+    $('pm-q').textContent = curQ;
+    $('pm-add').innerHTML = `Adicionar · ${brl(cur.preco * curQ)}`;
+  }
+  $('pm-m').onclick = () => { curQ = Math.max(1, curQ - 1); updProd(); };
+  $('pm-p').onclick = () => { curQ = Math.min(99, curQ + 1); updProd(); };
+  $('pm-add').onclick = () => {
+    const obs = $('pm-obs').value.trim();
+    const ex = bag.find(i => i.id === cur.id && i.obs === obs);
+    if (ex) ex.qtd = Math.min(99, ex.qtd + curQ); else bag.push({ id: cur.id, qtd: curQ, obs });
+    closeAll(); GP.toast(`${cur.nome} adicionado à sacola`, 'ok');
+  };
+
+  // ---------- Checkout ----------
+  let step = 1, map = null;
+  const cli = GP.ls.get('gp_cliente', {});
+  let pos = cli.lat != null ? { lat: cli.lat, lng: cli.lng } : (GP.ls.get('gp_pos') || null);
+  let pag = null, comprovante = null, comprovanteTotal = null;
+  $('c-nome').value = cli.nome || ''; $('c-tel').value = cli.telefone || '';
+  $('c-end').value = cli.endereco || ''; $('c-comp').value = cli.complemento || '';
+
+  const entrega = () => {
+    if (!pos || loja.lat == null) return null;
+    const d = GP.dist(loja.lat, loja.lng, pos.lat, pos.lng);
+    return { d, t: GP.taxa(loja, d), fora: GP.foraArea(loja, d) };
+  };
+  const total = () => { const e = entrega(); return Math.round((subtotal() + (e ? e.t : 0)) * 100) / 100; };
+
+  const openCheckout = () => {
+    if (!count()) return GP.toast('Sua sacola está vazia');
+    step = 1; renderStep(); openSheet($('co')); $('bagbar').classList.add('hidden');
+  };
+  $('bagbar').onclick = openCheckout; $('b-bag').onclick = openCheckout;
+  $('co-back').onclick = () => { if (step > 1) { step--; renderStep(); } else closeAll(); };
+
+  function renderStep() {
+    ['step1', 'step2', 'step3'].forEach((s, i) => $(s).classList.toggle('hide', i + 1 !== step));
+    ['st1', 'st2', 'st3'].forEach((s, i) => $(s).classList.toggle('on', i < step));
+    $('co-title').textContent = ['Sua sacola', 'Entrega', 'Pagamento'][step - 1];
+    $('co').querySelector('.sheet-body').scrollTop = 0;
+    if (step === 1) renderBag();
+    if (step === 2) renderEntrega();
+    if (step === 3) renderPag();
+    updNext();
+  }
+
+  function renderBag() {
+    if (!bag.length) { $('bag-list').innerHTML = `<div class="empty"><div class="big">${ic('bag')}</div><h4>Sacola vazia</h4><p>Escolha algo gostoso no cardápio.</p></div>`; }
+    else $('bag-list').innerHTML = bag.map((it, k) => {
+      const p = P[it.id];
+      return `<div class="bag-item"><div class="th" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}"></div>
+        <div class="grow"><b class="small">${esc(p.nome)}</b>${it.obs ? `<div class="small muted ellipsis">${esc(it.obs)}</div>` : ''}<div class="small" style="font-weight:700;margin-top:2px">${brl(p.preco * it.qtd)}</div></div>
+        <div class="qty"><button data-k="${k}" data-d="-1">${it.qtd === 1 ? ic('trash') : ic('minus')}</button><span>${it.qtd}</span><button data-k="${k}" data-d="1">${ic('plus')}</button></div></div>`;
+    }).join('');
+    $('s1-sub').textContent = brl(subtotal());
+    const falta = Number(loja.pedido_minimo) - subtotal();
+    $('s1-min').textContent = falta > 0 ? `Pedido mínimo de ${brl(loja.pedido_minimo)} — faltam ${brl(falta)}.` : '';
+  }
+  $('bag-list').onclick = (e) => {
+    const b = e.target.closest('[data-k]'); if (!b) return;
+    const it = bag[+b.dataset.k]; it.qtd += +b.dataset.d;
+    if (it.qtd <= 0) bag.splice(+b.dataset.k, 1);
+    GP.ls.set(KEY, bag); renderBag(); updNext();
+  };
+
+  function renderEntrega() {
+    if (!map) {
+      map = GP.mapPicker($('c-map'), pos, (lat, lng) => { pos = { lat, lng }; renderFee(); updNext(); });
+      if (!pos && loja.lat != null) map.map.setView([loja.lat, loja.lng], 14);
+    } else map.refresh();
+    renderFee();
+  }
+  function renderFee() {
+    const e = entrega();
+    if (!e) { $('c-fee').innerHTML = `<div class="fee">${ic('pin')}<span>Marque sua localização para calcularmos a taxa de entrega.</span></div>`; return; }
+    if (e.fora) { $('c-fee').innerHTML = `<div class="fee bad">${ic('x')}<span>Você está a ${km(e.d)} da loja — fora da área de entrega (até ${km(loja.raio_km)}).</span></div>`; return; }
+    $('c-fee').innerHTML = `<div class="fee ok">${ic('bike')}<span class="grow">Distância de <b>${km(e.d)}</b> até a loja</span><b>${e.t > 0 ? brl(e.t) : 'Grátis'}</b></div>`;
+  }
+  $('c-geo').onclick = async () => {
+    const b = $('c-geo'); const old = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…'; b.disabled = true;
+    try { const p = await GP.geo(); map.set(p.lat, p.lng); }
+    catch (e) { GP.toast(e.message, 'err'); }
+    b.innerHTML = old; b.disabled = false;
+  };
+  ['c-nome', 'c-tel', 'c-end'].forEach(id => $(id).addEventListener('input', updNext));
+
+  function renderPag() {
+    const ops = [
+      loja.aceita_pix && ['pix', 'pix', 'Pix', 'Pague agora e anexe o comprovante'],
+      loja.aceita_debito && ['debito', 'card', 'Cartão de débito', 'Pague na entrega, na maquininha'],
+      loja.aceita_credito && ['credito', 'card', 'Cartão de crédito', 'Pague na entrega, na maquininha']
+    ].filter(Boolean);
+    if (pag && !ops.find(o => o[0] === pag)) pag = null;
+    if (!pag && ops.length === 1) pag = ops[0][0];
+    $('pay-opts').innerHTML = ops.length ? ops.map(o => `<label class="opt ${pag === o[0] ? 'on' : ''}">
+      <input type="radio" name="pag" value="${o[0]}" ${pag === o[0] ? 'checked' : ''}>
+      <span class="ic" style="color:${o[0] === 'pix' ? '#32BCAD' : 'var(--ink-2)'}">${ic(o[1])}</span>
+      <span class="grow"><b>${o[2]}</b><div class="small muted">${o[3]}</div></span></label>`).join('')
+      : '<p class="muted">Esta loja ainda não configurou formas de pagamento.</p>';
+    if (comprovante && comprovanteTotal !== total()) { comprovante = null; GP.toast('O valor mudou: anexe um novo comprovante.'); }
+    const e = entrega();
+    $('s3-sub').textContent = brl(subtotal());
+    $('s3-fee').textContent = e && e.t > 0 ? brl(e.t) : 'Grátis';
+    $('s3-dist').textContent = e ? `(${km(e.d)})` : '';
+    $('s3-tot').textContent = brl(total());
+    renderPix();
+  }
+  $('pay-opts').onchange = (e) => { pag = e.target.value; renderPag(); updNext(); };
+
+  function renderPix() {
+    const on = pag === 'pix';
+    $('pix-area').classList.toggle('hide', !on);
+    if (!on) return;
+    const v = total();
+    const cc = GP.pixPayload(loja, v);
+    $('pix-val').textContent = brl(v);
+    $('pix-qr').innerHTML = cc ? GP.qr(cc) : '';
+    $('pix-qr').style.display = cc ? '' : 'none';
+    $('pix-copy-cc').style.display = cc ? '' : 'none';
+    $('pix-copy-cc').onclick = () => GP.copy(cc, 'Código Pix copiado! Cole no app do seu banco.');
+    const tipos = { cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória' };
+    $('pix-tipo').textContent = 'Chave Pix · ' + (tipos[loja.pix_tipo] || '');
+    $('pix-key').textContent = loja.pix_chave || '—';
+    $('pix-copy-key').onclick = () => GP.copy(GP.pixChave(loja.pix_tipo, loja.pix_chave), 'Chave Pix copiada!');
+    $('pix-nome').innerHTML = loja.pix_nome ? `Recebedor: <b>${esc(loja.pix_nome)}</b>. Confira o nome antes de pagar.` : '';
+    renderDrop();
+  }
+  function renderDrop(loading) {
+    const d = $('pix-drop');
+    d.classList.toggle('done', !!comprovante && !loading);
+    if (loading) d.innerHTML = `<span class="ic"><span class="spin"></span></span><b>Enviando comprovante…</b>`;
+    else if (comprovante) d.innerHTML = `<span class="ic">${ic('check')}</span><b>Comprovante anexado</b><span class="small">Toque para trocar o arquivo</span>`;
+    else d.innerHTML = `<span class="ic">${ic('upload')}</span><b>Anexar comprovante do Pix</b><span class="small muted">Foto ou print da tela (JPG, PNG ou PDF)</span>`;
+    $('pix-lock').innerHTML = comprovante ? '' : ic('shield') + 'O pedido só pode ser enviado depois de anexar o comprovante.';
+  }
+  $('pix-file').onchange = async (e) => {
+    let f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (!/^image\/|application\/pdf/.test(f.type)) return GP.toast('Envie uma imagem ou PDF.', 'err');
+    renderDrop(true); updNext(true);
+    try {
+      f = await GP.compress(f, 1600, 0.85);
+      if (f.size > 8 * 1024 * 1024) throw new Error('Arquivo muito grande (máx. 8 MB).');
+      const path = `${loja.id}/${GP.uid()}.${GP.ext(f)}`;
+      const { error } = await sb.storage.from('ff-comprovantes').upload(path, f, { contentType: f.type, upsert: false });
+      if (error) throw error;
+      comprovante = path; comprovanteTotal = total();
+      GP.toast('Comprovante anexado!', 'ok');
+    } catch (er) { comprovante = null; GP.toast(GP.err(er), 'err'); }
+    renderDrop(); updNext();
+  };
+
+  function updNext(busy) {
+    const b = $('co-next');
+    let ok = true, txt = 'Continuar';
+    if (step === 1) {
+      txt = `Continuar · ${brl(subtotal())}`;
+      ok = count() > 0 && subtotal() >= Number(loja.pedido_minimo);
+    } else if (step === 2) {
+      const e = entrega();
+      txt = 'Ir para o pagamento';
+      ok = $('c-nome').value.trim().length >= 2 && GP.digits($('c-tel').value).length >= 10 && $('c-end').value.trim().length >= 5 && e && !e.fora;
+    } else {
+      txt = `Enviar pedido · ${brl(total())}`;
+      ok = !!pag && (pag !== 'pix' || !!comprovante);
+    }
+    if (!loja.aberta) { ok = false; txt = 'Loja fechada no momento'; }
+    b.textContent = txt; b.disabled = !ok || busy === true;
+  }
+
+  $('co-next').onclick = async () => {
+    if (step < 3) {
+      if (step === 2) GP.ls.set('gp_cliente', { nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: $('c-end').value.trim(), complemento: $('c-comp').value.trim(), lat: pos.lat, lng: pos.lng });
+      step++; renderStep(); return;
+    }
+    const b = $('co-next'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Enviando pedido…';
+    const { data, error } = await sb.rpc('ff_criar_pedido', {
+      p_loja: loja.id,
+      p_cliente: { nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: $('c-end').value.trim(), complemento: $('c-comp').value.trim(), observacao: $('c-obs').value.trim(), lat: pos.lat, lng: pos.lng },
+      p_itens: bag.map(i => ({ id: i.id, qtd: i.qtd, obs: i.obs })),
+      p_pagamento: pag,
+      p_comprovante: pag === 'pix' ? comprovante : null
+    });
+    if (error) { GP.toast(GP.err(error), 'err'); updNext(); return; }
+    bag = []; GP.ls.del(KEY);
+    const hist = GP.ls.get('gp_pedidos', []); hist.unshift({ t: data.token, n: data.numero, loja: loja.nome, em: Date.now() });
+    GP.ls.set('gp_pedidos', hist.slice(0, 20));
+    location.href = 'pedido.html?t=' + encodeURIComponent(data.token) + '&novo=1';
+  };
+
+  saveBag();
+})();
+</script>
+</body>
+</html>

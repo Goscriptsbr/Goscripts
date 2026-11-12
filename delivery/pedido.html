@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Acompanhar pedido · GoPedido</title>
+<meta name="theme-color" content="#F2451C">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+  .ok-hero{text-align:center;padding:34px 0 8px}
+  .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+  .ok-hero .big .i{width:38px;height:38px;stroke-width:2.6}
+  @keyframes pop{from{transform:scale(.4);opacity:0}}
+  .ok-hero h1{font-size:1.6rem;letter-spacing:-.03em}
+  .timeline{position:relative;padding-left:6px}
+  .tl{display:flex;gap:14px;position:relative;padding-bottom:20px}
+  .tl:last-child{padding-bottom:0}
+  .tl::before{content:"";position:absolute;left:15px;top:32px;bottom:0;width:2px;background:var(--line)}
+  .tl:last-child::before{display:none}
+  .tl .b{width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid var(--line);display:grid;place-items:center;flex:none;color:var(--muted);position:relative;z-index:1}
+  .tl.done .b{background:var(--ok);border-color:var(--ok);color:#fff}
+  .tl.done::before{background:var(--ok)}
+  .tl.now .b{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 0 0 6px rgba(242,69,28,.15)}
+  .tl h4{font-size:.96rem}
+  .tl p{font-size:.84rem;color:var(--muted)}
+  .item{display:flex;justify-content:space-between;gap:12px;padding:8px 0;font-size:.92rem}
+  .store-mini{display:flex;gap:12px;align-items:center}
+  .store-mini .lg{width:48px;height:48px;border-radius:14px;background:var(--brand-soft) center/cover;display:grid;place-items:center;color:var(--brand);font-weight:800}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted)}
+  .live i{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pl 1.6s infinite}
+  @keyframes pl{0%{box-shadow:0 0 0 0 rgba(20,148,90,.5)}100%{box-shadow:0 0 0 10px rgba(20,148,90,0)}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap narrow">
+    <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
+    <div class="grow"></div>
+    <span class="live" id="live"><i></i>Atualizando ao vivo</span>
+  </div>
+</header>
+
+<main class="wrap narrow" id="main" style="padding-bottom:40px">
+  <div class="sk" style="height:120px;margin-top:30px"></div>
+  <div class="sk" style="height:240px;margin-top:16px"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(async () => {
+  const { $, esc, brl, km, ic } = GP;
+  $('lg').innerHTML = ic('bag');
+  const sb = GP.client(false);
+  const qs = new URLSearchParams(location.search);
+  const token = qs.get('t');
+  const novo = qs.get('novo') === '1';
+  if (novo) history.replaceState(null, '', 'pedido.html?t=' + encodeURIComponent(token));
+
+  const ORDEM = ['novo', 'preparando', 'saiu', 'entregue'];
+  const ICS = { novo: 'receipt', preparando: 'bolt', saiu: 'bike', entregue: 'check' };
+  let last = null;
+
+  async function load() {
+    if (!token) return notFound();
+    const { data, error } = await sb.rpc('ff_acompanhar', { p_token: token });
+    if (error) { if (!last) $('main').innerHTML = `<div class="empty" style="padding-top:80px"><h4>Não foi possível carregar</h4><p>${esc(GP.err(error))}</p></div>`; return; }
+    if (!data) return notFound();
+    const sig = data.status + data.atualizado_em;
+    if (sig === last) return;
+    if (last && navigator.vibrate) navigator.vibrate(200);
+    last = sig; render(data);
+  }
+  function notFound() {
+    $('live').classList.add('hide');
+    $('main').innerHTML = `<div class="empty" style="padding-top:80px"><div class="big">${ic('receipt')}</div><h4>Pedido não encontrado</h4><p>Confira o link que você recebeu.</p><a class="btn btn-primary" href="./" style="margin-top:16px">Voltar ao início</a></div>`;
+  }
+
+  function render(p) {
+    const st = GP.STATUS[p.status];
+    const fim = p.status === 'entregue' || p.status === 'cancelado';
+    $('live').classList.toggle('hide', fim);
+    const idx = ORDEM.indexOf(p.status);
+    const tl = p.status === 'cancelado'
+      ? `<div class="tl now"><div class="b" style="background:var(--bad);border-color:var(--bad)">${ic('x')}</div><div><h4>Pedido cancelado</h4><p>Fale com a loja se tiver dúvidas.</p></div></div>`
+      : ORDEM.map((s, i) => `<div class="tl ${i < idx || (i === idx && s === 'entregue') ? 'done' : i === idx ? 'now' : ''}">
+          <div class="b">${ic(i < idx ? 'check' : ICS[s])}</div>
+          <div><h4>${GP.STATUS[s].t}</h4><p>${i === idx ? GP.STATUS[s].d + ' · ' + GP.hora(p.atualizado_em) : i === 0 ? GP.hora(p.criado_em) : ''}</p></div></div>`).join('');
+    const l = p.loja;
+    const msg = `Olá! Sou ${p.cliente_nome}, fiz o pedido #${p.numero} pelo GoPedido.`;
+    $('main').innerHTML = `
+      ${novo ? `<div class="ok-hero"><div class="big">${ic('check')}</div><h1>Pedido enviado!</h1><p class="muted">A loja já recebeu. Guarde este link para acompanhar.</p></div>` : '<div style="height:24px"></div>'}
+      <div class="card pad" style="margin-top:14px">
+        <div class="row between" style="margin-bottom:18px">
+          <div><div class="small muted">Pedido</div><b style="font-size:1.3rem">#${p.numero}</b></div>
+          <span class="badge ${st.c}"><i class="dot"></i>${st.t}</span>
+        </div>
+        <div class="timeline">${tl}</div>
+        ${!fim && l.tempo_entrega ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('clock')}<span>Previsão da loja: <b>${esc(l.tempo_entrega)}</b></span></div>` : ''}
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <div class="store-mini">
+          <div class="lg" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : esc(l.nome.trim()[0])}</div>
+          <div class="grow"><b>${esc(l.nome)}</b><div class="small muted">${esc(new Date(p.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))}</div></div>
+          ${l.telefone ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="${GP.wa(l.telefone, msg)}">${ic('chat')}WhatsApp</a>` : ''}
+        </div>
+        <div class="divider"></div>
+        ${p.itens.map(i => `<div class="item"><span><b>${i.qtd}×</b> ${esc(i.nome)}${i.obs ? `<div class="small muted">${esc(i.obs)}</div>` : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}
+        <div class="divider"></div>
+        <div class="sum-row"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
+        <div class="sum-row"><span>Entrega <span class="small muted">(${km(p.distancia_km)})</span></span><span>${Number(p.taxa_entrega) ? brl(p.taxa_entrega) : 'Grátis'}</span></div>
+        <div class="sum-row total"><span>Total</span><span>${brl(p.total)}</span></div>
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <div class="row" style="align-items:flex-start;margin-bottom:12px">${ic('pin')}<div><b class="small">Entregar em</b><div class="small muted">${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}</div></div></div>
+        <div class="row" style="align-items:flex-start">${ic(p.pagamento === 'pix' ? 'pix' : 'card')}<div><b class="small">Pagamento</b><div class="small muted">${GP.PAG[p.pagamento]}${p.pagamento === 'pix' ? ' · comprovante enviado' : ''}</div></div></div>
+        ${p.observacao ? `<div class="row" style="align-items:flex-start;margin-top:12px">${ic('edit')}<div><b class="small">Observação</b><div class="small muted">${esc(p.observacao)}</div></div></div>` : ''}
+      </div>
+
+      <div class="row" style="margin-top:18px;gap:10px">
+        <button class="btn btn-ghost grow" id="b-link">${ic('copy')}Copiar link</button>
+        <a class="btn btn-dark grow" href="loja.html?l=${encodeURIComponent(l.slug)}">${ic('store')}Pedir de novo</a>
+      </div>`;
+    $('b-link').onclick = () => GP.copy(location.origin + location.pathname + '?t=' + encodeURIComponent(token), 'Link do pedido copiado!');
+  }
+
+  await load();
+  setInterval(() => { if (!document.hidden) load(); }, 12000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Painel da loja · GoPedido</title>
+<meta name="theme-color" content="#16161B">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  /* login */
+  .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+  .auth .side{background:var(--ink);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+  .auth .side::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:var(--brand);opacity:.3;right:-140px;bottom:-140px}
+  .auth .side h2{font-size:2.2rem;line-height:1.1;letter-spacing:-.03em;margin:22px 0 14px;position:relative}
+  .auth .side ul{list-style:none;display:grid;gap:12px;position:relative}
+  .auth .side li{display:flex;gap:10px;color:#d6d6dd}
+  .auth .side li .i{color:#FF8A65}
+  .auth .form{display:grid;place-items:center;padding:30px 20px}
+  .auth .box{width:min(400px,100%)}
+  .auth h1{font-size:1.6rem;letter-spacing:-.03em;margin-bottom:4px}
+  .seg{display:flex;background:#ECEAE6;border-radius:12px;padding:4px;margin:20px 0}
+  .seg button{flex:1;height:38px;border-radius:9px;font-weight:700;color:var(--muted)}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+  @media(max-width:860px){.auth{grid-template-columns:1fr}.auth .side{display:none}}
+  .logo.light span{color:#fff}
+
+  /* app */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 20px;overflow-x:auto}
+  .tabs button{height:46px;padding:0 16px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;display:flex;gap:8px;align-items:center;white-space:nowrap}
+  .tabs button.on{color:var(--ink);border-color:var(--brand)}
+  .tabs button[disabled]{opacity:.35;pointer-events:none}
+  .tabs .count{background:var(--brand);color:#fff;border-radius:999px;font-size:.72rem;min-width:20px;height:20px;padding:0 6px;display:grid;place-items:center}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .stat{padding:14px 16px}
+  .stat .l{font-size:.78rem;color:var(--muted);font-weight:600}
+  .stat .v{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+  @media(max-width:700px){.stats{grid-template-columns:1fr 1fr}}
+  .orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+  @media(max-width:420px){.orders{grid-template-columns:1fr}}
+  .order{display:flex;flex-direction:column}
+  .order.st-novo{border-color:#F7A58C;box-shadow:0 0 0 3px rgba(242,69,28,.1),var(--sh)}
+  .order .oh{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .order .ob{padding:14px 16px;flex:1;font-size:.9rem}
+  .order .of{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
+  .order .line{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;color:var(--ink-2)}
+  .order .line .i{color:var(--muted);margin-top:2px}
+  .order .its{background:var(--bg);border-radius:10px;padding:10px 12px;margin:10px 0}
+  .order .its div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+
+  .plist{display:grid;gap:10px}
+  .pitem{display:flex;gap:12px;align-items:center;padding:10px 12px}
+  .pitem .th{width:58px;height:58px;border-radius:12px;background:#F1EFEA center/cover;flex:none;display:grid;place-items:center;color:#c9c5bc}
+  .pitem.off{opacity:.6}
+
+  .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:820px){.formgrid{grid-template-columns:1fr}}
+  .fs h3{font-size:1rem;font-weight:800;margin-bottom:14px;display:flex;gap:8px;align-items:center}
+  .imgpick{display:flex;gap:14px;align-items:center}
+  .imgpick .pv{width:84px;height:84px;border-radius:18px;background:#F1EFEA center/cover;border:1px solid var(--line);flex:none;display:grid;place-items:center;color:#c9c5bc}
+  .imgpick .pv.wide{width:150px}
+  .linkbox{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:12px;padding:8px 8px 8px 14px}
+  .linkbox code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.86rem}
+  .savebar{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--bg) 30%);padding:20px 0 calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:flex-end;gap:10px;z-index:5}
+  .welcome{background:linear-gradient(135deg,#FFF1EB,#fff);border:1px solid #FAD3C5;border-radius:var(--r);padding:18px;margin-bottom:18px;display:flex;gap:14px;align-items:center}
+  .welcome .big{width:48px;height:48px;border-radius:14px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="v-auth" class="auth hide">
+  <div class="side">
+    <a class="logo light" href="./"><b id="lg1"></b><span>Go<em>Pedido</em></span></a>
+    <div>
+      <h2>Sua lanchonete recebendo pedidos online hoje.</h2>
+      <ul id="perks"></ul>
+    </div>
+    <p class="small" style="color:#8d8d99;position:relative">Grátis para começar · sem comissão por pedido</p>
+  </div>
+  <div class="form">
+    <div class="box">
+      <a class="logo" href="./" style="margin-bottom:26px"><b id="lg2"></b><span>Go<em>Pedido</em></span></a>
+      <div id="auth-main">
+        <h1 id="a-title">Entrar no painel</h1>
+        <p class="muted" id="a-sub">Gerencie sua loja, cardápio e pedidos.</p>
+        <div class="seg"><button class="on" data-m="in">Entrar</button><button data-m="up">Criar conta</button></div>
+        <form id="f-auth">
+          <label class="field"><span>E-mail</span><input class="input" type="email" id="a-email" autocomplete="email" required></label>
+          <label class="field"><span>Senha</span><input class="input" type="password" id="a-pass" autocomplete="current-password" minlength="6" required></label>
+          <button class="btn btn-primary btn-block" id="a-btn">Entrar</button>
+        </form>
+        <button class="small muted" id="a-forgot" style="margin-top:14px;text-decoration:underline">Esqueci minha senha</button>
+      </div>
+      <div id="auth-reset" class="hide">
+        <h1>Criar nova senha</h1>
+        <p class="muted" style="margin-bottom:18px">Digite a nova senha da sua conta.</p>
+        <form id="f-reset">
+          <label class="field"><span>Nova senha</span><input class="input" type="password" id="r-pass" minlength="6" autocomplete="new-password" required></label>
+          <button class="btn btn-primary btn-block">Salvar nova senha</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAINEL ===================== -->
+<div id="v-app" class="hide">
+  <header class="topbar">
+    <div class="wrap">
+      <a class="logo" href="./"><b id="lg3"></b><span class="ellipsis" id="t-nome" style="max-width:38vw">Minha loja</span></a>
+      <div class="grow"></div>
+      <label class="switch" id="sw-wrap" title="Abrir/fechar a loja"><input type="checkbox" id="sw-aberta"><i></i><span id="sw-txt">Fechada</span></label>
+      <a class="icon-btn" id="b-ver" target="_blank" rel="noopener" title="Ver minha loja"></a>
+      <button class="icon-btn" id="b-sair" title="Sair"></button>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-bottom:30px">
+    <nav class="tabs" id="tabs">
+      <button data-t="pedidos" class="on"><span id="ti1"></span>Pedidos <span class="count hide" id="cnt"></span></button>
+      <button data-t="cardapio"><span id="ti2"></span>Cardápio</button>
+      <button data-t="loja"><span id="ti3"></span>Minha loja</button>
+    </nav>
+
+    <!-- Pedidos -->
+    <section id="tab-pedidos">
+      <div class="stats" id="stats"></div>
+      <div class="row between" style="margin-bottom:14px;flex-wrap:wrap">
+        <div class="row" id="ofilter" style="gap:8px">
+          <button class="chip on" data-f="abertos" style="cursor:pointer">Em andamento</button>
+          <button class="chip" data-f="fim" style="cursor:pointer">Finalizados</button>
+          <button class="chip" data-f="todos" style="cursor:pointer">Todos</button>
+        </div>
+        <span class="small muted" id="upd"></span>
+      </div>
+      <div class="orders" id="orders"></div>
+    </section>
+
+    <!-- Cardápio -->
+    <section id="tab-cardapio" class="hide">
+      <div class="row between" style="margin-bottom:16px">
+        <div><h2 style="font-size:1.25rem;letter-spacing:-.02em">Cardápio</h2><p class="small muted" id="p-count"></p></div>
+        <button class="btn btn-primary" id="b-novo"></button>
+      </div>
+      <div id="plist"></div>
+    </section>
+
+    <!-- Minha loja -->
+    <section id="tab-loja" class="hide">
+      <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div><b>Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div></div>
+      <form id="f-loja">
+        <div class="formgrid">
+          <div class="card pad fs">
+            <h3><span id="fi1"></span>Dados da loja</h3>
+            <div class="field"><span>Logo / foto da loja</span>
+              <div class="imgpick"><div class="pv" id="pv-logo"></div><div><label class="btn btn-ghost btn-sm" for="in-logo">Escolher imagem</label><small>Quadrada, JPG ou PNG</small></div></div>
+              <input type="file" id="in-logo" accept="image/*" hidden></div>
+            <div class="field"><span>Capa <span class="muted">(opcional)</span></span>
+              <div class="imgpick"><div class="pv wide" id="pv-capa"></div><div><label class="btn btn-ghost btn-sm" for="in-capa">Escolher imagem</label><small>Horizontal, aparece no topo da loja</small></div></div>
+              <input type="file" id="in-capa" accept="image/*" hidden></div>
+            <label class="field"><span>Nome da loja</span><input class="input" id="l-nome" maxlength="60" required placeholder="Ex.: Burger do Zé"></label>
+            <label class="field"><span>Descrição</span><textarea class="input" id="l-desc" maxlength="240" placeholder="Hambúrgueres artesanais, porções e milkshakes."></textarea></label>
+            <label class="field"><span>WhatsApp da loja</span><input class="input" id="l-tel" inputmode="tel" placeholder="(19) 99999-9999"></label>
+            <label class="field"><span>Tempo médio de entrega</span><input class="input" id="l-tempo" maxlength="30" placeholder="30–50 min"></label>
+            <div class="field"><span>Link da sua loja</span>
+              <div class="linkbox"><code id="l-link">—</code><button type="button" class="btn btn-ghost btn-sm" id="b-copylink"></button></div></div>
+          </div>
+
+          <div class="card pad fs">
+            <h3><span id="fi2"></span>Localização e entrega</h3>
+            <label class="field"><span>Endereço da loja</span><input class="input" id="l-end" maxlength="200" placeholder="Rua, número, bairro, cidade"></label>
+            <div class="row between" style="margin-bottom:8px"><b class="small">Ponto no mapa (de onde sai a entrega)</b><button type="button" class="btn btn-soft btn-sm" id="b-geo"></button></div>
+            <div class="map" id="l-map" style="height:220px"></div>
+            <p class="small muted" style="margin:6px 0 16px" id="l-coord">Toque no mapa para marcar a loja.</p>
+            <div class="grid2">
+              <label class="field"><span>Taxa por km</span><div class="prefix"><i>R$</i><input class="input" id="l-taxakm" inputmode="decimal" placeholder="2,00"></div></label>
+              <label class="field"><span>Taxa mínima</span><div class="prefix"><i>R$</i><input class="input" id="l-taxamin" inputmode="decimal" placeholder="5,00"></div></label>
+              <label class="field"><span>Raio máximo</span><div class="prefix"><i>km</i><input class="input" id="l-raio" inputmode="decimal" placeholder="0 = sem limite"></div></label>
+              <label class="field"><span>Pedido mínimo</span><div class="prefix"><i>R$</i><input class="input" id="l-min" inputmode="decimal" placeholder="0,00"></div></label>
+            </div>
+            <div class="fee small" id="l-sim" style="background:var(--bg);border-radius:12px;padding:12px 14px"></div>
+          </div>
+
+          <div class="card pad fs" style="grid-column:1/-1">
+            <h3><span id="fi3"></span>Formas de pagamento</h3>
+            <div class="row" style="gap:22px;flex-wrap:wrap;margin-bottom:18px">
+              <label class="switch"><input type="checkbox" id="l-pix"><i></i>Pix</label>
+              <label class="switch"><input type="checkbox" id="l-deb"><i></i>Débito na entrega</label>
+              <label class="switch"><input type="checkbox" id="l-cred"><i></i>Crédito na entrega</label>
+            </div>
+            <div id="pix-cfg" class="grid2">
+              <label class="field"><span>Tipo de chave Pix</span>
+                <select class="input" id="l-pixtipo"><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="telefone">Telefone</option><option value="email">E-mail</option><option value="aleatoria">Chave aleatória</option></select></label>
+              <label class="field"><span>Chave Pix</span><input class="input" id="l-pixchave" maxlength="80"></label>
+              <label class="field"><span>Nome do recebedor</span><input class="input" id="l-pixnome" maxlength="60" placeholder="Como aparece no banco"><small>Usado para gerar o QR Code com o valor certo.</small></label>
+              <label class="field"><span>Cidade do recebedor</span><input class="input" id="l-pixcidade" maxlength="40" placeholder="Mogi Guaçu"></label>
+            </div>
+          </div>
+        </div>
+        <div class="savebar"><button class="btn btn-primary" id="b-salvar" style="min-width:200px">Salvar loja</button></div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="ov"></div>
+
+<!-- Modal produto -->
+<div class="sheet modal" id="pmod" role="dialog" aria-modal="true">
+  <div class="sheet-head"><h3 id="pm-title">Novo produto</h3><button class="icon-btn" id="pm-x"></button></div>
+  <form id="f-prod" style="display:contents">
+    <div class="sheet-body">
+      <div class="field"><span>Foto</span>
+        <div class="imgpick"><div class="pv wide" id="pv-prod"></div><div><label class="btn btn-ghost btn-sm" for="in-prod">Escolher foto</label><small>Uma boa foto vende mais!</small></div></div>
+        <input type="file" id="in-prod" accept="image/*" hidden></div>
+      <label class="field"><span>Nome</span><input class="input" id="p-nome" maxlength="80" required placeholder="X-Bacon artesanal"></label>
+      <label class="field"><span>Descrição</span><textarea class="input" id="p-desc" maxlength="300" placeholder="Pão brioche, blend 160g, bacon crocante, cheddar…"></textarea></label>
+      <div class="grid2">
+        <label class="field"><span>Preço</span><div class="prefix"><i>R$</i><input class="input" id="p-preco" inputmode="decimal" required placeholder="29,90"></div></label>
+        <label class="field"><span>Categoria</span><input class="input" id="p-cat" list="cats" maxlength="40" required placeholder="Lanches"><datalist id="cats"></datalist></label>
+      </div>
+      <label class="switch"><input type="checkbox" id="p-disp" checked><i></i>Disponível para venda</label>
+    </div>
+    <div class="sheet-foot row">
+      <button type="button" class="btn btn-bad hide" id="p-del"></button>
+      <button class="btn btn-primary grow" id="p-save">Salvar produto</button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(async () => {
+  const { $, esc, brl, km, ic, num } = GP;
+  const sb = GP.client(true);
+  const cfg = GP.cfg;
+  ['lg1', 'lg2', 'lg3'].forEach(id => $(id).innerHTML = ic('bag'));
+  $('perks').innerHTML = [
+    'Cardápio com fotos, preços e categorias',
+    'Taxa de entrega automática por km (latitude e longitude)',
+    'Pix com QR Code e comprovante obrigatório',
+    'Cartão de débito e crédito na entrega',
+    'Pedidos chegando em tempo real com aviso sonoro'
+  ].map(t => `<li>${ic('check')}${t}</li>`).join('');
+  $('ti1').innerHTML = ic('receipt'); $('ti2').innerHTML = ic('menu'); $('ti3').innerHTML = ic('store');
+  $('fi1').innerHTML = ic('store'); $('fi2').innerHTML = ic('pin'); $('fi3').innerHTML = ic('card');
+  $('b-ver').innerHTML = ic('ext'); $('b-sair').innerHTML = ic('logout'); $('w-ic').innerHTML = ic('store');
+  $('b-novo').innerHTML = ic('plus') + 'Novo produto'; $('pm-x').innerHTML = ic('x');
+  $('p-del').innerHTML = ic('trash'); $('b-copylink').innerHTML = ic('copy');
+  $('b-geo').innerHTML = ic('locate') + 'Usar localização atual';
+  $('pv-logo').innerHTML = ic('image'); $('pv-capa').innerHTML = ic('image');
+  GP.phoneMask($('l-tel'));
+
+  let user = null, loja = null, prods = [], pedidos = [], conhecidos = null, ofiltro = 'abertos', timer = null;
+
+  // ================= AUTENTICAÇÃO =================
+  let modo = 'in', recovering = false;
+  document.querySelector('.seg').onclick = (e) => {
+    const b = e.target.closest('[data-m]'); if (!b) return;
+    modo = b.dataset.m;
+    document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b));
+    $('a-title').textContent = modo === 'in' ? 'Entrar no painel' : 'Criar conta de lojista';
+    $('a-sub').textContent = modo === 'in' ? 'Gerencie sua loja, cardápio e pedidos.' : 'Leva menos de 2 minutos. É grátis.';
+    $('a-btn').textContent = modo === 'in' ? 'Entrar' : 'Criar conta';
+    $('a-pass').autocomplete = modo === 'in' ? 'current-password' : 'new-password';
+  };
+  $('f-auth').onsubmit = async (e) => {
+    e.preventDefault();
+    const b = $('a-btn'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+    const email = $('a-email').value.trim(), password = $('a-pass').value;
+    try {
+      if (modo === 'in') {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      } else {
+        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: cfg.siteUrl + 'painel.html' } });
+        if (error) throw error;
+        if (!data.session) GP.toast('Conta criada! Confirme pelo link enviado ao seu e-mail.', 'ok');
+      }
+    } catch (er) { GP.toast(GP.err(er), 'err'); }
+    b.disabled = false; b.textContent = t;
+  };
+  $('a-forgot').onclick = async () => {
+    const email = $('a-email').value.trim();
+    if (!email) return GP.toast('Digite seu e-mail acima primeiro.');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: cfg.siteUrl + 'painel.html' });
+    GP.toast(error ? GP.err(error) : 'Enviamos um link para redefinir a senha.', error ? 'err' : 'ok');
+  };
+  $('f-reset').onsubmit = async (e) => {
+    e.preventDefault();
+    const { error } = await sb.auth.updateUser({ password: $('r-pass').value });
+    if (error) return GP.toast(GP.err(error), 'err');
+    recovering = false; GP.toast('Senha alterada!', 'ok'); boot();
+  };
+  $('b-sair').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+  sb.auth.onAuthStateChange((ev, session) => {
+    if (ev === 'PASSWORD_RECOVERY') { recovering = true; showAuth(true); return; }
+    if (ev === 'SIGNED_IN' && !recovering && (!user || user.id !== session.user.id)) setTimeout(boot, 0);
+  });
+  function showAuth(reset) {
+    $('v-app').classList.add('hide'); $('v-auth').classList.remove('hide');
+    $('auth-main').classList.toggle('hide', !!reset); $('auth-reset').classList.toggle('hide', !reset);
+  }
+
+  let booting = null;
+  function boot() { if (!booting) booting = doBoot().finally(() => { booting = null; }); return booting; }
+  async function doBoot() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return showAuth(false);
+    if (recovering) return;
+    user = session.user;
+    $('v-auth').classList.add('hide'); $('v-app').classList.remove('hide');
+    const { data, error } = await sb.from('ff_lojas').select('*').eq('dono', user.id).maybeSingle();
+    if (error) return GP.toast(GP.err(error), 'err');
+    loja = data;
+    fillLoja();
+    if (!loja) { setTabsLocked(true); go('loja'); $('welcome').classList.remove('hide'); return; }
+    setTabsLocked(false); applyHeader();
+    await loadProds();
+    go('pedidos');
+    await loadPedidos();
+    clearInterval(timer);
+    timer = setInterval(() => { if (!document.hidden) loadPedidos(); }, 15000);
+  }
+
+  // ================= ABAS =================
+  function setTabsLocked(v) { document.querySelectorAll('#tabs [data-t]').forEach(b => { if (b.dataset.t !== 'loja') b.disabled = v; }); $('sw-wrap').classList.toggle('hide', v); $('b-ver').classList.toggle('hide', v); }
+  function go(t) {
+    document.querySelectorAll('#tabs [data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+    ['pedidos', 'cardapio', 'loja'].forEach(s => $('tab-' + s).classList.toggle('hide', s !== t));
+    if (t === 'loja') initMap();
+  }
+  $('tabs').onclick = (e) => { const b = e.target.closest('[data-t]'); if (b) go(b.dataset.t); };
+
+  function applyHeader() {
+    $('t-nome').textContent = loja.nome;
+    $('sw-aberta').checked = loja.aberta; $('sw-txt').textContent = loja.aberta ? 'Aberta' : 'Fechada';
+    $('b-ver').href = 'loja.html?l=' + encodeURIComponent(loja.slug);
+    $('l-link').textContent = cfg.siteUrl + 'loja.html?l=' + loja.slug;
+  }
+  $('sw-aberta').onchange = async (e) => {
+    const v = e.target.checked;
+    if (v) {
+      const falta = [];
+      if (loja.lat == null) falta.push('localização no mapa');
+      if (!loja.aceita_pix && !loja.aceita_debito && !loja.aceita_credito) falta.push('forma de pagamento');
+      if (loja.aceita_pix && !loja.pix_chave) falta.push('chave Pix');
+      if (!prods.some(p => p.disponivel)) falta.push('ao menos 1 produto disponível');
+      if (falta.length) { e.target.checked = false; GP.toast('Antes de abrir, configure: ' + falta.join(', ') + '.', 'err'); return; }
+    }
+    const { error } = await sb.from('ff_lojas').update({ aberta: v }).eq('id', loja.id);
+    if (error) { e.target.checked = !v; return GP.toast(GP.err(error), 'err'); }
+    loja.aberta = v; applyHeader(); GP.toast(v ? 'Loja aberta! Já pode receber pedidos.' : 'Loja fechada.', 'ok');
+  };
+  $('b-copylink').onclick = () => loja && GP.copy(cfg.siteUrl + 'loja.html?l=' + loja.slug, 'Link da loja copiado!');
+
+  // ================= PEDIDOS =================
+  const beep = () => {
+    try {
+      const a = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.18, 0.36].forEach((t, i) => {
+        const o = a.createOscillator(), g = a.createGain();
+        o.frequency.value = [880, 1175, 1568][i]; o.type = 'sine';
+        g.gain.setValueAtTime(0.0001, a.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.35, a.currentTime + t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + t + 0.16);
+        o.connect(g).connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + 0.18);
+      });
+    } catch {}
+  };
+  async function loadPedidos() {
+    if (!loja) return;
+    const desde = new Date(Date.now() - 7 * 864e5).toISOString();
+    const { data, error } = await sb.from('ff_pedidos').select('*, ff_pedido_itens(*)')
+      .eq('loja_id', loja.id).gte('criado_em', desde).order('criado_em', { ascending: false }).limit(200);
+    if (error) { $('upd').textContent = 'Erro ao atualizar'; return; }
+    const ids = new Set(data.map(p => p.id));
+    if (conhecidos) {
+      const novos = data.filter(p => !conhecidos.has(p.id));
+      if (novos.length) { beep(); GP.toast(`🔔 Novo pedido #${novos[0].numero}!`, 'ok'); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
+    }
+    conhecidos = ids; pedidos = data;
+    $('upd').textContent = 'Atualizado às ' + GP.hora(new Date());
+    renderPedidos();
+  }
+  function renderPedidos() {
+    const hoje = new Date().toDateString();
+    const ph = pedidos.filter(p => new Date(p.criado_em).toDateString() === hoje && p.status !== 'cancelado');
+    const novos = pedidos.filter(p => p.status === 'novo').length;
+    const andamento = pedidos.filter(p => ['novo', 'preparando', 'saiu'].includes(p.status)).length;
+    $('cnt').textContent = novos; $('cnt').classList.toggle('hide', !novos);
+    document.title = (novos ? `(${novos}) ` : '') + 'Painel da loja · GoPedido';
+    $('stats').innerHTML = [
+      ['Pedidos hoje', ph.length], ['Faturamento hoje', brl(ph.reduce((s, p) => s + Number(p.total), 0))],
+      ['Em andamento', andamento], ['Ticket médio', brl(ph.length ? ph.reduce((s, p) => s + Number(p.subtotal), 0) / ph.length : 0)]
+    ].map(([l, v]) => `<div class="card stat"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
+
+    const lst = pedidos.filter(p => ofiltro === 'todos' ? true : ofiltro === 'fim' ? ['entregue', 'cancelado'].includes(p.status) : ['novo', 'preparando', 'saiu'].includes(p.status));
+    if (!lst.length) {
+      $('orders').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('receipt')}</div><h4>${ofiltro === 'abertos' ? 'Nenhum pedido em andamento' : 'Nenhum pedido aqui'}</h4><p>${loja.aberta ? 'Quando chegar um pedido, ele aparece aqui com um aviso sonoro.' : 'Sua loja está fechada. Abra no botão lá em cima para receber pedidos.'}</p></div>`;
+      return;
+    }
+    const PROX = { novo: ['preparando', 'Aceitar e preparar'], preparando: ['saiu', 'Saiu para entrega'], saiu: ['entregue', 'Marcar como entregue'] };
+    $('orders').innerHTML = lst.map(p => {
+      const st = GP.STATUS[p.status], nx = PROX[p.status];
+      const maps = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+      return `<article class="card order st-${p.status}">
+        <div class="oh"><b style="font-size:1.08rem">#${p.numero}</b><span class="small muted">${GP.hora(p.criado_em)} · ${GP.ago(p.criado_em)}</span><div class="grow"></div><span class="badge ${st.c}"><i class="dot"></i>${st.t}</span></div>
+        <div class="ob">
+          <div class="line">${ic('phone')}<div><b>${esc(p.cliente_nome)}</b> · <a href="${GP.wa(p.cliente_telefone, `Olá ${p.cliente_nome}! Aqui é da ${loja.nome}, sobre seu pedido #${p.numero}.`)}" target="_blank" rel="noopener" style="color:var(--ok);font-weight:700">${esc(p.cliente_telefone)}</a></div></div>
+          <div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}<br><a href="${maps}" target="_blank" rel="noopener" class="small" style="color:var(--brand-2);font-weight:700">Abrir rota no mapa (${km(p.distancia_km)})</a></div></div>
+          <div class="its">${p.ff_pedido_itens.map(i => `<div><span><b>${i.qtd}×</b> ${esc(i.nome)}${i.obs ? `<br><span class="small muted">↳ ${esc(i.obs)}</span>` : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div>
+          ${p.observacao ? `<div class="line">${ic('edit')}<div class="small"><b>Obs.:</b> ${esc(p.observacao)}</div></div>` : ''}
+          <div class="sum-row small"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
+          <div class="sum-row small"><span>Entrega</span><span>${brl(p.taxa_entrega)}</span></div>
+          <div class="sum-row total" style="font-size:1rem"><span>Total</span><span>${brl(p.total)}</span></div>
+          <div class="row" style="margin-top:10px;gap:8px">
+            <span class="badge ${p.pagamento === 'pix' ? 'b-ok' : 'b-warn'}">${p.pagamento === 'pix' ? 'Pix' : p.pagamento === 'debito' ? 'Débito na entrega' : 'Crédito na entrega'}</span>
+            ${p.comprovante_path ? `<button class="btn btn-soft btn-sm" data-comp="${esc(p.comprovante_path)}">${ic('receipt')}Ver comprovante</button>` : ''}
+          </div>
+        </div>
+        ${nx || p.status !== 'cancelado' && p.status !== 'entregue' ? `<div class="of">
+          ${nx ? `<button class="btn ${p.status === 'novo' ? 'btn-primary' : 'btn-dark'} btn-sm grow" data-st="${nx[0]}" data-id="${p.id}">${nx[1]}</button>` : ''}
+          <button class="btn btn-bad btn-sm" data-st="cancelado" data-id="${p.id}">Cancelar</button></div>` : ''}
+      </article>`;
+    }).join('');
+  }
+  $('ofilter').onclick = (e) => {
+    const b = e.target.closest('[data-f]'); if (!b) return;
+    ofiltro = b.dataset.f;
+    document.querySelectorAll('#ofilter .chip').forEach(c => c.classList.toggle('on', c === b));
+    renderPedidos();
+  };
+  $('orders').onclick = async (e) => {
+    const c = e.target.closest('[data-comp]');
+    if (c) {
+      const w = window.open('', '_blank');
+      const { data, error } = await sb.storage.from('ff-comprovantes').createSignedUrl(c.dataset.comp, 600);
+      if (error) { if (w) w.close(); return GP.toast(GP.err(error), 'err'); }
+      if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+      return;
+    }
+    const b = e.target.closest('[data-st]'); if (!b) return;
+    if (b.dataset.st === 'cancelado' && !confirm('Cancelar este pedido? O cliente verá o pedido como cancelado.')) return;
+    b.disabled = true;
+    const { error } = await sb.from('ff_pedidos').update({ status: b.dataset.st }).eq('id', b.dataset.id);
+    if (error) { b.disabled = false; return GP.toast(GP.err(error), 'err'); }
+    const p = pedidos.find(x => x.id === b.dataset.id); if (p) p.status = b.dataset.st;
+    renderPedidos(); GP.toast('Pedido atualizado: ' + GP.STATUS[b.dataset.st].t, 'ok');
+  };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && loja) loadPedidos(); });
+
+  // ================= CARDÁPIO =================
+  async function loadProds() {
+    const { data, error } = await sb.from('ff_produtos').select('*').eq('loja_id', loja.id).order('categoria').order('ordem').order('nome');
+    if (error) return GP.toast(GP.err(error), 'err');
+    prods = data; renderProds();
+  }
+  function renderProds() {
+    const cats = [...new Set(prods.map(p => p.categoria))];
+    $('cats').innerHTML = [...new Set([...cats, 'Lanches', 'Porções', 'Pizzas', 'Bebidas', 'Sobremesas', 'Combos'])].map(c => `<option value="${esc(c)}">`).join('');
+    $('p-count').textContent = prods.length ? `${prods.length} produto${prods.length > 1 ? 's' : ''} · ${prods.filter(p => p.disponivel).length} disponíve${prods.filter(p => p.disponivel).length === 1 ? 'l' : 'is'}` : '';
+    if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>Seu cardápio está vazio</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
+    $('plist').innerHTML = cats.map(c => `<h3 style="font-size:.95rem;margin:18px 0 10px;color:var(--ink-2)">${esc(c)}</h3><div class="plist">${prods.filter(p => p.categoria === c).map(p => `
+      <div class="card pitem ${p.disponivel ? '' : 'off'}">
+        <div class="th" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${p.imagem_url ? '' : ic('image')}</div>
+        <div class="grow"><b class="ellipsis" style="display:block">${esc(p.nome)}</b><div class="small muted ellipsis">${esc(p.descricao)}</div><b class="small">${brl(p.preco)}</b></div>
+        <label class="switch" title="Disponível"><input type="checkbox" data-disp="${p.id}" ${p.disponivel ? 'checked' : ''}><i></i></label>
+        <button class="icon-btn" data-edit="${p.id}" title="Editar">${ic('edit')}</button>
+      </div>`).join('')}</div>`).join('');
+  }
+  $('plist').onchange = async (e) => {
+    const id = e.target.dataset.disp; if (!id) return;
+    const v = e.target.checked;
+    const { error } = await sb.from('ff_produtos').update({ disponivel: v }).eq('id', id);
+    if (error) { e.target.checked = !v; return GP.toast(GP.err(error), 'err'); }
+    prods.find(p => p.id === id).disponivel = v; renderProds();
+  };
+  $('plist').onclick = (e) => { const b = e.target.closest('[data-edit]'); if (b) openProd(prods.find(p => p.id === b.dataset.edit)); };
+
+  let editing = null, prodImg = null;
+  const ov = $('ov');
+  const closeModal = () => { $('pmod').classList.remove('on'); ov.classList.remove('on'); };
+  ov.onclick = closeModal; $('pm-x').onclick = closeModal;
+  $('b-novo').onclick = () => openProd(null);
+  function openProd(p) {
+    editing = p; prodImg = p ? p.imagem_url : '';
+    $('pm-title').textContent = p ? 'Editar produto' : 'Novo produto';
+    $('p-nome').value = p ? p.nome : ''; $('p-desc').value = p ? p.descricao : '';
+    $('p-preco').value = p ? Number(p.preco).toFixed(2).replace('.', ',') : '';
+    $('p-cat').value = p ? p.categoria : (prods[0] ? prods[0].categoria : 'Lanches');
+    $('p-disp').checked = p ? p.disponivel : true;
+    $('p-del').classList.toggle('hide', !p);
+    setPv('pv-prod', prodImg);
+    $('pmod').classList.add('on'); ov.classList.add('on');
+    setTimeout(() => $('p-nome').focus(), 200);
+  }
+  function setPv(id, url) { const el = $(id); el.style.backgroundImage = url ? `url('${url}')` : ''; el.innerHTML = url ? '' : ic('image'); }
+
+  async function uploadImg(file, max) {
+    const f = await GP.compress(file, max, 0.84);
+    if (f.size > 5 * 1024 * 1024) throw new Error('Imagem muito grande (máx. 5 MB).');
+    const path = `${user.id}/${GP.uid()}.${GP.ext(f)}`;
+    const { error } = await sb.storage.from('ff-imagens').upload(path, f, { contentType: f.type, cacheControl: '31536000', upsert: false });
+    if (error) throw error;
+    return GP.publicUrl(sb, path);
+  }
+  function bindImg(inputId, pvId, max, set) {
+    $(inputId).onchange = async (e) => {
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      if (!f.type.startsWith('image/')) return GP.toast('Escolha uma imagem.', 'err');
+      $(pvId).innerHTML = '<span class="spin" style="color:var(--brand)"></span>';
+      try { const url = await uploadImg(f, max); set(url); setPv(pvId, url); }
+      catch (er) { GP.toast(GP.err(er), 'err'); setPv(pvId, ''); }
+    };
+  }
+  bindImg('in-prod', 'pv-prod', 1000, (u) => prodImg = u);
+
+  $('f-prod').onsubmit = async (e) => {
+    e.preventDefault();
+    const preco = num($('p-preco').value);
+    if (!(preco > 0)) return GP.toast('Informe um preço válido.', 'err');
+    const row = { nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: $('p-cat').value.trim() || 'Lanches', disponivel: $('p-disp').checked, imagem_url: prodImg || '' };
+    const b = $('p-save'); b.disabled = true;
+    const q = editing ? sb.from('ff_produtos').update(row).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...row, loja_id: loja.id, ordem: prods.length });
+    const { error } = await q;
+    b.disabled = false;
+    if (error) return GP.toast(GP.err(error), 'err');
+    closeModal(); GP.toast(editing ? 'Produto atualizado' : 'Produto adicionado', 'ok'); loadProds();
+  };
+  $('p-del').onclick = async () => {
+    if (!editing || !confirm(`Excluir "${editing.nome}" do cardápio?`)) return;
+    const { error } = await sb.from('ff_produtos').delete().eq('id', editing.id);
+    if (error) return GP.toast(GP.err(error), 'err');
+    closeModal(); GP.toast('Produto excluído', 'ok'); loadProds();
+  };
+
+  // ================= MINHA LOJA =================
+  let lojaImg = '', lojaCapa = '', lojaPos = null, lmap = null;
+  bindImg('in-logo', 'pv-logo', 600, (u) => lojaImg = u);
+  bindImg('in-capa', 'pv-capa', 1600, (u) => lojaCapa = u);
+  const money = (v) => (Number(v) ? Number(v).toFixed(2).replace('.', ',') : '');
+  function fillLoja() {
+    const l = loja || {};
+    lojaImg = l.imagem_url || ''; lojaCapa = l.capa_url || '';
+    lojaPos = l.lat != null ? { lat: l.lat, lng: l.lng } : null;
+    setPv('pv-logo', lojaImg); setPv('pv-capa', lojaCapa);
+    $('l-nome').value = l.nome || ''; $('l-desc').value = l.descricao || ''; $('l-tel').value = l.telefone || '';
+    $('l-tempo').value = l.tempo_entrega || '30–50 min'; $('l-end').value = l.endereco || '';
+    $('l-taxakm').value = money(l.taxa_km); $('l-taxamin').value = money(l.taxa_minima);
+    $('l-raio').value = Number(l.raio_km) ? String(l.raio_km).replace('.', ',') : ''; $('l-min').value = money(l.pedido_minimo);
+    $('l-pix').checked = loja ? l.aceita_pix : true; $('l-deb').checked = loja ? l.aceita_debito : true; $('l-cred').checked = loja ? l.aceita_credito : true;
+    $('l-pixtipo').value = l.pix_tipo || 'cpf'; $('l-pixchave').value = l.pix_chave || '';
+    $('l-pixnome').value = l.pix_nome || ''; $('l-pixcidade').value = l.pix_cidade || '';
+    $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
+    togglePix(); sim(); coord();
+    if (lmap && lojaPos) lmap.set(lojaPos.lat, lojaPos.lng);
+  }
+  const togglePix = () => $('pix-cfg').style.display = $('l-pix').checked ? '' : 'none';
+  $('l-pix').onchange = togglePix;
+  const coord = () => $('l-coord').textContent = lojaPos ? `📍 ${lojaPos.lat.toFixed(5)}, ${lojaPos.lng.toFixed(5)} — arraste o pino para ajustar.` : 'Toque no mapa para marcar onde fica a loja.';
+  function sim() {
+    const t = { taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value) };
+    const ex = [2, 5, 8].map(d => `${d} km = <b>${brl(GP.taxa(t, d))}</b>`).join(' · ');
+    $('l-sim').innerHTML = `${ic('bike')}<span>Simulação: ${ex}</span>`;
+  }
+  ['l-taxakm', 'l-taxamin'].forEach(id => $(id).addEventListener('input', sim));
+  function initMap() {
+    if (lmap) return lmap.refresh();
+    lmap = GP.mapPicker($('l-map'), lojaPos, (lat, lng) => { lojaPos = { lat, lng }; coord(); });
+  }
+  $('b-geo').onclick = async () => {
+    const b = $('b-geo'), o = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…';
+    try { const p = await GP.geo(); lmap.set(p.lat, p.lng); } catch (e) { GP.toast(e.message, 'err'); }
+    b.innerHTML = o;
+  };
+
+  $('f-loja').onsubmit = async (e) => {
+    e.preventDefault();
+    const nome = $('l-nome').value.trim();
+    if (!nome) return GP.toast('Informe o nome da loja.', 'err');
+    if (!lojaPos) { GP.toast('Marque a localização da loja no mapa.', 'err'); $('l-map').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    const pix = $('l-pix').checked;
+    if (pix && !$('l-pixchave').value.trim()) return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err');
+    if (!pix && !$('l-deb').checked && !$('l-cred').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
+    const row = {
+      nome, descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
+      endereco: $('l-end').value.trim(), lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
+      taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value), raio_km: num($('l-raio').value), pedido_minimo: num($('l-min').value),
+      aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked,
+      pix_tipo: $('l-pixtipo').value, pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()
+    };
+    const b = $('b-salvar'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>Salvando…';
+    let res;
+    if (loja) res = await sb.from('ff_lojas').update(row).eq('id', loja.id).select().single();
+    else {
+      const base = GP.slugify(nome);
+      res = await sb.from('ff_lojas').insert({ ...row, slug: base }).select().single();
+      if (res.error && /slug/.test(res.error.message)) res = await sb.from('ff_lojas').insert({ ...row, slug: base + '-' + Math.random().toString(36).slice(2, 6) }).select().single();
+    }
+    b.disabled = false; b.textContent = t;
+    if (res.error) return GP.toast(GP.err(res.error), 'err');
+    const primeira = !loja;
+    loja = res.data; fillLoja(); applyHeader(); setTabsLocked(false);
+    $('welcome').classList.add('hide');
+    if (primeira) {
+      GP.toast('Loja criada! Agora monte seu cardápio.', 'ok');
+      await loadProds(); go('cardapio'); await loadPedidos();
+      clearInterval(timer); timer = setInterval(() => { if (!document.hidden) loadPedidos(); }, 15000);
+    } else GP.toast('Alterações salvas', 'ok');
+  };
+
+  boot();
+})();
+</script>
+</body>
+</html>

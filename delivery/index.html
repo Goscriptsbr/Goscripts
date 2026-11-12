@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GoPedido · Delivery de fast food perto de você</title>
+<meta name="description" content="Peça lanches, pizzas e porções das lanchonetes da sua região. Taxa de entrega calculada pela distância, pagamento por Pix ou cartão na entrega.">
+<meta property="og:title" content="GoPedido · Delivery de fast food">
+<meta property="og:description" content="Peça das lanchonetes da sua região. Pix ou cartão na entrega.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#F2451C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+  .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
+  .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}
+  .hero h1{font-size:clamp(2rem,4.6vw,3.2rem);line-height:1.05;letter-spacing:-.035em;font-weight:800}
+  .hero h1 em{font-style:normal;color:var(--brand)}
+  .hero p{color:var(--ink-2);font-size:1.06rem;margin:14px 0 22px;max-width:520px}
+  .searchbar{display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:7px;box-shadow:var(--sh);max-width:560px}
+  .searchbar .in{flex:1;display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--muted)}
+  .searchbar input{border:0;outline:0;width:100%;height:42px;background:none;color:var(--ink)}
+  .hero-art{position:relative;height:280px}
+  .hero-art .blob{position:absolute;inset:10px;border-radius:40% 60% 55% 45%/50% 45% 55% 50%;background:linear-gradient(135deg,#FF7A45,#F2451C);box-shadow:0 30px 60px rgba(242,69,28,.3)}
+  .hero-art .em{position:absolute;font-size:64px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.18));animation:fl 5s ease-in-out infinite}
+  @keyframes fl{50%{transform:translateY(-10px) rotate(4deg)}}
+  .hero-art .f{position:absolute;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:var(--sh-lg);font-weight:700;font-size:.85rem;display:flex;gap:8px;align-items:center}
+  @media(max-width:820px){.hero .wrap{grid-template-columns:1fr;padding-top:30px}.hero-art{display:none}}
+
+  .trust{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px;color:var(--ink-2);font-size:.86rem;font-weight:600}
+  .trust span{display:flex;gap:6px;align-items:center}
+  .trust .i{color:var(--ok)}
+
+  .filters{display:flex;gap:8px;align-items:center;margin:22px 0 4px;flex-wrap:wrap}
+  .chip.btnchip{cursor:pointer}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+  .store{overflow:hidden;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column}
+  .store:hover{transform:translateY(-3px);box-shadow:var(--sh-lg)}
+  .store .cover{height:130px;background:#eee center/cover;position:relative}
+  .store .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.25))}
+  .store .logo-s{width:62px;height:62px;border-radius:16px;border:3px solid #fff;background:#fff center/cover;box-shadow:var(--sh);margin:-34px 0 0 16px;position:relative;z-index:2;display:grid;place-items:center;color:var(--brand);font-weight:800;font-size:1.4rem}
+  .store .body{padding:10px 16px 16px;flex:1;display:flex;flex-direction:column}
+  .store h3{font-size:1.06rem;font-weight:800;letter-spacing:-.01em}
+  .store .desc{color:var(--muted);font-size:.88rem;margin:3px 0 12px}
+  .store .meta{display:flex;flex-wrap:wrap;gap:12px;color:var(--ink-2);font-size:.82rem;font-weight:600;margin-top:auto}
+  .store .meta span{display:flex;gap:5px;align-items:center}
+  .store.closed{opacity:.62}
+  .store .st{position:absolute;top:12px;right:12px;z-index:2}
+
+  .cta{margin:44px 0 10px;border-radius:24px;background:var(--ink);color:#fff;padding:34px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap;position:relative;overflow:hidden}
+  .cta::before{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:var(--brand);opacity:.25;right:-80px;top:-120px}
+  .cta h3{font-size:1.5rem;letter-spacing:-.02em;position:relative}
+  .cta p{color:#c9c9d1;margin-top:6px;max-width:520px;position:relative}
+  .cta .btn{position:relative}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
+    <div class="grow"></div>
+    <button class="chip btnchip" id="loc-chip"></button>
+    <a class="btn btn-ghost btn-sm" href="painel.html" id="btn-loja"></a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="badge b-brand" style="margin-bottom:14px">⚡ Delivery da sua região</span>
+      <h1>Bateu a fome?<br><em>Peça em poucos toques.</em></h1>
+      <p>Lanches, pizzas, açaí e porções das lanchonetes perto de você. A taxa de entrega é calculada pela distância — sem surpresa no final.</p>
+      <div class="searchbar">
+        <label class="in"><span id="ic-search"></span><input id="q" placeholder="Buscar loja ou comida…" autocomplete="off"></label>
+        <button class="btn btn-primary" id="btn-buscar">Buscar</button>
+      </div>
+      <div class="trust">
+        <span id="t1"></span><span id="t2"></span><span id="t3"></span>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="blob"></div>
+      <div class="em" style="left:22%;top:16%">🍔</div>
+      <div class="em" style="left:58%;top:30%;animation-delay:-1.5s">🍟</div>
+      <div class="em" style="left:30%;top:54%;animation-delay:-3s">🍕</div>
+      <div class="em" style="left:64%;top:62%;animation-delay:-2s;font-size:52px">🥤</div>
+      <div class="f" style="left:-10px;bottom:30px">🛵 Saiu para entrega</div>
+      <div class="f" style="right:-6px;top:20px">✅ Pix confirmado</div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="filters" id="filters">
+    <button class="chip btnchip on" data-f="todas">Todas</button>
+    <button class="chip btnchip" data-f="abertas">Abertas agora</button>
+    <button class="chip btnchip" data-f="perto">Mais perto</button>
+    <button class="chip btnchip" data-f="taxa">Menor taxa</button>
+  </div>
+  <h2 class="sec-title" id="titulo">Lojas</h2>
+  <div class="grid" id="lista"></div>
+
+  <div class="cta">
+    <div>
+      <h3>Tem uma lanchonete ou fast food?</h3>
+      <p>Cadastre sua loja grátis, monte o cardápio com fotos, defina a taxa por km e receba pedidos com Pix ou cartão na entrega.</p>
+    </div>
+    <a class="btn btn-primary" href="painel.html">Cadastrar minha loja</a>
+  </div>
+</main>
+
+<footer class="footer">GoPedido · um produto <a href="https://goscripts.com.br" style="font-weight:700">GoScripts</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(async () => {
+  const { $, esc, brl, km, ic } = GP;
+  const sb = GP.client(false);
+  $('lg').innerHTML = ic('bag');
+  $('ic-search').innerHTML = ic('search');
+  $('btn-loja').innerHTML = ic('store') + '<span>Sou lojista</span>';
+  $('t1').innerHTML = ic('check') + 'Pix na hora';
+  $('t2').innerHTML = ic('check') + 'Cartão na entrega';
+  $('t3').innerHTML = ic('check') + 'Acompanhe o pedido';
+
+  let lojas = [], filtro = 'todas', busca = '';
+  let pos = GP.ls.get('gp_pos');
+
+  const locChip = () => {
+    $('loc-chip').innerHTML = ic('pin') + (pos ? '<span>Localização ativa</span>' : '<span>Ativar localização</span>');
+  };
+  locChip();
+  $('loc-chip').onclick = async () => {
+    try { pos = await GP.geo(); GP.ls.set('gp_pos', pos); locChip(); render(); GP.toast('Localização atualizada', 'ok'); }
+    catch (e) { GP.toast(e.message, 'err'); }
+  };
+
+  $('lista').innerHTML = Array(6).fill('<div class="card" style="overflow:hidden"><div class="sk" style="height:130px;border-radius:0"></div><div class="pad"><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:12px;margin-top:10px"></div><div class="sk" style="height:12px;width:40%;margin-top:8px"></div></div></div>').join('');
+
+  const [{ data, error }, { data: prods }] = await Promise.all([
+    sb.from('ff_lojas').select('id,slug,nome,descricao,imagem_url,capa_url,lat,lng,taxa_km,taxa_minima,raio_km,tempo_entrega,aberta').eq('ativa', true),
+    sb.from('ff_produtos').select('loja_id,nome,categoria').eq('disponivel', true)
+  ]);
+  if (error) {
+    $('lista').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('store')}</div><h4>Não foi possível carregar as lojas</h4><p>${esc(GP.err(error))}</p></div>`;
+    return;
+  }
+  const idx = {};
+  (prods || []).forEach(p => { idx[p.loja_id] = (idx[p.loja_id] || '') + ' ' + p.nome + ' ' + p.categoria; });
+  lojas = data.map(l => ({ ...l, _busca: (l.nome + ' ' + l.descricao + ' ' + (idx[l.id] || '')).toLowerCase() }));
+
+  function render() {
+    let arr = lojas.map(l => {
+      const d = pos && l.lat != null ? GP.dist(l.lat, l.lng, pos.lat, pos.lng) : null;
+      return { ...l, _d: d, _t: d != null ? GP.taxa(l, d) : null, _fora: d != null && GP.foraArea(l, d) };
+    });
+    if (busca) arr = arr.filter(l => l._busca.includes(busca));
+    if (filtro === 'abertas') arr = arr.filter(l => l.aberta);
+    arr.sort((a, b) => {
+      if (a.aberta !== b.aberta) return a.aberta ? -1 : 1;
+      if (filtro === 'perto' && a._d != null && b._d != null) return a._d - b._d;
+      if (filtro === 'taxa' && a._t != null && b._t != null) return a._t - b._t;
+      return a.nome.localeCompare(b.nome);
+    });
+    $('titulo').textContent = busca ? `Resultados para “${busca}”` : (arr.length ? `${arr.length} loja${arr.length > 1 ? 's' : ''} na região` : 'Lojas');
+    if (!arr.length) {
+      $('lista').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('search')}</div><h4>${lojas.length ? 'Nada encontrado' : 'Nenhuma loja cadastrada ainda'}</h4><p>${lojas.length ? 'Tente buscar outro termo.' : 'Seja o primeiro: cadastre sua lanchonete.'}</p></div>`;
+      return;
+    }
+    $('lista').innerHTML = arr.map(l => {
+      const ini = esc((l.nome || '?').trim()[0].toUpperCase());
+      const capa = l.capa_url || l.imagem_url;
+      const taxa = l._d == null ? (Number(l.taxa_km) ? `${brl(l.taxa_km)}/km` : 'Entrega grátis')
+        : l._fora ? 'Fora da área' : (l._t > 0 ? brl(l._t) : 'Grátis');
+      return `<a class="card store ${l.aberta ? '' : 'closed'}" href="loja.html?l=${encodeURIComponent(l.slug)}">
+        <div class="cover" style="${capa ? `background-image:url('${esc(capa)}')` : 'background:linear-gradient(135deg,#FFB199,#F2451C)'}">
+          <span class="badge st ${l.aberta ? 'b-ok' : 'b-off'}"><i class="dot"></i>${l.aberta ? 'Aberta' : 'Fechada'}</span>
+        </div>
+        <div class="logo-s" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : ini}</div>
+        <div class="body">
+          <h3 class="ellipsis">${esc(l.nome)}</h3>
+          <p class="desc clamp2">${esc(l.descricao || 'Fast food')}</p>
+          <div class="meta">
+            <span>${ic('clock')}${esc(l.tempo_entrega || '30–50 min')}</span>
+            <span>${ic('bike')}${taxa}</span>
+            ${l._d != null ? `<span>${ic('pin')}${km(l._d)}</span>` : ''}
+          </div>
+        </div></a>`;
+    }).join('');
+  }
+  render();
+
+  const doSearch = () => { busca = $('q').value.trim().toLowerCase(); render(); };
+  $('q').addEventListener('input', doSearch);
+  $('btn-buscar').onclick = () => { doSearch(); $('titulo').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  $('filters').onclick = async (e) => {
+    const b = e.target.closest('[data-f]'); if (!b) return;
+    filtro = b.dataset.f;
+    document.querySelectorAll('#filters .chip').forEach(c => c.classList.toggle('on', c === b));
+    if ((filtro === 'perto' || filtro === 'taxa') && !pos) {
+      try { pos = await GP.geo(); GP.ls.set('gp_pos', pos); locChip(); } catch (er) { GP.toast(er.message, 'err'); }
+    }
+    render();
+  };
+})();
+</script>
+</body>
+</html>
