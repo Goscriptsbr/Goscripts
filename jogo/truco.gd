@@ -1071,11 +1071,11 @@ func _draw() -> void:
 	_plate(Rect2(96, h - 128, 220, 60), names[0] if netmode != "" else str(game.my_name()), 0, ws_view == 0, frac if ws_view == 0 else -1.0)
 	# rodada anterior
 	if not last_plays.is_empty():
-		draw_style_box(ui.sbox(Color(0, 0, 0, 0.35), 12), Rect2(w - 290, 132, 270, 100))
-		draw_string(f, Vector2(w - 280, 152), "RODADA ANTERIOR", HORIZONTAL_ALIGNMENT_LEFT, 250, 13, Color(1, 1, 1, 0.6))
+		draw_style_box(ui.sbox(Color(0, 0, 0, 0.35), 12), Rect2(w - 306, 84, 290, 140))
+		draw_string(f, Vector2(w - 294, 105), "RODADA ANTERIOR", HORIZONTAL_ALIGNMENT_LEFT, 260, 14, Color(1, 1, 1, 0.6))
 		for k in last_plays.size():
 			var p: Dictionary = last_plays[k]
-			draw_card_on(self, Rect2(Vector2(w - 278 + k * 62, 160), Vector2(48, 66)), p.c, (not p.hid or ferro) and not p.c.is_empty(), false)
+			draw_card_on(self, Rect2(Vector2(w - 293 + k * 68, 115), Vector2(60, 84)), p.c, (not p.hid or ferro) and not p.c.is_empty(), false)
 	# jogadas da rodada
 	for p in plays:
 		var cp := seat_pos(p.seat)

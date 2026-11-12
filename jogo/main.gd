@@ -18,7 +18,7 @@ const DECKS := [
 	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
 	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
 ]
-const APP_VERSION := 64  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 65  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
