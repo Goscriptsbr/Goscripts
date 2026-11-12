@@ -18,7 +18,7 @@ const DECKS := [
 	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
 	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
 ]
-const APP_VERSION := 67  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 68  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -2993,18 +2993,36 @@ func _draw_rails() -> void:
 		var pk: Vector2 = POCK[pi]
 		var rr := 25.0 if pi < 4 else 21.0
 		# aro de latão com brilho em cima e sombra embaixo, e a boca escurecendo para dentro
-		# brilhos girados para cada caçapa ficar virada para o centro da mesa, igual à do canto superior esquerdo
-		var rot: float = (-pk).angle() - Vector2(505, 255).angle()
-		rails.draw_circle(pk, rr + 5.0, Color("15100b"))
-		rails.draw_arc(pk, rr + 3.6, 0, TAU, 48, Color("8a6a2a"), 2.2)
-		rails.draw_arc(pk, rr + 3.6, PI * 1.05 + rot, PI * 1.6 + rot, 20, Color(1.0, 0.925, 0.667, 0.75), 2.2)
-		rails.draw_arc(pk, rr + 3.6, PI * 0.1 + rot, PI * 0.55 + rot, 20, Color(0, 0, 0, 0.45), 2.2)
+		# brilhos espelhados: cada caçapa fica igual à do canto superior esquerdo, vista do seu próprio canto
+		# (as do meio ficam simétricas, viradas para o centro)
+		var arcs: Array = [[1.05, 1.6], [0.1, 0.55], [0.15, 0.7]] if pi < 4 else [[1.22, 1.78], [0.28, 0.72], [0.22, 0.78]]
+		var fx: bool = pk.x > 0.0 and pi < 4
+		var fy: bool = pk.y > 0.0
+		var arc_at := func(k: int) -> Vector2:
+			var a0: float = PI * float(arcs[k][0])
+			var a1: float = PI * float(arcs[k][1])
+			if fx:
+				var t0 := PI - a1
+				a1 = PI - a0
+				a0 = t0
+			if fy:
+				var t1 := -a1
+				a1 = -a0
+				a0 = t1
+			return Vector2(a0, a1)
+		var ain: Vector2 = arc_at.call(2)
+		# aro de latão só na parte de trás (embutida na madeira); a boca virada para a mesa fica aberta, onde a bola entra
+		var outa: float = pk.angle()
+		var half: float = deg_to_rad(78.0) if pi < 4 else deg_to_rad(80.0)
+		rails.draw_arc(pk, rr + 3.2, outa - half, outa + half, 40, Color("15100b"), 6.0)
+		rails.draw_arc(pk, rr + 3.6, outa - half, outa + half, 40, Color("8a6a2a"), 2.2)
+		rails.draw_arc(pk, rr + 3.6, outa - half * 0.45, outa + half * 0.45, 24, Color(1.0, 0.925, 0.667, 0.75), 2.2)
 		rails.draw_circle(pk, rr + 2.0, Color("1c130c"))
 		rails.draw_circle(pk, rr, Color("0d0a08"))
 		rails.draw_circle(pk, rr - 4.0, Color("070504"))
 		rails.draw_circle(pk, rr - 8.0, Color("030202"))
 		rails.draw_circle(pk, rr - 12.0, Color("000000"))
-		rails.draw_arc(pk, rr - 1.5, PI * 0.15 + rot, PI * 0.7 + rot, 20, Color(1, 1, 1, 0.1), 2.0)
+		rails.draw_arc(pk, rr - 1.5, ain.x, ain.y, 20, Color(1, 1, 1, 0.1), 2.0)
 
 
 func _diamond(c: Vector2) -> void:
