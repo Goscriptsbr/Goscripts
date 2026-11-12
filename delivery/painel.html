@@ -208,7 +208,7 @@
             <div id="pix-cfg" class="grid2">
               <label class="field"><span>Tipo de chave Pix</span>
                 <select class="input" id="l-pixtipo"><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="telefone">Telefone</option><option value="email">E-mail</option><option value="aleatoria">Chave aleatória</option></select></label>
-              <label class="field"><span>Chave Pix</span><input class="input" id="l-pixchave" maxlength="80"></label>
+              <label class="field"><span>Chave Pix</span><input class="input" id="l-pixchave" maxlength="80"><small id="pix-prev"></small></label>
               <label class="field"><span>Nome do recebedor</span><input class="input" id="l-pixnome" maxlength="60" placeholder="Como aparece no banco"><small>Usado para gerar o QR Code com o valor certo.</small></label>
               <label class="field"><span>Cidade do recebedor</span><input class="input" id="l-pixcidade" maxlength="40" placeholder="Mogi Guaçu"></label>
             </div>
@@ -606,9 +606,19 @@
     $('l-pixtipo').value = l.pix_tipo || 'cpf'; $('l-pixchave').value = l.pix_chave || '';
     $('l-pixnome').value = l.pix_nome || ''; $('l-pixcidade').value = l.pix_cidade || '';
     $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
-    togglePix(); sim(); coord();
+    togglePix(); sim(); coord(); pixPrev();
     if (lmap && lojaPos) lmap.set(lojaPos.lat, lojaPos.lng);
   }
+  const NOMES_PIX = { cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória' };
+  function pixPrev() {
+    const k = $('l-pixchave').value.trim();
+    if (!k) { $('pix-prev').innerHTML = ''; return; }
+    const t = GP.pixTipo(k, $('l-pixtipo').value);
+    $('l-pixtipo').value = t;
+    $('pix-prev').innerHTML = `O cliente vai pagar para: <b style="color:var(--ink)">${esc(GP.pixChave(t, k))}</b> (${NOMES_PIX[t]}). Confira se é a chave cadastrada no seu banco.`;
+  }
+  $('l-pixchave').addEventListener('input', pixPrev);
+  $('l-pixtipo').addEventListener('change', () => { const k = $('l-pixchave').value.trim(); if (k) $('pix-prev').innerHTML = ''; pixPrev(); });
   const togglePix = () => $('pix-cfg').style.display = $('l-pix').checked ? '' : 'none';
   $('l-pix').onchange = togglePix;
   const coord = () => $('l-coord').textContent = lojaPos ? `📍 ${lojaPos.lat.toFixed(5)}, ${lojaPos.lng.toFixed(5)} — arraste o pino para ajustar.` : 'Toque no mapa para marcar onde fica a loja.';
@@ -644,7 +654,7 @@
       endereco: $('l-end').value.trim(), lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
       taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value), raio_km: num($('l-raio').value), pedido_minimo: num($('l-min').value),
       aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked,
-      pix_tipo: $('l-pixtipo').value, pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()
+      pix_tipo: GP.pixTipo($('l-pixchave').value, $('l-pixtipo').value), pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()
     };
     const b = $('b-salvar'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>Salvando…';
     let res;

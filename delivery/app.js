@@ -211,11 +211,30 @@
     }
     return c.toString(16).toUpperCase().padStart(4, '0');
   };
+  const cpfValido = (d) => {
+    if (!/^\d{11}$/.test(d) || /^(\d)\1+$/.test(d)) return false;
+    const dv = (n) => { let t = 0; for (let k = 0; k < n; k++) t += +d[k] * (n + 1 - k); const r = (t * 10) % 11; return r === 10 ? 0 : r; };
+    return dv(9) === +d[9] && dv(10) === +d[10];
+  };
+  // Descobre o tipo da chave pelo que foi digitado (não depende da opção escolhida)
+  GP.pixTipo = (chave, tipoEscolhido) => {
+    const k = String(chave || '').trim(), d = GP.digits(k);
+    if (!k) return tipoEscolhido;
+    if (k.includes('@')) return 'email';
+    if (/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(k)) return 'aleatoria';
+    if (k.startsWith('+')) return 'telefone';
+    if (d.length === 14) return 'cnpj';
+    if (d.length === 11) return cpfValido(d) && tipoEscolhido !== 'telefone' ? 'cpf' : 'telefone';
+    if (d.length === 10 || ((d.length === 12 || d.length === 13) && d.startsWith('55'))) return 'telefone';
+    return tipoEscolhido;
+  };
   GP.pixChave = (tipo, chave) => {
     const k = String(chave || '').trim();
-    if (tipo === 'cpf' || tipo === 'cnpj') return GP.digits(k);
-    if (tipo === 'telefone') { const d = GP.digits(k); return '+' + (d.length <= 11 ? '55' + d : d); }
-    if (tipo === 'email') return k.toLowerCase();
+    const t = GP.pixTipo(k, tipo);
+    if (t === 'cpf' || t === 'cnpj') return GP.digits(k);
+    if (t === 'telefone') { const d = GP.digits(k); return '+' + (d.length <= 11 ? '55' + d : d); }
+    if (t === 'email') return k.toLowerCase();
+    if (t === 'aleatoria') { const h = k.toLowerCase().replace(/[^0-9a-f]/g, ''); return h.length === 32 ? h.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5') : k; }
     return k;
   };
   GP.pixPayload = (loja, valor) => {
