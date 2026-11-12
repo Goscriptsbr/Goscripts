@@ -10,7 +10,9 @@
     <meta property="og:description" content="Sistemas e sites para o seu negócio. Pague uma única vez, sem mensalidades: o projeto é 100% seu.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://goscripts.com.br/">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f8cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M18 22l12 10-12 10' fill='none' stroke='%2305101f' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M34 44h13' stroke='%2305101f' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/png" href="logo-192.png">
+    <link rel="apple-touch-icon" href="logo-192.png">
+    <meta property="og:image" content="https://goscripts.com.br/logo.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -632,6 +634,9 @@
         a.contact-item .go { margin-left: auto; color: var(--muted); font-size: 0.85rem; transition: transform 0.2s ease, color 0.2s ease; }
         a.contact-item:hover .go { color: var(--accent-2); transform: translateX(3px); }
 
+        .logo-img { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 4px 14px rgba(34, 211, 238, 0.35)); transition: transform 0.3s ease; }
+        .logo:hover .logo-img { transform: scale(1.08) rotate(-4deg); }
+
         /* Rodapé */
         .footer-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; }
         .footer-links a { transition: color 0.2s ease; }
@@ -671,7 +676,7 @@
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
             <a href="#home" class="logo" aria-label="GoScripts - início">
-                <span class="logo-mark"><i class="fas fa-terminal"></i></span> GoScripts
+                <img class="logo-img" src="logo-192.png" alt="" width="44" height="44"> GoScripts
             </a>
             <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-links">
                 <i class="fas fa-bars"></i>
@@ -868,7 +873,7 @@
 
     <footer>
         <div class="container footer-inner">
-            <a href="#home" class="logo"><span class="logo-mark"><i class="fas fa-terminal"></i></span> GoScripts</a>
+            <a href="#home" class="logo"><img class="logo-img" src="logo-192.png" alt="" width="44" height="44"> GoScripts</a>
             <nav class="footer-links" aria-label="Rodapé">
                 <a href="#services">Serviços</a>
                 <a href="#portfolio">Portfólio</a>
