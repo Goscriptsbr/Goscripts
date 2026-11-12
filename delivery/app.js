@@ -254,6 +254,40 @@
     if (j.erro) throw new Error('CEP não encontrado.');
     return { cep: d.replace(/(\d{5})(\d{3})/, '$1-$2'), rua: j.logradouro || '', bairro: j.bairro || '', cidade: j.localidade || '', uf: j.uf || '' };
   };
+  // Busca na base dos Correios todos os CEPs de uma rua (para acertar bairro e CEP)
+  GP.viacepRua = async (uf, cidade, rua) => {
+    const limpa = (t) => String(t || '').replace(/^(rua|r\.|avenida|av\.?|travessa|alameda|estrada|rodovia)\s+/i, '').trim();
+    const nome = limpa(rua);
+    if (!uf || !cidade || nome.length < 3) return [];
+    const r = await fetch(`https://viacep.com.br/ws/${encodeURIComponent(uf)}/${encodeURIComponent(cidade)}/${encodeURIComponent(nome)}/json/`);
+    const j = await r.json();
+    return Array.isArray(j) ? j : [];
+  };
+  // Escolhe o CEP certo quando a rua tem vários (por faixa de número)
+  GP.escolheCep = (lista, numero, cepMapa, ruaMapa) => {
+    if (!lista.length) return null;
+    const norm = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    let l = lista.filter(x => norm(x.logradouro) === norm(ruaMapa));
+    if (!l.length) l = lista;
+    if (l.length === 1) return l[0];
+    const n = parseInt(String(numero || '').replace(/\D/g, ''), 10);
+    if (n) {
+      const imp = n % 2 === 1;
+      const ok = l.filter(x => {
+        const c = norm(x.complemento);
+        if (!c) return false;
+        if (c.includes('lado impar') && !imp) return false;
+        if (c.includes('lado par') && imp) return false;
+        let m = c.match(/de (\d+)(?:\/\d+)? ao fim/); if (m) return n >= +m[1];
+        m = c.match(/de (\d+)(?:\/\d+)? a (\d+)/); if (m) return n >= +m[1] && n <= +m[2];
+        m = c.match(/ate (\d+)/); if (m) return n <= +m[1];
+        return true;
+      });
+      if (ok.length) return ok[0];
+    }
+    const d = String(cepMapa || '').replace(/\D/g, '');
+    return l.find(x => x.cep.replace(/\D/g, '') === d) || l.find(x => !x.complemento) || l[0];
+  };
   const NOM = 'https://nominatim.openstreetmap.org';
   GP.reverse = async (lat, lng) => {
     const r = await fetch(`${NOM}/reverse?format=jsonv2&addressdetails=1&accept-language=pt-BR&zoom=18&lat=${lat}&lon=${lng}`);
@@ -328,9 +362,30 @@
     const map = GP.mapPicker($f('map'), pos, async (lat, lng) => {
       pos = { lat, lng }; fire();
       const my = ++seq; status('<span class="spin" style="width:12px;height:12px;border-width:2px"></span> buscando endereço…');
-      try { const e = await GP.reverse(lat, lng); if (my === seq) { fill(e); status('✓ endereço preenchido'); fire(); } }
-      catch { if (my === seq) status('preencha os campos manualmente'); }
+      try {
+        const e = await GP.reverse(lat, lng);
+        if (my !== seq) return;
+        fill(e); status('✓ endereço preenchido'); fire();
+        corrigeCorreios(my, e.cep);
+      } catch { if (my === seq) status('preencha os campos manualmente'); }
     });
+
+    // Confere rua/cidade nos Correios para pegar o bairro e o CEP oficiais
+    let ceps = [], cepsRua = '';
+    async function corrigeCorreios(my, cepMapa) {
+      const e = api.get();
+      const chave = (e.uf + '|' + e.cidade + '|' + e.rua).toLowerCase();
+      try {
+        if (chave !== cepsRua) { ceps = await GP.viacepRua(e.uf, e.cidade, e.rua); cepsRua = chave; }
+        if (my != null && my !== seq) return;
+        const x = GP.escolheCep(ceps, e.numero, cepMapa || e.cep, e.rua);
+        if (!x) return;
+        $f('cep').value = x.cep;
+        if (x.bairro) $f('bairro').value = x.bairro;
+        if (x.logradouro) $f('rua').value = x.logradouro;
+        status('✓ endereço conferido nos Correios'); fire();
+      } catch {}
+    }
     if (!pos && opts.centro) map.map.setView([opts.centro.lat, opts.centro.lng], 14);
 
     async function locateFromFields() {
@@ -356,7 +411,7 @@
         fire(); locateFromFields();
       } catch (er) { $f('cepst').innerHTML = ''; GP.toast(er.message, 'err'); }
     });
-    $f('numero').addEventListener('change', locateFromFields);
+    $f('numero').addEventListener('change', () => { if (ceps.length > 1) corrigeCorreios(null); locateFromFields(); });
     $f('rua').addEventListener('change', () => { if (!pos) locateFromFields(); });
     KEYS.forEach(k => $f(k) && $f(k).addEventListener('input', fire));
     $f('geo').onclick = async () => {
