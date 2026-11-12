@@ -65,6 +65,18 @@
     const n = t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t;
     return Number(n) || 0;
   };
+  // Campo de dinheiro: digita só números e vai preenchendo os centavos (2 → 0,02 → 0,20 → 2,00)
+  GP.fmtMoeda = (v) => (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  GP.moneyMask = (el) => {
+    el.setAttribute('inputmode', 'numeric');
+    const apply = () => {
+      const d = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 9);
+      el.value = d ? GP.fmtMoeda(Number(d) / 100) : '';
+    };
+    el.addEventListener('input', () => { apply(); el.setSelectionRange && el.setSelectionRange(el.value.length, el.value.length); });
+    el.addEventListener('focus', () => { setTimeout(() => el.setSelectionRange && el.setSelectionRange(el.value.length, el.value.length), 0); });
+    if (el.value) el.value = GP.fmtMoeda(GP.num(el.value));
+  };
   GP.digits = (s) => String(s || '').replace(/\D/g, '');
   GP.slugify = (s) =>
     String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()

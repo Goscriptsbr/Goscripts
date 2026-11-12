@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611121952">
+<link rel="stylesheet" href="app.css?v=202611122016">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -190,10 +190,10 @@
             <div class="map" id="l-map" style="height:220px"></div>
             <p class="small muted" style="margin:6px 0 16px" id="l-coord">Toque no mapa para marcar a loja.</p>
             <div class="grid2">
-              <label class="field"><span>Taxa por km</span><div class="prefix"><i>R$</i><input class="input" id="l-taxakm" inputmode="decimal" placeholder="2,00"></div></label>
-              <label class="field"><span>Taxa mínima</span><div class="prefix"><i>R$</i><input class="input" id="l-taxamin" inputmode="decimal" placeholder="5,00"></div></label>
+              <label class="field"><span>Taxa por km</span><div class="prefix"><i>R$</i><input class="input" id="l-taxakm" inputmode="numeric" placeholder="0,00"></div></label>
+              <label class="field"><span>Taxa mínima</span><div class="prefix"><i>R$</i><input class="input" id="l-taxamin" inputmode="numeric" placeholder="0,00"></div></label>
               <label class="field"><span>Raio máximo</span><div class="prefix"><i>km</i><input class="input" id="l-raio" inputmode="decimal" placeholder="0 = sem limite"></div></label>
-              <label class="field"><span>Pedido mínimo</span><div class="prefix"><i>R$</i><input class="input" id="l-min" inputmode="decimal" placeholder="0,00"></div></label>
+              <label class="field"><span>Pedido mínimo</span><div class="prefix"><i>R$</i><input class="input" id="l-min" inputmode="numeric" placeholder="0,00"></div></label>
             </div>
             <div class="fee small" id="l-sim" style="background:var(--bg);border-radius:12px;padding:12px 14px"></div>
           </div>
@@ -233,9 +233,10 @@
       <label class="field"><span>Nome</span><input class="input" id="p-nome" maxlength="80" required placeholder="X-Bacon artesanal"></label>
       <label class="field"><span>Descrição</span><textarea class="input" id="p-desc" maxlength="300" placeholder="Pão brioche, blend 160g, bacon crocante, cheddar…"></textarea></label>
       <div class="grid2">
-        <label class="field"><span>Preço</span><div class="prefix"><i>R$</i><input class="input" id="p-preco" inputmode="decimal" required placeholder="29,90"></div></label>
-        <label class="field"><span>Categoria</span><input class="input" id="p-cat" list="cats" maxlength="40" required placeholder="Lanches"><datalist id="cats"></datalist></label>
+        <label class="field"><span>Preço</span><div class="prefix"><i>R$</i><input class="input" id="p-preco" inputmode="numeric" required placeholder="0,00"></div></label>
+        <label class="field"><span>Categoria</span><select class="input" id="p-catsel"></select></label>
       </div>
+      <label class="field hide" id="p-catnova-wrap"><span>Nome da nova categoria</span><input class="input" id="p-cat" maxlength="40" placeholder="Ex.: Pastéis"></label>
       <label class="switch"><input type="checkbox" id="p-disp" checked><i></i>Disponível para venda</label>
     </div>
     <div class="sheet-foot row">
@@ -247,8 +248,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="config.js?v=202611121952"></script>
-<script src="app.js?v=202611121952"></script>
+<script src="config.js?v=202611122016"></script>
+<script src="app.js?v=202611122016"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -511,7 +512,6 @@
   }
   function renderProds() {
     const cats = [...new Set(prods.map(p => p.categoria))];
-    $('cats').innerHTML = [...new Set([...cats, 'Lanches', 'Porções', 'Pizzas', 'Bebidas', 'Sobremesas', 'Combos'])].map(c => `<option value="${esc(c)}">`).join('');
     $('p-count').textContent = prods.length ? `${prods.length} produto${prods.length > 1 ? 's' : ''} · ${prods.filter(p => p.disponivel).length} disponíve${prods.filter(p => p.disponivel).length === 1 ? 'l' : 'is'}` : '';
     if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>Seu cardápio está vazio</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
     $('plist').innerHTML = cats.map(c => `<h3 style="font-size:.95rem;margin:18px 0 10px;color:var(--ink-2)">${esc(c)}</h3><div class="plist">${prods.filter(p => p.categoria === c).map(p => `
@@ -540,8 +540,8 @@
     editing = p; prodImg = p ? p.imagem_url : '';
     $('pm-title').textContent = p ? 'Editar produto' : 'Novo produto';
     $('p-nome').value = p ? p.nome : ''; $('p-desc').value = p ? p.descricao : '';
-    $('p-preco').value = p ? Number(p.preco).toFixed(2).replace('.', ',') : '';
-    $('p-cat').value = p ? p.categoria : (prods[0] ? prods[0].categoria : 'Lanches');
+    $('p-preco').value = p ? GP.fmtMoeda(p.preco) : '';
+    montaCats(p ? p.categoria : (prods[0] ? prods[0].categoria : ''));
     $('p-disp').checked = p ? p.disponivel : true;
     $('p-del').classList.toggle('hide', !p);
     setPv('pv-prod', prodImg);
@@ -569,11 +569,34 @@
   }
   bindImg('in-prod', 'pv-prod', 1000, (u) => prodImg = u);
 
+  // Categorias: lista com as que a loja já tem + "Nova categoria"
+  const SUGEST = ['Lanches', 'Porções', 'Pizzas', 'Pastéis', 'Bebidas', 'Sobremesas', 'Combos', 'Açaí'];
+  function montaCats(atual) {
+    const minhas = [...new Set(prods.map(p => p.categoria).filter(Boolean))];
+    const sug = SUGEST.filter(c => !minhas.some(m => m.toLowerCase() === c.toLowerCase()));
+    let html = '';
+    if (minhas.length) html += `<optgroup label="Suas categorias">${minhas.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}</optgroup>`;
+    html += `<optgroup label="${minhas.length ? 'Outras sugestões' : 'Sugestões'}">${sug.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}</optgroup>`;
+    html += `<option value="__nova">+ Criar nova categoria…</option>`;
+    $('p-catsel').innerHTML = html;
+    $('p-catsel').value = atual && [...$('p-catsel').options].some(o => o.value === atual) ? atual : (minhas[0] || 'Lanches');
+    $('p-cat').value = ''; toggleNova();
+  }
+  const toggleNova = () => { const n = $('p-catsel').value === '__nova'; $('p-catnova-wrap').classList.toggle('hide', !n); if (n) setTimeout(() => $('p-cat').focus(), 50); };
+  $('p-catsel').onchange = toggleNova;
+  const catEscolhida = () => {
+    if ($('p-catsel').value !== '__nova') return $('p-catsel').value;
+    const t = $('p-cat').value.trim(); if (!t) return '';
+    const ja = prods.map(p => p.categoria).find(c => c.toLowerCase() === t.toLowerCase());
+    return ja || t.charAt(0).toUpperCase() + t.slice(1);
+  };
+
   $('f-prod').onsubmit = async (e) => {
     e.preventDefault();
+    if (!catEscolhida()) return GP.toast('Digite o nome da nova categoria.', 'err');
     const preco = num($('p-preco').value);
     if (!(preco > 0)) return GP.toast('Informe um preço válido.', 'err');
-    const row = { nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: $('p-cat').value.trim() || 'Lanches', disponivel: $('p-disp').checked, imagem_url: prodImg || '' };
+    const row = { nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '' };
     const b = $('p-save'); b.disabled = true;
     const q = editing ? sb.from('ff_produtos').update(row).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...row, loja_id: loja.id, ordem: prods.length });
     const { error } = await q;
@@ -592,7 +615,8 @@
   let lojaImg = '', lojaCapa = '', lojaPos = null, lmap = null;
   bindImg('in-logo', 'pv-logo', 600, (u) => lojaImg = u);
   bindImg('in-capa', 'pv-capa', 1600, (u) => lojaCapa = u);
-  const money = (v) => (Number(v) ? Number(v).toFixed(2).replace('.', ',') : '');
+  const money = (v) => (Number(v) ? GP.fmtMoeda(v) : '');
+  ['l-taxakm', 'l-taxamin', 'l-min', 'p-preco'].forEach(id => GP.moneyMask($(id)));
   function fillLoja() {
     const l = loja || {};
     lojaImg = l.imagem_url || ''; lojaCapa = l.capa_url || '';
