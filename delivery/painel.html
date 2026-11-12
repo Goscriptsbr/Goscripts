@@ -30,6 +30,10 @@
   .logo.light span{color:#fff}
 
   /* app */
+  #v-app .topbar .logo{min-width:0;flex:0 1 auto}
+  #v-app .topbar .logo b{flex:none}
+  #t-nome{max-width:none!important;min-width:0}
+  @media(max-width:600px){#v-app .topbar .wrap{gap:8px}#sw-txt{display:none}#v-app .icon-btn{width:38px;height:38px}.tabs button{padding:0 10px;flex:1;justify-content:center}.tabs button>span:first-child{display:none}}
   .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 20px;overflow-x:auto}
   .tabs button{height:46px;padding:0 16px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;display:flex;gap:8px;align-items:center;white-space:nowrap}
   .tabs button.on{color:var(--ink);border-color:var(--brand)}

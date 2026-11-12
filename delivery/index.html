@@ -51,6 +51,13 @@
   .store.closed{opacity:.62}
   .store .st{position:absolute;top:12px;right:12px;z-index:2}
 
+  @media(max-width:600px){
+    .topbar .wrap{gap:8px}
+    #loc-chip{width:40px;height:40px;padding:0;justify-content:center;border-radius:12px}
+    #loc-chip span{display:none}
+    #loc-chip.on{background:var(--ok-soft);color:var(--ok);border-color:#bfe8d2}
+    #btn-loja{padding:0 12px}
+  }
   .cta{margin:44px 0 10px;border-radius:24px;background:var(--ink);color:#fff;padding:34px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap;position:relative;overflow:hidden}
   .cta::before{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:var(--brand);opacity:.25;right:-80px;top:-120px}
   .cta h3{font-size:1.5rem;letter-spacing:-.02em;position:relative}
@@ -135,6 +142,8 @@
 
   const locChip = () => {
     $('loc-chip').innerHTML = ic('pin') + (pos ? '<span>Localização ativa</span>' : '<span>Ativar localização</span>');
+    $('loc-chip').classList.toggle('on', !!pos);
+    $('loc-chip').title = pos ? 'Localização ativa' : 'Ativar localização';
   };
   locChip();
   $('loc-chip').onclick = async () => {
