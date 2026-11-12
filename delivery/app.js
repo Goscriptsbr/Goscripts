@@ -44,6 +44,7 @@
     star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/>',
     shield: '<path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
     bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>',
+    cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>',
     key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9m-4 4 3 3"/>',
@@ -123,6 +124,7 @@
     loja_fechada: 'A loja está fechada no momento.',
     loja_sem_localizacao: 'A loja ainda não configurou a localização.',
     pagamento_invalido: 'Forma de pagamento não aceita por esta loja.',
+    troco_invalido: 'O valor do troco precisa ser maior que o total do pedido.',
     codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
     status_invalido: 'Este pedido já mudou de situação. Atualize a lista.',
     pedido_invalido: 'Pedido não encontrado.',
@@ -507,5 +509,81 @@
     entregue: { t: 'Entregue', c: 'b-off', d: 'Pedido entregue. Bom apetite!' },
     cancelado: { t: 'Cancelado', c: 'b-bad', d: 'Este pedido foi cancelado' }
   };
-  GP.PAG = { pix: 'Pix', debito: 'Cartão de débito (na entrega)', credito: 'Cartão de crédito (na entrega)' };
+  GP.PAG = { pix: 'Pix', debito: 'Cartão de débito (na entrega)', credito: 'Cartão de crédito (na entrega)', dinheiro: 'Dinheiro (na entrega)' };
+
+  // ---------- Comprovante para impressora térmica ----------
+  GP.cupom = (p, L, pcfg = {}) => {
+    pcfg = Object.assign({ largura: '80', vias: 'entrega' }, pcfg);
+    const e = GP.esc, brl = GP.brl, km = GP.km, dt = new Date(p.criado_em);
+    const itensArr = p.itens || p.ff_pedido_itens || [];
+    const data = dt.toLocaleDateString('pt-BR') + ' ' + GP.hora(dt);
+    const linha = '<div class="hr"></div>';
+    const rota = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+    const qr = GP.qr(rota);
+    const troco = p.pagamento === 'dinheiro' && Number(p.troco_para) > 0 ? Number(p.troco_para) - Number(p.total) : 0;
+    const pag = p.pagamento === 'pix'
+      ? `<div class="box">PIX — JÁ PAGO<br><small>comprovante anexado · NÃO COBRAR</small></div>`
+      : p.pagamento === 'dinheiro'
+        ? `<div class="box">COBRAR EM DINHEIRO<br><span class="big">${brl(p.total)}</span><br>${troco > 0 ? `Cliente paga com ${brl(p.troco_para)}<br><span class="big">LEVAR TROCO: ${brl(troco)}</span>` : 'Sem troco (valor certo)'}</div>`
+        : `<div class="box">COBRAR NA ENTREGA<br>${p.pagamento === 'debito' ? 'CARTÃO DE DÉBITO' : 'CARTÃO DE CRÉDITO'}<br><span class="big">${brl(p.total)}</span><br><small>levar maquininha</small></div>`;
+    const itens = itensArr.map(i => `<div class="it"><span><b>${i.qtd}x</b> ${e(i.nome)}</span><span>${brl(i.preco * i.qtd)}</span></div>${i.obs ? `<div class="obs">&gt; ${e(i.obs)}</div>` : ''}`).join('');
+    const viaEntrega = `<section class="via">
+      <div class="c"><div class="loja">${e(L.nome)}</div>${L.cnpj ? `<div>CNPJ ${e(GP.fmtCnpj(L.cnpj))}</div>` : ''}${L.telefone ? `<div>${e(L.telefone)}</div>` : ''}</div>
+      ${linha}<div class="c"><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div class="tag">VIA DA ENTREGA</div></div>${linha}
+      <div><b>CLIENTE:</b> ${e(p.cliente_nome)}</div><div><b>TEL:</b> ${e(p.cliente_telefone)}</div>
+      ${linha}<div><b>ENTREGAR EM:</b></div><div class="end">${e(p.endereco)}</div>${p.complemento ? `<div class="end">${e(p.complemento)}</div>` : ''}
+      <div>Distância: ${km(p.distancia_km)}${p.entregador_nome ? ` · Entregador: ${e(p.entregador_nome)}` : ''}</div>
+      ${linha}${itens}${linha}
+      <div class="it"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
+      <div class="it"><span>Taxa de entrega</span><span>${brl(p.taxa_entrega)}</span></div>
+      <div class="it tot"><span>TOTAL</span><span>${brl(p.total)}</span></div>
+      ${linha}${pag}
+      ${p.observacao ? `${linha}<div><b>OBS:</b> ${e(p.observacao)}</div>` : ''}
+      ${qr ? `${linha}<div class="c"><div class="qr">${qr}</div><small>Aponte a câmera para abrir a rota</small></div>` : ''}
+      ${linha}<div class="c"><small>GoPedido · goscripts.com.br/delivery</small></div>
+    </section>`;
+    const viaCozinha = `<section class="via">
+      <div class="c"><div class="tag">COZINHA</div><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div>${e(p.cliente_nome)}</div></div>${linha}
+      ${itensArr.map(i => `<div class="kit"><b>${i.qtd}x</b> ${e(i.nome)}</div>${i.obs ? `<div class="kobs">&gt; ${e(i.obs)}</div>` : ''}`).join('')}
+      ${p.observacao ? `${linha}<div class="kobs">OBS: ${e(p.observacao)}</div>` : ''}${linha}
+      <div class="box">${p.pagamento === 'pix' ? 'PIX — JÁ PAGO' : p.pagamento === 'dinheiro' ? `DINHEIRO · ${brl(p.total)}${troco > 0 ? ` · TROCO ${brl(troco)}` : ''}` : `COBRAR NA ENTREGA · ${p.pagamento === 'debito' ? 'DÉBITO' : 'CRÉDITO'} · ${brl(p.total)}`}</div>
+    </section>`;
+    const vias = pcfg.vias === 'entrega' ? viaEntrega : pcfg.vias === 'cozinha' ? viaCozinha : viaEntrega + viaCozinha;
+    const W = pcfg.largura === '58' ? 48 : 72, F = pcfg.largura === '58' ? 11 : 12.5;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pedido #${p.numero}</title><style>
+      @page{size:${pcfg.largura}mm auto;margin:0}
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{width:${W}mm;margin:0 auto;padding:3mm 0;font-family:'Courier New',ui-monospace,monospace;font-size:${F}px;line-height:1.3;color:#000;font-weight:600}
+      .via{page-break-after:always;break-after:page;padding-bottom:6mm}
+      .via:last-child{page-break-after:auto;break-after:auto}
+      .c{text-align:center}.loja{font-size:1.35em;font-weight:900}
+      .big{font-size:1.5em;font-weight:900}
+      .tag{display:inline-block;border:2px solid #000;padding:1px 8px;margin-top:3px;font-weight:900;letter-spacing:.08em}
+      .hr{border-top:1px dashed #000;margin:5px 0}
+      .it{display:flex;justify-content:space-between;gap:6px}.it span:last-child{white-space:nowrap}
+      .tot{font-size:1.3em;font-weight:900;margin-top:2px}
+      .obs{padding-left:10px;font-style:italic}
+      .end{font-size:1.1em;font-weight:800}
+      .box{border:2px solid #000;padding:5px;text-align:center;font-weight:900}
+      .qr{width:30mm;height:30mm;margin:4px auto}.qr svg{width:100%;height:100%}
+      .kit{font-size:1.45em;font-weight:900;margin:4px 0}.kobs{font-size:1.2em;padding-left:10px;font-weight:800}
+      small{font-size:.85em;font-weight:500}
+      @media screen{body{background:#fff;box-shadow:0 0 0 1px #ddd;margin:10px auto;padding:3mm}}
+    </style></head><body>${vias}<script>window.onload=function(){setTimeout(function(){window.print()},250)};window.onafterprint=function(){window.close()};<\/script></body></html>`;
+    return html;
+  };
+  GP.imprimirCupom = (html, janela) => {
+    const w = janela || window.open('', '_blank');
+    if (!w) return GP.toast('Libere as janelas pop-up para imprimir.', 'err');
+    w.document.open(); w.document.write(html); w.document.close();
+  };
+  GP.troco = (p) => p.pagamento === 'dinheiro' && Number(p.troco_para) > 0 ? Number(p.troco_para) - Number(p.total) : 0;
+  GP.pagTexto = (p) => {
+    if (p.pagamento === 'pix') return 'Pix · já pago';
+    if (p.pagamento === 'dinheiro') { const t = GP.troco(p); return `Dinheiro · ${t > 0 ? `troco para ${GP.brl(p.troco_para)} (levar ${GP.brl(t)})` : 'sem troco'}`; }
+    return p.pagamento === 'debito' ? 'Débito na entrega' : 'Crédito na entrega';
+  };
+
+
+
 })();

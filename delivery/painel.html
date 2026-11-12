@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122034">
+<link rel="stylesheet" href="app.css?v=202611122038">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -223,6 +223,7 @@
               <label class="switch"><input type="checkbox" id="l-pix"><i></i>Pix</label>
               <label class="switch"><input type="checkbox" id="l-deb"><i></i>Débito na entrega</label>
               <label class="switch"><input type="checkbox" id="l-cred"><i></i>Crédito na entrega</label>
+              <label class="switch"><input type="checkbox" id="l-din"><i></i>Dinheiro (com troco)</label>
             </div>
             <div id="pix-cfg" class="grid2">
               <label class="field"><span>Tipo de chave Pix</span>
@@ -268,8 +269,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122034"></script>
-<script src="app.js?v=202611122034"></script>
+<script src="config.js?v=202611122038"></script>
+<script src="app.js?v=202611122038"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -416,7 +417,7 @@
     if (v) {
       const falta = [];
       if (loja.lat == null) falta.push('localização no mapa');
-      if (!loja.aceita_pix && !loja.aceita_debito && !loja.aceita_credito) falta.push('forma de pagamento');
+      if (!loja.aceita_pix && !loja.aceita_debito && !loja.aceita_credito && !loja.aceita_dinheiro) falta.push('forma de pagamento');
       if (loja.aceita_pix && !loja.pix_chave) falta.push('chave Pix');
       if (!prods.some(p => p.disponivel)) falta.push('ao menos 1 produto disponível');
       if (falta.length) { e.target.checked = false; GP.toast('Antes de abrir, configure: ' + falta.join(', ') + '.', 'err'); return; }
@@ -471,63 +472,7 @@
   });
   pcRender();
 
-  function imprimir(p, janela) {
-    const L = loja, e = esc, dt = new Date(p.criado_em);
-    const data = dt.toLocaleDateString('pt-BR') + ' ' + GP.hora(dt);
-    const linha = '<div class="hr"></div>';
-    const rota = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
-    const qr = GP.qr(rota);
-    const pag = p.pagamento === 'pix'
-      ? `<div class="box">PIX — JÁ PAGO<br><small>comprovante anexado · NÃO COBRAR</small></div>`
-      : `<div class="box">COBRAR NA ENTREGA<br>${p.pagamento === 'debito' ? 'CARTÃO DE DÉBITO' : 'CARTÃO DE CRÉDITO'}<br><span class="big">${brl(p.total)}</span><br><small>levar maquininha</small></div>`;
-    const itens = p.ff_pedido_itens.map(i => `<div class="it"><span><b>${i.qtd}x</b> ${e(i.nome)}</span><span>${brl(i.preco * i.qtd)}</span></div>${i.obs ? `<div class="obs">&gt; ${e(i.obs)}</div>` : ''}`).join('');
-    const viaEntrega = `<section class="via">
-      <div class="c"><div class="loja">${e(L.nome)}</div>${L.cnpj ? `<div>CNPJ ${e(GP.fmtCnpj(L.cnpj))}</div>` : ''}${L.telefone ? `<div>${e(L.telefone)}</div>` : ''}</div>
-      ${linha}<div class="c"><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div class="tag">VIA DA ENTREGA</div></div>${linha}
-      <div><b>CLIENTE:</b> ${e(p.cliente_nome)}</div><div><b>TEL:</b> ${e(p.cliente_telefone)}</div>
-      ${linha}<div><b>ENTREGAR EM:</b></div><div class="end">${e(p.endereco)}</div>${p.complemento ? `<div class="end">${e(p.complemento)}</div>` : ''}
-      <div>Distância: ${km(p.distancia_km)}${p.entregador_nome ? ` · Entregador: ${e(p.entregador_nome)}` : ''}</div>
-      ${linha}${itens}${linha}
-      <div class="it"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
-      <div class="it"><span>Taxa de entrega</span><span>${brl(p.taxa_entrega)}</span></div>
-      <div class="it tot"><span>TOTAL</span><span>${brl(p.total)}</span></div>
-      ${linha}${pag}
-      ${p.observacao ? `${linha}<div><b>OBS:</b> ${e(p.observacao)}</div>` : ''}
-      ${qr ? `${linha}<div class="c"><div class="qr">${qr}</div><small>Aponte a câmera para abrir a rota</small></div>` : ''}
-      ${linha}<div class="c"><small>GoPedido · goscripts.com.br/delivery</small></div>
-    </section>`;
-    const viaCozinha = `<section class="via">
-      <div class="c"><div class="tag">COZINHA</div><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div>${e(p.cliente_nome)}</div></div>${linha}
-      ${p.ff_pedido_itens.map(i => `<div class="kit"><b>${i.qtd}x</b> ${e(i.nome)}</div>${i.obs ? `<div class="kobs">&gt; ${e(i.obs)}</div>` : ''}`).join('')}
-      ${p.observacao ? `${linha}<div class="kobs">OBS: ${e(p.observacao)}</div>` : ''}${linha}
-      <div class="box">${p.pagamento === 'pix' ? 'PIX — JÁ PAGO' : `COBRAR NA ENTREGA · ${p.pagamento === 'debito' ? 'DÉBITO' : 'CRÉDITO'} · ${brl(p.total)}`}</div>
-    </section>`;
-    const vias = pcfg.vias === 'entrega' ? viaEntrega : pcfg.vias === 'cozinha' ? viaCozinha : viaEntrega + viaCozinha;
-    const W = pcfg.largura === '58' ? 48 : 72, F = pcfg.largura === '58' ? 11 : 12.5;
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pedido #${p.numero}</title><style>
-      @page{size:${pcfg.largura}mm auto;margin:0}
-      *{box-sizing:border-box;margin:0;padding:0}
-      body{width:${W}mm;margin:0 auto;padding:3mm 0;font-family:'Courier New',ui-monospace,monospace;font-size:${F}px;line-height:1.3;color:#000;font-weight:600}
-      .via{page-break-after:always;break-after:page;padding-bottom:6mm}
-      .via:last-child{page-break-after:auto;break-after:auto}
-      .c{text-align:center}.loja{font-size:1.35em;font-weight:900}
-      .big{font-size:1.5em;font-weight:900}
-      .tag{display:inline-block;border:2px solid #000;padding:1px 8px;margin-top:3px;font-weight:900;letter-spacing:.08em}
-      .hr{border-top:1px dashed #000;margin:5px 0}
-      .it{display:flex;justify-content:space-between;gap:6px}.it span:last-child{white-space:nowrap}
-      .tot{font-size:1.3em;font-weight:900;margin-top:2px}
-      .obs{padding-left:10px;font-style:italic}
-      .end{font-size:1.1em;font-weight:800}
-      .box{border:2px solid #000;padding:5px;text-align:center;font-weight:900}
-      .qr{width:30mm;height:30mm;margin:4px auto}.qr svg{width:100%;height:100%}
-      .kit{font-size:1.45em;font-weight:900;margin:4px 0}.kobs{font-size:1.2em;padding-left:10px;font-weight:800}
-      small{font-size:.85em;font-weight:500}
-      @media screen{body{background:#fff;box-shadow:0 0 0 1px #ddd;margin:10px auto;padding:3mm}}
-    </style></head><body>${vias}<script>window.onload=function(){setTimeout(function(){window.print()},250)};window.onafterprint=function(){window.close()};<\/script></body></html>`;
-    const w = janela || window.open('', '_blank');
-    if (!w) return GP.toast('Libere as janelas pop-up para imprimir.', 'err');
-    w.document.open(); w.document.write(html); w.document.close();
-  }
+  function imprimir(p, janela) { GP.imprimirCupom(GP.cupom(p, loja, pcfg), janela); }
 
   // ================= PEDIDOS =================
   const beep = () => {
@@ -586,13 +531,14 @@
           <div class="line">${ic('phone')}<div><b>${esc(p.cliente_nome)}</b> · <a href="${GP.wa(p.cliente_telefone, `Olá ${p.cliente_nome}! Aqui é da ${loja.nome}, sobre seu pedido #${p.numero}.`)}" target="_blank" rel="noopener" style="color:var(--ok);font-weight:700">${esc(p.cliente_telefone)}</a></div></div>
           <div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}<br><a href="${maps}" target="_blank" rel="noopener" class="small" style="color:var(--brand-2);font-weight:700">Abrir rota no mapa (${km(p.distancia_km)})</a></div></div>
           <div class="its">${p.ff_pedido_itens.map(i => `<div><span><b>${i.qtd}×</b> ${esc(i.nome)}${i.obs ? `<br><span class="small muted">↳ ${esc(i.obs)}</span>` : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div>
+          ${GP.troco(p) > 0 ? `<div class="fee" style="background:var(--warn-soft);color:#7a4f0e;display:flex;gap:10px;padding:10px 12px;border-radius:12px;margin-bottom:10px;font-weight:700">${ic('cash')}<span class="grow">Separar troco para o motoboy</span><span>${brl(GP.troco(p))}</span></div>` : ''}
           ${p.entregador_nome ? `<div class="line">${ic('bike')}<div class="small">Entregador: <b>${esc(p.entregador_nome)}</b></div></div>` : ''}
           ${p.observacao ? `<div class="line">${ic('edit')}<div class="small"><b>Obs.:</b> ${esc(p.observacao)}</div></div>` : ''}
           <div class="sum-row small"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
           <div class="sum-row small"><span>Entrega</span><span>${brl(p.taxa_entrega)}</span></div>
           <div class="sum-row total" style="font-size:1rem"><span>Total</span><span>${brl(p.total)}</span></div>
           <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
-            <span class="badge ${p.pagamento === 'pix' ? 'b-ok' : 'b-warn'}">${p.pagamento === 'pix' ? 'Pix' : p.pagamento === 'debito' ? 'Débito na entrega' : 'Crédito na entrega'}</span>
+            <span class="badge ${p.pagamento === 'pix' ? 'b-ok' : 'b-warn'}">${GP.pagTexto(p)}</span>
             ${p.comprovante_path ? `<button class="btn btn-soft btn-sm" data-comp="${esc(p.comprovante_path)}">${ic('receipt')}Ver comprovante</button>` : ''}
             <button class="btn btn-ghost btn-sm" data-print="${p.id}" style="margin-left:auto">${ic('receipt')}Imprimir</button>
           </div>
@@ -755,7 +701,7 @@
     $('l-tempo').value = l.tempo_entrega || '30–50 min'; $('l-end').value = l.endereco || '';
     $('l-taxakm').value = money(l.taxa_km); $('l-taxamin').value = money(l.taxa_minima);
     $('l-raio').value = Number(l.raio_km) ? String(l.raio_km).replace('.', ',') : ''; $('l-min').value = money(l.pedido_minimo);
-    $('l-pix').checked = loja ? l.aceita_pix : true; $('l-deb').checked = loja ? l.aceita_debito : true; $('l-cred').checked = loja ? l.aceita_credito : true;
+    $('l-pix').checked = loja ? l.aceita_pix : true; $('l-deb').checked = loja ? l.aceita_debito : true; $('l-cred').checked = loja ? l.aceita_credito : true; $('l-din').checked = loja ? l.aceita_dinheiro !== false : true;
     $('l-pixtipo').value = l.pix_tipo || 'cpf'; $('l-pixchave').value = l.pix_chave || '';
     $('l-pixnome').value = l.pix_nome || ''; $('l-pixcidade').value = l.pix_cidade || '';
     $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
@@ -832,12 +778,12 @@
     const pix = $('l-pix').checked;
     if (pix && !$('l-pixchave').value.trim()) return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err');
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }
-    if (!pix && !$('l-deb').checked && !$('l-cred').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
+    if (!pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
     const row = {
       nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
       endereco: $('l-end').value.trim(), lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
       taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value), raio_km: num($('l-raio').value), pedido_minimo: num($('l-min').value),
-      aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked,
+      aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked,
       pix_tipo: $('l-pixtipo').value, pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()
     };
     const b = $('b-salvar'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>Salvando…';

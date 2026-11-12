@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122034">
+<link rel="stylesheet" href="app.css?v=202611122038">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -171,6 +171,10 @@
     <section id="step3" class="hide">
       <b class="small" style="display:block;margin-bottom:10px">Como você quer pagar?</b>
       <div id="pay-opts"></div>
+      <div id="din-area" class="hide" style="margin-bottom:6px">
+        <label class="field" style="margin-bottom:8px"><span>Vai precisar de troco? Troco para quanto?</span><div class="prefix"><i>R$</i><input class="input" id="c-troco" placeholder="0,00"></div><small id="troco-msg"></small></label>
+        <label class="check"><input type="checkbox" id="c-semtroco">Não preciso de troco (vou pagar o valor certo)</label>
+      </div>
       <div id="pix-area" class="hide">
         <div class="pixbox">
           <div class="center"><b>Pague <span id="pix-val"></span> com Pix</b><p class="small muted">Escaneie o QR Code ou use o copia e cola</p></div>
@@ -200,8 +204,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122034"></script>
-<script src="app.js?v=202611122034"></script>
+<script src="config.js?v=202611122038"></script>
+<script src="app.js?v=202611122038"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -232,7 +236,7 @@
   $('s-nome').textContent = loja.nome;
   $('s-desc').textContent = loja.descricao || '';
   if (loja.cnpj) $('s-desc').insertAdjacentHTML('afterend', `<p class="small muted" style="margin:-6px 0 12px">CNPJ ${esc(GP.fmtCnpj(loja.cnpj))}</p>`);
-  const pags = [loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito'].filter(Boolean);
+  const pags = [loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito', loja.aceita_dinheiro !== false && loja.aceita_dinheiro != null && 'Dinheiro'].filter(Boolean);
   $('s-chips').innerHTML = [
     `<span class="badge ${loja.aberta ? 'b-ok' : 'b-off'}"><i class="dot"></i>${loja.aberta ? 'Aberta agora' : 'Fechada'}</span>`,
     `<span class="chip">${ic('clock')}${esc(loja.tempo_entrega)}</span>`,
@@ -423,7 +427,8 @@
     const ops = [
       loja.aceita_pix && ['pix', 'pix', 'Pix', 'Pague agora e anexe o comprovante'],
       loja.aceita_debito && ['debito', 'card', 'Cartão de débito', 'Pague na entrega, na maquininha'],
-      loja.aceita_credito && ['credito', 'card', 'Cartão de crédito', 'Pague na entrega, na maquininha']
+      loja.aceita_credito && ['credito', 'card', 'Cartão de crédito', 'Pague na entrega, na maquininha'],
+      loja.aceita_dinheiro && ['dinheiro', 'cash', 'Dinheiro', 'Pague na entrega · informe se precisa de troco']
     ].filter(Boolean);
     if (pag && !ops.find(o => o[0] === pag)) pag = null;
     if (!pag && ops.length === 1) pag = ops[0][0];
@@ -442,7 +447,26 @@
   }
   $('pay-opts').onchange = (e) => { pag = e.target.value; renderPag(); updNext(); };
 
+  GP.moneyMask($('c-troco'));
+  function trocoOk() {
+    if ($('c-semtroco').checked) return true;
+    const v = GP.num($('c-troco').value);
+    return v > total();
+  }
+  function renderDin() {
+    const on = pag === 'dinheiro';
+    $('din-area').classList.toggle('hide', !on);
+    if (!on) return;
+    const sem = $('c-semtroco').checked, v = GP.num($('c-troco').value);
+    $('c-troco').disabled = sem;
+    $('troco-msg').innerHTML = sem ? '' : !v ? `Total do pedido: <b>${brl(total())}</b>` : v > total()
+      ? `<span style="color:var(--ok);font-weight:700">✓ O motoboy leva ${brl(v - total())} de troco</span>`
+      : `<span style="color:var(--bad);font-weight:700">⚠ Precisa ser maior que ${brl(total())}</span>`;
+  }
+  $('c-troco').addEventListener('input', () => { renderDin(); updNext(); });
+  $('c-semtroco').addEventListener('change', () => { if ($('c-semtroco').checked) $('c-troco').value = ''; renderDin(); updNext(); });
   function renderPix() {
+    renderDin();
     const on = pag === 'pix';
     $('pix-area').classList.toggle('hide', !on);
     if (!on) return;
@@ -498,7 +522,7 @@
       if (addr && !addr.valid() && $('c-nome').value.trim()) txt = 'Preencha rua, número e cidade';
     } else {
       txt = `Enviar pedido · ${brl(total())}`;
-      ok = !!pag && (pag !== 'pix' || !!comprovante);
+      ok = !!pag && (pag !== 'pix' || !!comprovante) && (pag !== 'dinheiro' || trocoOk());
     }
     if (!loja.aberta) { ok = false; txt = 'Loja fechada no momento'; }
     b.textContent = txt; b.disabled = !ok || busy === true;
@@ -515,7 +539,7 @@
     const b = $('co-next'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Enviando pedido…';
     const { data, error } = await sb.rpc('ff_criar_pedido', {
       p_loja: loja.id,
-      p_cliente: { nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: GP.fmtEnd(addr.get()), complemento: addr.get().complemento, observacao: $('c-obs').value.trim(), lat: pos.lat, lng: pos.lng },
+      p_cliente: { troco_para: pag === 'dinheiro' && !$('c-semtroco').checked ? GP.num($('c-troco').value) : null, nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: GP.fmtEnd(addr.get()), complemento: addr.get().complemento, observacao: $('c-obs').value.trim(), lat: pos.lat, lng: pos.lng },
       p_itens: bag.map(i => ({ id: i.id, qtd: i.qtd, obs: i.obs })),
       p_pagamento: pag,
       p_comprovante: pag === 'pix' ? comprovante : null

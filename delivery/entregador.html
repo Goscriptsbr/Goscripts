@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=202611122034">
+<link rel="stylesheet" href="app.css?v=202611122038">
 <style>
   body{background:#F2F1EE}
   .entry{min-height:100vh;display:grid;place-items:center;padding:24px 18px;background:radial-gradient(800px 400px at 50% -10%,rgba(242,69,28,.25),transparent 60%),var(--ink);color:#fff}
@@ -82,8 +82,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=202611122034"></script>
-<script src="app.js?v=202611122034"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="config.js?v=202611122038"></script>
+<script src="app.js?v=202611122038"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -171,9 +172,12 @@
           <div class="addr">${esc(p.endereco)}</div>
           ${p.complemento ? `<div class="small" style="margin-top:4px">${ic('home')} ${esc(p.complemento)}</div>` : ''}
           <div class="small muted" style="margin-top:6px">${ic('user')} ${esc(p.cliente_nome)}${p.entregador_nome && p.status !== 'preparando' ? ` · entregador: ${esc(p.entregador_nome)}` : ''}</div>
-          <div class="money ${pago ? 'paid' : 'card'}">${ic(pago ? 'check' : 'card')}<span class="grow">${pago ? 'Já pago no Pix — não cobrar' : `Cobrar no ${p.pagamento === 'debito' ? 'débito' : 'crédito'} · levar maquininha`}</span><span>${brl(p.total)}</span></div>
+          ${pago ? `<div class="money paid">${ic('check')}<span class="grow">Já pago no Pix — não cobrar</span><span>${brl(p.total)}</span></div>`
+            : p.pagamento === 'dinheiro' ? `<div class="money card">${ic('cash')}<span class="grow">Cobrar em dinheiro${GP.troco(p) > 0 ? `<br><small>Cliente paga com ${brl(p.troco_para)} · <b>levar ${brl(GP.troco(p))} de troco</b></small>` : '<br><small>Sem troco (valor certo)</small>'}</span><span>${brl(p.total)}</span></div>`
+            : `<div class="money card">${ic('card')}<span class="grow">Cobrar no ${p.pagamento === 'debito' ? 'débito' : 'crédito'} · levar maquininha</span><span>${brl(p.total)}</span></div>`}
           <div class="its">${p.itens.map(i => `${i.qtd}× ${esc(i.nome)}`).join(' · ')}</div>
           ${p.observacao ? `<div class="small" style="margin-top:8px"><b>Obs.:</b> ${esc(p.observacao)}</div>` : ''}
+          <button class="btn btn-ghost btn-sm btn-block" data-cupom="${p.id}" style="margin-top:10px">${ic('receipt')}Comprovante do pedido (imprimir / salvar PDF)</button>
           ${p.status !== 'entregue' ? `<div class="acts">
             <a class="btn btn-ghost btn-sm" href="${rota}" target="_blank" rel="noopener">${ic('pin')}Google Maps</a>
             <a class="btn btn-ghost btn-sm" href="${waze}" target="_blank" rel="noopener">${ic('bike')}Waze</a>
@@ -191,6 +195,13 @@
     aba = b.dataset.t; document.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x === b)); render();
   };
   $('lista').onclick = async (e) => {
+    const cp = e.target.closest('[data-cupom]');
+    if (cp) {
+      const p = lista.find(x => x.id === cp.dataset.cupom);
+      const larg = (GP.ls.get('gp_print', {}) || {}).largura || '80';
+      if (p) GP.imprimirCupom(GP.cupom(p, info.loja, { vias: 'entrega', largura: larg }));
+      return;
+    }
     const b = e.target.closest('[data-st]'); if (!b) return;
     const st = b.dataset.st;
     if (st === 'entregue' && !confirm('Confirmar que o pedido foi entregue ao cliente?')) return;

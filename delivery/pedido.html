@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=202611122034">
+<link rel="stylesheet" href="app.css?v=202611122038">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -50,8 +50,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=202611122034"></script>
-<script src="app.js?v=202611122034"></script>
+<script src="config.js?v=202611122038"></script>
+<script src="app.js?v=202611122038"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -120,7 +120,7 @@
 
       <div class="card pad" style="margin-top:14px">
         <div class="row" style="align-items:flex-start;margin-bottom:12px">${ic('pin')}<div><b class="small">Entregar em</b><div class="small muted">${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}</div></div></div>
-        <div class="row" style="align-items:flex-start">${ic(p.pagamento === 'pix' ? 'pix' : 'card')}<div><b class="small">Pagamento</b><div class="small muted">${GP.PAG[p.pagamento]}${p.pagamento === 'pix' ? ' · comprovante enviado' : ''}</div></div></div>
+        <div class="row" style="align-items:flex-start">${ic(p.pagamento === 'pix' ? 'pix' : p.pagamento === 'dinheiro' ? 'cash' : 'card')}<div><b class="small">Pagamento</b><div class="small muted">${p.pagamento === 'dinheiro' ? GP.pagTexto(p) : GP.PAG[p.pagamento]}${p.pagamento === 'pix' ? ' · comprovante enviado' : ''}</div></div></div>
         ${p.observacao ? `<div class="row" style="align-items:flex-start;margin-top:12px">${ic('edit')}<div><b class="small">Observação</b><div class="small muted">${esc(p.observacao)}</div></div></div>` : ''}
       </div>
 
