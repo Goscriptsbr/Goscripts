@@ -76,6 +76,7 @@ button.chip{cursor:pointer}
 textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(242,69,28,.12)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid2>*,.grid3>*,.grid-rua>*,.formgrid>*,.plist>*,.orders>*,.prods>*,.grid>*{min-width:0}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 @media(max-width:560px){.grid3{grid-template-columns:1fr 1fr}}
 .prefix{position:relative}

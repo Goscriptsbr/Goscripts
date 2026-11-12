@@ -228,14 +228,50 @@
     if (d.length === 10 || ((d.length === 12 || d.length === 13) && d.startsWith('55'))) return 'telefone';
     return tipoEscolhido;
   };
+  const cnpjValido = (d) => {
+    if (!/^\d{14}$/.test(d) || /^(\d)\1+$/.test(d)) return false;
+    const calc = (n) => { const w = n === 12 ? [5,4,3,2,9,8,7,6,5,4,3,2] : [6,5,4,3,2,9,8,7,6,5,4,3,2]; let t = 0; for (let k = 0; k < n; k++) t += +d[k] * w[k]; const r = t % 11; return r < 2 ? 0 : 11 - r; };
+    return calc(12) === +d[12] && calc(13) === +d[13];
+  };
+  // Confere se a chave combina com o tipo escolhido
+  GP.pixValida = (tipo, chave) => {
+    const k = String(chave || '').trim(), d = GP.digits(k);
+    if (!k) return { ok: false, msg: 'Digite a chave Pix.' };
+    if (tipo === 'cpf') {
+      if (d.length !== 11 || /[a-z@]/i.test(k)) return { ok: false, msg: 'CPF precisa ter 11 números.' };
+      if (!cpfValido(d)) return { ok: false, msg: 'Esse CPF não é válido. Confira os números.' };
+      return { ok: true, chave: d };
+    }
+    if (tipo === 'cnpj') {
+      if (d.length !== 14 || /[a-z@]/i.test(k)) return { ok: false, msg: 'CNPJ precisa ter 14 números.' };
+      if (!cnpjValido(d)) return { ok: false, msg: 'Esse CNPJ não é válido. Confira os números.' };
+      return { ok: true, chave: d };
+    }
+    if (tipo === 'telefone') {
+      if (/[a-z@]/i.test(k)) return { ok: false, msg: 'Telefone só pode ter números.' };
+      let n = d;
+      if ((n.length === 12 || n.length === 13) && n.startsWith('55')) n = n.slice(2);
+      if (n.length !== 10 && n.length !== 11) return { ok: false, msg: 'Telefone precisa ter DDD + número. Ex.: (19) 99999-9999.' };
+      if (+n.slice(0, 2) < 11) return { ok: false, msg: 'DDD inválido.' };
+      if (n.length === 11 && n[2] !== '9') return { ok: false, msg: 'Celular com 11 números deve começar com 9 depois do DDD.' };
+      return { ok: true, chave: '+55' + n };
+    }
+    if (tipo === 'email') {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(k)) return { ok: false, msg: 'E-mail inválido. Ex.: nome@gmail.com' };
+      return { ok: true, chave: k.toLowerCase() };
+    }
+    if (tipo === 'aleatoria') {
+      const h = k.toLowerCase().replace(/[^0-9a-f]/g, '');
+      if (h.length !== 32 || !/^[0-9a-f-]+$/i.test(k)) return { ok: false, msg: 'Chave aleatória tem 32 letras/números no formato xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.' };
+      return { ok: true, chave: h.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5') };
+    }
+    return { ok: false, msg: 'Escolha o tipo da chave.' };
+  };
+  // Chave final usada no QR Code (se uma loja antiga salvou com o tipo errado, tenta o tipo certo)
   GP.pixChave = (tipo, chave) => {
-    const k = String(chave || '').trim();
-    const t = GP.pixTipo(k, tipo);
-    if (t === 'cpf' || t === 'cnpj') return GP.digits(k);
-    if (t === 'telefone') { const d = GP.digits(k); return '+' + (d.length <= 11 ? '55' + d : d); }
-    if (t === 'email') return k.toLowerCase();
-    if (t === 'aleatoria') { const h = k.toLowerCase().replace(/[^0-9a-f]/g, ''); return h.length === 32 ? h.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5') : k; }
-    return k;
+    let v = GP.pixValida(tipo, chave);
+    if (!v.ok) v = GP.pixValida(GP.pixTipo(chave, tipo), chave);
+    return v.ok ? v.chave : String(chave || '').trim();
   };
   GP.pixPayload = (loja, valor) => {
     const chave = GP.pixChave(loja.pix_tipo, loja.pix_chave);
