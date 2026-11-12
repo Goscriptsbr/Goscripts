@@ -6,6 +6,11 @@
     <title>GoScripts - Soluções Digitais</title>
     <meta name="description" content="Sistemas e sites para o seu negócio. Pague uma única vez, sem mensalidades: o projeto é 100% seu.">
     <meta name="theme-color" content="#07090f">
+    <meta property="og:title" content="GoScripts - Soluções Digitais">
+    <meta property="og:description" content="Sistemas e sites para o seu negócio. Pague uma única vez, sem mensalidades: o projeto é 100% seu.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://goscripts.com.br/">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f8cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M18 22l12 10-12 10' fill='none' stroke='%2305101f' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M34 44h13' stroke='%2305101f' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -476,9 +481,192 @@
             *, *::before, *::after { animation: none !important; transition: none !important; }
             .reveal { opacity: 1; transform: none; }
         }
+
+        /* --- 12. Polimento visual --- */
+        .scroll-progress {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 3px;
+            transform: scaleX(0); transform-origin: 0 50%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            z-index: 2000;
+        }
+
+        /* Luzes em movimento atrás do topo */
+        .hero { position: relative; }
+        .aurora { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+        .aurora span {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.42;
+            animation: drift 16s ease-in-out infinite alternate;
+        }
+        .aurora span:nth-child(1) { width: 440px; height: 440px; top: -90px; right: -70px; background: #4f8cff; }
+        .aurora span:nth-child(2) { width: 340px; height: 340px; top: 38%; left: -130px; background: #22d3ee; opacity: 0.22; animation-duration: 21s; animation-delay: -6s; }
+        .aurora span:nth-child(3) { width: 300px; height: 300px; bottom: -120px; right: 22%; background: #7c5cff; opacity: 0.26; animation-duration: 25s; animation-delay: -11s; }
+        @keyframes drift {
+            from { transform: translate3d(0, 0, 0) scale(1); }
+            to   { transform: translate3d(-50px, 44px, 0) scale(1.15); }
+        }
+
+        /* Título com brilho passando */
+        .hero h1 .grad {
+            background: linear-gradient(110deg, var(--accent) 0%, var(--accent-2) 35%, #b9f3ff 50%, var(--accent-2) 65%, var(--accent) 100%);
+            background-size: 220% 100%;
+            -webkit-background-clip: text;
+                    background-clip: text;
+            animation: shine 7s linear infinite;
+        }
+        @keyframes shine { to { background-position: -220% 0; } }
+
+        .badge { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+        .badge .dot { animation: pulse 2.2s ease-out infinite; }
+        @keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55); }
+            100% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); }
+        }
+
+        /* Botão principal com reflexo */
+        .btn-primary { position: relative; overflow: hidden; }
+        .btn-primary::after {
+            content: '';
+            position: absolute; top: 0; bottom: 0; left: -80%;
+            width: 50%;
+            background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.6s ease;
+        }
+        .btn-primary:hover::after { left: 130%; }
+        .btn i { transition: transform 0.2s ease; }
+        .btn:hover .fa-arrow-right { transform: translateX(4px); }
+
+        /* Janela de código flutuando com borda luminosa */
+        .code-window { position: relative; }
+        .code-window.active { animation: float 7s ease-in-out 0.9s infinite; }
+        .code-window::before {
+            content: '';
+            position: absolute; inset: 0;
+            padding: 1px;
+            border-radius: inherit;
+            background: linear-gradient(140deg, rgba(79, 140, 255, 0.9), transparent 35%, transparent 65%, rgba(34, 211, 238, 0.8));
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+                    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+            pointer-events: none;
+        }
+        @keyframes float { 50% { transform: translateY(-10px); } }
+
+        /* Faixa de destaques */
+        .marquee {
+            border-block: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.02);
+            overflow: hidden;
+            padding: 1rem 0;
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+                    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+        }
+        .marquee-track { display: flex; width: max-content; animation: marquee 32s linear infinite; }
+        .marquee:hover .marquee-track { animation-play-state: paused; }
+        .marquee ul { display: flex; flex-shrink: 0; }
+        .marquee li {
+            display: flex; align-items: center; gap: 0.7rem;
+            padding: 0 1.6rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        .marquee li i { color: var(--accent-2); font-size: 0.75rem; }
+        @keyframes marquee { to { transform: translateX(-50%); } }
+
+        /* Cartões: luz que segue o dedo/mouse */
+        .feature, .contact-item { position: relative; overflow: hidden; }
+        .feature::before, .contact-item::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgba(79, 140, 255, 0.2), transparent 65%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .feature:hover::before, .contact-item:hover::before { opacity: 1; }
+        .feature > *, .contact-item > * { position: relative; }
+        .feature .ico {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #05101f;
+            box-shadow: 0 10px 24px -10px rgba(79, 140, 255, 0.9);
+            transition: transform 0.3s ease;
+        }
+        .feature:hover .ico { transform: scale(1.08) rotate(-6deg); }
+        .feature-num {
+            position: absolute !important;
+            top: 1.3rem; right: 1.4rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.22);
+        }
+
+        .section-head h2 {
+            background: linear-gradient(180deg, #fff 30%, #a9b6d3);
+            -webkit-background-clip: text;
+                    background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Portfólio: aviso "Visitar site" sobre a imagem */
+        .project-thumb { position: relative; }
+        .project-thumb::after {
+            content: 'Visitar site  \2197';
+            position: absolute; inset: 0;
+            display: grid; place-items: center;
+            background: linear-gradient(180deg, rgba(7, 9, 15, 0.15), rgba(7, 9, 15, 0.78));
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .project:hover .project-thumb::after, .project:focus-visible .project-thumb::after { opacity: 1; }
+
+        /* Contato clicável */
+        a.contact-item .go { margin-left: auto; color: var(--muted); font-size: 0.85rem; transition: transform 0.2s ease, color 0.2s ease; }
+        a.contact-item:hover .go { color: var(--accent-2); transform: translateX(3px); }
+
+        /* Rodapé */
+        .footer-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; }
+        .footer-links a { transition: color 0.2s ease; }
+        .footer-links a:hover { color: var(--text); }
+        .footer-copy { width: 100%; padding-top: 1.4rem; margin-top: 0.6rem; border-top: 1px solid var(--line); font-size: 0.84rem; }
+
+        /* WhatsApp à esquerda para não ficar em cima do chat */
+        .whatsapp-float { right: auto; left: 22px; }
+        .whatsapp-float::before {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 50%;
+            border: 2px solid var(--whatsapp);
+            animation: ring 2.4s ease-out infinite;
+        }
+        @keyframes ring { from { transform: scale(1); opacity: 0.7; } to { transform: scale(1.6); opacity: 0; } }
+
+        @media (max-width: 760px) {
+            .whatsapp-float { right: auto; left: 16px; }
+            .aurora span { filter: blur(60px); }
+            .aurora span:nth-child(1) { width: 300px; height: 300px; }
+            .code-body { font-size: 0.8rem; }
+            .footer-inner { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .marquee-track { width: auto; flex-wrap: wrap; justify-content: center; }
+            .marquee ul[aria-hidden] { display: none; }
+            .marquee ul { flex-wrap: wrap; justify-content: center; row-gap: 0.6rem; }
+        }
     </style>
 </head>
 <body>
+
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
 
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
@@ -499,6 +687,7 @@
     </nav>
 
     <header class="hero" id="home">
+        <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
         <div class="container hero-grid">
             <div class="reveal">
                 <div class="badge"><span class="dot"></span> Sem mensalidades · pagamento único</div>
@@ -531,6 +720,27 @@
         </div>
     </header>
 
+    <div class="marquee">
+        <div class="marquee-track">
+            <ul>
+                    <li><i class="fas fa-circle-check"></i> Sem mensalidades</li>
+                    <li><i class="fas fa-circle-check"></i> Pagamento único</li>
+                    <li><i class="fas fa-circle-check"></i> O código é 100% seu</li>
+                    <li><i class="fas fa-circle-check"></i> Design sob medida</li>
+                    <li><i class="fas fa-circle-check"></i> Funciona em qualquer tela</li>
+                    <li><i class="fas fa-circle-check"></i> Pronto para o Google</li>
+            </ul>
+            <ul aria-hidden="true">
+                    <li><i class="fas fa-circle-check"></i> Sem mensalidades</li>
+                    <li><i class="fas fa-circle-check"></i> Pagamento único</li>
+                    <li><i class="fas fa-circle-check"></i> O código é 100% seu</li>
+                    <li><i class="fas fa-circle-check"></i> Design sob medida</li>
+                    <li><i class="fas fa-circle-check"></i> Funciona em qualquer tela</li>
+                    <li><i class="fas fa-circle-check"></i> Pronto para o Google</li>
+            </ul>
+        </div>
+    </div>
+
     <main>
         <section id="services">
             <div class="container">
@@ -542,21 +752,25 @@
 
                 <div class="features">
                     <article class="feature reveal">
+                        <span class="feature-num" aria-hidden="true">01</span>
                         <div class="ico"><i class="fas fa-hand-holding-dollar"></i></div>
                         <h3>Sem Mensalidades</h3>
                         <p>Diferente das agências tradicionais, não cobramos mensalidade para manter seu site. O projeto é 100% seu.</p>
                     </article>
                     <article class="feature reveal" style="transition-delay: 0.08s;">
+                        <span class="feature-num" aria-hidden="true">02</span>
                         <div class="ico"><i class="fas fa-paint-brush"></i></div>
                         <h3>Design Premium</h3>
                         <p>Layouts exclusivos e modernos pensados na identidade da sua marca para converter mais clientes.</p>
                     </article>
                     <article class="feature reveal" style="transition-delay: 0.16s;">
+                        <span class="feature-num" aria-hidden="true">03</span>
                         <div class="ico"><i class="fas fa-mobile-alt"></i></div>
                         <h3>100% Responsivo</h3>
                         <p>Seu site perfeito e fluido em qualquer tela: Computadores, Tablets e Celulares.</p>
                     </article>
                     <article class="feature reveal" style="transition-delay: 0.24s;">
+                        <span class="feature-num" aria-hidden="true">04</span>
                         <div class="ico"><i class="fas fa-rocket"></i></div>
                         <h3>SEO Otimizado</h3>
                         <p>Estrutura de código leve e moderna para que o Google encontre sua empresa rapidamente.</p>
@@ -616,14 +830,16 @@
 
                 <div class="contact-layout">
                     <div class="reveal">
-                        <div class="contact-item">
+                        <a class="contact-item" href="https://wa.me/5519988283178" target="_blank" rel="noopener">
                             <div class="ico"><i class="fab fa-whatsapp"></i></div>
                             <div><h4>WhatsApp</h4><p>(19) 98828-3178</p></div>
-                        </div>
-                        <div class="contact-item">
+                            <i class="fas fa-chevron-right go" aria-hidden="true"></i>
+                        </a>
+                        <a class="contact-item" href="mailto:goscriptsbr@gmail.com">
                             <div class="ico"><i class="far fa-envelope"></i></div>
                             <div><h4>E-mail</h4><p>goscriptsbr@gmail.com</p></div>
-                        </div>
+                            <i class="fas fa-chevron-right go" aria-hidden="true"></i>
+                        </a>
 
                         <div class="quick-box">
                             <h3>Prefere atendimento imediato?</h3>
@@ -653,7 +869,13 @@
     <footer>
         <div class="container footer-inner">
             <a href="#home" class="logo"><span class="logo-mark"><i class="fas fa-terminal"></i></span> GoScripts</a>
-            <p>&copy; <span id="year">2025</span> GoScripts Soluções Digitais. Todos os direitos reservados.</p>
+            <nav class="footer-links" aria-label="Rodapé">
+                <a href="#services">Serviços</a>
+                <a href="#portfolio">Portfólio</a>
+                <a href="#contact">Contato</a>
+                <a href="https://wa.me/5519988283178" target="_blank" rel="noopener">WhatsApp</a>
+            </nav>
+            <p class="footer-copy">&copy; <span id="year">2025</span> GoScripts Soluções Digitais. Todos os direitos reservados.</p>
         </div>
     </footer>
 
@@ -667,7 +889,12 @@
         const navLinks = document.getElementById('nav-links');
         const menuToggle = document.getElementById('menu-toggle');
 
-        function onScroll() { navbar.classList.toggle('scrolled', window.scrollY > 20); }
+        const progress = document.getElementById('scroll-progress');
+        function onScroll() {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            progress.style.transform = `scaleX(${max > 0 ? window.scrollY / max : 0})`;
+        }
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
 
@@ -708,6 +935,15 @@
             });
         }, { threshold: 0.12 });
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // --- 3b. Luz que segue o ponteiro nos cartões ---
+        document.querySelectorAll('.feature, .contact-item').forEach(card => {
+            card.addEventListener('pointermove', e => {
+                const r = card.getBoundingClientRect();
+                card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+                card.style.setProperty('--my', `${e.clientY - r.top}px`);
+            });
+        });
 
         // --- 4. Ano do rodapé ---
         document.getElementById('year').textContent = new Date().getFullYear();
