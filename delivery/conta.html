@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Minha conta · GoPedido</title>
+<meta name="theme-color" content="#F2451C">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .authbox{max-width:420px;margin:36px auto 60px}
+  .authbox h1{font-size:1.6rem;letter-spacing:-.03em}
+  .seg{display:flex;background:#ECEAE6;border-radius:12px;padding:4px;margin:20px 0}
+  .seg button{flex:1;height:38px;border-radius:9px;font-weight:700;color:var(--muted)}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+  .hello{display:flex;gap:14px;align-items:center;margin:26px 0 6px}
+  .hello .av{width:56px;height:56px;border-radius:18px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.4rem;flex:none}
+  .hello h1{font-size:1.4rem;letter-spacing:-.02em}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 18px}
+  .tabs button{flex:1;height:46px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent}
+  .tabs button.on{color:var(--ink);border-color:var(--brand)}
+  .ord{display:flex;gap:12px;align-items:center;padding:12px 14px;margin-bottom:10px}
+  .ord .lg{width:46px;height:46px;border-radius:12px;background:var(--brand-soft) center/cover;display:grid;place-items:center;color:var(--brand);font-weight:800;flex:none}
+  .addr{display:flex;gap:12px;align-items:flex-start;padding:14px;margin-bottom:10px}
+  .addr .ic{width:40px;height:40px;border-radius:12px;background:var(--bg);display:grid;place-items:center;flex:none}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap narrow">
+    <a class="icon-btn" href="./" id="b-back" aria-label="Voltar"></a>
+    <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
+    <div class="grow"></div>
+    <button class="icon-btn hide" id="b-sair" title="Sair"></button>
+  </div>
+</header>
+
+<!-- login -->
+<main class="wrap narrow hide" id="v-auth">
+  <div class="authbox">
+    <div id="a-main">
+      <h1 id="a-title">Entrar na sua conta</h1>
+      <p class="muted" id="a-sub">Salve seus endereços e acompanhe seus pedidos.</p>
+      <div class="seg" id="seg"><button class="on" data-m="in">Entrar</button><button data-m="up">Criar conta</button></div>
+      <form id="f-auth">
+        <div id="up-fields" class="hide">
+          <label class="field"><span>Seu nome</span><input class="input" id="a-nome" maxlength="80" autocomplete="name"></label>
+          <label class="field"><span>WhatsApp</span><input class="input" id="a-tel" inputmode="tel" autocomplete="tel" placeholder="(19) 99999-9999"></label>
+        </div>
+        <label class="field"><span>E-mail</span><input class="input" type="email" id="a-email" autocomplete="email" required></label>
+        <label class="field"><span>Senha</span><input class="input" type="password" id="a-pass" minlength="6" autocomplete="current-password" required></label>
+        <button class="btn btn-primary btn-block" id="a-btn">Entrar</button>
+      </form>
+      <button class="small muted" id="a-forgot" style="margin-top:14px;text-decoration:underline">Esqueci minha senha</button>
+      <div class="divider"></div>
+      <a class="btn btn-ghost btn-block" href="./">Continuar sem conta</a>
+    </div>
+    <div id="a-reset" class="hide">
+      <h1>Criar nova senha</h1>
+      <form id="f-reset" style="margin-top:18px">
+        <label class="field"><span>Nova senha</span><input class="input" type="password" id="r-pass" minlength="6" autocomplete="new-password" required></label>
+        <button class="btn btn-primary btn-block">Salvar nova senha</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- conta -->
+<main class="wrap narrow hide" id="v-app" style="padding-bottom:40px">
+  <div class="hello"><div class="av" id="av"></div><div><h1 id="h-nome"></h1><div class="small muted" id="h-email"></div></div></div>
+  <nav class="tabs" id="tabs">
+    <button data-t="pedidos" class="on">Pedidos</button>
+    <button data-t="enderecos">Endereços</button>
+    <button data-t="dados">Meus dados</button>
+  </nav>
+  <section id="t-pedidos"><div id="pedidos"></div></section>
+  <section id="t-enderecos" class="hide">
+    <div id="enderecos"></div>
+    <button class="btn btn-soft btn-block" id="b-addend"></button>
+  </section>
+  <section id="t-dados" class="hide">
+    <form class="card pad" id="f-dados">
+      <label class="field"><span>Nome</span><input class="input" id="d-nome" maxlength="80" required></label>
+      <label class="field"><span>WhatsApp</span><input class="input" id="d-tel" inputmode="tel" placeholder="(19) 99999-9999"></label>
+      <label class="field"><span>E-mail</span><input class="input" id="d-email" disabled></label>
+      <button class="btn btn-primary btn-block">Salvar</button>
+    </form>
+  </section>
+</main>
+
+<div class="overlay" id="ov"></div>
+<aside class="sheet tall" id="em">
+  <div class="sheet-head"><h3 id="em-title">Novo endereço</h3><button class="icon-btn" id="em-x"></button></div>
+  <div class="sheet-body">
+    <label class="field"><span>Apelido <span class="muted">(opcional)</span></span><input class="input" id="em-apelido" maxlength="30" placeholder="Casa, Trabalho…"></label>
+    <div id="em-form"></div>
+    <label class="check"><input type="checkbox" id="em-principal">Usar como endereço principal</label>
+  </div>
+  <div class="sheet-foot row">
+    <button class="btn btn-bad hide" id="em-del"></button>
+    <button class="btn btn-primary grow" id="em-save">Salvar endereço</button>
+  </div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+(async () => {
+  const { $, esc, brl, ic } = GP;
+  const sb = GP.client('cliente');
+  const cfg = GP.cfg;
+  $('lg').innerHTML = ic('bag'); $('b-back').innerHTML = ic('left'); $('b-sair').innerHTML = ic('logout');
+  $('em-x').innerHTML = ic('x'); $('em-del').innerHTML = ic('trash'); $('b-addend').innerHTML = ic('plus') + 'Adicionar endereço';
+  GP.phoneMask($('a-tel')); GP.phoneMask($('d-tel'));
+  const voltar = new URLSearchParams(location.search).get('voltar');
+  if (voltar) $('b-back').href = voltar;
+
+  let user = null, perfil = null, ends = [], modo = 'in', recovering = false;
+
+  // ---------- login ----------
+  $('seg').onclick = (e) => {
+    const b = e.target.closest('[data-m]'); if (!b) return;
+    modo = b.dataset.m;
+    document.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x === b));
+    $('up-fields').classList.toggle('hide', modo !== 'up');
+    $('a-title').textContent = modo === 'in' ? 'Entrar na sua conta' : 'Criar sua conta';
+    $('a-btn').textContent = modo === 'in' ? 'Entrar' : 'Criar conta';
+    $('a-pass').autocomplete = modo === 'in' ? 'current-password' : 'new-password';
+  };
+  $('f-auth').onsubmit = async (e) => {
+    e.preventDefault();
+    const b = $('a-btn'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+    const email = $('a-email').value.trim(), password = $('a-pass').value;
+    try {
+      if (modo === 'in') {
+        const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error;
+      } else {
+        const nome = $('a-nome').value.trim(), telefone = $('a-tel').value.trim();
+        if (nome.length < 2) throw new Error('Digite seu nome.');
+        GP.ls.set('gp_cad_pendente', { nome, telefone });
+        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: cfg.siteUrl + 'conta.html', data: { nome, telefone } } });
+        if (error) throw error;
+        if (!data.session) GP.toast('Conta criada! Confirme pelo link enviado ao seu e-mail.', 'ok');
+      }
+    } catch (er) { GP.toast(GP.err(er), 'err'); }
+    b.disabled = false; b.textContent = t;
+  };
+  $('a-forgot').onclick = async () => {
+    const email = $('a-email').value.trim();
+    if (!email) return GP.toast('Digite seu e-mail acima primeiro.');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: cfg.siteUrl + 'conta.html' });
+    GP.toast(error ? GP.err(error) : 'Enviamos um link para redefinir a senha.', error ? 'err' : 'ok');
+  };
+  $('f-reset').onsubmit = async (e) => {
+    e.preventDefault();
+    const { error } = await sb.auth.updateUser({ password: $('r-pass').value });
+    if (error) return GP.toast(GP.err(error), 'err');
+    recovering = false; GP.toast('Senha alterada!', 'ok'); boot();
+  };
+  $('b-sair').onclick = async () => { await sb.auth.signOut(); location.href = './'; };
+  sb.auth.onAuthStateChange((ev, s) => {
+    if (ev === 'PASSWORD_RECOVERY') { recovering = true; showAuth(true); return; }
+    if (ev === 'SIGNED_IN' && !recovering && (!user || user.id !== s.user.id)) setTimeout(boot, 0);
+  });
+  function showAuth(reset) {
+    $('v-app').classList.add('hide'); $('v-auth').classList.remove('hide'); $('b-sair').classList.add('hide');
+    $('a-main').classList.toggle('hide', !!reset); $('a-reset').classList.toggle('hide', !reset);
+  }
+
+  let booting = null;
+  function boot() { if (!booting) booting = doBoot().finally(() => booting = null); return booting; }
+  async function doBoot() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return showAuth(false);
+    if (recovering) return;
+    user = session.user;
+    const { data } = await sb.from('ff_clientes').select('*').eq('id', user.id).maybeSingle();
+    perfil = data;
+    if (!perfil) {
+      const md = user.user_metadata || {}, pend = GP.ls.get('gp_cad_pendente', {});
+      const r = await sb.from('ff_clientes').upsert({ id: user.id, nome: md.nome || pend.nome || '', telefone: md.telefone || pend.telefone || '' }).select().single();
+      perfil = r.data || { nome: '', telefone: '' };
+      GP.ls.del('gp_cad_pendente');
+    }
+    if (voltar) { location.href = voltar; return; }
+    $('v-auth').classList.add('hide'); $('v-app').classList.remove('hide'); $('b-sair').classList.remove('hide');
+    renderHead(); loadPedidos(); loadEnds();
+    $('d-nome').value = perfil.nome || ''; $('d-tel').value = perfil.telefone || ''; $('d-email').value = user.email;
+  }
+  function renderHead() {
+    const n = perfil.nome || user.email.split('@')[0];
+    $('h-nome').textContent = 'Olá, ' + n.split(' ')[0] + '!'; $('h-email').textContent = user.email;
+    $('av').textContent = n.trim()[0].toUpperCase();
+  }
+
+  // ---------- abas ----------
+  $('tabs').onclick = (e) => {
+    const b = e.target.closest('[data-t]'); if (!b) return;
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+    ['pedidos', 'enderecos', 'dados'].forEach(t => $('t-' + t).classList.toggle('hide', t !== b.dataset.t));
+  };
+
+  // ---------- pedidos ----------
+  async function loadPedidos() {
+    $('pedidos').innerHTML = '<div class="sk" style="height:70px;margin-bottom:10px"></div><div class="sk" style="height:70px"></div>';
+    const { data, error } = await sb.rpc('ff_meus_pedidos');
+    if (error) { $('pedidos').innerHTML = `<p class="muted">${esc(GP.err(error))}</p>`; return; }
+    if (!data.length) { $('pedidos').innerHTML = `<div class="empty"><div class="big">${ic('receipt')}</div><h4>Nenhum pedido ainda</h4><p>Seus pedidos feitos com a conta aparecem aqui.</p><a class="btn btn-primary" href="./" style="margin-top:14px">Ver lojas</a></div>`; return; }
+    $('pedidos').innerHTML = data.map(p => {
+      const st = GP.STATUS[p.status];
+      return `<a class="card ord" href="pedido.html?t=${encodeURIComponent(p.token)}">
+        <div class="lg" style="${p.loja_imagem ? `background-image:url('${esc(p.loja_imagem)}')` : ''}">${p.loja_imagem ? '' : esc(p.loja_nome.trim()[0])}</div>
+        <div class="grow" style="min-width:0"><b class="ellipsis" style="display:block">${esc(p.loja_nome)}</b><div class="small muted">#${p.numero} · ${new Date(p.criado_em).toLocaleDateString('pt-BR')} · ${brl(p.total)}</div></div>
+        <span class="badge ${st.c}">${st.t}</span></a>`;
+    }).join('');
+  }
+
+  // ---------- endereços ----------
+  async function loadEnds() {
+    const { data } = await sb.from('ff_enderecos').select('*').order('principal', { ascending: false }).order('criado_em');
+    ends = data || []; renderEnds();
+  }
+  function renderEnds() {
+    $('enderecos').innerHTML = ends.length ? ends.map(e => `<div class="card addr">
+      <div class="ic">${ic('home')}</div>
+      <div class="grow" style="min-width:0"><b>${esc(e.apelido || 'Endereço')}</b> ${e.principal ? '<span class="badge b-brand">Principal</span>' : ''}
+        <div class="small muted">${esc(GP.fmtEnd(e))}${e.complemento ? ' · ' + esc(e.complemento) : ''}</div></div>
+      <button class="icon-btn" data-e="${e.id}">${ic('edit')}</button></div>`).join('')
+      : `<div class="empty"><div class="big">${ic('home')}</div><h4>Nenhum endereço salvo</h4><p>Salve seu endereço para pedir mais rápido.</p></div>`;
+  }
+  $('enderecos').onclick = (e) => { const b = e.target.closest('[data-e]'); if (b) openEnd(ends.find(x => x.id === b.dataset.e)); };
+  $('b-addend').onclick = () => openEnd(null);
+
+  let form = null, editing = null;
+  const closeEnd = () => { $('em').classList.remove('on'); $('ov').classList.remove('on'); };
+  $('ov').onclick = closeEnd; $('em-x').onclick = closeEnd;
+  function openEnd(e) {
+    editing = e;
+    $('em-title').textContent = e ? 'Editar endereço' : 'Novo endereço';
+    $('em-apelido').value = e ? e.apelido : (ends.length ? '' : 'Casa');
+    $('em-principal').checked = e ? e.principal : !ends.length;
+    $('em-del').classList.toggle('hide', !e);
+    $('em').classList.add('on'); $('ov').classList.add('on');
+    if (!form) form = GP.addressForm($('em-form'), { mapaTitulo: 'Local exato da entrega' });
+    else form.refresh();
+    form.set(e || {});
+  }
+  $('em-save').onclick = async () => {
+    if (!form.valid()) return GP.toast('Preencha rua, número, cidade e marque no mapa.', 'err');
+    const a = form.get();
+    const row = { apelido: $('em-apelido').value.trim(), cep: a.cep, rua: a.rua, numero: a.numero, bairro: a.bairro, cidade: a.cidade, uf: a.uf, complemento: a.complemento, lat: a.lat, lng: a.lng, principal: $('em-principal').checked };
+    const b = $('em-save'); b.disabled = true;
+    if (row.principal) await sb.from('ff_enderecos').update({ principal: false }).eq('cliente_id', user.id);
+    const { error } = editing ? await sb.from('ff_enderecos').update(row).eq('id', editing.id) : await sb.from('ff_enderecos').insert(row);
+    b.disabled = false;
+    if (error) return GP.toast(GP.err(error), 'err');
+    closeEnd(); GP.toast('Endereço salvo', 'ok'); loadEnds();
+  };
+  $('em-del').onclick = async () => {
+    if (!editing || !confirm('Excluir este endereço?')) return;
+    const { error } = await sb.from('ff_enderecos').delete().eq('id', editing.id);
+    if (error) return GP.toast(GP.err(error), 'err');
+    closeEnd(); GP.toast('Endereço excluído', 'ok'); loadEnds();
+  };
+
+  // ---------- dados ----------
+  $('f-dados').onsubmit = async (e) => {
+    e.preventDefault();
+    const row = { id: user.id, nome: $('d-nome').value.trim(), telefone: $('d-tel').value.trim() };
+    const { data, error } = await sb.from('ff_clientes').upsert(row).select().single();
+    if (error) return GP.toast(GP.err(error), 'err');
+    perfil = data; renderHead(); GP.toast('Dados atualizados', 'ok');
+  };
+
+  boot();
+})();
+</script>
+</body>
+</html>

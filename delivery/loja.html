@@ -86,6 +86,7 @@
     <a class="icon-btn" href="./" id="b-back" aria-label="Voltar"></a>
     <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
     <div class="grow"></div>
+    <a class="icon-btn" href="conta.html" id="b-conta" aria-label="Minha conta"></a>
     <button class="btn btn-ghost btn-sm" id="b-bag"></button>
   </div>
 </header>
@@ -151,17 +152,15 @@
 
     <!-- 2. entrega -->
     <section id="step2" class="hide">
-      <label class="field"><span>Seu nome</span><input class="input" id="c-nome" autocomplete="name" maxlength="80" placeholder="Como devemos te chamar?"></label>
-      <label class="field"><span>WhatsApp</span><input class="input" id="c-tel" inputmode="tel" autocomplete="tel" placeholder="(19) 99999-9999"></label>
-      <label class="field"><span>Endereço de entrega</span><input class="input" id="c-end" autocomplete="street-address" maxlength="200" placeholder="Rua, número e bairro"></label>
-      <label class="field"><span>Complemento <span class="muted">(opcional)</span></span><input class="input" id="c-comp" maxlength="120" placeholder="Apto, bloco, ponto de referência"></label>
-
-      <div class="row between" style="margin:6px 0 8px">
-        <b class="small">Localização para entrega</b>
-        <button class="btn btn-soft btn-sm" id="c-geo"></button>
+      <div id="c-login" class="fee" style="margin:0 0 14px"></div>
+      <div class="grid2">
+        <label class="field"><span>Seu nome</span><input class="input" id="c-nome" autocomplete="name" maxlength="80" placeholder="Como te chamamos?"></label>
+        <label class="field"><span>WhatsApp</span><input class="input" id="c-tel" inputmode="tel" autocomplete="tel" placeholder="(19) 99999-9999"></label>
       </div>
-      <div class="map" id="c-map"></div>
-      <p class="small muted" style="margin-top:6px">Toque no mapa ou arraste o pino até a sua porta.</p>
+      <div id="c-saved-wrap" class="hide"><b class="small" style="display:block;margin-bottom:8px">Seus endereços</b><div class="saved" id="c-saved"></div></div>
+      <b class="small" style="display:block;margin:4px 0 10px">Endereço de entrega</b>
+      <div id="c-addr"></div>
+      <label class="check hide" id="c-save-wrap"><input type="checkbox" id="c-save" checked>Salvar este endereço na minha conta</label>
       <div id="c-fee"></div>
       <label class="field" style="margin-top:14px"><span>Observação do pedido <span class="muted">(opcional)</span></span>
         <textarea class="input" id="c-obs" maxlength="300" placeholder="Ex.: troco, interfone quebrado…" style="min-height:64px"></textarea></label>
@@ -205,11 +204,11 @@
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
-  const sb = GP.client(false);
+  const sb = GP.client('cliente');
   $('lg').innerHTML = ic('bag'); $('b-back').innerHTML = ic('left');
   $('pm-x').innerHTML = ic('x'); $('pm-m').innerHTML = ic('minus'); $('pm-p').innerHTML = ic('plus');
   $('co-x').innerHTML = ic('x'); $('co-back').innerHTML = ic('left'); $('bb-ic').innerHTML = ic('right');
-  $('c-geo').innerHTML = ic('locate') + 'Usar minha localização';
+  $('b-conta').innerHTML = ic('user');
   $('pix-copy-cc').innerHTML = ic('copy') + 'Copiar código Pix (copia e cola)';
   $('pix-copy-key').innerHTML = ic('copy') + 'Copiar';
   GP.phoneMask($('c-tel'));
@@ -325,7 +324,21 @@
   let pos = cli.lat != null ? { lat: cli.lat, lng: cli.lng } : (GP.ls.get('gp_pos') || null);
   let pag = null, comprovante = null, comprovanteTotal = null;
   $('c-nome').value = cli.nome || ''; $('c-tel').value = cli.telefone || '';
-  $('c-end').value = cli.endereco || ''; $('c-comp').value = cli.complemento || '';
+  let user = null, perfil = null, enderecos = [], endSel = null;
+  const { data: { session } } = await sb.auth.getSession();
+  user = session ? session.user : null;
+  if (user) {
+    const [{ data: pf }, { data: ends }] = await Promise.all([
+      sb.from('ff_clientes').select('*').eq('id', user.id).maybeSingle(),
+      sb.from('ff_enderecos').select('*').order('principal', { ascending: false }).order('criado_em', { ascending: false })
+    ]);
+    perfil = pf; enderecos = ends || [];
+    if (perfil) { if (perfil.nome) $('c-nome').value = perfil.nome; if (perfil.telefone) $('c-tel').value = perfil.telefone; }
+  }
+  const voltar = encodeURIComponent('loja.html?l=' + slug);
+  $('c-login').innerHTML = user
+    ? `${ic('user')}<span class="grow">Entrou como <b>${esc((perfil && perfil.nome) || user.email)}</b></span><a class="small" style="font-weight:700;color:var(--brand-2)" href="conta.html">Minha conta</a>`
+    : `${ic('user')}<span class="grow">Tem conta? Use seus endereços salvos.</span><a class="small" style="font-weight:700;color:var(--brand-2)" href="conta.html?voltar=${voltar}">Entrar</a>`;
 
   const entrega = () => {
     if (!pos || loja.lat == null) return null;
@@ -371,26 +384,38 @@
     GP.ls.set(KEY, bag); renderBag(); updNext();
   };
 
+  let addr = null;
   function renderEntrega() {
-    if (!map) {
-      map = GP.mapPicker($('c-map'), pos, (lat, lng) => { pos = { lat, lng }; renderFee(); updNext(); });
-      if (!pos && loja.lat != null) map.map.setView([loja.lat, loja.lng], 14);
-    } else map.refresh();
+    if (!addr) {
+      addr = GP.addressForm($('c-addr'), {
+        inicio: pos, centro: loja.lat != null ? { lat: loja.lat, lng: loja.lng } : null,
+        onChange: (a) => { pos = a.pos; if (endSel && !a.get().rua) endSel = null; renderFee(); updNext(); }
+      });
+      const salvo = enderecos.find(e => e.principal) || enderecos[0];
+      if (salvo) pickEnd(salvo); else if (cli.end) addr.set({ ...cli.end, lat: cli.lat, lng: cli.lng });
+      renderSaved();
+    } else addr.refresh();
     renderFee();
   }
+  function pickEnd(e) { endSel = e.id; addr.set(e); renderSaved(); }
+  function renderSaved() {
+    $('c-saved-wrap').classList.toggle('hide', !enderecos.length);
+    $('c-saved').innerHTML = enderecos.map(e => `<button type="button" class="${endSel === e.id ? 'on' : ''}" data-e="${e.id}"><b>${ic('home')} ${esc(e.apelido || e.rua)}</b><span>${esc(e.rua)}, ${esc(e.numero)} - ${esc(e.bairro)}</span></button>`).join('')
+      + (enderecos.length ? `<button type="button" data-e="novo"><b>${ic('plus')} Outro endereço</b><span>Digite um novo</span></button>` : '');
+    $('c-save-wrap').classList.toggle('hide', !user || !!endSel);
+  }
+  $('c-saved').onclick = (ev) => {
+    const b = ev.target.closest('[data-e]'); if (!b) return;
+    if (b.dataset.e === 'novo') { endSel = null; addr.set({}); pos = null; renderSaved(); renderFee(); updNext(); addr.focus(); return; }
+    pickEnd(enderecos.find(e => e.id === b.dataset.e));
+  };
   function renderFee() {
     const e = entrega();
     if (!e) { $('c-fee').innerHTML = `<div class="fee">${ic('pin')}<span>Marque sua localização para calcularmos a taxa de entrega.</span></div>`; return; }
     if (e.fora) { $('c-fee').innerHTML = `<div class="fee bad">${ic('x')}<span>Você está a ${km(e.d)} da loja — fora da área de entrega (até ${km(loja.raio_km)}).</span></div>`; return; }
     $('c-fee').innerHTML = `<div class="fee ok">${ic('bike')}<span class="grow">Distância de <b>${km(e.d)}</b> até a loja</span><b>${e.t > 0 ? brl(e.t) : 'Grátis'}</b></div>`;
   }
-  $('c-geo').onclick = async () => {
-    const b = $('c-geo'); const old = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…'; b.disabled = true;
-    try { const p = await GP.geo(); map.set(p.lat, p.lng); }
-    catch (e) { GP.toast(e.message, 'err'); }
-    b.innerHTML = old; b.disabled = false;
-  };
-  ['c-nome', 'c-tel', 'c-end'].forEach(id => $(id).addEventListener('input', updNext));
+  ['c-nome', 'c-tel'].forEach(id => $(id).addEventListener('input', updNext));
 
   function renderPag() {
     const ops = [
@@ -467,7 +492,8 @@
     } else if (step === 2) {
       const e = entrega();
       txt = 'Ir para o pagamento';
-      ok = $('c-nome').value.trim().length >= 2 && GP.digits($('c-tel').value).length >= 10 && $('c-end').value.trim().length >= 5 && e && !e.fora;
+      ok = $('c-nome').value.trim().length >= 2 && GP.digits($('c-tel').value).length >= 10 && addr && addr.valid() && e && !e.fora;
+      if (addr && !addr.valid() && $('c-nome').value.trim()) txt = 'Preencha rua, número e cidade';
     } else {
       txt = `Enviar pedido · ${brl(total())}`;
       ok = !!pag && (pag !== 'pix' || !!comprovante);
@@ -478,19 +504,32 @@
 
   $('co-next').onclick = async () => {
     if (step < 3) {
-      if (step === 2) GP.ls.set('gp_cliente', { nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: $('c-end').value.trim(), complemento: $('c-comp').value.trim(), lat: pos.lat, lng: pos.lng });
+      if (step === 2) {
+        const a = addr.get();
+        GP.ls.set('gp_cliente', { nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), end: a, lat: pos.lat, lng: pos.lng });
+      }
       step++; renderStep(); return;
     }
     const b = $('co-next'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Enviando pedido…';
     const { data, error } = await sb.rpc('ff_criar_pedido', {
       p_loja: loja.id,
-      p_cliente: { nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: $('c-end').value.trim(), complemento: $('c-comp').value.trim(), observacao: $('c-obs').value.trim(), lat: pos.lat, lng: pos.lng },
+      p_cliente: { nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: GP.fmtEnd(addr.get()), complemento: addr.get().complemento, observacao: $('c-obs').value.trim(), lat: pos.lat, lng: pos.lng },
       p_itens: bag.map(i => ({ id: i.id, qtd: i.qtd, obs: i.obs })),
       p_pagamento: pag,
       p_comprovante: pag === 'pix' ? comprovante : null
     });
     if (error) { GP.toast(GP.err(error), 'err'); updNext(); return; }
     bag = []; GP.ls.del(KEY);
+    if (user) {
+      try {
+        const nome = $('c-nome').value.trim(), telefone = $('c-tel').value.trim();
+        await sb.from('ff_clientes').upsert({ id: user.id, nome: (perfil && perfil.nome) || nome, telefone: (perfil && perfil.telefone) || telefone });
+        if (!endSel && $('c-save').checked) {
+          const a = addr.get();
+          await sb.from('ff_enderecos').insert({ apelido: enderecos.length ? '' : 'Casa', cep: a.cep, rua: a.rua, numero: a.numero, bairro: a.bairro, cidade: a.cidade, uf: a.uf, complemento: a.complemento, lat: a.lat, lng: a.lng, principal: !enderecos.length });
+        }
+      } catch {}
+    }
     const hist = GP.ls.get('gp_pedidos', []); hist.unshift({ t: data.token, n: data.numero, loja: loja.nome, em: Date.now() });
     GP.ls.set('gp_pedidos', hist.slice(0, 20));
     location.href = 'pedido.html?t=' + encodeURIComponent(data.token) + '&novo=1';

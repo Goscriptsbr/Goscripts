@@ -90,7 +90,7 @@
       ? `<div class="tl now"><div class="b" style="background:var(--bad);border-color:var(--bad)">${ic('x')}</div><div><h4>Pedido cancelado</h4><p>Fale com a loja se tiver dúvidas.</p></div></div>`
       : ORDEM.map((s, i) => `<div class="tl ${i < idx || (i === idx && s === 'entregue') ? 'done' : i === idx ? 'now' : ''}">
           <div class="b">${ic(i < idx ? 'check' : ICS[s])}</div>
-          <div><h4>${GP.STATUS[s].t}</h4><p>${i === idx ? GP.STATUS[s].d + ' · ' + GP.hora(p.atualizado_em) : i === 0 ? GP.hora(p.criado_em) : ''}</p></div></div>`).join('');
+          <div><h4>${GP.STATUS[s].t}</h4><p>${i === idx ? GP.STATUS[s].d + ' · ' + GP.hora(p.atualizado_em) : i === 0 ? GP.hora(p.criado_em) : ''}${s === 'saiu' && i <= idx && p.entregador_nome ? `<br>${ic('bike')} Entregador: <b>${esc(p.entregador_nome)}</b>` : ''}</p></div></div>`).join('');
     const l = p.loja;
     const msg = `Olá! Sou ${p.cliente_nome}, fiz o pedido #${p.numero} pelo GoPedido.`;
     $('main').innerHTML = `

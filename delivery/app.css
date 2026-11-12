@@ -147,3 +147,16 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .divider{height:1px;background:var(--line);margin:16px 0}
 
 .footer{padding:36px 0 50px;color:var(--muted);font-size:.85rem;text-align:center}
+
+.grid-rua{display:grid;grid-template-columns:1fr 110px;gap:12px}
+.prefix-r{position:relative}
+.prefix-r>.input{padding-right:38px}
+.prefix-r>i{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;display:flex}
+.saved{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+.saved::-webkit-scrollbar{display:none}
+.saved button{flex:none;max-width:230px;text-align:left;padding:10px 12px;border:1.5px solid var(--line);border-radius:14px;background:#fff}
+.saved button.on{border-color:var(--brand);background:#FFF9F6}
+.saved b{display:block;font-size:.86rem}
+.saved span{display:block;font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.check{display:flex;gap:10px;align-items:center;font-size:.9rem;font-weight:600;cursor:pointer;margin:6px 0 4px}
+.check input{width:18px;height:18px;accent-color:var(--brand)}

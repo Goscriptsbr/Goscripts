@@ -57,6 +57,8 @@
     #loc-chip span{display:none}
     #loc-chip.on{background:var(--ok-soft);color:var(--ok);border-color:#bfe8d2}
     #btn-loja{padding:0 12px}
+    #btn-loja span{display:none}
+    #btn-loja{width:40px;padding:0}
   }
   .cta{margin:44px 0 10px;border-radius:24px;background:var(--ink);color:#fff;padding:34px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap;position:relative;overflow:hidden}
   .cta::before{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:var(--brand);opacity:.25;right:-80px;top:-120px}
@@ -72,6 +74,7 @@
     <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
     <div class="grow"></div>
     <button class="chip btnchip" id="loc-chip"></button>
+    <a class="icon-btn" href="conta.html" id="btn-conta" aria-label="Minha conta"></a>
     <a class="btn btn-ghost btn-sm" href="painel.html" id="btn-loja"></a>
   </div>
 </header>
@@ -133,6 +136,7 @@
   $('lg').innerHTML = ic('bag');
   $('ic-search').innerHTML = ic('search');
   $('btn-loja').innerHTML = ic('store') + '<span>Sou lojista</span>';
+  $('btn-conta').innerHTML = ic('user');
   $('t1').innerHTML = ic('check') + 'Pix na hora';
   $('t2').innerHTML = ic('check') + 'Cartão na entrega';
   $('t3').innerHTML = ic('check') + 'Acompanhe o pedido';

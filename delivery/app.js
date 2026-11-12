@@ -4,10 +4,13 @@
   const GP = (window.GP = { cfg });
 
   // ---------- Supabase ----------
-  GP.client = (persist) =>
-    window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
-      auth: persist ? { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'gopedido-auth' } : { persistSession: false, storageKey: 'gopedido-pub' }
+  // modo: true/'loja' = painel do lojista · 'cliente' = conta do cliente · false = sem login
+  GP.client = (modo) => {
+    const key = modo === 'cliente' ? 'gopedido-cliente' : modo ? 'gopedido-auth' : 'gopedido-pub';
+    return window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
+      auth: modo ? { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: key } : { persistSession: false, storageKey: key }
     });
+  };
   GP.publicUrl = (sb, path) => (path ? sb.storage.from('ff-imagens').getPublicUrl(path).data.publicUrl : '');
 
   // ---------- Ícones ----------
@@ -41,6 +44,10 @@
     star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/>',
     shield: '<path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
     bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>',
+    key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9m-4 4 3 3"/>',
+    refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
     ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
   };
   GP.ic = (n, extra = '') => `<svg class="i" viewBox="0 0 24 24" ${extra}>${ICONS[n] || ''}</svg>`;
@@ -104,6 +111,10 @@
     loja_fechada: 'A loja está fechada no momento.',
     loja_sem_localizacao: 'A loja ainda não configurou a localização.',
     pagamento_invalido: 'Forma de pagamento não aceita por esta loja.',
+    codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
+    status_invalido: 'Este pedido já mudou de situação. Atualize a lista.',
+    pedido_invalido: 'Pedido não encontrado.',
+    sem_loja: 'Cadastre sua loja primeiro.',
     comprovante_obrigatorio: 'Anexe o comprovante do Pix para enviar o pedido.',
     dados_incompletos: 'Preencha nome, telefone e endereço.',
     localizacao_obrigatoria: 'Informe sua localização no mapa.',
@@ -164,7 +175,7 @@
     setTimeout(() => map.invalidateSize(), 250);
     return {
       map,
-      set(lat, lng) { put(lat, lng); map.setView([lat, lng], 17); },
+      set(lat, lng, silent) { put(lat, lng, !silent); map.setView([lat, lng], 17); },
       refresh() { setTimeout(() => map.invalidateSize(), 60); }
     };
   };
@@ -232,6 +243,137 @@
       t.select(); document.execCommand('copy'); t.remove();
     }
     GP.toast(msg, 'ok');
+  };
+
+  // ---------- Endereço: CEP (ViaCEP) e mapa (OpenStreetMap / Nominatim) ----------
+  GP.viacep = async (cep) => {
+    const d = GP.digits(cep);
+    if (d.length !== 8) throw new Error('CEP precisa ter 8 números.');
+    const r = await fetch(`https://viacep.com.br/ws/${d}/json/`);
+    const j = await r.json();
+    if (j.erro) throw new Error('CEP não encontrado.');
+    return { cep: d.replace(/(\d{5})(\d{3})/, '$1-$2'), rua: j.logradouro || '', bairro: j.bairro || '', cidade: j.localidade || '', uf: j.uf || '' };
+  };
+  const NOM = 'https://nominatim.openstreetmap.org';
+  GP.reverse = async (lat, lng) => {
+    const r = await fetch(`${NOM}/reverse?format=jsonv2&addressdetails=1&accept-language=pt-BR&zoom=18&lat=${lat}&lon=${lng}`);
+    const a = (await r.json()).address || {};
+    const UFS = { 'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM', 'Bahia': 'BA', 'Ceará': 'CE', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES', 'Goiás': 'GO', 'Maranhão': 'MA', 'Mato Grosso': 'MT', 'Mato Grosso do Sul': 'MS', 'Minas Gerais': 'MG', 'Pará': 'PA', 'Paraíba': 'PB', 'Paraná': 'PR', 'Pernambuco': 'PE', 'Piauí': 'PI', 'Rio de Janeiro': 'RJ', 'Rio Grande do Norte': 'RN', 'Rio Grande do Sul': 'RS', 'Rondônia': 'RO', 'Roraima': 'RR', 'Santa Catarina': 'SC', 'São Paulo': 'SP', 'Sergipe': 'SE', 'Tocantins': 'TO' };
+    const iso = (a['ISO3166-2-lvl4'] || '').split('-')[1];
+    const cep = GP.digits(a.postcode || '');
+    return {
+      cep: cep.length === 8 ? cep.replace(/(\d{5})(\d{3})/, '$1-$2') : '',
+      rua: a.road || a.pedestrian || a.footway || a.residential || '',
+      numero: a.house_number || '',
+      bairro: a.suburb || a.neighbourhood || a.quarter || a.city_district || a.hamlet || '',
+      cidade: a.city || a.town || a.village || a.municipality || '',
+      uf: iso || UFS[a.state] || ''
+    };
+  };
+  GP.geocode = async (e) => {
+    const tries = [
+      `street=${encodeURIComponent(((e.numero || '') + ' ' + (e.rua || '')).trim())}&city=${encodeURIComponent(e.cidade || '')}&state=${encodeURIComponent(e.uf || '')}&country=Brasil`,
+      `q=${encodeURIComponent([e.rua, e.bairro, e.cidade, e.uf, 'Brasil'].filter(Boolean).join(', '))}`,
+      e.cep ? `postalcode=${GP.digits(e.cep)}&country=Brasil` : ''
+    ].filter(Boolean);
+    for (const q of tries) {
+      try {
+        const r = await fetch(`${NOM}/search?format=jsonv2&limit=1&countrycodes=br&${q}`);
+        const j = await r.json();
+        if (j && j[0]) return { lat: +j[0].lat, lng: +j[0].lon };
+      } catch {}
+    }
+    return null;
+  };
+  GP.fmtEnd = (e) => {
+    const l1 = [e.rua, e.numero].filter(Boolean).join(', ');
+    const l2 = [e.bairro, [e.cidade, e.uf].filter(Boolean).join('/')].filter(Boolean).join(', ');
+    return [l1, l2].filter(Boolean).join(' - ') + (e.cep ? ' - CEP ' + e.cep : '');
+  };
+
+  // Formulário de endereço completo: CEP + campos + mapa que se preenchem sozinhos
+  GP.addressForm = (root, opts = {}) => {
+    const id = 'af' + Math.random().toString(36).slice(2, 7);
+    root.innerHTML = `
+      <div class="grid2">
+        <label class="field"><span>CEP</span><div class="prefix-r"><input class="input" id="${id}-cep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code"><i id="${id}-cepst"></i></div><small><a href="https://buscacepinter.correios.com.br/" target="_blank" rel="noopener" style="text-decoration:underline">Não sei meu CEP</a></small></label>
+        <div class="field"><span>&nbsp;</span><button type="button" class="btn btn-soft btn-block" id="${id}-geo">${GP.ic('locate')}Minha localização</button></div>
+      </div>
+      <div class="grid-rua">
+        <label class="field"><span>Rua</span><input class="input" id="${id}-rua" maxlength="120" autocomplete="address-line1" placeholder="Nome da rua"></label>
+        <label class="field"><span>Número</span><input class="input" id="${id}-numero" maxlength="12" inputmode="numeric" placeholder="123"></label>
+      </div>
+      <label class="field"><span>Bairro</span><input class="input" id="${id}-bairro" maxlength="80"></label>
+      <div class="grid-rua">
+        <label class="field"><span>Cidade</span><input class="input" id="${id}-cidade" maxlength="80" autocomplete="address-level2"></label>
+        <label class="field"><span>UF</span><input class="input" id="${id}-uf" maxlength="2" style="text-transform:uppercase" autocomplete="address-level1"></label>
+      </div>
+      ${opts.complemento === false ? '' : `<label class="field"><span>Complemento <span class="muted">(opcional)</span></span><input class="input" id="${id}-complemento" maxlength="120" placeholder="Apto, bloco, ponto de referência"></label>`}
+      <div class="row between" style="margin:2px 0 8px"><b class="small">${opts.mapaTitulo || 'Confirme no mapa'}</b><span class="small muted" id="${id}-st"></span></div>
+      <div class="map" id="${id}-map" style="height:${opts.altura || 220}px"></div>
+      <p class="small muted" style="margin-top:6px">Toque no mapa ou arraste o pino até a porta. Os campos se preenchem sozinhos.</p>`;
+    const $f = (k) => document.getElementById(`${id}-${k}`);
+    const KEYS = ['cep', 'rua', 'numero', 'bairro', 'cidade', 'uf', 'complemento'];
+    let pos = opts.inicio && opts.inicio.lat != null ? { lat: opts.inicio.lat, lng: opts.inicio.lng } : null;
+    let seq = 0;
+    const status = (t) => { $f('st').innerHTML = t; };
+    const fire = () => opts.onChange && opts.onChange(api);
+    const fill = (e) => {
+      const ruaMudou = e.rua && e.rua.toLowerCase() !== $f('rua').value.trim().toLowerCase();
+      if (ruaMudou) $f('numero').value = e.numero || '';
+      else if (e.numero && !$f('numero').value) $f('numero').value = e.numero;
+      ['cep', 'rua', 'bairro', 'cidade', 'uf'].forEach(k => { if (e[k]) $f(k).value = e[k]; });
+      if (ruaMudou && !e.numero) $f('numero').focus();
+    };
+    const map = GP.mapPicker($f('map'), pos, async (lat, lng) => {
+      pos = { lat, lng }; fire();
+      const my = ++seq; status('<span class="spin" style="width:12px;height:12px;border-width:2px"></span> buscando endereço…');
+      try { const e = await GP.reverse(lat, lng); if (my === seq) { fill(e); status('✓ endereço preenchido'); fire(); } }
+      catch { if (my === seq) status('preencha os campos manualmente'); }
+    });
+    if (!pos && opts.centro) map.map.setView([opts.centro.lat, opts.centro.lng], 14);
+
+    async function locateFromFields() {
+      const e = api.get(); if (!e.rua || !e.cidade) return;
+      const my = ++seq; status('<span class="spin" style="width:12px;height:12px;border-width:2px"></span> localizando no mapa…');
+      const p = await GP.geocode(e);
+      if (my !== seq) return;
+      if (p) { pos = p; map.set(p.lat, p.lng, true); status('✓ confira o pino no mapa'); fire(); }
+      else status('não achei no mapa — toque nele para marcar');
+    }
+    $f('cep').addEventListener('input', async (ev) => {
+      let d = GP.digits(ev.target.value).slice(0, 8);
+      ev.target.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
+      fire();
+      if (d.length !== 8) return;
+      $f('cepst').innerHTML = '<span class="spin" style="width:14px;height:14px;border-width:2px"></span>';
+      try {
+        const e = await GP.viacep(d);
+        $f('rua').value = e.rua || $f('rua').value; $f('bairro').value = e.bairro || $f('bairro').value;
+        $f('cidade').value = e.cidade; $f('uf').value = e.uf;
+        $f('cepst').innerHTML = GP.ic('check', 'style="color:var(--ok)"');
+        (e.rua ? $f('numero') : $f('rua')).focus();
+        fire(); locateFromFields();
+      } catch (er) { $f('cepst').innerHTML = ''; GP.toast(er.message, 'err'); }
+    });
+    $f('numero').addEventListener('change', locateFromFields);
+    $f('rua').addEventListener('change', () => { if (!pos) locateFromFields(); });
+    KEYS.forEach(k => $f(k) && $f(k).addEventListener('input', fire));
+    $f('geo').onclick = async () => {
+      const b = $f('geo'), o = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…'; b.disabled = true;
+      try { const p = await GP.geo(); map.set(p.lat, p.lng); } catch (e) { GP.toast(e.message, 'err'); }
+      b.innerHTML = o; b.disabled = false;
+    };
+    const api = {
+      get() { const o = {}; KEYS.forEach(k => o[k] = $f(k) ? $f(k).value.trim() : ''); o.uf = o.uf.toUpperCase(); o.lat = pos && pos.lat; o.lng = pos && pos.lng; return o; },
+      set(e) { KEYS.forEach(k => { if ($f(k)) $f(k).value = e[k] || ''; }); if (e.lat != null) { pos = { lat: e.lat, lng: e.lng }; map.set(e.lat, e.lng, true); } fire(); },
+      get pos() { return pos; },
+      valid() { const e = api.get(); return e.rua.length >= 3 && e.numero.length >= 1 && e.cidade.length >= 2 && !!pos; },
+      texto() { return GP.fmtEnd(api.get()); },
+      refresh() { map.refresh(); },
+      focus() { $f('cep').focus(); }
+    };
+    return api;
   };
 
   GP.STATUS = {

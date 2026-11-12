@@ -70,6 +70,13 @@
   .linkbox{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:12px;padding:8px 8px 8px 14px}
   .linkbox code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.86rem}
   .savebar{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--bg) 30%);padding:20px 0 calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:flex-end;gap:10px;z-index:5}
+  .moto{padding:16px 18px;margin-bottom:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:linear-gradient(135deg,#16161B,#2a2a33);color:#fff;border:0}
+  .moto .ic{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none}
+  .moto .code{font-family:ui-monospace,Menlo,monospace;font-size:1.5rem;font-weight:800;letter-spacing:.12em}
+  .moto .sub{color:#b9b9c4;font-size:.8rem}
+  .moto .acts{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .moto .btn-ghost{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff}
+  @media(max-width:600px){.moto .acts{margin-left:0;width:100%}.moto .acts .btn{flex:1}}
   .welcome{background:linear-gradient(135deg,#FFF1EB,#fff);border:1px solid #FAD3C5;border-radius:var(--r);padding:18px;margin-bottom:18px;display:flex;gap:14px;align-items:center}
   .welcome .big{width:48px;height:48px;border-radius:14px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
 </style>
@@ -133,6 +140,7 @@
 
     <!-- Pedidos -->
     <section id="tab-pedidos">
+      <div class="card moto" id="moto"></div>
       <div class="stats" id="stats"></div>
       <div class="row between" style="margin-bottom:14px;flex-wrap:wrap">
         <div class="row" id="ofilter" style="gap:8px">
@@ -367,6 +375,36 @@
   };
   $('b-copylink').onclick = () => loja && GP.copy(cfg.siteUrl + 'loja.html?l=' + loja.slug, 'Link da loja copiado!');
 
+  // ================= CÓDIGO DO MOTOBOY =================
+  let codigo = null;
+  const fmtCod = (c) => c ? c.slice(0, 4) + '-' + c.slice(4) : '';
+  async function loadCodigo(novo) {
+    const { data, error } = await sb.rpc('ff_codigo_entregador', { p_novo: !!novo });
+    if (error) { $('moto').innerHTML = `<span class="small">Acesso do motoboy indisponível: ${esc(GP.err(error))}</span>`; return; }
+    codigo = data; renderCodigo();
+  }
+  function renderCodigo() {
+    if (!codigo) return;
+    const exp = new Date(codigo.expira), h = Math.max(0, (exp - Date.now()) / 36e5);
+    const resta = h >= 1 ? Math.floor(h) + 'h' + String(Math.round((h % 1) * 60)).padStart(2, '0') : Math.round(h * 60) + ' min';
+    $('moto').innerHTML = `<div class="ic">${ic('bike')}</div>
+      <div><div class="sub">Código do motoboy</div><div class="code">${fmtCod(codigo.codigo)}</div>
+      <div class="sub">Vale até ${GP.hora(exp)} (faltam ${resta}) · troca sozinho a cada 8h</div></div>
+      <div class="acts">
+        <button class="btn btn-ghost btn-sm" id="m-copy">${ic('copy')}Copiar</button>
+        <a class="btn btn-ok btn-sm" id="m-wa" target="_blank" rel="noopener">${ic('chat')}Enviar</a>
+        <button class="btn btn-ghost btn-sm" id="m-novo">${ic('refresh')}Gerar novo</button>
+      </div>`;
+    const link = cfg.siteUrl + 'entregador.html?c=' + codigo.codigo;
+    const msg = `Entregas da ${loja.nome} 🛵\nAcesse: ${link}\nCódigo: ${fmtCod(codigo.codigo)} (vale até ${GP.hora(exp)})`;
+    $('m-wa').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+    $('m-copy').onclick = () => GP.copy(msg, 'Código e link copiados!');
+    $('m-novo').onclick = async () => {
+      if (!confirm('Gerar um novo código? O código atual para de funcionar na hora e o motoboy vai precisar do novo.')) return;
+      await loadCodigo(true); GP.toast('Novo código gerado', 'ok');
+    };
+  }
+
   // ================= PEDIDOS =================
   const beep = () => {
     try {
@@ -387,6 +425,7 @@
     const { data, error } = await sb.from('ff_pedidos').select('*, ff_pedido_itens(*)')
       .eq('loja_id', loja.id).gte('criado_em', desde).order('criado_em', { ascending: false }).limit(200);
     if (error) { $('upd').textContent = 'Erro ao atualizar'; return; }
+    if (!codigo || new Date(codigo.expira) <= new Date()) loadCodigo(); else renderCodigo();
     const ids = new Set(data.map(p => p.id));
     if (conhecidos) {
       const novos = data.filter(p => !conhecidos.has(p.id));
@@ -423,6 +462,7 @@
           <div class="line">${ic('phone')}<div><b>${esc(p.cliente_nome)}</b> · <a href="${GP.wa(p.cliente_telefone, `Olá ${p.cliente_nome}! Aqui é da ${loja.nome}, sobre seu pedido #${p.numero}.`)}" target="_blank" rel="noopener" style="color:var(--ok);font-weight:700">${esc(p.cliente_telefone)}</a></div></div>
           <div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}<br><a href="${maps}" target="_blank" rel="noopener" class="small" style="color:var(--brand-2);font-weight:700">Abrir rota no mapa (${km(p.distancia_km)})</a></div></div>
           <div class="its">${p.ff_pedido_itens.map(i => `<div><span><b>${i.qtd}×</b> ${esc(i.nome)}${i.obs ? `<br><span class="small muted">↳ ${esc(i.obs)}</span>` : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div>
+          ${p.entregador_nome ? `<div class="line">${ic('bike')}<div class="small">Entregador: <b>${esc(p.entregador_nome)}</b></div></div>` : ''}
           ${p.observacao ? `<div class="line">${ic('edit')}<div class="small"><b>Obs.:</b> ${esc(p.observacao)}</div></div>` : ''}
           <div class="sum-row small"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
           <div class="sum-row small"><span>Entrega</span><span>${brl(p.taxa_entrega)}</span></div>
@@ -580,7 +620,10 @@
   ['l-taxakm', 'l-taxamin'].forEach(id => $(id).addEventListener('input', sim));
   function initMap() {
     if (lmap) return lmap.refresh();
-    lmap = GP.mapPicker($('l-map'), lojaPos, (lat, lng) => { lojaPos = { lat, lng }; coord(); });
+    lmap = GP.mapPicker($('l-map'), lojaPos, async (lat, lng) => {
+      lojaPos = { lat, lng }; coord();
+      try { const e = await GP.reverse(lat, lng); const t = GP.fmtEnd(e); if (t) $('l-end').value = t; } catch {}
+    });
   }
   $('b-geo').onclick = async () => {
     const b = $('b-geo'), o = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…';
