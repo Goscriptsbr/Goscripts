@@ -18,7 +18,7 @@ const DECKS := [
 	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
 	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
 ]
-const APP_VERSION := 66  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 67  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -2993,16 +2993,18 @@ func _draw_rails() -> void:
 		var pk: Vector2 = POCK[pi]
 		var rr := 25.0 if pi < 4 else 21.0
 		# aro de latão com brilho em cima e sombra embaixo, e a boca escurecendo para dentro
+		# brilhos girados para cada caçapa ficar virada para o centro da mesa, igual à do canto superior esquerdo
+		var rot: float = (-pk).angle() - Vector2(505, 255).angle()
 		rails.draw_circle(pk, rr + 5.0, Color("15100b"))
 		rails.draw_arc(pk, rr + 3.6, 0, TAU, 48, Color("8a6a2a"), 2.2)
-		rails.draw_arc(pk, rr + 3.6, PI * 1.05, PI * 1.6, 20, Color(1.0, 0.925, 0.667, 0.75), 2.2)
-		rails.draw_arc(pk, rr + 3.6, PI * 0.1, PI * 0.55, 20, Color(0, 0, 0, 0.45), 2.2)
+		rails.draw_arc(pk, rr + 3.6, PI * 1.05 + rot, PI * 1.6 + rot, 20, Color(1.0, 0.925, 0.667, 0.75), 2.2)
+		rails.draw_arc(pk, rr + 3.6, PI * 0.1 + rot, PI * 0.55 + rot, 20, Color(0, 0, 0, 0.45), 2.2)
 		rails.draw_circle(pk, rr + 2.0, Color("1c130c"))
 		rails.draw_circle(pk, rr, Color("0d0a08"))
 		rails.draw_circle(pk, rr - 4.0, Color("070504"))
 		rails.draw_circle(pk, rr - 8.0, Color("030202"))
 		rails.draw_circle(pk, rr - 12.0, Color("000000"))
-		rails.draw_arc(pk, rr - 1.5, PI * 0.15, PI * 0.7, 20, Color(1, 1, 1, 0.1), 2.0)
+		rails.draw_arc(pk, rr - 1.5, PI * 0.15 + rot, PI * 0.7 + rot, 20, Color(1, 1, 1, 0.1), 2.0)
 
 
 func _diamond(c: Vector2) -> void:
