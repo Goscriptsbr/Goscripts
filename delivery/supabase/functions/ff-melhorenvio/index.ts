@@ -483,17 +483,32 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
     const site = BASE.includes('sandbox') ? 'https://app-sandbox.melhorenvio.com.br' : 'https://app.melhorenvio.com.br';
     // O pagamento é feito na tela do meio de pagamento do próprio Melhor Envio; o GoPedido só pede o link
     const gateways = ['mercado-pago', 'pagseguro', 'picpay', 'moip'];
+    // Procura um link https em qualquer campo da resposta (o nome do campo varia)
+    const acharLink = (o, d = 0) => {
+      if (!o || d > 4) return '';
+      if (typeof o === 'string') return /^https:\/\/\S+$/i.test(o) && !/\.(png|jpe?g|svg|gif)(\?|$)/i.test(o) ? o : '';
+      if (Array.isArray(o)) { for (const x of o) { const u = acharLink(x, d + 1); if (u) return u; } return ''; }
+      if (typeof o === 'object') {
+        const pri = ['redirect', 'url', 'payment_url', 'redirect_url', 'checkout_url', 'link', 'init_point', 'href'];
+        for (const k of pri) { const u = acharLink(o[k], d + 1); if (u) return u; }
+        for (const k of Object.keys(o)) { const u = acharLink(o[k], d + 1); if (u) return u; }
+      }
+      return '';
+    };
     let ultimo = '';
     for (const gateway of gateways) {
-      try {
-        const j = await api(l.id, 'POST', '/api/v2/me/balance', { gateway, redirect: voltar, value: valor });
-        const url = j && (j.redirect || j.url || j.payment_url || j.link || j.checkout_url || (j.data && (j.data.redirect || j.data.url)));
-        if (url && /^https:\/\//i.test(String(url))) return { status: 200, corpo: { url: String(url), gateway } };
-        ultimo = 'o Melhor Envio não devolveu o link de pagamento';
-      } catch (e) {
+      let j;
+      try { j = await api(l.id, 'POST', '/api/v2/me/balance', { gateway, redirect: voltar, value: valor }); }
+      catch (e) {
         if (e.message === 'me_desconectado') throw new Falha('me_permissao', 400, 'reconecte o Melhor Envio para liberar a recarga pelo GoPedido');
-        ultimo = e.detalhe || e.message;
+        ultimo = gateway + ': ' + (e.detalhe || e.message);
+        continue;   // esse meio de pagamento não foi aceito: tenta o próximo
       }
+      const url = acharLink(j);
+      if (url) return { status: 200, corpo: { url, gateway } };
+      // Aceitou mas não mandou link: para aqui (não cria várias recargas) e mostra o que veio
+      ultimo = gateway + ' respondeu sem link: ' + JSON.stringify(j).slice(0, 240);
+      break;
     }
     // Não deu pela API: devolve o site do Melhor Envio para recarregar por lá
     return { status: 200, corpo: { url: site, fallback: true, motivo: ultimo } };
