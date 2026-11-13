@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=81035">
+<link rel="stylesheet" href="app.css?v=81529">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -717,7 +717,8 @@
           <label class="field"><span>Largura</span><div class="prefix-r"><input class="input" id="p-larg" inputmode="decimal" placeholder="11"><i class="small muted" style="font-style:normal">cm</i></div></label>
           <label class="field"><span>Comprimento</span><div class="prefix-r"><input class="input" id="p-comp" inputmode="decimal" placeholder="16"><i class="small muted" style="font-style:normal">cm</i></div></label>
         </div>
-        <p class="small muted" style="margin:0">Em branco, usamos 300 g e 4 × 11 × 16 cm.</p>
+        <div class="warnline" style="margin-top:2px"><b>Pese o produto já embalado</b> (com caixa, saco ou plástico bolha) e meça a embalagem por fora. Se o peso ou as medidas estiverem menores que o real, a transportadora pode cobrar a diferença da loja depois.</div>
+        <p class="small muted" style="margin:8px 0 0">Em branco, usamos 300 g e 4 × 11 × 16 cm. Caixas menores que 2 × 11 × 16 cm são cobradas como esse tamanho mínimo.</p>
       </div>
 
       <div class="psec">
@@ -778,8 +779,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=81035"></script>
-<script src="app.js?v=81035"></script>
+<script src="config.js?v=81529"></script>
+<script src="app.js?v=81529"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;

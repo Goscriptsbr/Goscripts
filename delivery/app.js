@@ -851,13 +851,13 @@
 
   // ---------- tipos de loja ----------
   GP.TIPOS = [
-    { id: 'restaurante', nome: 'Restaurante e lanchonete', curto: 'Restaurantes', ex: ['Burger do Zé', 'Hambúrgueres artesanais, porções e milkshakes.'], ic: 'bag', desc: 'Lanches, pizzas, açaí, marmitas, doces' },
-    { id: 'mercado', nome: 'Mercado e conveniência', curto: 'Mercados', ex: ['Mercadinho Bom Preço', 'Mercearia, hortifrúti, frios e bebidas geladas.'], ic: 'cart', desc: 'Mercearia, hortifrúti, padaria, conveniência' },
-    { id: 'farmacia', nome: 'Farmácia', curto: 'Farmácias', ex: ['Farmácia Saúde', 'Medicamentos, higiene, beleza e perfumaria.'], ic: 'pill', desc: 'Farmácia, drogaria, perfumaria' },
-    { id: 'pet', nome: 'Pet shop', curto: 'Pet shops', ex: ['Pet Feliz', 'Rações, petiscos, brinquedos e acessórios.'], ic: 'paw', desc: 'Ração, acessórios, casa de ração' },
-    { id: 'bebidas', nome: 'Bebidas e adega', curto: 'Bebidas', ex: ['Adega do Centro', 'Cervejas, destilados, gelo, água e gás.'], ic: 'wine', desc: 'Adega, distribuidora, gelo, água e gás' },
-    { id: 'variedades', nome: 'Variedades', curto: 'Variedades', ex: ['Loja da Ana', 'Roupas, presentes, utilidades e eletrônicos.'], ic: 'box', desc: 'Roupas, presentes, eletrônicos, utilidades. Pode enviar para outras cidades.' },
-    { id: 'outros', nome: 'Outros', curto: 'Outros', ex: ['Minha Loja', 'Conte o que você vende.'], ic: 'grid', desc: 'Qualquer outro tipo de loja' }
+    { id: 'restaurante', nome: 'Restaurante e lanchonete', curto: 'Restaurantes', ex: ['Burger do Zé', 'Hambúrgueres artesanais, porções e milkshakes.'], ic: 'bag', obsItem: 'Ex.: sem cebola, ponto da carne…', obsPedido: 'Ex.: troco, interfone quebrado…', desc: 'Lanches, pizzas, açaí, marmitas, doces' },
+    { id: 'mercado', nome: 'Mercado e conveniência', curto: 'Mercados', ex: ['Mercadinho Bom Preço', 'Mercearia, hortifrúti, frios e bebidas geladas.'], ic: 'cart', obsItem: 'Ex.: banana mais verde, marca preferida…', obsPedido: 'Ex.: pode trocar por similar se faltar, interfone…', desc: 'Mercearia, hortifrúti, padaria, conveniência' },
+    { id: 'farmacia', nome: 'Farmácia', curto: 'Farmácias', ex: ['Farmácia Saúde', 'Medicamentos, higiene, beleza e perfumaria.'], ic: 'pill', obsItem: 'Ex.: prefiro genérico, apresentação em gotas…', obsPedido: 'Ex.: troco, portão azul…', desc: 'Farmácia, drogaria, perfumaria' },
+    { id: 'pet', nome: 'Pet shop', curto: 'Pet shops', ex: ['Pet Feliz', 'Rações, petiscos, brinquedos e acessórios.'], ic: 'paw', obsItem: 'Ex.: sabor frango, tamanho M…', obsPedido: 'Ex.: troco, cuidado com o cachorro…', desc: 'Ração, acessórios, casa de ração' },
+    { id: 'bebidas', nome: 'Bebidas e adega', curto: 'Bebidas', ex: ['Adega do Centro', 'Cervejas, destilados, gelo, água e gás.'], ic: 'wine', obsItem: 'Ex.: bem gelada, marca preferida…', obsPedido: 'Ex.: troco, interfone quebrado…', desc: 'Adega, distribuidora, gelo, água e gás' },
+    { id: 'variedades', nome: 'Variedades', curto: 'Variedades', ex: ['Loja da Ana', 'Roupas, presentes, utilidades e eletrônicos.'], ic: 'box', obsItem: 'Ex.: cor preferida, embrulhar para presente…', obsPedido: 'Ex.: é presente, não mandar nota com o preço…', desc: 'Roupas, presentes, eletrônicos, utilidades. Pode enviar para outras cidades.' },
+    { id: 'outros', nome: 'Outros', curto: 'Outros', ex: ['Minha Loja', 'Conte o que você vende.'], ic: 'grid', obsItem: 'Ex.: algum detalhe sobre este item…', obsPedido: 'Ex.: troco, ponto de referência…', desc: 'Qualquer outro tipo de loja' }
   ];
   GP.tipo = (id) => GP.TIPOS.find(t => t.id === id) || GP.TIPOS[0];
 

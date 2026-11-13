@@ -41,6 +41,7 @@ create table if not exists public.ff_cotacoes (
   criado_em    timestamptz not null default now(),
   expira       timestamptz not null default now() + interval '2 hours'
 );
+alter table public.ff_cotacoes add column if not exists pacotes jsonb not null default '[]'::jsonb;
 create index if not exists ff_cotacoes_loja_idx on public.ff_cotacoes (loja_id, criado_em desc);
 alter table public.ff_cotacoes enable row level security;
 revoke all on public.ff_cotacoes from anon, authenticated;
@@ -56,6 +57,7 @@ alter table public.ff_pedidos add column if not exists endereco_partes jsonb not
 alter table public.ff_pedidos add column if not exists me_pedido_id    text not null default '';
 alter table public.ff_pedidos add column if not exists etiqueta_status text not null default '';
 alter table public.ff_pedidos add column if not exists rastreio        text not null default '';
+alter table public.ff_pedidos add column if not exists frete_pacotes   jsonb not null default '[]'::jsonb;
 alter table public.ff_pedidos drop constraint if exists ff_pedidos_tipo_entrega_check;
 alter table public.ff_pedidos add constraint ff_pedidos_tipo_entrega_check check (tipo_entrega in ('entrega','retirada','envio'));
 
@@ -201,7 +203,7 @@ begin
   insert into public.ff_pedidos
     (loja_id, cliente_id, cliente_nome, cliente_telefone, endereco, complemento, lat, lng,
      distancia_km, taxa_entrega, pagamento, comprovante_path, observacao, tipo_entrega,
-     frete_servico, frete_nome, frete_prazo, cep_destino, cliente_doc, endereco_partes)
+     frete_servico, frete_nome, frete_prazo, cep_destino, cliente_doc, endereco_partes, frete_pacotes)
   values
     (l.id, auth.uid(), left(trim(p_cliente ->> 'nome'), 80), left(trim(p_cliente ->> 'telefone'), 30),
      case when v_ret then 'Retirada no local' else left(trim(p_cliente ->> 'endereco'), 200) end,
@@ -215,7 +217,8 @@ begin
      case when v_env then v_cot.prazo end,
      case when v_env then v_cot.cep_destino end,
      case when v_env then regexp_replace(coalesce(p_cliente ->> 'cpf', ''), '\D', '', 'g') else '' end,
-     case when v_env then coalesce(p_cliente -> 'partes', '{}'::jsonb) else '{}'::jsonb end)
+     case when v_env then coalesce(p_cliente -> 'partes', '{}'::jsonb) else '{}'::jsonb end,
+     case when v_env then coalesce(v_cot.pacotes, '[]'::jsonb) else '[]'::jsonb end)
   returning * into v_ped;
 
   for it in select * from jsonb_array_elements(coalesce(p_itens, '[]'::jsonb)) loop

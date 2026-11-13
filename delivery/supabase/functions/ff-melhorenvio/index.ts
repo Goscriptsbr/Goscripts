@@ -241,7 +241,7 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
       const preco = v && v.preco != null && v.preco !== '' ? Number(v.preco) : Number(p.preco);
       return {
         id: it.id + (it.v ? '-' + it.v : ''),
-        width: num(p.largura_cm, 11), height: num(p.altura_cm, 4), length: num(p.comprimento_cm, 16),
+        width: Math.max(num(p.largura_cm, 11), 11), height: Math.max(num(p.altura_cm, 4), 2), length: Math.max(num(p.comprimento_cm, 16), 16),
         weight: num(p.peso_kg, 0.3), insurance_value: Math.max(0, preco || 0), quantity: it.qtd
       };
     });
@@ -261,7 +261,12 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
       servico_nome: ((s.company && s.company.name ? s.company.name + ' ' : '') + (s.name || '')).trim().slice(0, 80),
       preco: Math.round(Number(s.custom_price || s.price) * 100) / 100,
       prazo: Number(s.custom_delivery_time || s.delivery_time) || null,
-      itens_chave: chave
+      itens_chave: chave,
+      // Caixas que o Melhor Envio montou para essa cotação: a etiqueta usa exatamente as mesmas
+      pacotes: (Array.isArray(s.packages) ? s.packages : []).map(pk => ({
+        height: Number(pk.dimensions && pk.dimensions.height) || 2, width: Number(pk.dimensions && pk.dimensions.width) || 11,
+        length: Number(pk.dimensions && pk.dimensions.length) || 16, weight: Number(pk.weight) || 0.3
+      }))
     }));
     const { data: salvas } = ok(await admin.from('ff_cotacoes').insert(linhas).select('id, servico_id, servico_nome, preco, prazo'), 'cotacoes');
     const logo = new Map(validas.map(s => [Number(s.id), s.company && s.company.picture || '']));
@@ -294,6 +299,7 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
         peso += num(m.peso_kg, 0.3) * i.qtd;
         alt += num(m.altura_cm, 4) * i.qtd;
         larg = Math.max(larg, num(m.largura_cm, 11));
+        alt = Math.max(alt, 2);
         comp = Math.max(comp, num(m.comprimento_cm, 16));
       }
       const doc = so(p.cliente_doc);
@@ -314,7 +320,9 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
           state_abbr: (para.uf || '').toUpperCase(), postal_code: so(para.cep || p.cep_destino), country_id: 'BR'
         },
         products: (itens || []).map(i => ({ name: String(i.nome).slice(0, 80), quantity: i.qtd, unitary_value: Number(i.preco) })),
-        volumes: [{ height: Math.min(Math.ceil(alt), 100), width: Math.ceil(larg), length: Math.ceil(comp), weight: Math.round(peso * 1000) / 1000 }],
+        // Mesmas caixas da cotação que o cliente pagou; sem elas, monta uma caixa com a soma dos produtos
+        volumes: (Array.isArray(p.frete_pacotes) && p.frete_pacotes.length) ? p.frete_pacotes
+          : [{ height: Math.min(Math.ceil(alt), 100), width: Math.ceil(larg), length: Math.ceil(comp), weight: Math.round(peso * 1000) / 1000 }],
         options: { insurance_value: Number(p.subtotal), receipt: false, own_hand: false, reverse: false, non_commercial: true, platform: 'GoPedido', tags: [{ tag: 'Pedido #' + p.numero }] }
       };
       const r = await api(l.id, 'POST', '/api/v2/me/cart', corpo);
