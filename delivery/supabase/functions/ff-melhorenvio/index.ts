@@ -178,6 +178,20 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
     return p;
   };
 
+  // Código de rastreio: o da transportadora quando já existe; antes disso, o do próprio Melhor Envio
+  const lerRastreio = async (lojaId, meId) => {
+    let codigo = '', situacao = '';
+    try {
+      const j = await api(lojaId, 'POST', '/api/v2/me/shipment/tracking', { orders: [meId] });
+      const t = (j && (j[meId] || Object.values(j)[0])) || {};
+      codigo = t.tracking || t.melhorenvio_tracking || ''; situacao = t.status || '';
+    } catch (_) {}
+    if (!codigo) {
+      try { const o = await api(lojaId, 'GET', '/api/v2/me/orders/' + encodeURIComponent(meId)); codigo = o.tracking || o.self_tracking || ''; situacao = situacao || o.status || ''; } catch (_) {}
+    }
+    return { codigo: String(codigo || '').slice(0, 60), situacao: String(situacao || '') };
+  };
+
   // ================= ações =================
   if (acao === 'url') {
     const l = await pegaLoja(b.loja); exigeDono(l);
@@ -366,12 +380,8 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
       ok(await admin.from('ff_pedidos').update({ etiqueta_status: 'paga' }).eq('id', p.id), 'paga');
     }
     await api(l.id, 'POST', '/api/v2/me/shipment/generate', { orders: [meId] });
-    let rastreio = '';
-    try {
-      const o = await api(l.id, 'GET', '/api/v2/me/orders/' + encodeURIComponent(meId));
-      rastreio = o.tracking || o.self_tracking || '';
-    } catch (_) {}
-    ok(await admin.from('ff_pedidos').update({ etiqueta_status: 'gerada', rastreio: String(rastreio).slice(0, 60) }).eq('id', p.id), 'gerada');
+    const { codigo: rastreio } = await lerRastreio(l.id, meId);
+    ok(await admin.from('ff_pedidos').update({ etiqueta_status: 'gerada', rastreio }).eq('id', p.id), 'gerada');
     return { status: 200, corpo: { ok: true, status: 'gerada', rastreio } };
   }
 
@@ -388,15 +398,15 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
     const p = await pegaPedido();
     const l = await pegaLoja(p.loja_id);
     if (!b.token) await exigeEquipe(l); // o cliente usa o token secreto do pedido
-    if (!p.me_pedido_id) return { status: 200, corpo: { rastreio: p.rastreio || '', situacao: p.etiqueta_status || '' } };
-    let rastreio = p.rastreio || '', situacao = '';
-    try {
-      const j = await api(l.id, 'POST', '/api/v2/me/shipment/tracking', { orders: [p.me_pedido_id] });
-      const t = j && j[p.me_pedido_id] || {};
-      rastreio = t.tracking || t.melhorenvio_tracking || rastreio; situacao = t.status || '';
-    } catch (e) { if (!b.token) throw e; }
-    if (rastreio && rastreio !== p.rastreio) ok(await admin.from('ff_pedidos').update({ rastreio: String(rastreio).slice(0, 60) }).eq('id', p.id), 'rastreio');
-    return { status: 200, corpo: { rastreio, situacao } };
+    if (!p.me_pedido_id || p.etiqueta_status !== 'gerada') return { status: 200, corpo: { rastreio: p.rastreio || '', situacao: '' } };
+    const { codigo, situacao } = await lerRastreio(l.id, p.me_pedido_id);
+    const mudar = {};
+    if (codigo && codigo !== p.rastreio) mudar.rastreio = codigo;
+    // A situação da transportadora atualiza o pedido sozinha: postado → Enviado, entregue → Entregue
+    if (/posted|postado|transit/i.test(situacao) && ['novo', 'preparando'].includes(p.status)) mudar.status = 'saiu';
+    if (/delivered|entregue/i.test(situacao) && ['novo', 'preparando', 'saiu'].includes(p.status)) mudar.status = 'entregue';
+    if (Object.keys(mudar).length) ok(await admin.from('ff_pedidos').update(mudar).eq('id', p.id), 'rastreio');
+    return { status: 200, corpo: { rastreio: codigo || p.rastreio || '', situacao, status: mudar.status || p.status } };
   }
 
   if (acao === 'cancelar') {

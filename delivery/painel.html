@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=83708">
+<link rel="stylesheet" href="app.css?v=84862">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -779,8 +779,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=83708"></script>
-<script src="app.js?v=83708"></script>
+<script src="config.js?v=84862"></script>
+<script src="app.js?v=84862"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1452,7 +1452,14 @@
     }).join('');
   }
   // Pedido com envio: transportadora, endereço completo e etiqueta
+  const rastreioPedido = new Set();
   function envioBloco(p) {
+    if (p.etiqueta_status === 'gerada' && p.status !== 'cancelado' && p.status !== 'entregue' && !rastreioPedido.has(p.id)) {
+      rastreioPedido.add(p.id);
+      chamarME({ acao: 'rastrear', pedido: p.id }).then(r => {
+        if (r && ((r.rastreio && r.rastreio !== p.rastreio) || (r.status && r.status !== p.status))) { p.rastreio = r.rastreio || p.rastreio; p.status = r.status || p.status; renderPedidos(); }
+      }).catch(() => {});
+    }
     const e = p.endereco_partes || {};
     const doc = GP.digits(p.cliente_doc || '');
     const docF = doc.length === 11 ? doc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : doc.length === 14 ? GP.fmtCnpj(doc) : doc;
@@ -1478,7 +1485,7 @@
       const r = await chamarME({ acao, pedido: p.id });
       if (acao === 'etiqueta') { p.etiqueta_status = 'gerada'; p.rastreio = r.rastreio || p.rastreio; GP.toast('Etiqueta gerada! Agora é só imprimir.', 'ok'); }
       if (acao === 'imprimir') { if (janela) janela.location = r.url; else location.href = r.url; }
-      if (acao === 'rastrear') { p.rastreio = r.rastreio || p.rastreio; GP.toast(r.rastreio ? 'Rastreio: ' + r.rastreio : 'O código de rastreio aparece depois que a transportadora recebe o pacote.', r.rastreio ? 'ok' : ''); }
+      if (acao === 'rastrear') { p.rastreio = r.rastreio || p.rastreio; if (r.status) p.status = r.status; GP.toast(r.rastreio ? 'Rastreio: ' + r.rastreio : 'O código de rastreio aparece depois que a transportadora recebe o pacote.', r.rastreio ? 'ok' : ''); }
     } catch (er) {
       if (janela) janela.close();
       GP.toast(er.message, 'err');

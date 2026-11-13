@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=83708">
+<link rel="stylesheet" href="app.css?v=84862">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -50,8 +50,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=83708"></script>
-<script src="app.js?v=83708"></script>
+<script src="config.js?v=84862"></script>
+<script src="app.js?v=84862"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -82,7 +82,17 @@
     $('main').innerHTML = `<div class="empty" style="padding-top:80px"><div class="big">${ic('receipt')}</div><h4>Pedido não encontrado</h4><p>Confira o link que você recebeu.</p><a class="btn btn-primary" href="./" style="margin-top:16px">Voltar ao início</a></div>`;
   }
 
+  // Envio sem código ainda: pergunta ao Melhor Envio (no máximo a cada 10 min por página)
+  let ultRastreio = 0;
+  function buscarRastreio(p) {
+    if (p.tipo_entrega !== 'envio' || p.status === 'cancelado' || p.status === 'entregue' || Date.now() - ultRastreio < 600e3) return;
+    ultRastreio = Date.now();
+    sb.functions.invoke('ff-melhorenvio', { body: { acao: 'rastrear', token } }).then(({ data }) => {
+      if (data && (data.rastreio && data.rastreio !== p.rastreio || data.status && data.status !== p.status)) { last = null; load(); }
+    }).catch(() => {});
+  }
   function render(p) {
+    buscarRastreio(p);
     const st = GP.statusTxt(p);
     const ret = p.tipo_entrega === 'retirada', env = p.tipo_entrega === 'envio';
     const fim = p.status === 'entregue' || p.status === 'cancelado';
@@ -103,6 +113,7 @@
           <span class="badge ${st.c}"><i class="dot"></i>${st.t}</span>
         </div>
         <div class="timeline">${tl}</div>
+        ${env && !p.rastreio && !fim && p.status !== 'novo' ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('box')}<span>O código de rastreio aparece aqui assim que a loja gerar a etiqueta.</span></div>` : ''}
         ${env && p.rastreio ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('box')}<span class="grow">Código de rastreio: <b>${esc(p.rastreio)}</b></span><a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(p.rastreio)}">Rastrear</a></div>` : ''}
         ${!fim && env && p.frete_prazo ? `<div class="fee" style="margin-top:12px;background:var(--bg);display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('clock')}<span>${esc(p.frete_nome || 'Transportadora')}: chega em até <b>${p.frete_prazo} dia${p.frete_prazo > 1 ? 's' : ''} útei${p.frete_prazo > 1 ? 's' : 'l'}</b> depois de postado</span></div>` : ''}
         ${!fim && !env && l.tempo_entrega ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('clock')}<span>Previsão da loja: <b>${esc(l.tempo_entrega)}</b></span></div>` : ''}
