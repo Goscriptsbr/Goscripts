@@ -242,3 +242,6 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .gs-foot .gs-zap{font-weight:700;color:var(--ok);font-size:.82rem}
 .gs-foot .gs-zap svg{width:16px;height:16px}
 .gs-foot .gs-zap:hover{background:var(--ok-soft)}
+
+/* aviso amarelo */
+.warnline{background:var(--warn-soft);color:#7a4f0e;border-radius:10px;padding:8px 10px;font-size:.82rem;line-height:1.4}
