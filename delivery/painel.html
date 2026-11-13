@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=39080">
+<link rel="stylesheet" href="app.css?v=39632">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -198,7 +198,10 @@
         <div class="seg"><button class="on" data-m="in">Entrar</button><button data-m="up">Criar conta</button></div>
         <form id="f-auth">
           <label class="field"><span>E-mail</span><input class="input" type="email" id="a-email" autocomplete="email" required></label>
+          <label class="field up-only hide"><span>Confirme o e-mail</span><input class="input" type="email" id="a-email2" autocomplete="off"></label>
           <label class="field"><span>Senha</span><input class="input" type="password" id="a-pass" autocomplete="current-password" minlength="6" required></label>
+          <label class="field up-only hide"><span>Confirme a senha</span><input class="input" type="password" id="a-pass2" minlength="6" autocomplete="new-password"></label>
+          <p class="small muted up-only hide" style="margin:-4px 0 14px">Senha com no mínimo 6 caracteres.</p>
           <button class="btn btn-primary btn-block" id="a-btn">Entrar</button>
         </form>
         <button class="small muted" id="a-forgot" style="margin-top:14px;text-decoration:underline">Esqueci minha senha</button>
@@ -208,7 +211,10 @@
         <p class="muted" style="margin-bottom:18px">Digite a nova senha da sua conta.</p>
         <form id="f-reset">
           <label class="field"><span>Nova senha</span><input class="input" type="password" id="r-pass" minlength="6" autocomplete="new-password" required></label>
-          <button class="btn btn-primary btn-block">Salvar nova senha</button>
+          <label class="field"><span>Repita a nova senha</span><input class="input" type="password" id="r-pass2" minlength="6" autocomplete="new-password" required></label>
+          <p class="small muted" style="margin:-4px 0 14px">Mínimo de 6 caracteres.</p>
+          <button class="btn btn-primary btn-block" id="r-btn">Salvar nova senha</button>
+          <button type="button" class="btn btn-ghost btn-block hide" id="r-cancel" style="margin-top:8px">Cancelar</button>
         </form>
       </div>
     </div>
@@ -224,6 +230,7 @@
       <div class="grow"></div>
       <label class="switch" id="sw-wrap" title="Abrir/fechar a loja"><input type="checkbox" id="sw-aberta"><i></i><span id="sw-txt">Fechada</span></label>
       <a class="icon-btn" id="b-ver" target="_blank" rel="noopener" title="Ver minha loja"></a>
+      <a class="icon-btn hide" id="b-admin" href="admin.html" title="Administrador"></a>
       <button class="icon-btn" id="b-sair" title="Sair"></button>
     </div>
   </header>
@@ -398,6 +405,7 @@
         </div>
         <div class="savebar"><button class="btn btn-primary" id="b-salvar" style="min-width:200px">Salvar loja</button></div>
       </form>
+      <div class="card pad row between" style="margin-top:16px;gap:10px;flex-wrap:wrap"><div><b>Senha de acesso</b><div class="small muted">Troque a senha que você usa para entrar no painel.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-senha">Trocar senha</button></div>
     </section>
   </main>
 </div>
@@ -481,8 +489,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=39080"></script>
-<script src="app.js?v=39080"></script>
+<script src="config.js?v=39632"></script>
+<script src="app.js?v=39632"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -499,7 +507,7 @@
   ].map(t => `<li>${ic('check')}${t}</li>`).join('');
   $('ti1').innerHTML = ic('receipt'); $('ti2').innerHTML = ic('menu'); $('ti3').innerHTML = ic('store');
   $('fi1').innerHTML = ic('store'); $('fi2').innerHTML = ic('pin'); $('fi3').innerHTML = ic('card');
-  $('b-ver').innerHTML = ic('ext'); $('b-sair').innerHTML = ic('logout'); $('w-ic').innerHTML = ic('store');
+  $('b-ver').innerHTML = ic('ext'); $('b-admin').innerHTML = ic('shield'); $('b-sair').innerHTML = ic('logout'); $('w-ic').innerHTML = ic('store');
   $('b-novo').innerHTML = ic('plus') + 'Novo produto'; $('pm-x').innerHTML = ic('x');
   $('p-del').innerHTML = ic('trash'); $('b-copylink').innerHTML = ic('copy');
   $('b-geo').innerHTML = ic('locate') + 'Usar localização atual';
@@ -510,7 +518,7 @@
   let user = null, loja = null, lojas = [], prods = [], pedidos = [], conhecidos = null, ofiltro = 'abertos', timer = null;
 
   // ================= AUTENTICAÇÃO =================
-  let modo = 'in', recovering = false;
+  let modo = 'in', recovering = /type=recovery/.test(location.hash + location.search), trocando = false;
   document.querySelector('.seg').onclick = (e) => {
     const b = e.target.closest('[data-m]'); if (!b) return;
     modo = b.dataset.m;
@@ -519,6 +527,9 @@
     $('a-sub').textContent = modo === 'in' ? 'Gerencie sua loja, cardápio e pedidos.' : 'Leva menos de 2 minutos. É grátis.';
     $('a-btn').textContent = modo === 'in' ? 'Entrar' : 'Criar conta';
     $('a-pass').autocomplete = modo === 'in' ? 'current-password' : 'new-password';
+
+    document.querySelectorAll('.up-only').forEach(x => x.classList.toggle('hide', modo !== 'up'));
+    $('a-email2').required = $('a-pass2').required = modo === 'up';
   };
   $('f-auth').onsubmit = async (e) => {
     e.preventDefault();
@@ -529,6 +540,8 @@
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
+        if (email.toLowerCase() !== $('a-email2').value.trim().toLowerCase()) { $('a-email2').focus(); throw new Error('Os dois e-mails não são iguais. Confira e digite de novo.'); }
+        if (password !== $('a-pass2').value) { $('a-pass2').focus(); throw new Error('As duas senhas não são iguais.'); }
         const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: cfg.siteUrl + 'painel.html' } });
         if (error) throw error;
         if (!data.session) GP.toast('Conta criada! Confirme pelo link enviado ao seu e-mail.', 'ok');
@@ -544,19 +557,27 @@
   };
   $('f-reset').onsubmit = async (e) => {
     e.preventDefault();
+    if ($('r-pass').value !== $('r-pass2').value) { $('r-pass2').focus(); return GP.toast('As duas senhas não são iguais.', 'err'); }
+    const b = $('r-btn'); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
     const { error } = await sb.auth.updateUser({ password: $('r-pass').value });
+    b.disabled = false; b.textContent = 'Salvar nova senha';
     if (error) return GP.toast(GP.err(error), 'err');
-    recovering = false; GP.toast('Senha alterada!', 'ok'); boot();
+    $('f-reset').reset(); recovering = false; trocando = false;
+    if (/type=recovery/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+    GP.toast('Senha alterada!', 'ok'); boot();
   };
   $('b-sair').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
   sb.auth.onAuthStateChange((ev, session) => {
     if (ev === 'PASSWORD_RECOVERY') { recovering = true; showAuth(true); return; }
-    if (ev === 'SIGNED_IN' && !recovering && (!user || user.id !== session.user.id)) setTimeout(boot, 0);
+    if (ev === 'SIGNED_IN' && !recovering && !trocando && (!user || user.id !== session.user.id)) setTimeout(boot, 0);
   });
+  $('b-trocar-senha').onclick = () => { trocando = true; showAuth(true); setTimeout(() => $('r-pass').focus(), 50); };
+  $('r-cancel').onclick = () => { trocando = false; $('f-reset').reset(); boot(); };
   function showAuth(reset) {
     $('v-app').classList.add('hide'); $('v-auth').classList.remove('hide');
     $('auth-main').classList.toggle('hide', !!reset); $('auth-reset').classList.toggle('hide', !reset);
+    $('r-cancel').classList.toggle('hide', !(reset && trocando));
   }
 
   let booting = null;
@@ -564,9 +585,10 @@
   async function doBoot() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return showAuth(false);
-    if (recovering) return;
+    if (recovering) return showAuth(true);
     user = session.user;
     $('v-auth').classList.add('hide'); $('v-app').classList.remove('hide');
+    sb.rpc('ff_is_admin').then(({ data }) => { $('b-admin').classList.toggle('hide', data !== true); });
     const { data, error } = await sb.from('ff_lojas').select('*').eq('dono', user.id).order('criado_em');
     if (error) return GP.toast(GP.err(error), 'err');
     lojas = data || [];

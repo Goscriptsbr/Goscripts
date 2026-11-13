@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Falta só confirmar seu e-mail</title></head>
+<body style="margin:0;padding:0;background:#F7F6F3;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#16161B">
+<div style="display:none;max-height:0;overflow:hidden">Toque no botão para ativar sua conta no GoPedido.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F6F3;padding:28px 12px">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px">
+      <tr><td align="center" style="padding:0 0 20px">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="background:#F2451C;border-radius:12px;width:40px;height:40px;text-align:center;font-size:22px;line-height:40px">🛍️</td>
+          <td style="padding-left:10px;font-size:22px;font-weight:800;letter-spacing:-0.5px">Go<span style="color:#F2451C">Pedido</span></td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:20px;padding:34px 28px;box-shadow:0 2px 12px rgba(22,22,27,.06)">
+        <div style="font-size:42px;line-height:1;margin-bottom:16px">👋</div>
+        <h1 style="margin:0 0 10px;font-size:23px;line-height:1.25;letter-spacing:-0.5px">Falta só confirmar seu e-mail</h1>
+        <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4a4a55">Que bom ter você no GoPedido! Toque no botão abaixo para confirmar seu e-mail e ativar sua conta.</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="border-radius:14px;background:#F2451C">
+          <a href="{{ .ConfirmationURL }}" style="display:block;padding:16px 20px;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;border-radius:14px">Confirmar meu e-mail</a>
+        </td></tr></table>
+        <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#71717F">Se você não criou uma conta no GoPedido, é só ignorar este e-mail.</p>
+        <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#9a9aa5">Se o botão não funcionar, copie e cole este link no navegador:<br><a href="{{ .ConfirmationURL }}" style="color:#D9370F;word-break:break-all">{{ .ConfirmationURL }}</a></p>
+      </td></tr>
+      <tr><td align="center" style="padding:20px 10px 0;font-size:12px;line-height:1.6;color:#9a9aa5">
+        GoPedido · delivery sem comissão para lanchonetes<br>
+        <a href="https://goscripts.com.br/delivery/" style="color:#9a9aa5">goscripts.com.br/delivery</a>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=39080">
+<link rel="stylesheet" href="app.css?v=39632">
 <style>
   .hdr{background:var(--ink);color:#fff;position:sticky;top:0;z-index:30}
   .hdr .wrap{display:flex;align-items:center;gap:12px;height:62px}
@@ -62,7 +62,7 @@
     <label class="field"><span>Senha</span><input class="input" type="password" id="a-pass" autocomplete="current-password" required></label>
     <button class="btn btn-primary btn-block" id="a-btn">Entrar</button>
   </form>
-  <p class="small muted" style="margin-top:14px">É a mesma conta de e-mail e senha do painel do lojista.</p>
+  <p class="small muted" style="margin-top:14px">É a mesma conta de e-mail e senha do painel do lojista. <a href="painel.html" style="text-decoration:underline">Esqueci minha senha</a></p>
 </main>
 
 <main class="wrap narrow hide" id="v-negado" style="max-width:460px;padding-top:60px;text-align:center">
@@ -112,8 +112,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=39080"></script>
-<script src="app.js?v=39080"></script>
+<script src="config.js?v=39632"></script>
+<script src="app.js?v=39632"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;

@@ -42,6 +42,8 @@
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     menu: '<path d="M4 6h16M4 12h16M4 18h10"/>',
     star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/>',
+    eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+    eyeoff: '<path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
     shield: '<path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
     bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>',
     cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>',
@@ -785,5 +787,21 @@
   };
 
 
-
+  // ---------- olho para ver a senha (em todos os campos de senha) ----------
+  GP.olhoSenha = (raiz = document) => {
+    raiz.querySelectorAll('input[type="password"]:not([data-olho])').forEach(inp => {
+      inp.dataset.olho = '1';
+      const w = document.createElement('span'); w.className = 'pwd';
+      inp.parentNode.insertBefore(w, inp); w.appendChild(inp);
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pwd-eye'; b.tabIndex = -1; b.setAttribute('aria-label', 'Mostrar senha'); b.innerHTML = GP.ic('eye');
+      b.onclick = (e) => {
+        e.preventDefault();
+        const ver = inp.type === 'password'; inp.type = ver ? 'text' : 'password';
+        b.innerHTML = GP.ic(ver ? 'eyeoff' : 'eye'); b.setAttribute('aria-label', ver ? 'Esconder senha' : 'Mostrar senha');
+      };
+      w.appendChild(b);
+    });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => GP.olhoSenha()); else GP.olhoSenha();
 })();
