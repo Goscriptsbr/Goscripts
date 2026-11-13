@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122245">
+<link rel="stylesheet" href="app.css?v=202611122246">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -351,8 +351,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122245"></script>
-<script src="app.js?v=202611122245"></script>
+<script src="config.js?v=202611122246"></script>
+<script src="app.js?v=202611122246"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -543,7 +543,7 @@
     $('m-wa').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
     $('m-copy').onclick = () => GP.copy(msg, 'Código e link copiados!');
     $('m-novo').onclick = async () => {
-      if (!confirm('Gerar um novo código? O código atual para de funcionar na hora e o motoboy vai precisar do novo.')) return;
+      if (!(await GP.confirmar('Gerar um novo código?', { texto: 'O código atual para de funcionar na hora. Os motoboys vão precisar do código novo para entrar.', ok: 'Gerar novo', perigo: false, icone: 'refresh' }))) return;
       await loadCodigo(true); GP.toast('Novo código gerado', 'ok');
     };
   }
@@ -658,7 +658,7 @@
       return;
     }
     const b = e.target.closest('[data-st]'); if (!b) return;
-    if (b.dataset.st === 'cancelado' && !confirm('Cancelar este pedido? O cliente verá o pedido como cancelado.')) return;
+    if (b.dataset.st === 'cancelado' && !(await GP.confirmar('Cancelar este pedido?', { texto: 'O cliente vai ver o pedido como cancelado. Se ele usou cupom, o uso volta para o cupom.', ok: 'Cancelar pedido', cancelar: 'Voltar', icone: 'x' }))) return;
     b.disabled = true;
     const janela = b.dataset.st === 'preparando' && pcfg.auto ? window.open('', '_blank') : null;
     const { error } = await sb.from('ff_pedidos').update({ status: b.dataset.st }).eq('id', b.dataset.id);
@@ -830,8 +830,8 @@
   }
   $('g-add').innerHTML = ic('plus') + 'Adicionar etapa (ex.: Frutas, Caldas, Adicionais)';
   $('g-add').onclick = () => { gruposEd.push(novoGrupo()); renderGrupos(); const c = $('grupos').lastElementChild; if (c) c.querySelector('input').focus(); };
-  document.querySelectorAll('[data-modelo]').forEach(b => b.onclick = () => {
-    if (gruposEd.length && !confirm('Adicionar as etapas do modelo às que já existem?')) return;
+  document.querySelectorAll('[data-modelo]').forEach(b => b.onclick = async () => {
+    if (gruposEd.length && !(await GP.confirmar('Adicionar o modelo?', { texto: 'As etapas do modelo serão adicionadas junto com as que você já criou.', ok: 'Adicionar', perigo: false, icone: 'plus' }))) return;
     MODELOS[b.dataset.modelo].forEach(m => gruposEd.push(novoGrupo(m))); renderGrupos();
     GP.toast('Modelo adicionado. Ajuste nomes e preços como quiser.', 'ok');
   });
@@ -853,10 +853,10 @@
     if (e.target.dataset.f === 'obrig') { g.min = e.target.checked ? 1 : 0; renderGrupos(); }
     if (e.target.dataset.f === 'max') renderGrupos();
   });
-  $('grupos').addEventListener('click', (e) => {
+  $('grupos').addEventListener('click', async (e) => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const gi = +b.closest('[data-gi]').dataset.gi, g = gruposEd[gi];
-    if (b.dataset.act === 'delg') { if (confirm(`Excluir a etapa "${g.nome || 'sem nome'}"?`)) gruposEd.splice(gi, 1); }
+    if (b.dataset.act === 'delg') { if (await GP.confirmar(`Excluir a etapa "${g.nome || 'sem nome'}"?`, { texto: `As ${g.opcoes.length} opções dela também serão apagadas.`, ok: 'Excluir' })) gruposEd.splice(gi, 1); }
     if (b.dataset.act === 'up' && gi) [gruposEd[gi - 1], gruposEd[gi]] = [gruposEd[gi], gruposEd[gi - 1]];
     if (b.dataset.act === 'addo') g.opcoes.push({ id: gid(), nome: '', preco: 0 });
     if (b.dataset.act === 'delo') g.opcoes.splice(+b.closest('[data-oi]').dataset.oi, 1);
@@ -885,7 +885,7 @@
     if (grupos === null) return;
     if (porops) {
       if (!grupos.length) return GP.toast('Crie pelo menos uma etapa na montagem com os preços.', 'err');
-      if (!grupos.some(g => g.opcoes.some(o => o.preco > 0)) && !confirm('Nenhuma opção da montagem tem preço, então o produto vai sair de graça. Salvar mesmo assim?')) return;
+      if (!grupos.some(g => g.opcoes.some(o => o.preco > 0)) && !(await GP.confirmar('O produto vai sair de graça', { texto: 'Nenhuma opção da montagem tem preço. Quer salvar mesmo assim?', ok: 'Salvar assim', perigo: true, icone: 'bolt' }))) return;
       if (!grupos.some(g => g.min > 0)) GP.toast('Dica: marque a etapa do tamanho como "Obrigatório" para o cliente sempre escolher.', '');
     } else if (!(preco > 0)) return GP.toast('Informe o preço ou ligue "Preço vem da montagem".', 'err');
     let preco_promo = null, promo_ate = null;
@@ -903,7 +903,7 @@
     closeModal(); GP.toast(editing ? 'Produto atualizado' : 'Produto adicionado', 'ok'); loadProds();
   };
   $('p-del').onclick = async () => {
-    if (!editing || !confirm(`Excluir "${editing.nome}" do cardápio?`)) return;
+    if (!editing || !(await GP.confirmar(`Excluir "${editing.nome}"?`, { texto: 'O produto sai do cardápio. Os pedidos antigos continuam guardados. Se for só temporário, desligue "Disponível para venda".', ok: 'Excluir' }))) return;
     const { error } = await sb.from('ff_produtos').delete().eq('id', editing.id);
     if (error) return GP.toast(GP.err(error), 'err');
     closeModal(); GP.toast('Produto excluído', 'ok'); loadProds();
@@ -980,7 +980,7 @@
   $('cupons').onclick = async (e) => {
     const d = e.target.closest('[data-cdel]'), cp = e.target.closest('[data-ccopy]');
     if (cp) { const c = cupons.find(x => x.codigo === cp.dataset.ccopy); return GP.copy(`🎁 Cupom ${c.codigo}: ${descCupom(c)}${Number(c.minimo) ? ' em pedidos a partir de ' + brl(c.minimo) : ''} na ${loja.nome}!\nPeça aqui: ${cfg.siteUrl}loja.html?l=${loja.slug}`, 'Texto de divulgação copiado!'); }
-    if (d && confirm('Excluir este cupom?')) {
+    if (d && await GP.confirmar('Excluir este cupom?', { texto: 'Clientes não vão mais conseguir usar este código. Para parar só por um tempo, use a chave para pausar.', ok: 'Excluir' })) {
       const { error } = await sb.from('ff_cupons').delete().eq('id', d.dataset.cdel);
       if (error) return GP.toast(GP.err(error), 'err');
       loadCupons();

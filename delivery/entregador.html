@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=202611122245">
+<link rel="stylesheet" href="app.css?v=202611122246">
 <style>
   body{background:#F2F1EE}
   .entry{min-height:100vh;display:grid;place-items:center;padding:24px 18px;background:radial-gradient(800px 400px at 50% -10%,rgba(242,69,28,.25),transparent 60%),var(--ink);color:#fff}
@@ -83,8 +83,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122245"></script>
-<script src="app.js?v=202611122245"></script>
+<script src="config.js?v=202611122246"></script>
+<script src="app.js?v=202611122246"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -107,7 +107,7 @@
     $('v-app').classList.add('hide'); $('v-entry').classList.remove('hide');
     $('e-cod').value = ''; if (msg) GP.toast(msg, 'err');
   }
-  $('b-sair').onclick = () => { if (confirm('Sair da área de entregas?')) sair(); };
+  $('b-sair').onclick = async () => { if (await GP.confirmar('Sair da área de entregas?', { texto: 'Para entrar de novo você vai precisar do código da loja.', ok: 'Sair', icone: 'logout' })) sair(); };
 
   async function entrar(c) {
     const { data, error } = await sb.rpc('ff_entregador_entrar', { p_codigo: c });
@@ -204,7 +204,7 @@
     }
     const b = e.target.closest('[data-st]'); if (!b) return;
     const st = b.dataset.st;
-    if (st === 'entregue' && !confirm('Confirmar que o pedido foi entregue ao cliente?')) return;
+    if (st === 'entregue' && !(await GP.confirmar('Pedido entregue?', { texto: 'Confirme só depois de entregar ao cliente' + (lista.find(x => x.id === b.dataset.id) && lista.find(x => x.id === b.dataset.id).pagamento !== 'pix' ? ' e receber o pagamento.' : '.'), ok: 'Sim, entreguei', perigo: false, icone: 'check' }))) return;
     b.disabled = true; b.innerHTML = '<span class="spin"></span>';
     const { error } = await sb.rpc('ff_entregador_status', { p_codigo: cod, p_pedido: b.dataset.id, p_status: st, p_nome: nome });
     if (error) { GP.toast(GP.err(error), 'err'); if (/codigo_invalido/.test(error.message)) return sair(); return carregar(); }

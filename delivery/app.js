@@ -118,6 +118,33 @@
     setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
   };
 
+  // ---------- Confirmação bonita (no lugar do confirm do navegador) ----------
+  // await GP.confirmar('Excluir produto?', { texto: '...', ok: 'Excluir', perigo: true })
+  GP.confirmar = (titulo, o = {}) => new Promise((resolve) => {
+    const perigo = o.perigo !== false && /excluir|apagar|cancelar|remover|sair/i.test(o.ok || titulo) ? true : !!o.perigo;
+    const icon = o.icone || (perigo ? 'trash' : 'check');
+    const wrap = document.createElement('div');
+    wrap.className = 'cfm-wrap';
+    wrap.innerHTML = `<div class="cfm" role="alertdialog" aria-modal="true" aria-labelledby="cfm-t">
+      <div class="cfm-ic ${perigo ? 'bad' : ''}">${GP.ic(icon)}</div>
+      <h3 id="cfm-t">${GP.esc(titulo)}</h3>
+      ${o.texto ? `<p>${GP.esc(o.texto)}</p>` : ''}
+      <div class="cfm-acts">
+        <button type="button" class="btn btn-ghost" data-r="0">${GP.esc(o.cancelar || 'Voltar')}</button>
+        <button type="button" class="btn ${perigo ? 'btn-danger' : 'btn-primary'}" data-r="1">${GP.esc(o.ok || 'Confirmar')}</button>
+      </div></div>`;
+    document.body.appendChild(wrap);
+    requestAnimationFrame(() => wrap.classList.add('on'));
+    const fim = (v) => {
+      document.removeEventListener('keydown', key, true);
+      wrap.classList.remove('on'); setTimeout(() => wrap.remove(), 180); resolve(v);
+    };
+    const key = (e) => { if (e.key === 'Escape') { e.stopPropagation(); fim(false); } if (e.key === 'Enter') { e.preventDefault(); fim(true); } };
+    document.addEventListener('keydown', key, true);
+    wrap.addEventListener('click', (e) => { const b = e.target.closest('[data-r]'); if (b) fim(b.dataset.r === '1'); else if (e.target === wrap) fim(false); });
+    setTimeout(() => wrap.querySelector('[data-r="1"]').focus(), 50);
+  });
+
   // ---------- Erros do banco em português ----------
   const ERROS = {
     loja_invalida: 'Loja não encontrada.',
