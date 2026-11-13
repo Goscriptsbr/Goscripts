@@ -44,7 +44,13 @@
     star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/>',
     eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
     eyeoff: '<path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
-    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 7H6"/>',
+    pill: '<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>',
+    paw: '<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.05Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>',
+    wine: '<path d="M8 22h8M12 15v7M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/><path d="M7.2 9h9.6"/>',
+    box: '<path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+        bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
     fire: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
     lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
@@ -814,6 +820,18 @@
     return p.pagamento === 'debito' ? 'Débito na entrega' : 'Crédito na entrega';
   };
 
+
+  // ---------- tipos de loja ----------
+  GP.TIPOS = [
+    { id: 'restaurante', nome: 'Restaurante e lanchonete', curto: 'Restaurantes', ex: ['Burger do Zé', 'Hambúrgueres artesanais, porções e milkshakes.'], ic: 'bag', desc: 'Lanches, pizzas, açaí, marmitas, doces' },
+    { id: 'mercado', nome: 'Mercado e conveniência', curto: 'Mercados', ex: ['Mercadinho Bom Preço', 'Mercearia, hortifrúti, frios e bebidas geladas.'], ic: 'cart', desc: 'Mercearia, hortifrúti, padaria, conveniência' },
+    { id: 'farmacia', nome: 'Farmácia', curto: 'Farmácias', ex: ['Farmácia Saúde', 'Medicamentos, higiene, beleza e perfumaria.'], ic: 'pill', desc: 'Farmácia, drogaria, perfumaria' },
+    { id: 'pet', nome: 'Pet shop', curto: 'Pet shops', ex: ['Pet Feliz', 'Rações, petiscos, brinquedos e acessórios.'], ic: 'paw', desc: 'Ração, acessórios, casa de ração' },
+    { id: 'bebidas', nome: 'Bebidas e adega', curto: 'Bebidas', ex: ['Adega do Centro', 'Cervejas, destilados, gelo, água e gás.'], ic: 'wine', desc: 'Adega, distribuidora, gelo, água e gás' },
+    { id: 'variedades', nome: 'Variedades', curto: 'Variedades', ex: ['Loja da Ana', 'Roupas, presentes, utilidades e eletrônicos.'], ic: 'box', desc: 'Roupas, presentes, eletrônicos, utilidades. Pode enviar para outras cidades.' },
+    { id: 'outros', nome: 'Outros', curto: 'Outros', ex: ['Minha Loja', 'Conte o que você vende.'], ic: 'grid', desc: 'Qualquer outro tipo de loja' }
+  ];
+  GP.tipo = (id) => GP.TIPOS.find(t => t.id === id) || GP.TIPOS[0];
 
   // ---------- tempo real: escuta "toques" do banco num canal e chama aoMudar ----------
   // Devolve { parar(), ativo() }. Se o Realtime não estiver disponível, ativo() fica false e a tela usa a conferência de reserva.

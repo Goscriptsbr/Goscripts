@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=74074">
+<link rel="stylesheet" href="app.css?v=74936">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -330,6 +330,18 @@
   @media(max-width:600px){.tabs button{font-size:.86rem;padding:0 6px}}
   .welcome{background:linear-gradient(135deg,#FFF1EB,#fff);border:1px solid #FAD3C5;border-radius:var(--r);padding:18px;margin-bottom:18px;display:flex;gap:14px;align-items:center}
   .welcome .big{width:48px;height:48px;border-radius:14px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+  .tipos-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+  .tipos-g button{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px;border:1.5px solid var(--line);border-radius:16px;background:#fff;transition:border-color .15s,background .15s}
+  .tipos-g button:hover{border-color:var(--brand)}
+  .tipos-g button.on{border-color:var(--brand);background:var(--brand-soft)}
+  .tipos-g .ti,.tipo-atual .ti{width:40px;height:40px;border-radius:12px;background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;flex:none}
+  .tipos-g button.on .ti{background:#fff}
+  .tipos-g .ti svg,.tipo-atual .ti svg{width:20px;height:20px}
+  .tipos-g b{display:block;font-size:.92rem;line-height:1.25}
+  .tipos-g small{display:block;font-size:.76rem;color:var(--muted);line-height:1.35;margin-top:2px}
+  .tipo-atual{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--bg)}
+  .tipo-atual b{display:block;font-size:.9rem}.tipo-atual small{display:block;font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media(max-width:520px){.tipos-g{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -339,8 +351,8 @@
   <div class="side">
     <a class="logo light" href="./"><b id="lg1"></b><span>Go<em>Pedido</em></span></a>
     <div>
-      <span class="kick">Para lanchonetes, hamburguerias, açaí e pizzarias</span>
-      <h2>Sua lanchonete recebendo pedidos online hoje.</h2>
+      <span class="kick">Restaurantes, mercados, farmácias, pet shops e variedades</span>
+      <h2>Sua loja recebendo pedidos online hoje.</h2>
       <p class="lead">Seu próprio delivery, com link para divulgar no WhatsApp e no Instagram. <b>Sem comissão por pedido.</b></p>
       <ul id="perks"></ul>
     </div>
@@ -481,6 +493,11 @@
       <div class="card cm-plan" id="plano-box"></div>
       <nav class="ml-nav" id="ml-nav"><a href="#sec-dados">Dados</a><a href="#sec-entrega">Entrega</a><a href="#sec-horario">Horários</a><a href="#sec-pag">Pagamentos</a><a href="#sec-conta">Conta</a></nav>
       <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
+      <section class="card pad tipo-pick hide" id="tipo-pick">
+        <h3 style="font-size:1.1rem;letter-spacing:-.02em">Que tipo de loja você vai cadastrar?</h3>
+        <p class="small muted" style="margin:2px 0 14px">Cada loja tem o seu tipo. Se depois você criar outra loja, ela pode ser de um tipo diferente.</p>
+        <div class="tipos-g" id="tipos-g"></div>
+      </section>
       <form id="f-loja">
         <div class="formgrid">
           <div class="card pad fs ml-anchor" id="sec-dados">
@@ -493,6 +510,9 @@
               <div class="hint">Logo quadrada · capa na horizontal<br>JPG ou PNG</div>
               <input type="file" id="in-logo" accept="image/*" hidden><input type="file" id="in-capa" accept="image/*" hidden>
             </div>
+            <input type="hidden" id="l-tipo" value="restaurante">
+            <div class="field"><span>Tipo de loja</span>
+              <div class="tipo-atual"><span class="ti" id="ta-ic"></span><span class="grow" style="min-width:0"><b id="ta-nome"></b><small id="ta-desc"></small></span><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-tipo">Trocar</button></div></div>
             <label class="field"><span>Nome da loja</span><input class="input" id="l-nome" maxlength="60" required placeholder="Ex.: Burger do Zé"></label>
             <label class="field"><span>Descrição</span><textarea class="input" id="l-desc" maxlength="240" placeholder="Hambúrgueres artesanais, porções e milkshakes."></textarea></label>
             <div class="grid2">
@@ -685,8 +705,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=74074"></script>
-<script src="app.js?v=74074"></script>
+<script src="config.js?v=74936"></script>
+<script src="app.js?v=74936"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -867,6 +887,7 @@
     clearInterval(timer); desligarRealtime();
     loja = null; prods = []; pedidos = []; conhecidos = null; codigo = null;
     fillLoja(); renderLojaSel(); setTabsLocked(true); go('loja');
+    renderVerif(); escolherTipo(true);
     $('welcome').classList.remove('hide');
     $('w-tit').textContent = primeira ? 'Bem-vindo! Vamos configurar sua loja.' : 'Cadastrar uma nova loja';
     $('w-cancel').classList.toggle('hide', !lojas.length);
@@ -880,6 +901,25 @@
     }
     const l = lojas.find(x => x.id === v); if (l) abrirLoja(l);
   };
+  // ---- Tipo de loja: primeira escolha ao criar uma loja ----
+  $('tipos-g').innerHTML = GP.TIPOS.map(t => `<button type="button" data-tipo="${t.id}"><span class="ti">${ic(t.ic)}</span><span><b>${t.nome}</b><small>${t.desc}</small></span></button>`).join('');
+  function mostrarTipo() {
+    const t = GP.tipo($('l-tipo').value);
+    $('ta-ic').innerHTML = ic(t.ic); $('ta-nome').textContent = t.nome; $('ta-desc').textContent = t.desc;
+    $('l-nome').placeholder = 'Ex.: ' + t.ex[0]; $('l-desc').placeholder = t.ex[1];
+    document.querySelectorAll('#tipos-g [data-tipo]').forEach(b => b.classList.toggle('on', b.dataset.tipo === $('l-tipo').value));
+  }
+  function escolherTipo(abrir) {
+    $('tipo-pick').classList.toggle('hide', !abrir);
+    $('f-loja').classList.toggle('hide', !!abrir);
+    if (abrir) $('tipo-pick').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  $('tipos-g').onclick = (e) => {
+    const b = e.target.closest('[data-tipo]'); if (!b) return;
+    $('l-tipo').value = b.dataset.tipo; mostrarTipo(); escolherTipo(false);
+    setTimeout(() => { if (!$('l-nome').value) $('l-nome').focus(); }, 200);
+  };
+  $('b-trocar-tipo').onclick = () => escolherTipo(true);
   $('w-cancel').onclick = () => { const l = lojas.find(x => x.id === GP.ls.get('gp_loja_sel')) || lojas[0]; if (l) abrirLoja(l); };
 
   // ================= ABAS =================
@@ -1677,6 +1717,7 @@
   ['l-taxakm', 'l-taxamin', 'l-min', 'p-preco'].forEach(id => GP.moneyMask($(id)));
   function fillLoja() {
     const l = loja || {};
+    $('l-tipo').value = loja ? (l.tipo || 'restaurante') : ''; mostrarTipo(); escolherTipo(false);
     lojaImg = l.imagem_url || ''; lojaCapa = l.capa_url || '';
     lojaPos = l.lat != null ? { lat: l.lat, lng: l.lng } : null;
     lojaEnd = l.endereco || ''; lojaAddr = null; $('l-addr').innerHTML = '';
@@ -1836,6 +1877,7 @@
     if ($('l-auto').checked && !Object.values(lerHoras()).some(x => x.aberto)) { $('horas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Marque pelo menos um dia aberto no horário de funcionamento.', 'err'); }
     if (!pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
     const row = {
+      tipo: $('l-tipo').value || 'restaurante',
       nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
       endereco: lojaAddr ? lojaAddr.texto() : lojaEnd, lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
       ...cfgTaxa(), pedido_minimo: num($('l-min').value),
@@ -1854,6 +1896,7 @@
     b.disabled = false; b.textContent = t;
     if (res.error) {
       if (/limite_lojas/.test(res.error.message)) { await loadPlano(); return verPlanos('Limite de lojas atingido', 'Para cadastrar mais lojas, escolha um plano maior.'); }
+      if (/column .*(tipo|envio_externo)|(tipo|envio_externo).*column|schema cache/i.test(res.error.message)) return GP.toast('Falta rodar o SQL v17 no Supabase para salvar o tipo de loja.', 'err');
       return GP.toast(GP.err(res.error), 'err');
     }
     loadPlano();

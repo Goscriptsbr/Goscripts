@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>GoPedido · Delivery de fast food perto de você</title>
-<meta name="description" content="Peça lanches, pizzas e porções das lanchonetes da sua região. Taxa de entrega calculada pela distância, pagamento por Pix ou cartão na entrega.">
-<meta property="og:title" content="GoPedido · Delivery de fast food">
-<meta property="og:description" content="Peça das lanchonetes da sua região. Pix ou cartão na entrega.">
+<title>GoPedido · Delivery das lojas perto de você</title>
+<meta name="description" content="Peça de restaurantes, mercados, farmácias, pet shops e lojas da sua região. Taxa de entrega calculada pela distância, pagamento por Pix ou cartão na entrega.">
+<meta property="og:title" content="GoPedido · Delivery da sua região">
+<meta property="og:description" content="Peça das lojas da sua região. Pix ou cartão na entrega.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#F2451C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=74074">
+<link rel="stylesheet" href="app.css?v=74936">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -126,6 +126,11 @@
     .hero-phones .ph{width:min(240px,25vh)}
     .hero-phones .ph-c{margin-left:calc(min(240px,25vh) / -2)}
   }
+  .tipos-f{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:4px 0 14px;padding-bottom:2px}
+  .tipos-f::-webkit-scrollbar{display:none}
+  .tipos-f .tf{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:86px;padding:12px 6px;border-radius:16px;background:#fff;border:1.5px solid var(--line);font-size:.76rem;font-weight:700;color:var(--ink-2)}
+  .tipos-f .tf svg{width:22px;height:22px;color:var(--brand-2)}
+  .tipos-f .tf.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-2)}
 </style>
 </head>
 <body>
@@ -145,7 +150,7 @@
     <div>
       <span class="badge b-brand" style="margin-bottom:14px"><i id="hb-ic" style="display:inline-grid"></i>Delivery da sua região</span>
       <h1>Bateu a fome?<br><em>Peça em poucos toques.</em></h1>
-      <p>Lanches, pastéis, pizzas, açaí e porções das lanchonetes perto de você. A taxa de entrega é calculada pela distância e aparece antes de pagar — sem surpresa no final.</p>
+      <p>Lanches, mercado, farmácia, pet shop e muito mais, das lojas perto de você. A taxa de entrega é calculada pela distância e aparece antes de pagar — sem surpresa no final.</p>
       <div class="searchbar">
         <label class="in"><span id="ic-search"></span><input id="q" placeholder="Buscar loja ou comida…" autocomplete="off"></label>
         <button class="btn btn-primary" id="btn-buscar">Buscar</button>
@@ -173,6 +178,7 @@
     <button class="chip btnchip" data-f="perto">Mais perto</button>
     <button class="chip btnchip" data-f="taxa">Menor taxa</button>
   </div>
+  <div class="tipos-f hide" id="tipos-f"></div>
   <h2 class="sec-title" id="titulo">Lojas</h2>
   <div class="grid" id="lista"></div>
 
@@ -181,8 +187,8 @@
 
   <div class="cta">
     <div>
-      <h3>Tem uma lanchonete ou fast food?</h3>
-      <p>Cadastre sua loja grátis e comece a receber pedidos hoje. Você controla o cardápio, a taxa de entrega e os seus motoboys pelo celular.</p>
+      <h3>Tem uma loja?</h3>
+      <p>Restaurante, mercado, farmácia, pet shop, adega ou variedades: cadastre sua loja grátis e comece a receber pedidos hoje. Você controla o cardápio, a taxa de entrega e os seus motoboys pelo celular.</p>
       <ul class="cta-list" id="cta-list"></ul>
     </div>
     <a class="btn btn-primary" href="painel.html?criar=1">Cadastrar minha loja</a>
@@ -204,8 +210,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=74074"></script>
-<script src="app.js?v=74074"></script>
+<script src="config.js?v=74936"></script>
+<script src="app.js?v=74936"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -223,14 +229,14 @@
   $('t3').innerHTML = ic('check') + 'Acompanhe até a sua porta';
   $('t4').innerHTML = ic('check') + 'Endereços salvos na sua conta';
   $('how').innerHTML = [
-    ['search', 'Escolha a loja', 'Veja o cardápio, a taxa de entrega e o tempo estimado de cada lanchonete.'],
+    ['search', 'Escolha a loja', 'Veja os produtos, a taxa de entrega e o tempo estimado de cada loja.'],
     ['pin', 'Informe o endereço', 'Digite o CEP ou use sua localização — rua, bairro e número se preenchem sozinhos.'],
     ['card', 'Pague do seu jeito', 'Pix na hora com comprovante, ou débito e crédito na maquininha do entregador.'],
     ['bike', 'Acompanhe a entrega', 'Veja quando a loja aceitou, quando saiu e quem é o entregador a caminho.']
   ].map(([i, t, d], k) => `<div class="step"><span class="n">${k + 1}</span><div class="ic">${ic(i)}</div><h4>${t}</h4><p>${d}</p></div>`).join('');
   $('cta-list').innerHTML = [
-    'Cardápio com fotos e categorias', 'Taxa automática por km', 'Pix com QR Code e comprovante obrigatório',
-    'Cartão na entrega', 'Código de acesso para seus motoboys', 'Pedidos com aviso sonoro'
+    'Pedidos ao vivo com aviso sonoro', 'Produtos com fotos e categorias', 'Pix com QR Code e comprovante',
+    'Taxa automática pela distância', 'Área do motoboy', 'Cupons, promoções e avaliações'
   ].map(t => `<li>${ic('check')}${t}</li>`).join('');
 
   let lojas = [], filtro = 'todas', busca = '';
@@ -249,10 +255,12 @@
 
   $('lista').innerHTML = Array(6).fill('<div class="card" style="overflow:hidden"><div class="sk" style="height:130px;border-radius:0"></div><div class="pad"><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:12px;margin-top:10px"></div><div class="sk" style="height:12px;width:40%;margin-top:8px"></div></div></div>').join('');
 
-  const [{ data, error }, { data: prods }] = await Promise.all([
-    sb.from('ff_lojas').select('id,slug,nome,descricao,imagem_url,capa_url,lat,lng,taxa_km,taxa_minima,raio_km,taxa_modo,km_arredonda,taxa_tabela,tempo_entrega,aberta,horario_auto,horarios,nota_media,nota_qtd').eq('ativa', true),
+  const colsLoja = 'id,slug,nome,descricao,imagem_url,capa_url,lat,lng,taxa_km,taxa_minima,raio_km,taxa_modo,km_arredonda,taxa_tabela,tempo_entrega,aberta,horario_auto,horarios,nota_media,nota_qtd';
+  let [{ data, error }, { data: prods }] = await Promise.all([
+    sb.from('ff_lojas').select(colsLoja + ',tipo').eq('ativa', true),
     sb.from('ff_produtos').select('loja_id,nome,categoria').eq('disponivel', true)
   ]);
+  if (error && /tipo/.test(error.message || '')) ({ data, error } = await sb.from('ff_lojas').select(colsLoja).eq('ativa', true));
   if (error) {
     $('lista').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('store')}</div><h4>Não foi possível carregar as lojas</h4><p>${esc(GP.err(error))}</p></div>`;
     return;
@@ -261,7 +269,15 @@
   try { const r = await sb.rpc('ff_cupons_publicos'); (r.data || []).forEach(c => { if (!cupLoja[c.loja_id]) cupLoja[c.loja_id] = c; }); } catch {}
   const idx = {};
   (prods || []).forEach(p => { idx[p.loja_id] = (idx[p.loja_id] || '') + ' ' + p.nome + ' ' + p.categoria; });
-  lojas = data.map(l => ({ ...l, _busca: (l.nome + ' ' + l.descricao + ' ' + (idx[l.id] || '')).toLowerCase() }));
+  lojas = data.map(l => ({ ...l, _busca: (l.nome + ' ' + l.descricao + ' ' + GP.tipo(l.tipo).nome + ' ' + (idx[l.id] || '')).toLowerCase() }));
+  // Filtro por tipo: só aparece quando há lojas de mais de um tipo
+  let tipoF = '';
+  const tiposTem = GP.TIPOS.filter(t => lojas.some(l => (l.tipo || 'restaurante') === t.id));
+  if (tiposTem.length > 1) {
+    $('tipos-f').classList.remove('hide');
+    $('tipos-f').innerHTML = `<button class="tf on" data-t="">${ic('grid')}<span>Tudo</span></button>` + tiposTem.map(t => `<button class="tf" data-t="${t.id}">${ic(t.ic)}<span>${t.curto}</span></button>`).join('');
+    $('tipos-f').onclick = (e) => { const b = e.target.closest('[data-t]'); if (!b) return; tipoF = b.dataset.t; document.querySelectorAll('#tipos-f .tf').forEach(x => x.classList.toggle('on', x === b)); render(); };
+  }
 
   function render() {
     let arr = lojas.map(l => {
@@ -270,6 +286,7 @@
       return { ...l, _st: st, _ab: st.aberta, _d: d, _t: d != null ? GP.taxa(l, d) : null, _fora: d != null && GP.foraArea(l, d) };
     });
     if (busca) arr = arr.filter(l => l._busca.includes(busca));
+    if (tipoF) arr = arr.filter(l => (l.tipo || 'restaurante') === tipoF);
     if (filtro === 'abertas') arr = arr.filter(l => l._ab);
     arr.sort((a, b) => {
       if (a._ab !== b._ab) return a._ab ? -1 : 1;
@@ -279,7 +296,7 @@
     });
     $('titulo').textContent = busca ? `Resultados para “${busca}”` : (arr.length ? `${arr.length} loja${arr.length > 1 ? 's' : ''} na região` : 'Lojas');
     if (!arr.length) {
-      $('lista').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('search')}</div><h4>${lojas.length ? 'Nada encontrado' : 'Nenhuma loja cadastrada ainda'}</h4><p>${lojas.length ? 'Tente buscar outro termo.' : 'Seja o primeiro: cadastre sua lanchonete.'}</p></div>`;
+      $('lista').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('search')}</div><h4>${lojas.length ? 'Nada encontrado' : 'Nenhuma loja cadastrada ainda'}</h4><p>${lojas.length ? 'Tente buscar outro termo.' : 'Seja o primeiro: cadastre sua loja.'}</p></div>`;
       return;
     }
     $('lista').innerHTML = arr.map(l => {
@@ -295,7 +312,7 @@
         <div class="logo-s" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : ini}</div>
         <div class="body">
           <h3 class="ellipsis">${esc(l.nome)}</h3>
-          <p class="desc clamp2">${esc(l.descricao || 'Fast food')}</p>
+          <p class="desc clamp2">${esc(l.descricao || GP.tipo(l.tipo).nome)}</p>
           <div class="meta">
             ${l.nota_qtd ? `<span><span class="stars">★</span>${String(l.nota_media).replace('.', ',')} <span class="muted">(${l.nota_qtd})</span></span>` : `<span>${ic('sparkle')}Novo</span>`}
             <span>${ic('clock')}${l._ab ? esc(l.tempo_entrega || '30–50 min') : esc(l._st.texto.replace(/^Fechada · /, '').replace(/^Pedidos pausados.*/, 'Pausada'))}</span>
