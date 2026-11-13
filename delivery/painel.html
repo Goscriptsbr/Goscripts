@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=41323">
+<link rel="stylesheet" href="app.css?v=41800">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -94,7 +94,40 @@
 
   .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media(max-width:820px){.formgrid{grid-template-columns:1fr}}
-  .fs h3{font-size:1rem;font-weight:800;margin-bottom:14px;display:flex;gap:8px;align-items:center}
+  .fs h3{font-size:1.02rem;font-weight:800;margin-bottom:2px;display:flex;gap:10px;align-items:center;letter-spacing:-.01em}
+  .fs h3>span:first-child{width:36px;height:36px;border-radius:11px;background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;flex:none}
+  .fs h3>span:first-child svg{width:19px;height:19px}
+  .fs .fsub{font-size:.82rem;color:var(--muted);margin:0 0 16px 46px;line-height:1.4}
+  .fs .sub-t{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;margin:18px 0 10px}
+  .ml-nav{position:sticky;top:64px;z-index:6;background:var(--bg);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 0;margin-bottom:8px}
+  .ml-nav::-webkit-scrollbar{display:none}
+  .ml-nav a{flex:none;height:34px;padding:0 14px;border-radius:99px;background:#fff;border:1px solid var(--line);font-size:.82rem;font-weight:700;display:flex;align-items:center;color:var(--ink-2)}
+  .ml-nav a:active{background:var(--brand-soft)}
+  .ml-anchor{scroll-margin-top:120px}
+  .brandbox{position:relative;margin-bottom:66px}
+  .brandbox .pv{width:100%!important;height:150px!important;border-radius:16px!important;border:0!important;background:#F1EFEA center/cover;display:grid;place-items:center;color:#c9c5bc}
+  .brandbox .lg{position:absolute;left:14px;bottom:-42px}
+  .brandbox .lg .pv{width:88px!important;height:88px!important;border-radius:22px!important;border:4px solid #fff!important;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+  .brandbox .cam{position:absolute;display:flex;align-items:center;gap:6px;background:rgba(22,22,27,.72);color:#fff;font-size:.76rem;font-weight:700;border-radius:99px;padding:7px 12px;cursor:pointer;backdrop-filter:blur(4px)}
+  .brandbox .cam svg{width:15px;height:15px}
+  .brandbox .cam.capa{right:10px;top:10px}
+  .brandbox .cam.logo{right:-8px;bottom:-6px;padding:0;width:32px;height:32px;justify-content:center;border:2px solid #fff;background:var(--brand)}
+  .brandbox .hint{position:absolute;left:116px;top:calc(100% + 8px);font-size:.74rem;color:var(--muted);line-height:1.35}
+  .paygrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+  @media(min-width:860px){.paygrid{grid-template-columns:repeat(4,1fr)}}
+  .paytile{display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;min-width:0;position:relative}
+  .paygrid .paytile{flex-direction:column;align-items:flex-start;gap:6px;padding:12px 12px 10px}
+  .paygrid .paytile .switch{position:absolute;right:10px;top:10px}
+  .paytile .pi{font-size:1.25rem;flex:none}
+  .paytile b{font-size:.84rem;line-height:1.2;display:block}
+  .paytile small{font-size:.7rem;color:var(--muted);display:block}
+  .paytile .switch{margin-left:auto;flex:none}
+  .paytile:has(input:checked){border-color:var(--ok);background:var(--ok-soft)}
+  .rettile{margin-bottom:16px}
+  .pixbox{background:var(--bg);border-radius:14px;padding:14px 14px 2px;margin-top:10px}
+  .pixbox .input{background:#fff}
+  @media(max-width:520px){.pixbox{grid-template-columns:1fr}}
+  @media(max-width:420px){#sec-dados .grid2{grid-template-columns:1fr}}
   .imgpick{display:flex;gap:14px;align-items:center}
   .imgpick .pv{width:84px;height:84px;border-radius:18px;background:#F1EFEA center/cover;border:1px solid var(--line);flex:none;display:grid;place-items:center;color:#c9c5bc}
   .imgpick .pv.wide{width:150px}
@@ -382,35 +415,46 @@
     </section>
 
     <section id="tab-loja" class="hide">
+      <div class="cm-head">
+        <div class="grow" style="min-width:0"><h2>Minha loja</h2><p class="small muted">Dados, entrega, horários e pagamentos.</p></div>
+        <a class="btn btn-ghost btn-sm" id="b-ver2" target="_blank" rel="noopener"></a>
+      </div>
       <div id="verif-banner2"></div>
-      <div class="card pad" id="plano-box" style="margin-bottom:16px"></div>
+      <div class="card cm-plan" id="plano-box"></div>
+      <nav class="ml-nav" id="ml-nav"><a href="#sec-dados">Dados</a><a href="#sec-entrega">Entrega</a><a href="#sec-horario">Horários</a><a href="#sec-pag">Pagamentos</a><a href="#sec-conta">Conta</a></nav>
       <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
       <form id="f-loja">
         <div class="formgrid">
-          <div class="card pad fs">
+          <div class="card pad fs ml-anchor" id="sec-dados">
             <h3><span id="fi1"></span>Dados da loja</h3>
-            <div class="field"><span>Logo / foto da loja</span>
-              <div class="imgpick"><div class="pv" id="pv-logo"></div><div><label class="btn btn-ghost btn-sm" for="in-logo">Escolher imagem</label><small>Quadrada, JPG ou PNG</small></div></div>
-              <input type="file" id="in-logo" accept="image/*" hidden></div>
-            <div class="field"><span>Capa <span class="muted">(opcional)</span></span>
-              <div class="imgpick"><div class="pv wide" id="pv-capa"></div><div><label class="btn btn-ghost btn-sm" for="in-capa">Escolher imagem</label><small>Horizontal, aparece no topo da loja</small></div></div>
-              <input type="file" id="in-capa" accept="image/*" hidden></div>
+            <p class="fsub">É assim que os clientes veem sua loja.</p>
+            <div class="brandbox">
+              <div class="pv" id="pv-capa"></div>
+              <label class="cam capa" for="in-capa"><span id="cam1"></span>Trocar capa</label>
+              <div class="lg"><div class="pv" id="pv-logo"></div><label class="cam logo" for="in-logo" title="Trocar logo"><span id="cam2"></span></label></div>
+              <div class="hint">Logo quadrada · capa na horizontal<br>JPG ou PNG</div>
+              <input type="file" id="in-logo" accept="image/*" hidden><input type="file" id="in-capa" accept="image/*" hidden>
+            </div>
             <label class="field"><span>Nome da loja</span><input class="input" id="l-nome" maxlength="60" required placeholder="Ex.: Burger do Zé"></label>
             <label class="field"><span>Descrição</span><textarea class="input" id="l-desc" maxlength="240" placeholder="Hambúrgueres artesanais, porções e milkshakes."></textarea></label>
+            <div class="grid2">
+              <label class="field"><span>WhatsApp da loja</span><input class="input" id="l-tel" inputmode="tel" placeholder="(19) 99999-9999"></label>
+              <label class="field"><span>Tempo de entrega</span><input class="input" id="l-tempo" maxlength="30" placeholder="30–50 min"></label>
+            </div>
             <label class="field"><span>CNPJ <span class="muted">(opcional)</span></span><input class="input" id="l-cnpj" inputmode="numeric" placeholder="00.000.000/0000-00"><small id="cnpj-msg"></small></label>
-            <label class="field"><span>WhatsApp da loja</span><input class="input" id="l-tel" inputmode="tel" placeholder="(19) 99999-9999"></label>
-            <label class="field"><span>Tempo médio de entrega</span><input class="input" id="l-tempo" maxlength="30" placeholder="30–50 min"></label>
             <div class="field"><span>Link da sua loja</span>
               <div class="linkbox"><code id="l-link">—</code><button type="button" class="btn btn-ghost btn-sm" id="b-copylink"></button></div></div>
           </div>
 
-          <div class="card pad fs">
+          <div class="card pad fs ml-anchor" id="sec-entrega">
             <h3><span id="fi2"></span>Localização e entrega</h3>
+            <p class="fsub">De onde sai a entrega e quanto você cobra.</p>
             <label class="field"><span>Endereço da loja</span><input class="input" id="l-end" maxlength="200" placeholder="Rua, número, bairro, cidade"></label>
             <div class="row between" style="margin-bottom:8px"><b class="small">Ponto no mapa (de onde sai a entrega)</b><button type="button" class="btn btn-soft btn-sm" id="b-geo"></button></div>
             <div class="map" id="l-map" style="height:220px"></div>
             <p class="small muted" style="margin:6px 0 16px" id="l-coord">Toque no mapa para marcar a loja.</p>
-            <b class="small" style="display:block;margin-bottom:8px">Como cobrar a entrega</b>
+            <label class="paytile rettile"><span class="pi">🏪</span><span style="min-width:0"><b>Aceitar retirada no local</b><small>O cliente busca na loja, sem taxa de entrega</small></span><span class="switch"><input type="checkbox" id="l-ret"><i></i></span></label>
+            <div class="sub-t">Como cobrar a entrega</div>
             <div class="modos" id="l-modo">
               <label class="opt"><input type="radio" name="taxa_modo" value="km"><span class="grow"><b>Valor por km</b><div class="small muted">Ex.: R$ 2,00 por km rodado</div></span></label>
               <label class="opt"><input type="radio" name="taxa_modo" value="tabela"><span class="grow"><b>Tabela por distância</b><div class="small muted">Ex.: até 1 km R$ 2 · até 2 km R$ 4</div></span></label>
@@ -439,24 +483,25 @@
             </div>
           </div>
 
-          <div class="card pad fs" style="grid-column:1/-1">
+          <div class="card pad fs ml-anchor" id="sec-horario" style="grid-column:1/-1">
             <h3><span id="fi4"></span>Horário de funcionamento</h3>
+            <p class="fsub">Os dias e horários em que a loja recebe pedidos.</p>
             <label class="switch" style="margin-bottom:6px"><input type="checkbox" id="l-auto"><i></i>Abrir e fechar sozinha pelo horário</label>
             <p class="small muted" style="margin-bottom:14px">Ligado: a loja abre e fecha nos horários abaixo (horário de Brasília). O botão lá em cima serve para <b>pausar</b> os pedidos quando precisar. Desligado: você abre e fecha manualmente.</p>
             <div id="horas"></div>
             <button type="button" class="btn btn-ghost btn-sm" id="b-copiahora" style="margin-top:6px"></button>
           </div>
 
-          <div class="card pad fs" style="grid-column:1/-1">
+          <div class="card pad fs ml-anchor" id="sec-pag" style="grid-column:1/-1">
             <h3><span id="fi3"></span>Formas de pagamento</h3>
-            <div class="row" style="gap:22px;flex-wrap:wrap;margin-bottom:18px">
-              <label class="switch"><input type="checkbox" id="l-pix"><i></i>Pix</label>
-              <label class="switch"><input type="checkbox" id="l-deb"><i></i>Débito na entrega</label>
-              <label class="switch"><input type="checkbox" id="l-cred"><i></i>Crédito na entrega</label>
-              <label class="switch"><input type="checkbox" id="l-din"><i></i>Dinheiro (com troco)</label>
-              <label class="switch"><input type="checkbox" id="l-ret"><i></i>Aceitar retirada no local</label>
+            <p class="fsub">Ligue as formas que sua loja aceita.</p>
+            <div class="paygrid">
+              <label class="paytile"><span class="pi">⚡</span><span style="min-width:0"><b>Pix</b><small>Pago na hora</small></span><span class="switch"><input type="checkbox" id="l-pix"><i></i></span></label>
+              <label class="paytile"><span class="pi">💳</span><span style="min-width:0"><b>Débito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-deb"><i></i></span></label>
+              <label class="paytile"><span class="pi">💳</span><span style="min-width:0"><b>Crédito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-cred"><i></i></span></label>
+              <label class="paytile"><span class="pi">💵</span><span style="min-width:0"><b>Dinheiro</b><small>Com troco</small></span><span class="switch"><input type="checkbox" id="l-din"><i></i></span></label>
             </div>
-            <div id="pix-cfg" class="grid2">
+            <div id="pix-cfg" class="grid2 pixbox">
               <label class="field"><span>Tipo de chave Pix</span>
                 <select class="input" id="l-pixtipo"><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="telefone">Telefone</option><option value="email">E-mail</option><option value="aleatoria">Chave aleatória</option></select></label>
               <label class="field"><span>Chave Pix</span><input class="input" id="l-pixchave" maxlength="80"><small id="pix-prev"></small></label>
@@ -467,7 +512,7 @@
         </div>
         <div class="savebar"><button class="btn btn-primary" id="b-salvar" style="min-width:200px">Salvar loja</button></div>
       </form>
-      <div class="card pad row between" style="margin-top:16px;gap:10px;flex-wrap:wrap"><div><b>Senha de acesso</b><div class="small muted">Troque a senha que você usa para entrar no painel.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-senha">Trocar senha</button></div>
+      <div class="card pad row between ml-anchor" id="sec-conta" style="margin-top:16px;gap:10px;flex-wrap:wrap"><div><b>Senha de acesso</b><div class="small muted">Troque a senha que você usa para entrar no painel.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-senha">Trocar senha</button></div>
     </section>
   </main>
 </div>
@@ -583,8 +628,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=41323"></script>
-<script src="app.js?v=41323"></script>
+<script src="config.js?v=41800"></script>
+<script src="app.js?v=41800"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -605,7 +650,8 @@
   $('b-novo').innerHTML = ic('plus') + 'Novo produto'; $('b-novo-fab').innerHTML = ic('plus') + 'Novo produto'; $('b-novo-fab').onclick = () => $('b-novo').click(); $('etp-ic').innerHTML = ic('menu'); $('pm-x').innerHTML = ic('x');
   $('p-del').innerHTML = ic('trash'); $('b-copylink').innerHTML = ic('copy');
   $('b-geo').innerHTML = ic('locate') + 'Usar localização atual';
-  $('pv-logo').innerHTML = ic('image'); $('pv-capa').innerHTML = ic('image');
+  $('pv-logo').innerHTML = ic('image'); $('pv-capa').innerHTML = ic('image'); $('cam1').innerHTML = ic('image'); $('cam2').innerHTML = ic('edit'); $('b-ver2').innerHTML = ic('ext') + 'Ver loja';
+  $('ml-nav').onclick = (e) => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); const el = document.querySelector(a.getAttribute('href')); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   GP.phoneMask($('l-tel'));
 
   let etapas = [];
@@ -724,9 +770,10 @@
       <div class="bar"><i class="${pct >= 100 ? 'full' : pct >= 80 ? 'warn' : ''}" style="width:${Math.max(pct, 2)}%"></i></div></div>
       <button type="button" class="btn btn-soft btn-sm" id="b-planos" style="flex:none">${plano.plano === 'premium' ? 'Planos' : 'Aumentar'}</button>`;
     $('b-planos').onclick = () => verPlanos();
-    $('plano-box').innerHTML = `<div class="row between" style="flex-wrap:wrap;gap:10px"><div><b>Plano ${GP.planoNome(plano.plano)}</b>${plano.valido_ate ? `<span class="small muted"> · até ${plano.valido_ate.split('-').reverse().join('/')}</span>` : ''}
-      <div class="small muted">${plano.lojas} de ${plano.lojas_max} loja${plano.lojas_max > 1 ? 's' : ''} criada${plano.lojas_max > 1 ? 's' : ''} · ${plano.produtos} de ${plano.produtos_max} produtos no total da conta</div></div>
-      <button type="button" class="btn btn-soft btn-sm" id="b-planos2">${ic('star')}Ver planos</button></div>`;
+    const pctL = Math.min(100, Math.round(plano.produtos / plano.produtos_max * 100));
+    $('plano-box').innerHTML = `<div class="grow" style="min-width:0"><div class="l"><span><b>Plano ${GP.planoNome(plano.plano)}</b>${plano.valido_ate ? ' · até ' + plano.valido_ate.split('-').reverse().join('/') : ''}</span><span>${plano.lojas}/${plano.lojas_max} loja${plano.lojas_max > 1 ? 's' : ''} · ${plano.produtos}/${plano.produtos_max} produtos</span></div>
+      <div class="bar"><i class="${pctL >= 100 ? 'full' : pctL >= 80 ? 'warn' : ''}" style="width:${Math.max(pctL, 2)}%"></i></div></div>
+      <button type="button" class="btn btn-soft btn-sm" id="b-planos2" style="flex:none">${ic('star')}Planos</button>`;
     $('b-planos2').onclick = () => verPlanos();
   }
   const verPlanos = (titulo, texto) => GP.mostrarPlanos({ atual: plano ? plano.plano : 'gratis', email: user && user.email, titulo, texto });
@@ -772,7 +819,7 @@
   $('w-cancel').onclick = () => { const l = lojas.find(x => x.id === GP.ls.get('gp_loja_sel')) || lojas[0]; if (l) abrirLoja(l); };
 
   // ================= ABAS =================
-  function setTabsLocked(v) { document.querySelectorAll('#tabs [data-t]').forEach(b => { if (b.dataset.t !== 'loja') b.disabled = v; }); $('sw-wrap').classList.toggle('hide', v); $('b-ver').classList.toggle('hide', v); }
+  function setTabsLocked(v) { document.querySelectorAll('#tabs [data-t]').forEach(b => { if (b.dataset.t !== 'loja') b.disabled = v; }); $('sw-wrap').classList.toggle('hide', v); $('b-ver').classList.toggle('hide', v); $('b-ver2').classList.toggle('hide', v); }
   function go(t) {
     document.querySelectorAll('#tabs [data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === t));
     ['pedidos', 'cardapio', 'promo', 'loja'].forEach(s => $('tab-' + s).classList.toggle('hide', s !== t));
@@ -839,7 +886,7 @@
     $('sw-txt').textContent = loja.horario_auto ? (loja.aberta ? (st.aberta ? 'Aberta' : 'Fora do horário') : 'Pausada') : (loja.aberta ? 'Aberta' : 'Fechada');
     $('sw-wrap').title = loja.horario_auto ? 'Automático pelo horário · desligue para pausar os pedidos' : 'Abrir/fechar a loja';
     $('stline').innerHTML = `<span class="badge ${st.cls}"><i class="dot"></i>${st.texto}</span>${loja.horario_auto ? '<span class="small muted">automático pelo horário</span>' : '<span class="small muted">abertura manual</span>'}`;
-    $('b-ver').href = 'loja.html?l=' + encodeURIComponent(loja.slug);
+    $('b-ver').href = $('b-ver2').href = 'loja.html?l=' + encodeURIComponent(loja.slug);
     $('l-link').textContent = cfg.siteUrl + 'loja.html?l=' + loja.slug;
   }
   $('sw-aberta').onchange = async (e) => {
