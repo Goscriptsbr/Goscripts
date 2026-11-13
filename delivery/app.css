@@ -189,7 +189,7 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .pl-nome{font-size:1rem}
 .pl-preco{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;margin:4px 0 10px}
 .pl-preco small{font-size:.85rem;color:var(--muted);font-weight:600}
-.plano ul{list-style:none;display:grid;gap:7px;margin-bottom:14px;font-size:.88rem;color:var(--ink-2);flex:1}
+.plano ul{list-style:none;display:grid;gap:7px;align-content:start;margin-bottom:14px;font-size:.88rem;color:var(--ink-2);flex:1}
 .plano li{display:flex;gap:8px;align-items:flex-start}
 .plano li .i{color:var(--ok);margin-top:1px}
 @media(max-width:600px){.planos-modal{max-height:94vh}}
