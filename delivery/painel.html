@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=85548">
+<link rel="stylesheet" href="app.css?v=85851">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -779,8 +779,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=85548"></script>
-<script src="app.js?v=85548"></script>
+<script src="config.js?v=85851"></script>
+<script src="app.js?v=85851"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1018,16 +1018,31 @@
         const r = await chamarME({ acao: 'agencias', loja: loja.id });
         const esc2 = loja.me_agencias || {};
         box.innerHTML = !r.transportadoras.length ? `<div class="warnline">Não achamos agências de outras transportadoras perto de ${esc(r.cidade)}. Seus envios vão pelos Correios.</div>`
-          : r.transportadoras.map(tp => `<label class="field"><span>${tp.logo ? `<img src="${esc(tp.logo)}" alt="" style="height:16px;vertical-align:-3px;margin-right:6px">` : ''}${esc(tp.nome)}</span>
-              <select class="input" data-transp="${tp.id}" data-tnome="${esc(tp.nome)}"><option value="">Escolher depois (o sistema escolhe uma perto)</option>
-              ${tp.agencias.map(a => `<option value="${a.id}" data-n="${esc(a.nome)}" data-e="${esc(a.endereco)}" ${esc2[tp.id] && Number(esc2[tp.id].id) === a.id ? 'selected' : ''}>${esc(a.nome)}${a.endereco ? ' — ' + esc(a.endereco) : ''}</option>`).join('')}</select></label>`).join('')
+          : r.transportadoras.map(tp => {
+              const atual = esc2[tp.id] ? Number(esc2[tp.id].id) : 0;
+              // "AVENIDA NOVE DE ABRIL" → "Avenida Nove de Abril" (mantém a sigla do estado)
+              const tit = (t) => String(t || '').toLowerCase().replace(/(^|[\s(/-])([a-zà-ú])/g, (m, a1, c) => a1 + c.toUpperCase())
+                .replace(/ (De|Da|Do|Dos|Das|E) /g, (m) => m.toLowerCase()).replace(/\/([a-z]{2})$/i, (m, uf) => '/' + uf.toUpperCase())
+                .replace(/\b(Ii|Iii|Iv|Vi|Vii|Viii|Ix|Xi|Xii)\b/g, (m) => m.toUpperCase());
+              const mapa = (a) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent((a.nome.replace(/\s*-\s*Ponto Parceiro/i, '') + ' ' + a.endereco).trim());
+              return `<div class="ag-transp" data-transp="${tp.id}" data-tnome="${esc(tp.nome)}">
+                <div class="ag-th">${tp.logo ? `<img src="${esc(tp.logo)}" alt="">` : ''}<b>${esc(tp.nome)}</b><span class="small muted">${tp.agencias.length} agência${tp.agencias.length > 1 ? 's' : ''} perto da loja</span></div>
+                <label class="ag-op ${!atual ? 'on' : ''}"><input type="radio" name="ag-${tp.id}" value="" ${!atual ? 'checked' : ''}><span class="ag-txt"><b>Escolher depois</b><small>O sistema usa uma agência perto da loja</small></span></label>
+                ${tp.agencias.map(a => {
+                  const parceiro = /ponto parceiro/i.test(a.nome), nome = a.nome.replace(/\s*-\s*Ponto Parceiro/i, '');
+                  return `<label class="ag-op ${atual === a.id ? 'on' : ''}"><input type="radio" name="ag-${tp.id}" value="${a.id}" data-n="${esc(tit(a.nome.replace(/\s*-\s*Ponto Parceiro/i, '')))}" data-e="${esc(tit(a.endereco))}" ${atual === a.id ? 'checked' : ''}>
+                    <span class="ag-txt"><b>${esc(tit(nome))}</b>${parceiro ? '<em>Ponto parceiro</em>' : '<em class="pr">Agência própria</em>'}<small>${esc(tit(a.endereco) || 'Endereço não informado')}</small></span>
+                    ${a.endereco ? `<a class="ag-map" href="${mapa(a)}" target="_blank" rel="noopener" title="Ver no mapa">${ic('pin')}<span>Mapa</span></a>` : ''}</label>`;
+                }).join('')}</div>`;
+            }).join('')
             + `<button type="button" class="btn btn-primary btn-sm" id="me-ag-salvar">Salvar agências</button>`;
         box.classList.remove('hide');
+        box.onchange = (ev) => { const g = ev.target.closest('.ag-transp'); if (g) g.querySelectorAll('.ag-op').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); };
         if ($('me-ag-salvar')) $('me-ag-salvar').onclick = async () => {
           const novo = {};
-          box.querySelectorAll('select[data-transp]').forEach(sel => {
-            const o = sel.selectedOptions[0];
-            if (sel.value) novo[sel.dataset.transp] = { id: Number(sel.value), nome: o.dataset.n, endereco: o.dataset.e, transp: sel.dataset.tnome };
+          box.querySelectorAll('.ag-transp').forEach(g => {
+            const o = g.querySelector('input[type=radio]:checked');
+            if (o && o.value) novo[g.dataset.transp] = { id: Number(o.value), nome: o.dataset.n, endereco: o.dataset.e, transp: g.dataset.tnome };
           });
           const { data, error } = await sb.from('ff_lojas').update({ me_agencias: novo }).eq('id', loja.id).select().single();
           if (error) return GP.toast(/me_agencias/.test(error.message || '') ? 'Falta rodar o SQL v21 no Supabase.' : GP.err(error), 'err');
