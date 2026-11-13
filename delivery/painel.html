@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122331">
+<link rel="stylesheet" href="app.css?v=202611122332">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -128,6 +128,11 @@
   .pcat-h .n{font-size:.75rem;font-weight:800;background:#ECEAE6;color:var(--ink-2);border-radius:99px;padding:2px 8px}
   .pcat-h .chev{margin-left:auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
   .pcat-h.fechada .chev{transform:rotate(-45deg)}
+  .simbox{background:var(--bg);border-radius:14px;padding:12px 14px}
+  .simbox input[type=range]{width:100%;margin:12px 0 6px;accent-color:var(--brand);height:28px}
+  .simres{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .simres .big{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+  .simres .muted{font-size:.84rem}
   .modos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
   .modos .opt{margin-bottom:0;padding:12px}
   @media(max-width:520px){.modos{grid-template-columns:1fr}}
@@ -327,7 +332,8 @@
                 <label class="field"><span>Taxa por km</span><div class="prefix"><i>R$</i><input class="input" id="l-taxakm" inputmode="numeric" placeholder="0,00"></div></label>
                 <label class="field"><span>Taxa mínima</span><div class="prefix"><i>R$</i><input class="input" id="l-taxamin" inputmode="numeric" placeholder="0,00"></div></label>
               </div>
-              <label class="switch" style="margin-bottom:14px"><input type="checkbox" id="l-arred" checked><i></i>Arredondar o km (4,3 km = 4 km · 4,6 km = 5 km)</label>
+              <label class="switch" style="margin-bottom:6px"><input type="checkbox" id="l-arred" checked><i></i>Arredondar o km (4,3 km = 4 km · 4,6 km = 5 km)</label>
+              <p class="small" id="arred-info" style="margin:0 0 14px"></p>
             </div>
             <div id="modo-tab" class="hide">
               <div id="faixas"></div>
@@ -338,7 +344,11 @@
               <label class="field"><span>Raio máximo</span><div class="prefix"><i>km</i><input class="input" id="l-raio" inputmode="decimal" placeholder="0 = sem limite"></div></label>
               <label class="field"><span>Pedido mínimo</span><div class="prefix"><i>R$</i><input class="input" id="l-min" inputmode="numeric" placeholder="0,00"></div></label>
             </div>
-            <div class="fee small" id="l-sim" style="background:var(--bg);border-radius:12px;padding:12px 14px"></div>
+            <div class="simbox">
+              <div class="row between"><b class="small">Teste a taxa: arraste a distância</b><span class="small muted">exemplo</span></div>
+              <input type="range" id="sim-km" min="0.1" max="20" step="0.1" value="4.6">
+              <div class="simres" id="l-sim"></div>
+            </div>
           </div>
 
           <div class="card pad fs" style="grid-column:1/-1">
@@ -450,8 +460,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122331"></script>
-<script src="app.js?v=202611122331"></script>
+<script src="config.js?v=202611122332"></script>
+<script src="app.js?v=202611122332"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1387,10 +1397,21 @@
   $('b-faixa').onclick = () => { const ult = faixas.length ? faixas[faixas.length - 1] : { ate: 0, valor: 0 }; faixas.push({ ate: (Number(ult.ate) || 0) + 1, valor: (Number(ult.valor) || 0) + 2 }); renderFaixas(); sim(); };
   const cfgTaxa = () => ({ taxa_modo: modoAtual(), taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value), km_arredonda: $('l-arred').checked, taxa_tabela: faixas.filter(f => Number(f.ate) > 0).sort((a, b) => a.ate - b.ate).map(f => ({ ate: Math.round(Number(f.ate) * 100) / 100, valor: Math.round((Number(f.valor) || 0) * 100) / 100 })), raio_km: num($('l-raio').value) });
   function sim() {
-    const t = cfgTaxa();
-    const ex = [0.8, 2.3, 4.6].map(d => { const v = GP.taxaOuNada(t, d); return `${String(d).replace('.', ',')} km = <b>${v == null ? 'não entrega' : brl(v)}</b>`; }).join(' · ');
-    $('l-sim').innerHTML = `${ic('bike')}<span>Simulação: ${ex}</span>`;
+    const t = cfgTaxa(), d = Number($('sim-km').value), v = GP.taxaOuNada(t, d);
+    const dTxt = d.toFixed(1).replace('.', ',') + ' km';
+    let como = '';
+    if (v != null && t.taxa_modo === 'km') {
+      const cobrado = t.km_arredonda ? Math.max(1, (d - Math.floor(d)) > 0.5 + 1e-9 ? Math.ceil(d) : Math.floor(d)) : d;
+      const calc = Math.round(cobrado * t.taxa_km * 100) / 100;
+      como = `${t.km_arredonda ? 'cobra ' + cobrado + ' km' : 'cobra ' + dTxt} × ${brl(t.taxa_km)}${calc < t.taxa_minima ? ` = ${brl(calc)} → taxa mínima` : ''}`;
+    } else if (v != null) {
+      const f = GP.faixas(t).find(x => d <= Number(x.ate)); como = `faixa até ${String(f.ate).replace('.', ',')} km`;
+    }
+    $('l-sim').innerHTML = `<span class="big">${dTxt}</span><span class="muted">→</span><span class="big" style="color:${v == null ? 'var(--bad)' : 'var(--ok)'}">${v == null ? 'não entrega' : brl(v)}</span><span class="muted" style="flex-basis:100%">${v == null ? (t.raio_km && d > t.raio_km ? 'passou do raio máximo de ' + String(t.raio_km).replace('.', ',') + ' km' : 'passou da última faixa da tabela') : como}</span>`;
+    $('arred-info').innerHTML = t.km_arredonda ? '<span class="muted">A taxa fica sempre em valor redondo de km.</span>'
+      : '<span style="color:var(--warn);font-weight:700">⚠ Sem arredondar, a taxa pode dar centavos (ex.: 4,46 km × R$ 2,00 = R$ 8,92).</span>';
   }
+  $('sim-km').addEventListener('input', sim);
   ['l-taxakm', 'l-taxamin', 'l-raio'].forEach(id => $(id).addEventListener('input', sim));
   $('l-arred').addEventListener('change', sim);
   function initMap() {
