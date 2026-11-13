@@ -59,6 +59,47 @@ alter table public.ff_pedidos add column if not exists rastreio        text not 
 alter table public.ff_pedidos drop constraint if exists ff_pedidos_tipo_entrega_check;
 alter table public.ff_pedidos add constraint ff_pedidos_tipo_entrega_check check (tipo_entrega in ('entrega','retirada','envio'));
 
+-- Confere os dígitos verificadores de CPF e CNPJ (não aceita número inventado)
+create or replace function public.ff_doc_valido(p text)
+returns boolean language plpgsql immutable set search_path = public as $$
+declare d text := regexp_replace(coalesce(p, ''), '\D', '', 'g'); s int; r int; i int;
+  w1 int[] := array[5,4,3,2,9,8,7,6,5,4,3,2]; w2 int[] := array[6,5,4,3,2,9,8,7,6,5,4,3,2];
+begin
+  if d ~ '^(\d)\1+$' then return false; end if;
+  if length(d) = 11 then
+    s := 0; for i in 1..9 loop s := s + substr(d, i, 1)::int * (11 - i); end loop;
+    r := (s * 10) % 11; if r = 10 then r := 0; end if;
+    if r <> substr(d, 10, 1)::int then return false; end if;
+    s := 0; for i in 1..10 loop s := s + substr(d, i, 1)::int * (12 - i); end loop;
+    r := (s * 10) % 11; if r = 10 then r := 0; end if;
+    return r = substr(d, 11, 1)::int;
+  elsif length(d) = 14 then
+    s := 0; for i in 1..12 loop s := s + substr(d, i, 1)::int * w1[i]; end loop;
+    r := s % 11; r := case when r < 2 then 0 else 11 - r end;
+    if r <> substr(d, 13, 1)::int then return false; end if;
+    s := 0; for i in 1..13 loop s := s + substr(d, i, 1)::int * w2[i]; end loop;
+    r := s % 11; r := case when r < 2 then 0 else 11 - r end;
+    return r = substr(d, 14, 1)::int;
+  end if;
+  return false;
+end;
+$$;
+grant execute on function public.ff_doc_valido(text) to anon, authenticated, service_role;
+
+-- CPF do responsável na verificação da loja precisa ser válido (quando preenchido)
+create or replace function public.ff_confere_cpf_verif()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if regexp_replace(coalesce(new.responsavel_cpf, ''), '\D', '', 'g') <> '' and not public.ff_doc_valido(new.responsavel_cpf) then
+    raise exception 'cpf_invalido';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists ff_verif_cpf on public.ff_verificacoes;
+create trigger ff_verif_cpf before insert or update on public.ff_verificacoes
+  for each row execute function public.ff_confere_cpf_verif();
+
 -- Criar pedido: igual ao v19, agora com o tipo "envio"
 create or replace function public.ff_criar_pedido(
   p_loja uuid, p_cliente jsonb, p_itens jsonb, p_pagamento text, p_comprovante text default null)
@@ -110,7 +151,7 @@ begin
     select * into v_cot from public.ff_cotacoes
      where id = nullif(p_cliente ->> 'cotacao', '')::uuid and loja_id = l.id and expira > now();
     if not found then raise exception 'cotacao_vencida'; end if;
-    if length(regexp_replace(coalesce(p_cliente ->> 'cpf', ''), '\D', '', 'g')) not in (11, 14) then raise exception 'cpf_obrigatorio'; end if;
+    if not public.ff_doc_valido(p_cliente ->> 'cpf') then raise exception 'cpf_obrigatorio'; end if;
   end if;
 
   if p_pagamento not in ('pix','debito','credito','dinheiro')

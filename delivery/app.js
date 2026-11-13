@@ -221,7 +221,8 @@
     envio_indisponivel: 'Esta loja não está enviando para outras cidades no momento.',
     pagamento_envio: 'Pedidos enviados por transportadora são pagos por Pix.',
     cotacao_vencida: 'O frete mudou. Escolha o frete de novo.',
-    cpf_obrigatorio: 'Digite o CPF (ou CNPJ) de quem vai receber.',
+    cpf_obrigatorio: 'Digite um CPF (ou CNPJ) válido de quem vai receber.',
+    cpf_invalido: 'Esse CPF não é válido. Confira os números.',
     avaliacao_cedo: 'Você pode avaliar depois que o pedido for entregue.',
     avaliacao_feita: 'Este pedido já foi avaliado. Obrigado!',
     avaliacao_expirada: 'O prazo para avaliar este pedido acabou.',
@@ -396,6 +397,8 @@
     return calc(12) === +d[12] && calc(13) === +d[13];
   };
   GP.cnpjValido = (v) => cnpjValido(GP.digits(v));
+  GP.cpfValido = (v) => cpfValido(GP.digits(v));
+  GP.docValido = (v) => { const d = GP.digits(v); return d.length === 11 ? cpfValido(d) : d.length === 14 ? cnpjValido(d) : false; };
   GP.fmtCnpj = (v) => { const d = GP.digits(v).slice(0, 14); return d.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2'); };
   // Confere se a chave combina com o tipo escolhido
   GP.pixValida = (tipo, chave) => {

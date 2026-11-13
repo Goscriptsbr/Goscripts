@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=78770">
+<link rel="stylesheet" href="app.css?v=79512">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -317,8 +317,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=78770"></script>
-<script src="app.js?v=78770"></script>
+<script src="config.js?v=79512"></script>
+<script src="app.js?v=79512"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -612,7 +612,7 @@
     if (base.fora && !base.calc && podeEnvio()) return { ...base, fora: false, envio: true, t: frete.sel ? frete.sel.preco : 0 };
     return base;
   };
-  const cpfOk = () => [11, 14].includes(GP.digits($('c-cpf').value).length);
+  const cpfOk = () => GP.docValido($('c-cpf').value);
   $('c-cpf').addEventListener('input', (e) => {
     const d = GP.digits(e.target.value).slice(0, 14);
     e.target.value = d.length <= 11 ? d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2') : d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2}).*/, '$1.$2.$3/$4-$5');
@@ -930,7 +930,7 @@
       if (e && e.envio) {
         if (frete.carregando) return { el: $('c-fretes'), msg: 'Aguarde, calculando o frete…' };
         if (!frete.sel) return { el: $('c-fretes'), msg: frete.erro || 'Escolha uma opção de frete.' };
-        if (!cpfOk()) return { el: $('c-cpf'), msg: 'Digite o CPF (ou CNPJ) de quem vai receber.' };
+        if (!cpfOk()) return { el: $('c-cpf'), msg: [11, 14].includes(GP.digits($('c-cpf').value).length) ? 'Esse CPF/CNPJ não é válido. Confira os números.' : 'Digite o CPF (ou CNPJ) de quem vai receber.' };
       }
       return null;
     }

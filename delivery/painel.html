@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=78770">
+<link rel="stylesheet" href="app.css?v=79512">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -778,8 +778,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=78770"></script>
-<script src="app.js?v=78770"></script>
+<script src="config.js?v=79512"></script>
+<script src="app.js?v=79512"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1224,6 +1224,7 @@
       const box = b.closest('.vbanner'), nome = box.querySelector('.vb-nome').value.trim(), cpf = box.querySelector('.vb-cpf').value.trim();
       if (nome.length < 5) return GP.toast('Digite o nome completo do responsável.', 'err');
       if (!loja.cnpj && GP.digits(cpf).length !== 11) return GP.toast('Digite o CPF do responsável (ou coloque o CNPJ da loja).', 'err');
+      if (GP.digits(cpf) && !GP.cpfValido(cpf)) return GP.toast('Esse CPF não é válido. Confira os números.', 'err');
       const { error } = await sb.from('ff_verificacoes').upsert({ loja_id: loja.id, responsavel_nome: nome, responsavel_cpf: cpf, atualizado_em: new Date().toISOString() });
       if (error) return GP.toast(GP.err(error), 'err');
       GP.toast('Dados salvos! Agora é só pedir a verificação no WhatsApp.', 'ok'); renderVerif();
