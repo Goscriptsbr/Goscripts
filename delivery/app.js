@@ -236,6 +236,24 @@
   GP.taxa = (loja, dist) => Math.max(Number(loja.taxa_minima) || 0, Math.round(dist * (Number(loja.taxa_km) || 0) * 100) / 100);
   GP.foraArea = (loja, dist) => Number(loja.raio_km) > 0 && dist > Number(loja.raio_km);
 
+  // Distância pelas ruas (rota de carro) usando OSRM/OpenStreetMap. Devolve km ou null.
+  const rotaCache = {};
+  GP.rota = async (lat1, lng1, lat2, lng2) => {
+    const k = [lat1, lng1, lat2, lng2].map(v => Number(v).toFixed(5)).join(',');
+    if (rotaCache[k] !== undefined) return rotaCache[k];
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 7000);
+    try {
+      const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=false&alternatives=false`, { signal: ctrl.signal });
+      const j = await r.json();
+      const m = j && j.code === 'Ok' && j.routes && j.routes[0] && j.routes[0].distance;
+      rotaCache[k] = m ? Math.round(m / 10) / 100 : null;
+    } catch { rotaCache[k] = null; }
+    clearTimeout(t);
+    return rotaCache[k];
+  };
+  // mesma regra do servidor: rota válida entre a linha reta e 3x a linha reta + 1 km; senão linha reta + 30%
+  GP.distEntrega = (reta, rota) => rota != null && rota >= reta && rota <= reta * 3 + 1 ? Math.round(rota * 100) / 100 : Math.round(reta * 1.3 * 100) / 100;
+
   GP.geo = () => new Promise((ok, fail) => {
     if (!navigator.geolocation) return fail(new Error('Seu navegador não permite localização.'));
     navigator.geolocation.getCurrentPosition(
