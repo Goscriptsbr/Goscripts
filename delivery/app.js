@@ -225,6 +225,9 @@
     carrinho_vazio: 'Sua sacola está vazia.',
     abaixo_do_minimo: 'O pedido não atingiu o valor mínimo da loja.',
     'Invalid login credentials': 'E-mail ou senha incorretos.',
+    'Auth session missing': 'Este link de senha expirou ou já foi usado. Peça um novo em "Esqueci minha senha".',
+    'Email link is invalid or has expired': 'Este link expirou ou já foi usado. Peça um novo.',
+    'should be different from the old password': 'A nova senha precisa ser diferente da senha atual.',
     'Email not confirmed': 'Confirme seu e-mail antes de entrar (veja sua caixa de entrada).',
     'User already registered': 'Este e-mail já tem conta. Faça login.'
   };
