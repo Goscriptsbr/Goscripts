@@ -265,7 +265,7 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ag-box{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 12px}
 .ag-sel{display:flex;gap:8px;align-items:flex-start;font-size:.88rem;margin-top:6px}
 .ag-sel .i{width:16px;height:16px;flex:none;margin-top:2px;color:var(--brand-2)}
-.envbox .small .i{color:var(--brand-2)}
+.envbox .ag-onde .i{color:var(--brand-2);width:15px;height:15px;vertical-align:-2px;margin-right:4px}
 .ag-transp{margin-bottom:14px}
 .ag-th{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .ag-th img{height:18px}
