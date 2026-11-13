@@ -343,6 +343,8 @@
         }
         .project-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
         .project-thumb.logo img { object-fit: contain; padding: 10%; }
+        .project.featured { grid-column: 1 / -1; }
+        .project.featured .project-thumb { aspect-ratio: 16 / 9; }
         .project:hover .project-thumb img { transform: scale(1.05); }
         .project-info {
             display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -793,6 +795,13 @@
                 </div>
 
                 <div class="portfolio-grid">
+                    <a class="project reveal featured" href="https://goscripts.com.br/delivery/" target="_blank" rel="noopener">
+                        <div class="project-thumb"><img src="delivery/img/portfolio-gopedido.jpg" alt="GoPedido — delivery para lanchonetes" loading="lazy"></div>
+                        <div class="project-info">
+                            <div><h3>GoPedido · Delivery</h3><small>goscripts.com.br/delivery</small></div>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </div>
+                    </a>
                     <a class="project reveal" href="http://soulgestao.online/" target="_blank" rel="noopener">
                         <div class="project-thumb logo"><img src="https://gozgames.neocities.org/Logo%20horizontal%20-%20fundo%20azul.png" alt="Grupo Soul" loading="lazy"></div>
                         <div class="project-info">
