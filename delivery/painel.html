@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122311">
+<link rel="stylesheet" href="app.css?v=202611122327">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -128,6 +128,12 @@
   .pcat-h .n{font-size:.75rem;font-weight:800;background:#ECEAE6;color:var(--ink-2);border-radius:99px;padding:2px 8px}
   .pcat-h .chev{margin-left:auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
   .pcat-h.fechada .chev{transform:rotate(-45deg)}
+  .modos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .modos .opt{margin-bottom:0;padding:12px}
+  @media(max-width:520px){.modos{grid-template-columns:1fr}}
+  .frow{display:grid;grid-template-columns:auto 1fr auto 1fr 36px;gap:8px;align-items:center;margin-bottom:8px;font-size:.88rem;color:var(--ink-2)}
+  .frow .input{height:42px;min-width:0}
+  .frow .icon-btn{width:36px;height:42px}
   .etp{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
   .etp:first-child{border-top:0}
   .ecat{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
@@ -309,9 +315,24 @@
             <div class="row between" style="margin-bottom:8px"><b class="small">Ponto no mapa (de onde sai a entrega)</b><button type="button" class="btn btn-soft btn-sm" id="b-geo"></button></div>
             <div class="map" id="l-map" style="height:220px"></div>
             <p class="small muted" style="margin:6px 0 16px" id="l-coord">Toque no mapa para marcar a loja.</p>
+            <b class="small" style="display:block;margin-bottom:8px">Como cobrar a entrega</b>
+            <div class="modos" id="l-modo">
+              <label class="opt"><input type="radio" name="taxa_modo" value="km"><span class="grow"><b>Valor por km</b><div class="small muted">Ex.: R$ 2,00 por km rodado</div></span></label>
+              <label class="opt"><input type="radio" name="taxa_modo" value="tabela"><span class="grow"><b>Tabela por distância</b><div class="small muted">Ex.: até 1 km R$ 2 · até 2 km R$ 4</div></span></label>
+            </div>
+            <div id="modo-km">
+              <div class="grid2">
+                <label class="field"><span>Taxa por km</span><div class="prefix"><i>R$</i><input class="input" id="l-taxakm" inputmode="numeric" placeholder="0,00"></div></label>
+                <label class="field"><span>Taxa mínima</span><div class="prefix"><i>R$</i><input class="input" id="l-taxamin" inputmode="numeric" placeholder="0,00"></div></label>
+              </div>
+              <label class="switch" style="margin-bottom:14px"><input type="checkbox" id="l-arred" checked><i></i>Arredondar km para cima (4,3 km = 5 km)</label>
+            </div>
+            <div id="modo-tab" class="hide">
+              <div id="faixas"></div>
+              <button type="button" class="btn btn-ghost btn-sm" id="b-faixa" style="margin-bottom:6px"></button>
+              <p class="small muted" style="margin-bottom:14px">Depois da última faixa a loja não entrega. A distância é a da rota pelas ruas.</p>
+            </div>
             <div class="grid2">
-              <label class="field"><span>Taxa por km</span><div class="prefix"><i>R$</i><input class="input" id="l-taxakm" inputmode="numeric" placeholder="0,00"></div></label>
-              <label class="field"><span>Taxa mínima</span><div class="prefix"><i>R$</i><input class="input" id="l-taxamin" inputmode="numeric" placeholder="0,00"></div></label>
               <label class="field"><span>Raio máximo</span><div class="prefix"><i>km</i><input class="input" id="l-raio" inputmode="decimal" placeholder="0 = sem limite"></div></label>
               <label class="field"><span>Pedido mínimo</span><div class="prefix"><i>R$</i><input class="input" id="l-min" inputmode="numeric" placeholder="0,00"></div></label>
             </div>
@@ -427,8 +448,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122311"></script>
-<script src="app.js?v=202611122311"></script>
+<script src="config.js?v=202611122327"></script>
+<script src="app.js?v=202611122327"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1249,6 +1270,10 @@
     $('l-cnpj').value = l.cnpj ? GP.fmtCnpj(l.cnpj) : ''; cnpjMsg();
     $('l-tempo').value = l.tempo_entrega || '30–50 min'; $('l-end').value = l.endereco || '';
     $('l-taxakm').value = money(l.taxa_km); $('l-taxamin').value = money(l.taxa_minima);
+    $('l-arred').checked = l.km_arredonda !== false;
+    faixas = Array.isArray(l.taxa_tabela) ? JSON.parse(JSON.stringify(l.taxa_tabela)) : []; renderFaixas();
+    document.querySelectorAll('input[name=taxa_modo]').forEach(r => r.checked = r.value === (l.taxa_modo || 'km'));
+    modoUI();
     $('l-raio').value = Number(l.raio_km) ? String(l.raio_km).replace('.', ',') : ''; $('l-min').value = money(l.pedido_minimo);
     $('l-pix').checked = loja ? l.aceita_pix : true; $('l-deb').checked = loja ? l.aceita_debito : true; $('l-cred').checked = loja ? l.aceita_credito : true; $('l-din').checked = loja ? l.aceita_dinheiro !== false : true;
     $('l-pixtipo').value = l.pix_tipo || 'cpf'; $('l-pixchave').value = l.pix_chave || '';
@@ -1326,12 +1351,39 @@
   const togglePix = () => $('pix-cfg').style.display = $('l-pix').checked ? '' : 'none';
   $('l-pix').onchange = togglePix;
   const coord = () => $('l-coord').textContent = lojaPos ? `📍 ${lojaPos.lat.toFixed(5)}, ${lojaPos.lng.toFixed(5)} — arraste o pino para ajustar.` : 'Toque no mapa para marcar onde fica a loja.';
+  // ---------- Como cobrar a entrega ----------
+  let faixas = [];
+  $('b-faixa').innerHTML = ic('plus') + 'Adicionar faixa';
+  const modoAtual = () => (document.querySelector('input[name=taxa_modo]:checked') || {}).value || 'km';
+  function modoUI() {
+    const m = modoAtual();
+    $('modo-km').classList.toggle('hide', m !== 'km'); $('modo-tab').classList.toggle('hide', m !== 'tabela');
+    document.querySelectorAll('#l-modo .opt').forEach(o => o.classList.toggle('on', o.querySelector('input').checked));
+    sim();
+  }
+  $('l-modo').addEventListener('change', () => { if (modoAtual() === 'tabela' && !faixas.length) { faixas = [{ ate: 1, valor: 2 }, { ate: 2, valor: 4 }, { ate: 3, valor: 5 }]; renderFaixas(); } modoUI(); });
+  function renderFaixas() {
+    $('faixas').innerHTML = faixas.map((f, i) => `<div class="frow" data-i="${i}">
+      <span>Até</span><div class="prefix"><i>km</i><input class="input" data-f="ate" inputmode="decimal" value="${f.ate ? String(f.ate).replace('.', ',') : ''}" placeholder="1"></div>
+      <span>→</span><div class="prefix"><i>R$</i><input class="input" data-f="valor" inputmode="numeric" value="${f.valor ? GP.fmtMoeda(f.valor) : ''}" placeholder="0,00"></div>
+      <button type="button" class="icon-btn" data-del="${i}">${ic('x')}</button></div>`).join('') || '<p class="small muted" style="margin-bottom:8px">Nenhuma faixa ainda.</p>';
+  }
+  $('faixas').addEventListener('input', (e) => {
+    const r = e.target.closest('[data-i]'); if (!r) return; const f = faixas[+r.dataset.i];
+    if (e.target.dataset.f === 'ate') { e.target.value = e.target.value.replace(/[^\d,.]/g, ''); f.ate = num(e.target.value); }
+    if (e.target.dataset.f === 'valor') { const d = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 7); e.target.value = d ? GP.fmtMoeda(Number(d) / 100) : ''; f.valor = d ? Number(d) / 100 : 0; }
+    sim();
+  });
+  $('faixas').addEventListener('click', (e) => { const b = e.target.closest('[data-del]'); if (b) { faixas.splice(+b.dataset.del, 1); renderFaixas(); sim(); } });
+  $('b-faixa').onclick = () => { const ult = faixas.length ? faixas[faixas.length - 1] : { ate: 0, valor: 0 }; faixas.push({ ate: (Number(ult.ate) || 0) + 1, valor: (Number(ult.valor) || 0) + 2 }); renderFaixas(); sim(); };
+  const cfgTaxa = () => ({ taxa_modo: modoAtual(), taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value), km_arredonda: $('l-arred').checked, taxa_tabela: faixas.filter(f => Number(f.ate) > 0).sort((a, b) => a.ate - b.ate).map(f => ({ ate: Math.round(Number(f.ate) * 100) / 100, valor: Math.round((Number(f.valor) || 0) * 100) / 100 })), raio_km: num($('l-raio').value) });
   function sim() {
-    const t = { taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value) };
-    const ex = [2, 5, 8].map(d => `${d} km = <b>${brl(GP.taxa(t, d))}</b>`).join(' · ');
+    const t = cfgTaxa();
+    const ex = [0.8, 2.3, 4.6].map(d => { const v = GP.taxaOuNada(t, d); return `${String(d).replace('.', ',')} km = <b>${v == null ? 'não entrega' : brl(v)}</b>`; }).join(' · ');
     $('l-sim').innerHTML = `${ic('bike')}<span>Simulação: ${ex}</span>`;
   }
-  ['l-taxakm', 'l-taxamin'].forEach(id => $(id).addEventListener('input', sim));
+  ['l-taxakm', 'l-taxamin', 'l-raio'].forEach(id => $(id).addEventListener('input', sim));
+  $('l-arred').addEventListener('change', sim);
   function initMap() {
     if (lmap) return lmap.refresh();
     lmap = GP.mapPicker($('l-map'), lojaPos, async (lat, lng) => {
@@ -1354,12 +1406,13 @@
     const pix = $('l-pix').checked;
     if (pix && !$('l-pixchave').value.trim()) return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err');
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }
+    if (modoAtual() === 'tabela' && !cfgTaxa().taxa_tabela.length) { $('faixas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Coloque pelo menos uma faixa na tabela de entrega.', 'err'); }
     if ($('l-auto').checked && !Object.values(lerHoras()).some(x => x.aberto)) { $('horas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Marque pelo menos um dia aberto no horário de funcionamento.', 'err'); }
     if (!pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
     const row = {
       nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
       endereco: $('l-end').value.trim(), lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
-      taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value), raio_km: num($('l-raio').value), pedido_minimo: num($('l-min').value),
+      ...cfgTaxa(), pedido_minimo: num($('l-min').value),
       aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked,
       horarios: lerHoras(), horario_auto: $('l-auto').checked,
       pix_tipo: $('l-pixtipo').value, pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122311">
+<link rel="stylesheet" href="app.css?v=202611122327">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -236,8 +236,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122311"></script>
-<script src="app.js?v=202611122311"></script>
+<script src="config.js?v=202611122327"></script>
+<script src="app.js?v=202611122327"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -276,7 +276,7 @@
   $('s-chips').innerHTML = [
     `<span class="badge ${ST().cls}" id="s-status"><i class="dot"></i>${ST().texto}</span>`,
     `<span class="chip">${ic('clock')}${esc(loja.tempo_entrega)}</span>`,
-    `<span class="chip">${ic('bike')}${Number(loja.taxa_km) ? brl(loja.taxa_km) + '/km' : 'Entrega grátis'}${Number(loja.taxa_minima) ? ' · mín. ' + brl(loja.taxa_minima) : ''}</span>`,
+    `<span class="chip">${ic('bike')}${GP.regraEntrega(loja)}</span>`,
     Number(loja.pedido_minimo) ? `<span class="chip">Pedido mín. ${brl(loja.pedido_minimo)}</span>` : '',
     pags.length ? `<span class="chip">${ic('card')}${pags.join(' · ')}</span>` : ''
   ].join('');
@@ -535,7 +535,7 @@
     const e = entrega();
     if (!e) { $('c-fee').innerHTML = `<div class="fee">${ic('pin')}<span>Marque sua localização para calcularmos a taxa de entrega.</span></div>`; return; }
     if (e.calc) { $('c-fee').innerHTML = `<div class="fee"><span class="spin" style="width:16px;height:16px;border-width:2px"></span><span>Calculando a rota até você…</span></div>`; return; }
-    if (e.fora) { $('c-fee').innerHTML = `<div class="fee bad">${ic('x')}<span>Você está a ${km(e.d)} da loja — fora da área de entrega (até ${km(loja.raio_km)}).</span></div>`; return; }
+    if (e.fora) { const lim = loja.taxa_modo === 'tabela' && GP.faixas(loja).length ? Number(GP.faixas(loja).slice(-1)[0].ate) : Number(loja.raio_km); $('c-fee').innerHTML = `<div class="fee bad">${ic('x')}<span>Você está a ${km(e.d)} da loja — fora da área de entrega${lim ? ' (até ' + km(lim) + ')' : ''}.</span></div>`; return; }
     $('c-fee').innerHTML = `<div class="fee ok">${ic('bike')}<span class="grow">${e.rota ? 'Rota de' : 'Cerca de'} <b>${km(e.d)}</b> até a loja${e.rota ? ' pelas ruas' : ''}</span><b>${e.t > 0 ? brl(e.t) : 'Grátis'}</b></div>`;
   }
   ['c-nome', 'c-tel'].forEach(id => $(id).addEventListener('input', updNext));

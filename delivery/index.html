@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=202611122311">
+<link rel="stylesheet" href="app.css?v=202611122327">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}
@@ -161,8 +161,8 @@
 <footer class="footer">GoPedido · um produto <a href="https://goscripts.com.br" style="font-weight:700">GoScripts</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=202611122311"></script>
-<script src="app.js?v=202611122311"></script>
+<script src="config.js?v=202611122327"></script>
+<script src="app.js?v=202611122327"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -206,7 +206,7 @@
   $('lista').innerHTML = Array(6).fill('<div class="card" style="overflow:hidden"><div class="sk" style="height:130px;border-radius:0"></div><div class="pad"><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:12px;margin-top:10px"></div><div class="sk" style="height:12px;width:40%;margin-top:8px"></div></div></div>').join('');
 
   const [{ data, error }, { data: prods }] = await Promise.all([
-    sb.from('ff_lojas').select('id,slug,nome,descricao,imagem_url,capa_url,lat,lng,taxa_km,taxa_minima,raio_km,tempo_entrega,aberta,horario_auto,horarios').eq('ativa', true),
+    sb.from('ff_lojas').select('id,slug,nome,descricao,imagem_url,capa_url,lat,lng,taxa_km,taxa_minima,raio_km,taxa_modo,km_arredonda,taxa_tabela,tempo_entrega,aberta,horario_auto,horarios').eq('ativa', true),
     sb.from('ff_produtos').select('loja_id,nome,categoria').eq('disponivel', true)
   ]);
   if (error) {
@@ -239,7 +239,7 @@
     $('lista').innerHTML = arr.map(l => {
       const ini = esc((l.nome || '?').trim()[0].toUpperCase());
       const capa = l.capa_url || l.imagem_url;
-      const taxa = l._d == null ? (Number(l.taxa_km) ? `${brl(l.taxa_km)}/km` : 'Entrega grátis')
+      const taxa = l._d == null ? GP.regraEntrega(l).replace(/ · mín\..*/, '')
         : l._fora ? 'Fora da área' : (l._t > 0 ? brl(l._t) : 'Grátis');
       return ` <a class="card store ${l._ab ? '' : 'closed'}" href="loja.html?l=${encodeURIComponent(l.slug)}">
         <div class="cover" style="${capa ? `background-image:url('${esc(capa)}')` : 'background:linear-gradient(135deg,#FFB199,#F2451C)'}">

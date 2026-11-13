@@ -233,8 +233,21 @@
     const a = Math.sin(rad(lat2 - lat1) / 2) ** 2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(rad(lng2 - lng1) / 2) ** 2;
     return Math.round(2 * R * Math.asin(Math.sqrt(a)) * 100) / 100;
   };
-  GP.taxa = (loja, dist) => Math.max(Number(loja.taxa_minima) || 0, Math.round(dist * (Number(loja.taxa_km) || 0) * 100) / 100);
-  GP.foraArea = (loja, dist) => Number(loja.raio_km) > 0 && dist > Number(loja.raio_km);
+  // Taxa de entrega: modo "km" (com ou sem arredondar para cima) ou "tabela" por faixas. null = não entrega.
+  GP.faixas = (loja) => (Array.isArray(loja.taxa_tabela) ? loja.taxa_tabela : []).filter(f => Number(f.ate) > 0).sort((a, b) => Number(a.ate) - Number(b.ate));
+  GP.taxaOuNada = (loja, dist) => {
+    if (Number(loja.raio_km) > 0 && dist > Number(loja.raio_km)) return null;
+    if (loja.taxa_modo === 'tabela') { const f = GP.faixas(loja).find(x => dist <= Number(x.ate)); return f ? Math.round(Number(f.valor) * 100) / 100 : null; }
+    const d = loja.km_arredonda === false ? dist : Math.ceil(dist);
+    return Math.max(Number(loja.taxa_minima) || 0, Math.round(d * (Number(loja.taxa_km) || 0) * 100) / 100);
+  };
+  GP.taxa = (loja, dist) => { const t = GP.taxaOuNada(loja, dist); return t == null ? 0 : t; };
+  GP.foraArea = (loja, dist) => GP.taxaOuNada(loja, dist) == null;
+  // texto curto da regra de entrega da loja
+  GP.regraEntrega = (loja) => {
+    if (loja.taxa_modo === 'tabela') { const f = GP.faixas(loja); if (!f.length) return 'Entrega a combinar'; const mn = Math.min(...f.map(x => Number(x.valor))); return mn ? `Entrega a partir de ${GP.brl(mn)}` : 'Entrega grátis perto'; }
+    return Number(loja.taxa_km) ? `${GP.brl(loja.taxa_km)}/km${Number(loja.taxa_minima) ? ' · mín. ' + GP.brl(loja.taxa_minima) : ''}` : 'Entrega grátis';
+  };
 
   // Distância pelas ruas (rota de carro) usando OSRM/OpenStreetMap. Devolve km ou null.
   const rotaCache = {};
