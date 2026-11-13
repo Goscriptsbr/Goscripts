@@ -806,5 +806,13 @@
       w.appendChild(b);
     });
   };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => GP.olhoSenha()); else GP.olhoSenha();
+  // ---------- rodapé "feito pela GoScripts" em todas as páginas ----------
+  GP.rodape = () => {
+    if (document.querySelector('.gs-foot') || document.body.dataset.semRodape != null) return;
+    const f = document.createElement('footer'); f.className = 'gs-foot';
+    f.innerHTML = `<a href="https://goscripts.com.br" target="_blank" rel="noopener"><span>Desenvolvido por</span><img src="../logo-192.png" alt="" width="22" height="22"><b>GoScripts</b></a>`;
+    document.body.appendChild(f);
+  };
+  const iniciar = () => { GP.olhoSenha(); GP.rodape(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
