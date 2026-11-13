@@ -228,6 +228,8 @@
     codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
     status_invalido: 'Este pedido já mudou de situação. Atualize a lista.',
     pedido_invalido: 'Pedido não encontrado.',
+    sem_estoque: 'Um dos produtos acabou ou não tem essa quantidade em estoque. Ajuste a sacola e tente de novo.',
+    escolha_variacao: 'Escolha a opção (tamanho, cor ou sabor) de cada produto.',
     so_dono: 'Só o dono da conta pode gerenciar a equipe.', nao_logado: 'Sua sessão expirou. Entre de novo.',
     nome_invalido: 'Digite o nome da pessoa.', email_invalido: 'Digite um e-mail válido.', senha_curta: 'A senha precisa ter pelo menos 6 caracteres.',
     senha_fraca: 'Escolha uma senha mais forte.', email_existe: 'Este e-mail já tem uma conta no GoPedido. Use outro e-mail.',
@@ -725,7 +727,15 @@
     const g = GP.grupos(p).find(x => x.id === s.g), o = g && (g.opcoes || []).find(x => x.id === s.o);
     return g && o ? { grupo: g.nome, nome: o.nome, preco: Number(o.preco) || 0 } : null;
   }).filter(Boolean);
-  GP.precoItem = (p, sel) => GP.precoAtual(p) + GP.opcoesEscolhidas(p, sel).reduce((t, o) => t + o.preco, 0);
+  // ---- variações (tamanho, cor, sabor…) e estoque ----
+  GP.variacoes = (p) => (p && Array.isArray(p.variacoes)) ? p.variacoes : [];
+  GP.varDe = (p, vid) => GP.variacoes(p).find(v => v.id === vid) || null;
+  const temNum = (x) => x !== null && x !== undefined && x !== '';
+  GP.estoqueDe = (p, vid) => { const vs = GP.variacoes(p); if (vs.length) { const v = GP.varDe(p, vid); return v && temNum(v.estoque) ? Number(v.estoque) : null; } return temNum(p.estoque) ? Number(p.estoque) : null; };
+  GP.esgotado = (p) => { const vs = GP.variacoes(p); return vs.length ? vs.every(v => temNum(v.estoque) && Number(v.estoque) <= 0) : temNum(p.estoque) && Number(p.estoque) <= 0; };
+  GP.precoBase = (p, vid) => { const v = GP.varDe(p, vid); return v && temNum(v.preco) ? Number(v.preco) : GP.precoAtual(p); };
+  GP.precoMinVar = (p) => { const vs = GP.variacoes(p).filter(v => !(temNum(v.estoque) && Number(v.estoque) <= 0)); return vs.length ? Math.min(...vs.map(v => GP.precoBase(p, v.id))) : GP.precoAtual(p); };
+  GP.precoItem = (p, sel, vid) => GP.precoBase(p, vid) + GP.opcoesEscolhidas(p, sel).reduce((t, o) => t + o.preco, 0);
   GP.txtOpcoes = (ops) => (ops || []).map(o => o.nome + (Number(o.preco) ? ` (+${GP.brl(o.preco)})` : '')).join(', ');
 
   GP.descCupom = (c) => c.tipo === 'frete' ? 'Entrega grátis' : c.tipo === 'percentual' ? `${Number(c.valor)}% OFF` : `${GP.brl(c.valor)} OFF`;

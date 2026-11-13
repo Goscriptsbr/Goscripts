@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=75930">
+<link rel="stylesheet" href="app.css?v=76301">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -161,6 +161,9 @@
   #bb-t{line-height:1.15;text-align:left}
   #s1-min.on{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);color:#7a4f0e;border-radius:12px;padding:10px 12px;font-size:.86rem;margin-top:10px}
   #s1-min.on svg{width:18px;height:18px;flex:none;margin-top:1px}
+  .esg{color:var(--bad);font-weight:800;font-size:.82rem}
+  small.esg{font-size:.7rem;margin-left:4px}
+  small.poucos{font-size:.7rem;font-weight:800;color:#B45309;background:#FEF3C7;border-radius:99px;padding:1px 7px;margin-left:4px}
 </style>
 </head>
 <body>
@@ -310,8 +313,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=75930"></script>
-<script src="app.js?v=75930"></script>
+<script src="config.js?v=76301"></script>
+<script src="app.js?v=76301"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -407,10 +410,12 @@
   let busca = '';
   function cardProd(p) {
         const n = qtdNo(p.id);
-        return `<button class="card prod ${p.disponivel ? '' : 'off'}" data-p="${p.id}">
+        const esg = p.disponivel && GP.esgotado(p), vs = GP.variacoes(p);
+        const varDif = vs.length && new Set(vs.map(v => GP.precoBase(p, v.id))).size > 1;
+        return `<button class="card prod ${p.disponivel && !esg ? '' : 'off'}" data-p="${p.id}">
           <div class="tx"><h3>${esc(p.nome)}${n ? `<span class="badge b-brand inbag">${n}×</span>` : ''}</h3>
           <p class="clamp2">${esc(p.descricao)}</p>
-          <div class="pr">${!p.disponivel ? '<span class="muted">Indisponível</span>' : (temMin(p) ? '<span class="small muted" style="font-weight:600">a partir de </span>' : '') + (GP.emPromo(p) ? `<span style="color:var(--bad)">${brl(GP.precoAtual(p) + minExtra(p))}</span><span class="promo-old">${brl(Number(p.preco) + minExtra(p))}</span>` : brl(GP.precoAtual(p) + minExtra(p)))}</div></div>
+          <div class="pr">${!p.disponivel ? '<span class="muted">Indisponível</span>' : esg ? '<span class="esg">Esgotado</span>' : varDif ? `<span class="small muted" style="font-weight:600">a partir de </span>${brl(GP.precoMinVar(p) + minExtra(p))}` : (temMin(p) ? '<span class="small muted" style="font-weight:600">a partir de </span>' : '') + (GP.emPromo(p) ? `<span style="color:var(--bad)">${brl(GP.precoAtual(p) + minExtra(p))}</span><span class="promo-old">${brl(Number(p.preco) + minExtra(p))}</span>` : brl(GP.precoAtual(p) + minExtra(p)))}</div></div>
           <div class="ph" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${GP.emPromo(p) ? `<span class="ptag">-${GP.descPct(p)}%</span>` : ''}${p.imagem_url ? '' : `<span style="position:absolute;inset:0;display:grid;place-items:center;color:#c9c5bc">${ic('image')}</span>`}<span class="add">${ic('plus')}</span></div>
         </button>`;
   }
@@ -441,14 +446,22 @@
     document.querySelectorAll('#catnav .chip').forEach(x => x.classList.toggle('on', x === b));
   };
   $('m-q').addEventListener('input', (e) => { busca = e.target.value.trim(); renderMenu(); });
-  $('menu').onclick = (e) => { const b = e.target.closest('[data-p]'); if (b) openProd(P[b.dataset.p]); };
+  $('menu').onclick = (e) => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    const p = P[b.dataset.p];
+    if (p.disponivel && GP.esgotado(p)) return GP.toast(`${p.nome} está esgotado no momento.`);
+    openProd(p);
+  };
 
   // ---------- Sacola ----------
   const KEY = 'gp_bag_' + loja.id;
   let bag = (GP.ls.get(KEY, []) || []).filter(it => P[it.id] && P[it.id].disponivel)
     .filter(it => { const p = P[it.id]; return GP.grupos(p).every(g => { const n = (it.opcoes || []).filter(x => x.g === g.id).length; return n >= (Number(g.min) || 0) && n <= (Number(g.max) || 1); }) && GP.opcoesEscolhidas(p, it.opcoes).length === (it.opcoes || []).length; });
   const qtdNo = (id) => bag.filter(i => i.id === id).reduce((s, i) => s + i.qtd, 0);
-  const precoIt = (it) => GP.precoItem(P[it.id], it.opcoes);
+  bag = bag.filter(it => { const p = P[it.id]; return !GP.variacoes(p).length || GP.varDe(p, it.v); });
+  const precoIt = (it) => GP.precoItem(P[it.id], it.opcoes, it.v);
+  const naSacola = (id, v, exceto) => bag.filter(i => i !== exceto && i.id === id && (i.v || null) === (v || null)).reduce((s, i) => s + i.qtd, 0);
+  const nomeVar = (it) => { const v = GP.varDe(P[it.id], it.v); return v ? v.nome : ''; };
   const subtotal = () => Math.round(bag.reduce((s, i) => s + precoIt(i) * i.qtd, 0) * 100) / 100;
   const count = () => bag.reduce((s, i) => s + i.qtd, 0);
   function saveBag() {
@@ -470,8 +483,11 @@
   ov.onclick = closeAll; $('pm-x').onclick = closeAll; $('co-x').onclick = closeAll;
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
   let escolha = {};   // grupoId -> [opcaoId]
+  let escV = null;   // variação escolhida
+  const varDisp = (p, v) => !(v.estoque !== null && v.estoque !== undefined && v.estoque !== '' && Number(v.estoque) - naSacola(p.id, v.id) <= 0);
   function openProd(p) {
-    cur = p; curQ = 1; escolha = {};
+    cur = p; curQ = 1; escolha = {}; escV = null;
+    const livres = GP.variacoes(p).filter(v => varDisp(p, v)); if (livres.length === 1) escV = livres[0].id;
     GP.grupos(p).forEach(g => { escolha[g.id] = []; if (Number(g.min) === 1 && Number(g.max) === 1 && g.opcoes.length === 1) escolha[g.id] = [g.opcoes[0].id]; });
     $('pm-img').style.backgroundImage = p.imagem_url ? `url('${p.imagem_url}')` : '';
     $('pm-img').style.display = p.imagem_url ? '' : 'none';
@@ -483,9 +499,20 @@
     $('pm').querySelector('.sheet-body').scrollTop = 0;
   }
   const selList = () => Object.entries(escolha).flatMap(([g, os]) => os.map(o => ({ g, o })));
-  const faltando = () => GP.grupos(cur).filter(g => (escolha[g.id] || []).length < (Number(g.min) || 0));
+  const faltando = () => (GP.variacoes(cur).length && !escV ? [{ id: '__v', nome: 'uma opção' }] : []).concat(GP.grupos(cur).filter(g => (escolha[g.id] || []).length < (Number(g.min) || 0)));
+  function blocoVar() {
+    const vs = GP.variacoes(cur); if (!vs.length) return '';
+    return `<div class="grp" data-g="__v">
+      <div class="grp-h"><b>Escolha uma opção</b><span class="req ${escV ? 'ok' : ''}">${escV ? '✓ OK' : 'Obrigatório'}</span></div>
+      ${vs.map(v => {
+        const disp = varDisp(cur, v), est = GP.estoqueDe(cur, v.id), resta = est != null ? est - naSacola(cur.id, v.id) : null;
+        const preco = GP.precoBase(cur, v.id);
+        return `<label class="gopt ${disp ? '' : 'dis'}"><input type="radio" name="g-__v" data-v="${esc(v.id)}" ${escV === v.id ? 'checked' : ''} ${disp ? '' : 'disabled'}><span>${esc(v.nome)}${!disp ? ' <small class="esg">esgotado</small>' : resta != null && resta <= 5 ? ` <small class="poucos">últimas ${resta}</small>` : ''}</span><em>${brl(preco)}</em></label>`;
+      }).join('')}
+    </div>`;
+  }
   function renderGrupos() {
-    $('pm-grupos').innerHTML = GP.grupos(cur).map(g => {
+    $('pm-grupos').innerHTML = blocoVar() + GP.grupos(cur).map(g => {
       const sel = escolha[g.id] || [], max = Number(g.max) || 1, min = Number(g.min) || 0, um = max === 1;
       const okReq = sel.length >= min;
       return `<div class="grp" data-g="${g.id}">
@@ -499,6 +526,7 @@
     }).join('');
   }
   $('pm-grupos').addEventListener('change', (e) => {
+    if (e.target.dataset.v) { escV = e.target.dataset.v; curQ = 1; renderGrupos(); updProd(); return; }
     const g = e.target.dataset.g, o = e.target.dataset.o; if (!g) return;
     const grp = GP.grupos(cur).find(x => x.id === g), max = Number(grp.max) || 1;
     if (max === 1) escolha[g] = [o];
@@ -508,20 +536,25 @@
   function updProd() {
     $('pm-q').textContent = curQ;
     const falta = faltando();
-    const unit = GP.precoItem(cur, selList());
+    const unit = GP.precoItem(cur, selList(), escV);
     $('pm-add').disabled = false;
     $('pm-add').classList.toggle('btn-dark', falta.length > 0);
     $('pm-add').classList.toggle('btn-primary', !falta.length);
     $('pm-add').innerHTML = falta.length ? `Escolha: ${esc(falta[0].nome)}` : `Adicionar · ${brl(unit * curQ)}`;
   }
   $('pm-m').onclick = () => { curQ = Math.max(1, curQ - 1); updProd(); };
-  $('pm-p').onclick = () => { curQ = Math.min(99, curQ + 1); updProd(); };
+  const maxQ = () => { const est = GP.estoqueDe(cur, escV); return est == null ? 99 : Math.max(0, est - naSacola(cur.id, escV)); };
+  $('pm-p').onclick = () => {
+    if (curQ + 1 > maxQ()) return GP.toast(maxQ() ? `Só ${maxQ() === 1 ? 'resta 1 unidade' : `restam ${maxQ()} unidades`}.` : 'Esgotado.', 'err');
+    curQ = Math.min(99, curQ + 1); updProd();
+  };
   const chaveOps = (ops) => (ops || []).map(x => x.g + ':' + x.o).sort().join('|');
   $('pm-add').onclick = () => {
     if (faltando().length) { const g = faltando()[0]; const el = $('pm-grupos').querySelector(`.grp[data-g="${g.id}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); GP.toast('Escolha: ' + g.nome, 'err'); return; }
+    if (curQ > maxQ()) return GP.toast(maxQ() ? `Só ${maxQ() === 1 ? 'resta 1 unidade' : `restam ${maxQ()} unidades`}.` : 'Essa opção esgotou.', 'err');
     const obs = $('pm-obs').value.trim(), opcoes = selList();
-    const ex = bag.find(i => i.id === cur.id && i.obs === obs && chaveOps(i.opcoes) === chaveOps(opcoes));
-    if (ex) ex.qtd = Math.min(99, ex.qtd + curQ); else bag.push({ id: cur.id, qtd: curQ, obs, opcoes });
+    const ex = bag.find(i => i.id === cur.id && (i.v || null) === (escV || null) && i.obs === obs && chaveOps(i.opcoes) === chaveOps(opcoes));
+    if (ex) ex.qtd = Math.min(99, ex.qtd + curQ); else bag.push({ id: cur.id, v: escV || undefined, qtd: curQ, obs, opcoes });
     closeAll();
     GP.toast(`${cur.nome} na sacola! Continue escolhendo ou toque na sacola para finalizar.`, 'ok');
     $('bagbar').classList.remove('pulse'); void $('bagbar').offsetWidth; $('bagbar').classList.add('pulse');
@@ -602,7 +635,7 @@
     else $('bag-list').innerHTML = bag.map((it, k) => {
       const p = P[it.id];
       return `<div class="bag-item"><div class="th" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}"></div>
-        <div class="grow"><b class="small">${esc(p.nome)}</b>${(it.opcoes || []).length ? `<div class="small muted">${esc(GP.txtOpcoes(GP.opcoesEscolhidas(p, it.opcoes)))}</div>` : ''}${it.obs ? `<div class="small muted ellipsis">Obs.: ${esc(it.obs)}</div>` : ''}<div class="small" style="font-weight:700;margin-top:2px">${brl(precoIt(it) * it.qtd)}</div></div>
+        <div class="grow"><b class="small">${esc(p.nome)}${nomeVar(it) ? ` <span class="muted">(${esc(nomeVar(it))})</span>` : ''}</b>${(it.opcoes || []).length ? `<div class="small muted">${esc(GP.txtOpcoes(GP.opcoesEscolhidas(p, it.opcoes)))}</div>` : ''}${it.obs ? `<div class="small muted ellipsis">Obs.: ${esc(it.obs)}</div>` : ''}<div class="small" style="font-weight:700;margin-top:2px">${brl(precoIt(it) * it.qtd)}</div></div>
         <div class="qty"><button data-k="${k}" data-d="-1">${it.qtd === 1 ? ic('trash') : ic('minus')}</button><span>${it.qtd}</span><button data-k="${k}" data-d="1">${ic('plus')}</button></div></div>`;
     }).join('');
     $('s1-sub').textContent = brl(subtotal());
@@ -614,7 +647,10 @@
   $('b-mais').onclick = () => { closeAll(); window.scrollTo({ top: document.querySelector('.catnav').offsetTop - 60, behavior: 'smooth' }); };
   $('bag-list').onclick = (e) => {
     const b = e.target.closest('[data-k]'); if (!b) return;
-    const it = bag[+b.dataset.k]; it.qtd += +b.dataset.d;
+    const it = bag[+b.dataset.k];
+    const est = GP.estoqueDe(P[it.id], it.v);
+    if (+b.dataset.d > 0 && est != null && naSacola(it.id, it.v) + 1 > est) return GP.toast(`Só ${est === 1 ? 'resta 1 unidade' : `restam ${est} unidades`} desse produto.`, 'err');
+    it.qtd += +b.dataset.d;
     if (it.qtd <= 0) bag.splice(+b.dataset.k, 1);
     GP.ls.set(KEY, bag); renderBag(); updNext();
   };
@@ -866,7 +902,7 @@
       p_loja: loja.id,
       p_cliente: Object.assign({ cupom: cupom ? cupom.codigo : '', troco_para: pag === 'dinheiro' && !$('c-semtroco').checked ? GP.num($('c-troco').value) : null, nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), observacao: $('c-obs').value.trim(), tipo: modoEnt },
         modoEnt === 'entrega' ? { endereco: GP.fmtEnd(addr.get()), complemento: addr.get().complemento, lat: pos.lat, lng: pos.lng, distancia_km: entrega() ? entrega().d : null } : {}),
-      p_itens: bag.map(i => ({ id: i.id, qtd: i.qtd, obs: i.obs, opcoes: i.opcoes || [] })),
+      p_itens: bag.map(i => ({ id: i.id, v: i.v || null, qtd: i.qtd, obs: i.obs, opcoes: i.opcoes || [] })),
       p_pagamento: pag,
       p_comprovante: pag === 'pix' ? comprovante : null
     });

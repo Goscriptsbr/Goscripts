@@ -21,14 +21,16 @@ const CORS = {
 };
 
 class Falha extends Error {
-  constructor(codigo, status = 400) { super(codigo); this.status = status; }
+  constructor(codigo, status = 400, detalhe = '') { super(codigo); this.status = status; this.detalhe = detalhe; }
 }
+// Qualquer erro de banco vira uma falha com o motivo real (aparece no painel)
+const ok = (r, onde) => { if (r && r.error) throw new Falha('erro_banco', 500, onde + ': ' + (r.error.message || r.error)); return r; };
 
 const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const limpaNome = (s) => String(s || '').trim().slice(0, 60);
 const limpaEmail = (s) => String(s || '').trim().toLowerCase().slice(0, 120);
 
-export async function tratar(req, admin) {
+export async function tratar(req, admin, comoUsuario) {
   if (req.method === 'OPTIONS') return { status: 200, corpo: 'ok' };
   if (req.method !== 'POST') throw new Falha('metodo_invalido', 405);
 
@@ -40,7 +42,7 @@ export async function tratar(req, admin) {
   if (eu || !dono) throw new Falha('nao_logado', 401);
 
   // Quem é da equipe não pode gerenciar a equipe
-  const { data: souFunc } = await admin.from('ff_equipe').select('id').eq('user_id', dono.id).maybeSingle();
+  const { data: souFunc } = ok(await admin.from('ff_equipe').select('id').eq('user_id', dono.id).maybeSingle(), 'equipe');
   if (souFunc) throw new Falha('so_dono', 403);
 
   const b = await req.json().catch(() => ({}));
@@ -48,14 +50,20 @@ export async function tratar(req, admin) {
   // As lojas escolhidas precisam ser do dono
   const lojasValidas = async (todas, lojas) => {
     if (todas) return [];
-    const { data } = await admin.from('ff_lojas').select('id').eq('dono', dono.id);
-    const minhas = (data || []).map(l => l.id);
-    const ok = [...new Set((Array.isArray(lojas) ? lojas : []).filter(id => minhas.includes(id)))];
-    if (!ok.length) throw new Falha('escolha_lojas');
-    return ok;
+    const { data } = ok(await admin.from('ff_lojas').select('id').eq('dono', dono.id), 'lojas');
+    let minhas = (data || []).map(l => String(l.id));
+    // Confere também com o login de quem chamou (as mesmas lojas que aparecem no painel dele)
+    if (comoUsuario) {
+      const r = await comoUsuario.rpc('ff_minhas_lojas');
+      if (!r.error && Array.isArray(r.data)) minhas = [...new Set(minhas.concat(r.data.filter(l => String(l.dono) === String(dono.id)).map(l => String(l.id))))];
+    }
+    lojas = (Array.isArray(lojas) ? lojas : []).map(String);
+    const validas = [...new Set(lojas.filter(id => minhas.includes(id)))];
+    if (!validas.length) throw new Falha('escolha_lojas', 400, `enviadas: ${lojas.length}, suas lojas encontradas: ${minhas.length}`);
+    return validas;
   };
   const membro = async (id) => {
-    const { data } = await admin.from('ff_equipe').select('*').eq('id', id).eq('dono', dono.id).maybeSingle();
+    const { data } = ok(await admin.from('ff_equipe').select('*').eq('id', id).eq('dono', dono.id).maybeSingle(), 'membro');
     if (!data) throw new Falha('membro_invalido', 404);
     return data;
   };
@@ -77,9 +85,9 @@ export async function tratar(req, admin) {
     const lojas = await lojasValidas(todas, b.lojas);
 
     // Limite do plano (o banco também confere)
-    const { data: plano } = await admin.rpc('ff_plano_de', { p_user: dono.id });
-    const { data: max } = await admin.rpc('ff_equipe_max', { p_plano: plano || 'gratis' });
-    const { count } = await admin.from('ff_equipe').select('id', { count: 'exact', head: true }).eq('dono', dono.id);
+    const { data: plano } = ok(await admin.rpc('ff_plano_de', { p_user: dono.id }), 'plano');
+    const { data: max } = ok(await admin.rpc('ff_equipe_max', { p_plano: plano || 'gratis' }), 'limite');
+    const { count } = ok(await admin.from('ff_equipe').select('id', { count: 'exact', head: true }).eq('dono', dono.id), 'contagem');
     if ((count || 0) >= (max || 1)) throw new Falha('limite_equipe');
 
     const { data: cu, error: ec } = await admin.auth.admin.createUser({
@@ -91,7 +99,8 @@ export async function tratar(req, admin) {
       .insert({ dono: dono.id, user_id: cu.user.id, nome, email, todas, lojas }).select().single();
     if (ei) {
       await admin.auth.admin.deleteUser(cu.user.id);   // desfaz a conta se não entrou na equipe
-      throw new Falha(/limite_equipe/.test(ei.message || '') ? 'limite_equipe' : 'erro_conta');
+      if (/limite_equipe/.test(ei.message || '')) throw new Falha('limite_equipe');
+      throw new Falha('erro_banco', 500, 'salvar equipe: ' + ei.message);
     }
     return { status: 200, corpo: { ok: true, membro: row } };
   }
@@ -116,7 +125,7 @@ export async function tratar(req, admin) {
     let row = m;
     if (Object.keys(mud).length) {
       const { data, error } = await admin.from('ff_equipe').update(mud).eq('id', m.id).select().single();
-      if (error) throw new Falha('erro_conta');
+      if (error) throw new Falha('erro_banco', 500, 'editar equipe: ' + error.message);
       row = data;
     }
     return { status: 200, corpo: { ok: true, membro: row } };
@@ -124,7 +133,7 @@ export async function tratar(req, admin) {
 
   if (b.acao === 'remover') {
     const m = await membro(b.id);
-    await admin.from('ff_equipe').delete().eq('id', m.id);   // perde o acesso na hora
+    ok(await admin.from('ff_equipe').delete().eq('id', m.id), 'remover');   // perde o acesso na hora
     await admin.auth.admin.deleteUser(m.user_id);           // e a conta deixa de existir
     return { status: 200, corpo: { ok: true } };
   }
@@ -141,10 +150,15 @@ if (typeof Deno !== 'undefined') {
       const admin = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), {
         auth: { persistSession: false, autoRefreshToken: false }
       });
-      const r = await tratar(req, admin);
+      // Cliente com o login de quem chamou (respeita as regras de segurança do banco)
+      const comoUsuario = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { headers: { Authorization: req.headers.get('Authorization') || '' } }
+      });
+      const r = await tratar(req, admin, comoUsuario);
       return resp(r.status, r.corpo);
     } catch (e) {
-      return resp(e instanceof Falha ? e.status : 500, { error: e instanceof Falha ? e.message : 'erro_interno' });
+      return resp(e instanceof Falha ? e.status : 500, { error: e instanceof Falha ? e.message : 'erro_interno', detalhe: e instanceof Falha ? e.detalhe : String(e && e.message || e) });
     }
   });
 }

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=75930">
+<link rel="stylesheet" href="app.css?v=76301">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -352,6 +352,14 @@
   .eq-loja{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;cursor:pointer}
   .eq-loja input{width:18px;height:18px;accent-color:var(--brand)}
   body.e-equipe .cm-plan .btn,body.e-equipe #b-planos,body.e-equipe #b-planos2{display:none}
+  .vrow{display:grid;grid-template-columns:1.3fr 1fr 40px;gap:6px;align-items:center;margin-bottom:6px}
+  .vrow.est{grid-template-columns:1.3fr 1fr .7fr 40px}
+  .vrow.vhead{font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+  .vrow.vhead small{font-weight:600}
+  .vrow .input{height:42px;min-width:0}
+  .vrow .prefix{min-width:0}
+  .pitem .tg.esg{background:#FDE8E8;color:var(--bad)}
+  .pitem .tg.poucos{background:#FEF3C7;color:#B45309}
 </style>
 </head>
 <body>
@@ -685,6 +693,15 @@
       <label class="switch"><input type="checkbox" id="p-disp" checked><i></i>Disponível para venda</label>
 
       <div class="psec">
+        <b>Variações e estoque</b>
+        <p class="small muted" style="margin:4px 0 12px">Tamanhos, cores, sabores, voltagem… O cliente escolhe uma opção. Cada uma pode ter preço e estoque próprios.</p>
+        <label class="switch" style="margin-bottom:10px"><input type="checkbox" id="p-est-on"><i></i>Controlar estoque</label>
+        <label class="field hide" id="p-est-wrap"><span>Quantidade em estoque</span><input class="input" type="number" min="0" inputmode="numeric" id="p-est" placeholder="Ex.: 20"><small>Quando chegar a zero, aparece "Esgotado" na loja.</small></label>
+        <div id="p-vars"></div>
+        <button type="button" class="btn btn-soft btn-sm" id="p-var-add"></button>
+      </div>
+
+      <div class="psec">
         <label class="switch"><input type="checkbox" id="p-promo"><i></i>Colocar em promoção</label>
         <div class="grid2 hide" id="p-promo-box" style="margin-top:12px">
           <label class="field"><span>Preço na promoção (por)</span><div class="prefix"><i>R$</i><input class="input" id="p-ppromo" placeholder="0,00"></div></label>
@@ -742,8 +759,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=75930"></script>
-<script src="app.js?v=75930"></script>
+<script src="config.js?v=76301"></script>
+<script src="app.js?v=76301"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1008,10 +1025,11 @@
   async function chamarEquipe(body) {
     const { data, error } = await sb.functions.invoke('ff-equipe', { body });
     if (!error) return data;
-    let cod = '';
-    try { cod = (await error.context.json()).error || ''; } catch {}
+    let cod = '', det = '';
+    try { const j = await error.context.json(); cod = j.error || ''; det = j.detalhe || ''; } catch {}
     if (!cod) throw new Error('Não foi possível falar com o servidor da equipe. Confira se a Edge Function "ff-equipe" foi publicada no Supabase.');
-    throw new Error(GP.err({ message: cod }));
+    if (cod === 'erro_banco' || cod === 'erro_interno') throw new Error('Erro no servidor da equipe: ' + (det || cod));
+    throw new Error(GP.err({ message: cod }) + (cod === 'escolha_lojas' && det ? ` (${det})` : ''));
   }
   $('f-eq').onsubmit = async (e) => {
     e.preventDefault();
@@ -1349,6 +1367,12 @@
   let pBusca = '', pFiltro = 'todos', pCat = '', catFechada = new Set(GP.ls.get('gp_cat_fechada', []));
   $('ps-ic').innerHTML = ic('search');
   const norm = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const estTag = (p) => {
+    if (GP.esgotado(p)) return '<span class="tg esg">Esgotado</span>';
+    const vs = GP.variacoes(p), tem = (x) => x !== null && x !== undefined && x !== '';
+    const tot = vs.length ? (vs.some(v => tem(v.estoque)) ? vs.reduce((t, v) => t + (Number(v.estoque) || 0), 0) : null) : (tem(p.estoque) ? Number(p.estoque) : null);
+    return tot == null ? '' : `<span class="tg ${tot <= 5 ? 'poucos' : ''}">Estoque: ${tot}</span>`;
+  };
   function linhaProd(p) {
     const nEt = GP.grupos(p).length + (p.etapas_ids || []).length;
     const promo = GP.emPromo(p);
@@ -1359,7 +1383,7 @@
       <div class="grow" style="min-width:0">
         <div class="nm">${esc(p.nome)}</div>
         ${p.descricao ? `<div class="ds">${esc(p.descricao)}</div>` : ''}
-        <div class="pr">${preco}${nEt ? `<span class="tg">${nEt} etapa${nEt > 1 ? 's' : ''}</span>` : ''}${p.disponivel ? '' : '<span class="tg off">Pausado</span>'}</div>
+        <div class="pr">${preco}${nEt ? `<span class="tg">${nEt} etapa${nEt > 1 ? 's' : ''}</span>` : ''}${GP.variacoes(p).length ? `<span class="tg">${GP.variacoes(p).length} opç${GP.variacoes(p).length > 1 ? 'ões' : 'ão'}</span>` : ''}${estTag(p)}${p.disponivel ? '' : '<span class="tg off">Pausado</span>'}</div>
       </div>
       <label class="side" title="Disponível para venda"><span class="switch"><input type="checkbox" data-disp="${p.id}" ${p.disponivel ? 'checked' : ''}><i></i></span><small>${p.disponivel ? 'Ativo' : 'Pausado'}</small></label>
     </div>`;
@@ -1416,6 +1440,37 @@
     if (limiteProd()) return verPlanos('Limite de produtos atingido', `Seu plano ${GP.planoNome(plano.plano)} permite ${plano.produtos_max} produtos. Para cadastrar mais, escolha um plano maior.`);
     openProd(null);
   };
+  // ---- Variações e estoque ----
+  let pVars = [];
+  $('p-var-add').innerHTML = ic('plus') + 'Adicionar variação';
+  function renderVars() {
+    const est = $('p-est-on').checked;
+    $('p-est-wrap').classList.toggle('hide', !est || pVars.length > 0);
+    $('p-vars').innerHTML = pVars.length ? `<div class="vrow vhead"><span>Opção</span><span>Preço <small>(opcional)</small></span>${est ? '<span>Estoque</span>' : ''}<span></span></div>` + pVars.map((v, i) => `<div class="vrow ${est ? 'est' : ''}">
+        <input class="input" data-vi="${i}" data-vk="nome" maxlength="40" placeholder="Ex.: P, Azul, 500 ml" value="${esc(v.nome || '')}">
+        <div class="prefix"><i>R$</i><input class="input" data-vi="${i}" data-vk="preco" inputmode="numeric" placeholder="igual" value="${v.preco !== null && v.preco !== undefined && v.preco !== '' ? GP.fmtMoeda(v.preco) : ''}"></div>
+        ${est ? `<input class="input" type="number" min="0" inputmode="numeric" data-vi="${i}" data-vk="estoque" placeholder="sem limite" value="${v.estoque !== null && v.estoque !== undefined ? v.estoque : ''}">` : ''}
+        <button type="button" class="icon-btn" data-vdel="${i}" title="Remover">${ic('x')}</button></div>`).join('')
+      + `<p class="small muted" style="margin:4px 0 10px">Preço em branco = usa o preço do produto.${est ? ' Estoque em branco = sem limite.' : ''}</p>` : '';
+    $('p-vars').querySelectorAll('[data-vk="preco"]').forEach(GP.moneyMask);
+  }
+  $('p-est-on').addEventListener('change', renderVars);
+  $('p-var-add').onclick = () => { pVars.push({ id: 'v' + Math.random().toString(36).slice(2, 8), nome: '', preco: null, estoque: null }); renderVars(); const ins = $('p-vars').querySelectorAll('[data-vk="nome"]'); if (ins.length) ins[ins.length - 1].focus(); };
+  $('p-vars').addEventListener('input', (e) => {
+    const i = e.target.dataset.vi, k = e.target.dataset.vk; if (i == null) return;
+    pVars[+i][k] = e.target.value;
+  });
+  $('p-vars').onclick = (e) => { const d = e.target.closest('[data-vdel]'); if (d) { pVars.splice(+d.dataset.vdel, 1); renderVars(); } };
+  function lerVars() {
+    const est = $('p-est-on').checked;
+    return pVars.map(v => ({
+      id: v.id || 'v' + Math.random().toString(36).slice(2, 8),
+      nome: String(v.nome || '').trim(),
+      preco: v.preco === null || v.preco === undefined || String(v.preco).trim() === '' ? null : (typeof v.preco === 'number' ? v.preco : num(v.preco)),
+      estoque: est && String(v.estoque ?? '').trim() !== '' ? Math.max(0, parseInt(v.estoque) || 0) : null
+    }));
+  }
+
   function openProd(p) {
     editing = p; prodImg = p ? p.imagem_url : '';
     $('pm-title').textContent = p ? 'Editar produto' : 'Novo produto';
@@ -1427,6 +1482,11 @@
     $('p-ppromo').value = p && p.preco_promo != null ? GP.fmtMoeda(p.preco_promo) : '';
     $('p-pate').value = p && p.promo_ate ? p.promo_ate : '';
     promoUI();
+    pVars = JSON.parse(JSON.stringify(p ? GP.variacoes(p) : []));
+    const temEst = (x) => x !== null && x !== undefined && x !== '';
+    $('p-est-on').checked = !!(p && (temEst(p.estoque) || pVars.some(v => temEst(v.estoque))));
+    $('p-est').value = p && temEst(p.estoque) ? p.estoque : '';
+    renderVars();
     gruposEd = JSON.parse(JSON.stringify(p ? GP.grupos(p) : []));
     renderGrupos();
     prodEtapas = p ? [...(p.etapas_ids || [])] : [];
@@ -1717,10 +1777,20 @@
       if (!(preco_promo > 0) || preco_promo >= preco) return GP.toast('O preço promocional precisa ser menor que o preço normal.', 'err');
       promo_ate = $('p-pate').value || null;
     }
-    const row = { nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)) };
+    const variacoes = lerVars();
+    if (variacoes.some(v => !v.nome)) { $('p-vars').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Dê um nome para cada variação (ex.: P, M, G).', 'err'); }
+    if (new Set(variacoes.map(v => v.nome.toLowerCase())).size !== variacoes.length) return GP.toast('Há variações com o mesmo nome.', 'err');
+    const estoque = $('p-est-on').checked && !variacoes.length ? Math.max(0, parseInt($('p-est').value) || 0) : null;
+    const row = { nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)), estoque, variacoes };
     const b = $('p-save'); b.disabled = true;
-    const q = editing ? sb.from('ff_produtos').update(row).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...row, loja_id: loja.id, ordem: prods.length });
-    const { error } = await q;
+    const salvar = (r) => editing ? sb.from('ff_produtos').update(r).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...r, loja_id: loja.id, ordem: prods.length });
+    let { error } = await salvar(row);
+    // Sem o SQL v19 ainda: salva sem variações/estoque e avisa
+    if (error && /estoque|variacoes/.test(error.message || '') && /column|schema/i.test(error.message || '')) {
+      const { estoque: _e, variacoes: _v, ...semNovos } = row;
+      ({ error } = await salvar(semNovos));
+      if (!error && (variacoes.length || estoque != null)) GP.toast('Produto salvo, mas variações e estoque só funcionam depois de rodar o SQL v19 no Supabase.', 'err');
+    }
     b.disabled = false;
     if (error) {
       if (/limite_produtos/.test(error.message)) { await loadPlano(); return verPlanos('Limite de produtos atingido', 'Para cadastrar mais produtos, escolha um plano maior.'); }
