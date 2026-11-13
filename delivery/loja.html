@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122246">
+<link rel="stylesheet" href="app.css?v=202611122254">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -236,8 +236,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122246"></script>
-<script src="app.js?v=202611122246"></script>
+<script src="config.js?v=202611122254"></script>
+<script src="app.js?v=202611122254"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -258,6 +258,9 @@
   if (error) return fail('Não foi possível abrir a loja', esc(GP.err(error)));
   if (!loja) return fail('Loja não encontrada', 'O link pode estar errado ou a loja saiu do ar.');
   const { data: prods } = await sb.from('ff_produtos').select('*').eq('loja_id', loja.id).order('ordem').order('nome');
+  const { data: etapasLoja } = await sb.from('ff_etapas').select('*').eq('loja_id', loja.id);
+  const ET = {}; (etapasLoja || []).forEach(e => ET[e.id] = { id: 'e:' + e.id, nome: e.nome, min: e.min, max: e.max, opcoes: e.opcoes || [] });
+  (prods || []).forEach(p => { p.grupos = GP.grupos(p).concat((p.etapas_ids || []).map(id => ET[id]).filter(Boolean)); });
   const P = {}; (prods || []).forEach(p => P[p.id] = p);
   document.title = `${loja.nome} · GoPedido`;
   const ST = () => GP.statusLoja(loja);

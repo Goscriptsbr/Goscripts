@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122246">
+<link rel="stylesheet" href="app.css?v=202611122254">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -105,6 +105,15 @@
   .orow{display:grid;grid-template-columns:1fr 110px 36px;gap:8px;margin-bottom:8px}
   .orow .input{height:40px}
   .orow .icon-btn{width:36px;height:40px}
+  .etp{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .etp:first-child{border-top:0}
+  .ecat{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .ecat-h{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);font-weight:800;font-size:.9rem}
+  .ecat-h .small{margin-left:auto;font-weight:600}
+  .ecat label{display:flex;gap:10px;align-items:center;padding:9px 12px;border-top:1px solid #F0EEEA;font-size:.9rem;cursor:pointer}
+  .ecat input{width:18px;height:18px;accent-color:var(--brand)}
+  .petp{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;font-size:.9rem;cursor:pointer;background:#fff}
+  .petp input{width:18px;height:18px;accent-color:var(--brand)}
   .g-add{width:100%;border:2px dashed #F7A58C;background:#FFF9F6;color:var(--brand-2);border-radius:14px;padding:14px;font-weight:800;display:flex;gap:8px;align-items:center;justify-content:center}
   .g-add:hover{background:var(--brand-soft)}
   .promo-tag{display:inline-block;background:var(--bad);color:#fff;border-radius:6px;font-size:.7rem;font-weight:800;padding:1px 6px;margin-left:6px;vertical-align:1px}
@@ -206,6 +215,11 @@
       <div class="row between" style="margin-bottom:16px">
         <div><h2 style="font-size:1.25rem;letter-spacing:-.02em">Cardápio</h2><p class="small muted" id="p-count"></p></div>
         <button class="btn btn-primary" id="b-novo"></button>
+      </div>
+      <div class="card pad" style="margin-bottom:18px">
+        <div class="row between" style="flex-wrap:wrap;gap:10px"><div><b>Adicionais compartilhados</b><div class="small muted">Cadastre uma vez (ex.: adicionais de lanche) e use em vários produtos. Mudou o preço aqui, muda em todos.</div></div>
+          <button class="btn btn-soft btn-sm" id="b-novaetapa"></button></div>
+        <div id="etapas" style="margin-top:12px"></div>
       </div>
       <div id="plist"></div>
     </section>
@@ -331,6 +345,10 @@
       <div class="psec">
         <div class="row between"><b>Montagem do produto</b><span class="small muted" id="g-count"></span></div>
         <p class="small muted" style="margin:4px 0 12px">Crie etapas para o cliente escolher. Ex.: açaí → tamanho do copo, complementos, cobertura. Lanche → adicionais.</p>
+        <div id="p-etapas-box" class="hide" style="margin-bottom:12px">
+          <div class="small" style="font-weight:700;margin-bottom:6px">Adicionais compartilhados neste produto</div>
+          <div id="p-etapas"></div>
+        </div>
         <div id="grupos"></div>
         <button type="button" class="g-add" id="g-add"></button>
         <div class="small muted" style="margin:12px 0 6px">Ou comece com um modelo pronto:</div>
@@ -348,11 +366,33 @@
   </form>
 </div>
 
+<div class="sheet modal" id="emod" role="dialog" aria-modal="true">
+  <div class="sheet-head"><h3 id="em-title">Adicional compartilhado</h3><button class="icon-btn" id="em-x"></button></div>
+  <div class="sheet-body">
+    <label class="field"><span>Nome</span><input class="input" id="e-nome" maxlength="40" placeholder="Ex.: Adicionais de lanche"></label>
+    <div class="gcfg" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:.88rem">
+      <label class="switch"><input type="checkbox" id="e-obrig"><i></i>Obrigatório</label>
+      <label style="display:flex;gap:8px;align-items:center">Pode escolher até <input class="input" type="number" min="1" max="20" id="e-max" value="3" style="width:64px;height:38px;text-align:center;padding:0 6px"></label>
+    </div>
+    <div id="e-ops"></div>
+    <button type="button" class="btn btn-ghost btn-sm" id="e-addop"></button>
+    <div class="psec">
+      <div class="row between"><b>Usar nestes produtos</b><span class="small muted" id="e-qtd"></span></div>
+      <p class="small muted" style="margin:4px 0 10px">Marque uma categoria inteira ou escolha produto por produto.</p>
+      <div id="e-prods"></div>
+    </div>
+  </div>
+  <div class="sheet-foot row">
+    <button type="button" class="btn btn-bad hide" id="e-del"></button>
+    <button type="button" class="btn btn-primary grow" id="e-save">Salvar adicional</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122246"></script>
-<script src="app.js?v=202611122246"></script>
+<script src="config.js?v=202611122254"></script>
+<script src="app.js?v=202611122254"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -376,6 +416,7 @@
   $('pv-logo').innerHTML = ic('image'); $('pv-capa').innerHTML = ic('image');
   GP.phoneMask($('l-tel'));
 
+  let etapas = [];
   let user = null, loja = null, lojas = [], prods = [], pedidos = [], conhecidos = null, ofiltro = 'abertos', timer = null;
 
   // ================= AUTENTICAÇÃO =================
@@ -673,7 +714,10 @@
   async function loadProds() {
     const { data, error } = await sb.from('ff_produtos').select('*').eq('loja_id', loja.id).order('categoria').order('ordem').order('nome');
     if (error) return GP.toast(GP.err(error), 'err');
-    prods = data; renderProds();
+    prods = data;
+    const r = await sb.from('ff_etapas').select('*').eq('loja_id', loja.id).order('criado_em');
+    etapas = r.error ? [] : r.data;
+    renderProds(); renderEtapas();
   }
   function renderProds() {
     const cats = [...new Set(prods.map(p => p.categoria))];
@@ -682,7 +726,7 @@
     $('plist').innerHTML = cats.map(c => `<h3 style="font-size:.95rem;margin:18px 0 10px;color:var(--ink-2)">${esc(c)}</h3><div class="plist">${prods.filter(p => p.categoria === c).map(p => `
       <div class="card pitem ${p.disponivel ? '' : 'off'}">
         <div class="th" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${p.imagem_url ? '' : ic('image')}</div>
-        <div class="grow"><b class="ellipsis" style="display:block">${esc(p.nome)}</b><div class="small muted ellipsis">${esc(p.descricao)}</div>${GP.emPromo(p) ? `<b class="small" style="color:var(--bad)">${brl(p.preco_promo)}</b> <s class="small muted">${brl(p.preco)}</s><span class="promo-tag">-${GP.descPct(p)}%</span>` : `<b class="small">${brl(p.preco)}</b>`}${GP.grupos(p).length ? `<span class="small muted"> · ${GP.grupos(p).length} etapa${GP.grupos(p).length > 1 ? 's' : ''} de montagem</span>` : ''}</div>
+        <div class="grow"><b class="ellipsis" style="display:block">${esc(p.nome)}</b><div class="small muted ellipsis">${esc(p.descricao)}</div>${GP.emPromo(p) ? `<b class="small" style="color:var(--bad)">${brl(p.preco_promo)}</b> <s class="small muted">${brl(p.preco)}</s><span class="promo-tag">-${GP.descPct(p)}%</span>` : `<b class="small">${brl(p.preco)}</b>`}${(GP.grupos(p).length + (p.etapas_ids || []).length) ? `<span class="small muted"> · ${GP.grupos(p).length + (p.etapas_ids || []).length} etapa${GP.grupos(p).length + (p.etapas_ids || []).length > 1 ? 's' : ''} de montagem</span>` : ''}</div>
         <label class="switch" title="Disponível"><input type="checkbox" data-disp="${p.id}" ${p.disponivel ? 'checked' : ''}><i></i></label>
         <button class="icon-btn" data-edit="${p.id}" title="Editar">${ic('edit')}</button>
       </div>`).join('')}</div>`).join('');
@@ -715,6 +759,8 @@
     promoUI();
     gruposEd = JSON.parse(JSON.stringify(p ? GP.grupos(p) : []));
     renderGrupos();
+    prodEtapas = p ? [...(p.etapas_ids || [])] : [];
+    renderProdEtapas();
     $('p-porops').checked = !!(p && !Number(p.preco) && GP.grupos(p).length);
     poropsUI();
     $('p-del').classList.toggle('hide', !p);
@@ -774,6 +820,105 @@
   }
   ['p-promo', 'p-ppromo', 'p-preco'].forEach(id => $(id).addEventListener('input', promoUI));
   $('p-promo').addEventListener('change', promoUI);
+
+  // ---------- Adicionais compartilhados ----------
+  let prodEtapas = [], etEdit = null, etOps = [], etProds = new Set();
+  $('b-novaetapa').innerHTML = ic('plus') + 'Novo adicional';
+  $('e-addop').innerHTML = ic('plus') + 'Opção';
+  $('em-x').innerHTML = ic('x'); $('e-del').innerHTML = ic('trash');
+  const usoEtapa = (id) => prods.filter(p => (p.etapas_ids || []).includes(id)).length;
+  function renderEtapas() {
+    $('etapas').innerHTML = etapas.length ? etapas.map(e => `<div class="etp">
+      <div class="grow" style="min-width:0"><b class="small">${esc(e.nome)}</b>
+        <div class="small muted ellipsis">${(e.opcoes || []).map(o => esc(o.nome) + (Number(o.preco) ? ' ' + brl(o.preco) : '')).join(' · ')}</div>
+        <div class="small muted">${GP.regraGrupo(e)}${e.min ? ' · obrigatório' : ''} · em ${usoEtapa(e.id)} produto${usoEtapa(e.id) === 1 ? '' : 's'}</div></div>
+      <button class="icon-btn" data-eedit="${e.id}">${ic('edit')}</button></div>`).join('')
+      : '<p class="small muted">Nenhum ainda. Ex.: "Adicionais de lanche" com bacon, cheddar, ovo.</p>';
+  }
+  function renderProdEtapas() {
+    $('p-etapas-box').classList.toggle('hide', !etapas.length);
+    $('p-etapas').innerHTML = etapas.map(e => `<label class="petp"><input type="checkbox" data-pe="${e.id}" ${prodEtapas.includes(e.id) ? 'checked' : ''}><span class="grow"><b>${esc(e.nome)}</b> <span class="small muted">· ${(e.opcoes || []).length} opções</span></span></label>`).join('');
+  }
+  $('p-etapas').onchange = (e) => {
+    const id = e.target.dataset.pe; if (!id) return;
+    prodEtapas = e.target.checked ? [...prodEtapas, id] : prodEtapas.filter(x => x !== id);
+  };
+  $('etapas').onclick = (e) => { const b = e.target.closest('[data-eedit]'); if (b) abrirEtapa(etapas.find(x => x.id === b.dataset.eedit)); };
+  $('b-novaetapa').onclick = () => abrirEtapa(null);
+  const fecharEtapa = () => { $('emod').classList.remove('on'); $('ov').classList.remove('on'); };
+  $('em-x').onclick = fecharEtapa;
+  $('ov').addEventListener('click', fecharEtapa);
+  function abrirEtapa(e) {
+    etEdit = e;
+    $('em-title').textContent = e ? 'Editar adicional compartilhado' : 'Novo adicional compartilhado';
+    $('e-nome').value = e ? e.nome : 'Adicionais';
+    $('e-obrig').checked = !!(e && e.min > 0);
+    $('e-max').value = e ? e.max : 3;
+    etOps = e ? JSON.parse(JSON.stringify(e.opcoes || [])) : [{ id: gid(), nome: 'Bacon', preco: 4 }, { id: gid(), nome: 'Cheddar', preco: 3 }, { id: gid(), nome: 'Ovo', preco: 2 }];
+    etProds = new Set(e ? prods.filter(p => (p.etapas_ids || []).includes(e.id)).map(p => p.id) : []);
+    $('e-del').classList.toggle('hide', !e);
+    renderEtOps(); renderEtProds();
+    $('emod').classList.add('on'); $('ov').classList.add('on');
+    $('emod').querySelector('.sheet-body').scrollTop = 0;
+  }
+  function renderEtOps() {
+    $('e-ops').innerHTML = etOps.map((o, i) => `<div class="orow" data-i="${i}">
+      <input class="input" data-f="n" value="${esc(o.nome)}" placeholder="Opção (ex.: Bacon)" maxlength="50">
+      <div class="prefix"><i>+R$</i><input class="input" data-f="p" value="${o.preco ? GP.fmtMoeda(o.preco) : ''}" placeholder="0,00" inputmode="numeric" style="padding-left:46px"></div>
+      <button type="button" class="icon-btn" data-del="${i}">${ic('x')}</button></div>`).join('');
+  }
+  $('e-ops').addEventListener('input', (e) => {
+    const r = e.target.closest('[data-i]'); if (!r) return; const o = etOps[+r.dataset.i];
+    if (e.target.dataset.f === 'n') o.nome = e.target.value;
+    if (e.target.dataset.f === 'p') { const d = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 7); e.target.value = d ? GP.fmtMoeda(Number(d) / 100) : ''; o.preco = d ? Number(d) / 100 : 0; }
+  });
+  $('e-ops').addEventListener('click', (e) => { const b = e.target.closest('[data-del]'); if (b) { etOps.splice(+b.dataset.del, 1); renderEtOps(); } });
+  $('e-addop').onclick = () => { etOps.push({ id: gid(), nome: '', preco: 0 }); renderEtOps(); const rows = $('e-ops').querySelectorAll('.orow'); rows[rows.length - 1].querySelector('input').focus(); };
+  function renderEtProds() {
+    const cats = [...new Set(prods.map(p => p.categoria))];
+    $('e-qtd').textContent = `${etProds.size} de ${prods.length} marcados`;
+    $('e-prods').innerHTML = prods.length ? cats.map(c => {
+      const ps = prods.filter(p => p.categoria === c), todos = ps.every(p => etProds.has(p.id));
+      return `<div class="ecat"><label class="ecat-h"><input type="checkbox" data-cat="${esc(c)}" ${todos ? 'checked' : ''}>${esc(c)}<span class="small muted">${ps.filter(p => etProds.has(p.id)).length}/${ps.length}</span></label>
+        ${ps.map(p => `<label><input type="checkbox" data-ep="${p.id}" ${etProds.has(p.id) ? 'checked' : ''}>${esc(p.nome)}</label>`).join('')}</div>`;
+    }).join('') : '<p class="small muted">Cadastre produtos no cardápio primeiro.</p>';
+  }
+  $('e-prods').onchange = (e) => {
+    if (e.target.dataset.cat != null) prods.filter(p => p.categoria === e.target.dataset.cat).forEach(p => e.target.checked ? etProds.add(p.id) : etProds.delete(p.id));
+    if (e.target.dataset.ep) e.target.checked ? etProds.add(e.target.dataset.ep) : etProds.delete(e.target.dataset.ep);
+    renderEtProds();
+  };
+  $('e-save').onclick = async () => {
+    const nome = $('e-nome').value.trim();
+    const opcoes = etOps.filter(o => o.nome.trim()).map(o => ({ id: o.id, nome: o.nome.trim(), preco: Math.round((Number(o.preco) || 0) * 100) / 100 }));
+    if (!nome) return GP.toast('Dê um nome para o adicional.', 'err');
+    if (!opcoes.length) return GP.toast('Coloque pelo menos uma opção.', 'err');
+    const row = { nome, min: $('e-obrig').checked ? 1 : 0, max: Math.min(Math.max(1, parseInt($('e-max').value) || 1), opcoes.length), opcoes };
+    const b = $('e-save'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Salvando…';
+    try {
+      let id = etEdit && etEdit.id;
+      if (id) { const r = await sb.from('ff_etapas').update(row).eq('id', id); if (r.error) throw r.error; }
+      else { const r = await sb.from('ff_etapas').insert({ ...row, loja_id: loja.id }).select().single(); if (r.error) throw r.error; id = r.data.id; }
+      // liga/desliga nos produtos
+      const muda = prods.filter(p => (p.etapas_ids || []).includes(id) !== etProds.has(p.id));
+      for (const p of muda) {
+        const ids = etProds.has(p.id) ? [...(p.etapas_ids || []), id] : (p.etapas_ids || []).filter(x => x !== id);
+        const r = await sb.from('ff_produtos').update({ etapas_ids: ids }).eq('id', p.id); if (r.error) throw r.error;
+      }
+      fecharEtapa(); GP.toast(`Adicional salvo${muda.length ? ' e aplicado em ' + etProds.size + ' produto' + (etProds.size === 1 ? '' : 's') : ''}.`, 'ok');
+      await loadProds();
+    } catch (er) { GP.toast(GP.err(er), 'err'); }
+    b.disabled = false; b.textContent = 'Salvar adicional';
+  };
+  $('e-del').onclick = async () => {
+    if (!etEdit) return;
+    const n = usoEtapa(etEdit.id);
+    if (!(await GP.confirmar(`Excluir "${etEdit.nome}"?`, { texto: n ? `Ele sai de ${n} produto${n === 1 ? '' : 's'}. Os pedidos antigos continuam guardados.` : 'Ele não está em nenhum produto.', ok: 'Excluir' }))) return;
+    for (const p of prods.filter(p => (p.etapas_ids || []).includes(etEdit.id))) await sb.from('ff_produtos').update({ etapas_ids: p.etapas_ids.filter(x => x !== etEdit.id) }).eq('id', p.id);
+    const { error } = await sb.from('ff_etapas').delete().eq('id', etEdit.id);
+    if (error) return GP.toast(GP.err(error), 'err');
+    fecharEtapa(); GP.toast('Adicional excluído', 'ok'); loadProds();
+  };
 
   // ---------- Preço vem da montagem ----------
   function poropsUI() {
@@ -884,7 +1029,7 @@
     const grupos = limparGrupos();
     if (grupos === null) return;
     if (porops) {
-      if (!grupos.length) return GP.toast('Crie pelo menos uma etapa na montagem com os preços.', 'err');
+      if (!grupos.length && !prodEtapas.length) return GP.toast('Crie pelo menos uma etapa na montagem com os preços.', 'err');
       if (!grupos.some(g => g.opcoes.some(o => o.preco > 0)) && !(await GP.confirmar('O produto vai sair de graça', { texto: 'Nenhuma opção da montagem tem preço. Quer salvar mesmo assim?', ok: 'Salvar assim', perigo: true, icone: 'bolt' }))) return;
       if (!grupos.some(g => g.min > 0)) GP.toast('Dica: marque a etapa do tamanho como "Obrigatório" para o cliente sempre escolher.', '');
     } else if (!(preco > 0)) return GP.toast('Informe o preço ou ligue "Preço vem da montagem".', 'err');
@@ -894,7 +1039,7 @@
       if (!(preco_promo > 0) || preco_promo >= preco) return GP.toast('O preço promocional precisa ser menor que o preço normal.', 'err');
       promo_ate = $('p-pate').value || null;
     }
-    const row = { nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate };
+    const row = { nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)) };
     const b = $('p-save'); b.disabled = true;
     const q = editing ? sb.from('ff_produtos').update(row).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...row, loja_id: loja.id, ordem: prods.length });
     const { error } = await q;
