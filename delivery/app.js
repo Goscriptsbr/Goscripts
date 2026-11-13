@@ -202,6 +202,12 @@
     cupom_esgotado: 'Este cupom já foi usado o máximo de vezes.',
     limite_lojas: 'Você chegou no limite de lojas do seu plano.',
     limite_produtos: 'Você chegou no limite de produtos do seu plano.',
+    loja_em_analise: 'Esta loja ainda está em análise e não recebe pedidos.',
+    retirada_indisponivel: 'Esta loja não aceita retirada no local.',
+    avaliacao_cedo: 'Você pode avaliar depois que o pedido for entregue.',
+    avaliacao_feita: 'Este pedido já foi avaliado. Obrigado!',
+    avaliacao_expirada: 'O prazo para avaliar este pedido acabou.',
+    sem_permissao: 'Você não tem permissão para isso.',
     cupom_ja_usado: 'Você já usou este cupom o máximo de vezes permitido.',
     cupom_minimo: 'O pedido não atingiu o valor mínimo para este cupom.',
     troco_invalido: 'O valor do troco precisa ser maior que o total do pedido.',
@@ -690,6 +696,17 @@
     entregue: { t: 'Entregue', c: 'b-off', d: 'Pedido entregue. Bom apetite!' },
     cancelado: { t: 'Cancelado', c: 'b-bad', d: 'Este pedido foi cancelado' }
   };
+  // status com texto certo para retirada
+  GP.statusTxt = (p, s) => {
+    s = s || p.status;
+    if (p.tipo_entrega === 'retirada') {
+      if (s === 'saiu') return { t: 'Pronto para retirar', c: 'b-ok', d: 'Pode vir buscar na loja' };
+      if (s === 'entregue') return { t: 'Retirado', c: 'b-off', d: 'Pedido retirado. Bom apetite!' };
+    }
+    return GP.STATUS[s];
+  };
+  GP.estrelas = (n, tam) => { const v = Math.round(Number(n) || 0); return `<span class="stars" style="${tam ? 'font-size:' + tam : ''}">${'★'.repeat(v)}<span class="off">${'★'.repeat(5 - v)}</span></span>`; };
+  GP.mapsLink = (lat, lng) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   GP.PAG = { pix: 'Pix', debito: 'Cartão de débito (na entrega)', credito: 'Cartão de crédito (na entrega)', dinheiro: 'Dinheiro (na entrega)' };
 
   // ---------- Comprovante para impressora térmica ----------
@@ -713,8 +730,8 @@
       <div class="c"><div class="loja">${e(L.nome)}</div>${L.cnpj ? `<div>CNPJ ${e(GP.fmtCnpj(L.cnpj))}</div>` : ''}${L.telefone ? `<div>${e(L.telefone)}</div>` : ''}</div>
       ${linha}<div class="c"><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div class="tag">VIA DA ENTREGA</div></div>${linha}
       <div><b>CLIENTE:</b> ${e(p.cliente_nome)}</div><div><b>TEL:</b> ${e(p.cliente_telefone)}</div>
-      ${linha}<div><b>ENTREGAR EM:</b></div><div class="end">${e(p.endereco)}</div>${p.complemento ? `<div class="end">${e(p.complemento)}</div>` : ''}
-      <div>Distância: ${km(p.distancia_km)}${p.entregador_nome ? ` · Entregador: ${e(p.entregador_nome)}` : ''}</div>
+      ${p.tipo_entrega === 'retirada' ? `${linha}<div class="box">RETIRADA NO LOCAL<br><small>o cliente vem buscar</small></div>` : `${linha}<div><b>ENTREGAR EM:</b></div><div class="end">${e(p.endereco)}</div>${p.complemento ? `<div class="end">${e(p.complemento)}</div>` : ''}
+      <div>Distância: ${km(p.distancia_km)}${p.entregador_nome ? ` · Entregador: ${e(p.entregador_nome)}` : ''}</div>`}
       ${linha}${itens}${linha}
       <div class="it"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
       <div class="it"><span>Taxa de entrega</span><span>${brl(p.taxa_entrega)}</span></div>
@@ -722,11 +739,11 @@
       <div class="it tot"><span>TOTAL</span><span>${brl(p.total)}</span></div>
       ${linha}${pag}
       ${p.observacao ? `${linha}<div><b>OBS:</b> ${e(p.observacao)}</div>` : ''}
-      ${qr ? `${linha}<div class="c"><div class="qr">${qr}</div><small>Aponte a câmera para abrir a rota</small></div>` : ''}
+      ${qr && p.tipo_entrega !== 'retirada' ? `${linha}<div class="c"><div class="qr">${qr}</div><small>Aponte a câmera para abrir a rota</small></div>` : ''}
       ${linha}<div class="c"><small>GoPedido · goscripts.com.br/delivery</small></div>
     </section>`;
     const viaCozinha = `<section class="via">
-      <div class="c"><div class="tag">COZINHA</div><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div>${e(p.cliente_nome)}</div></div>${linha}
+      <div class="c"><div class="tag">COZINHA${p.tipo_entrega === 'retirada' ? ' · RETIRADA' : ''}</div><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div>${e(p.cliente_nome)}</div></div>${linha}
       ${itensArr.map(i => `<div class="kit"><b>${i.qtd}x</b> ${e(i.nome)}</div>${(i.opcoes || []).map(o => `<div class="kobs">+ ${e(o.nome)}</div>`).join('')}${i.obs ? `<div class="kobs">&gt; ${e(i.obs)}</div>` : ''}`).join('')}
       ${p.observacao ? `${linha}<div class="kobs">OBS: ${e(p.observacao)}</div>` : ''}${linha}
       <div class="box">${p.pagamento === 'pix' ? 'PIX — JÁ PAGO' : p.pagamento === 'dinheiro' ? `DINHEIRO · ${brl(p.total)}${troco > 0 ? ` · TROCO ${brl(troco)}` : ''}` : `COBRAR NA ENTREGA · ${p.pagamento === 'debito' ? 'DÉBITO' : 'CRÉDITO'} · ${brl(p.total)}`}</div>

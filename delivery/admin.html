@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Admin · GoPedido</title>
+<meta name="theme-color" content="#16161B">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=38799">
+<style>
+  .hdr{background:var(--ink);color:#fff;position:sticky;top:0;z-index:30}
+  .hdr .wrap{display:flex;align-items:center;gap:12px;height:62px}
+  .hdr .logo span{color:#fff}
+  .hdr .tag{background:var(--brand);font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:999px;letter-spacing:.05em}
+  .hdr .icon-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+  .kpi{padding:14px;cursor:pointer}
+  .kpi .l{font-size:.76rem;color:var(--muted);font-weight:700}
+  .kpi .v{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+  .kpi.alert .v{color:var(--bad)}
+  @media(max-width:640px){.kpis{grid-template-columns:1fr 1fr}}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto}
+  .tabs button{height:44px;padding:0 14px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;display:flex;gap:6px;align-items:center}
+  .tabs button.on{color:var(--ink);border-color:var(--brand)}
+  .tabs .n{background:var(--bad);color:#fff;border-radius:99px;font-size:.7rem;padding:1px 7px}
+  .fil{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
+  .fil .chip{flex:none}
+  .lj{padding:16px;margin-bottom:12px}
+  .lj .top{display:flex;gap:12px;align-items:flex-start}
+  .lj .lg{width:52px;height:52px;border-radius:14px;background:var(--brand-soft) center/cover;flex:none;display:grid;place-items:center;font-weight:800;color:var(--brand)}
+  .lj dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.86rem;margin:12px 0}
+  .lj dt{color:var(--muted);font-weight:600}
+  .lj dd{word-break:break-word}
+  .lj .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .warnline{background:var(--warn-soft);color:#7a4f0e;border-radius:10px;padding:8px 10px;font-size:.82rem;margin-bottom:10px}
+  .dn{padding:14px;margin-bottom:10px}
+  .dn.ok{opacity:.55}
+  .pl{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 14px;margin-bottom:10px}
+  .pl .ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .pl select,.pl input{height:38px;padding:0 8px;border-radius:10px;border:1px solid var(--line);background:#fff}
+  @media(max-width:640px){.pl{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="wrap">
+    <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
+    <span class="tag">ADMIN</span>
+    <div class="grow"></div>
+    <button class="icon-btn hide" id="b-sair" title="Sair"></button>
+  </div>
+</header>
+
+<main class="wrap narrow hide" id="v-login" style="max-width:420px;padding-top:40px">
+  <h1 style="font-size:1.5rem;letter-spacing:-.03em">Acesso do administrador</h1>
+  <p class="muted" style="margin-bottom:18px">Entre com o e-mail cadastrado como administrador.</p>
+  <form id="f-login">
+    <label class="field"><span>E-mail</span><input class="input" type="email" id="a-email" autocomplete="email" required></label>
+    <label class="field"><span>Senha</span><input class="input" type="password" id="a-pass" autocomplete="current-password" required></label>
+    <button class="btn btn-primary btn-block" id="a-btn">Entrar</button>
+  </form>
+  <p class="small muted" style="margin-top:14px">É a mesma conta de e-mail e senha do painel do lojista.</p>
+</main>
+
+<main class="wrap narrow hide" id="v-negado" style="max-width:460px;padding-top:60px;text-align:center">
+  <div class="empty"><div class="big" id="ng-ic"></div><h4>Sem acesso de administrador</h4><p id="ng-txt"></p>
+  <button class="btn btn-ghost" id="b-sair2" style="margin-top:14px">Entrar com outra conta</button></div>
+</main>
+
+<main class="wrap hide" id="v-app" style="padding-bottom:40px">
+  <div class="kpis" id="kpis"></div>
+  <nav class="tabs" id="tabs">
+    <button data-t="lojas" class="on">Lojas <span class="n hide" id="n-pend"></span></button>
+    <button data-t="denuncias">Denúncias <span class="n hide" id="n-den"></span></button>
+    <button data-t="planos">Planos</button>
+  </nav>
+
+  <section id="t-lojas">
+    <div class="fil" id="fil-lojas">
+      <button class="chip on" data-f="pendente">Em análise</button>
+      <button class="chip" data-f="verificada">Verificadas</button>
+      <button class="chip" data-f="recusada">Recusadas</button>
+      <button class="chip" data-f="bloq">Bloqueadas</button>
+      <button class="chip" data-f="todas">Todas</button>
+    </div>
+    <label class="psearch" style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;height:44px;padding:0 12px;margin-bottom:12px"><span id="s-ic"></span><input id="busca" placeholder="Buscar por loja, e-mail, CNPJ…" style="flex:1;border:0;outline:0;background:none"></label>
+    <div id="lojas"></div>
+  </section>
+
+  <section id="t-denuncias" class="hide"><div id="denuncias"></div></section>
+
+  <section id="t-planos" class="hide">
+    <form class="card pad" id="f-plano" style="margin-bottom:14px">
+      <b>Liberar plano para um e-mail</b>
+      <div class="grid3" style="margin-top:10px">
+        <label class="field" style="margin:0"><span>E-mail do lojista</span><input class="input" type="email" id="pl-email" required></label>
+        <label class="field" style="margin:0"><span>Plano</span><select class="input" id="pl-plano"><option value="profissional">Profissional (R$ 50)</option><option value="premium">Premium (R$ 100)</option><option value="gratis">Grátis</option></select></label>
+        <label class="field" style="margin:0"><span>Válido até</span><input class="input" type="date" id="pl-ate"></label>
+      </div>
+      <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm">Salvar plano</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-mes="1">+1 mês</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-mes="3">+3 meses</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-mes="12">+1 ano</button>
+      </div>
+    </form>
+    <div id="lojistas"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js?v=38799"></script>
+<script src="app.js?v=38799"></script>
+<script>
+(async () => {
+  const { $, esc, brl, ic } = GP;
+  const sb = window.supabase.createClient(GP.cfg.supabaseUrl, GP.cfg.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'gopedido-admin' } });
+  $('lg').innerHTML = ic('bag'); $('b-sair').innerHTML = ic('logout'); $('ng-ic').innerHTML = ic('shield'); $('s-ic').innerHTML = ic('search');
+  let user = null, lojas = [], dens = [], lojistas = [], filtro = 'pendente', busca = '';
+  const show = (id) => ['v-login', 'v-negado', 'v-app'].forEach(v => $(v).classList.toggle('hide', v !== id));
+
+  $('f-login').onsubmit = async (e) => {
+    e.preventDefault();
+    const b = $('a-btn'); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+    const { error } = await sb.auth.signInWithPassword({ email: $('a-email').value.trim(), password: $('a-pass').value });
+    b.disabled = false; b.textContent = 'Entrar';
+    if (error) return GP.toast(GP.err(error), 'err');
+    boot();
+  };
+  const sair = async () => { await sb.auth.signOut(); location.reload(); };
+  $('b-sair').onclick = sair; $('b-sair2').onclick = sair;
+
+  async function boot() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return show('v-login');
+    user = session.user; $('b-sair').classList.remove('hide');
+    const { data: ok, error } = await sb.rpc('ff_is_admin');
+    if (error || !ok) { $('ng-txt').textContent = `A conta ${user.email} não está na lista de administradores.`; return show('v-negado'); }
+    show('v-app'); carregar();
+  }
+
+  async function carregar() {
+    const [a, b, c] = await Promise.all([sb.rpc('ff_admin_lojas'), sb.rpc('ff_admin_denuncias'), sb.rpc('ff_admin_lojistas')]);
+    if (a.error) return GP.toast(GP.err(a.error), 'err');
+    lojas = a.data || []; dens = b.data || []; lojistas = c.data || [];
+    const pend = lojas.filter(l => l.verificacao === 'pendente').length, denA = dens.filter(d => !d.resolvida).length;
+    $('kpis').innerHTML = [
+      ['Em análise', pend, pend ? 'alert' : '', 'lojas', 'pendente'], ['Lojas verificadas', lojas.filter(l => l.verificacao === 'verificada').length, '', 'lojas', 'verificada'],
+      ['Denúncias abertas', denA, denA ? 'alert' : '', 'denuncias'], ['Lojistas', lojistas.length, '', 'planos']
+    ].map(([l, v, c, t, f]) => `<div class="card kpi ${c}" data-go="${t}" data-f="${f || ''}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
+    $('n-pend').textContent = pend; $('n-pend').classList.toggle('hide', !pend);
+    $('n-den').textContent = denA; $('n-den').classList.toggle('hide', !denA);
+    renderLojas(); renderDen(); renderPlanos();
+  }
+  $('kpis').onclick = (e) => { const k = e.target.closest('[data-go]'); if (!k) return; ir(k.dataset.go); if (k.dataset.f) { filtro = k.dataset.f; document.querySelectorAll('#fil-lojas .chip').forEach(x => x.classList.toggle('on', x.dataset.f === filtro)); renderLojas(); } };
+  function ir(t) { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); ['lojas', 'denuncias', 'planos'].forEach(x => $('t-' + x).classList.toggle('hide', x !== t)); }
+  $('tabs').onclick = (e) => { const b = e.target.closest('[data-t]'); if (b) ir(b.dataset.t); };
+
+  // ---------- Lojas ----------
+  const ST = { pendente: ['Em análise', 'b-warn'], verificada: ['Verificada', 'b-ok'], recusada: ['Recusada', 'b-bad'] };
+  const fmtCpf = (c) => { const d = GP.digits(c); return d.length === 11 ? d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : c; };
+  function renderLojas() {
+    const q = busca.toLowerCase();
+    const lst = lojas.filter(l => (filtro === 'todas' || (filtro === 'bloq' ? !l.ativa : l.verificacao === filtro && (filtro !== 'verificada' || l.ativa)))
+      && (!q || [l.nome, l.dono_email, l.cnpj, l.responsavel_nome, l.telefone].join(' ').toLowerCase().includes(q)));
+    if (!lst.length) { $('lojas').innerHTML = `<div class="empty"><div class="big">${ic('store')}</div><h4>Nada aqui</h4><p>${filtro === 'pendente' ? 'Nenhuma loja esperando aprovação. 🎉' : 'Nenhuma loja neste filtro.'}</p></div>`; return; }
+    $('lojas').innerHTML = lst.map(l => {
+      const [stT, stC] = ST[l.verificacao] || ['', ''];
+      const alertas = [];
+      if (!l.cnpj && !GP.digits(l.responsavel_cpf).length) alertas.push('Não informou CNPJ nem CPF do responsável.');
+      if (l.pix_nome && l.responsavel_nome && !l.pix_nome.toLowerCase().split(' ')[0].includes(l.responsavel_nome.toLowerCase().split(' ')[0].slice(0, 4))) alertas.push(`Nome do recebedor do Pix (${l.pix_nome}) é diferente do responsável.`);
+      if (Number(l.denuncias)) alertas.push(`${l.denuncias} denúncia(s) aberta(s).`);
+      return `<article class="card lj">
+        <div class="top"><div class="lg" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : esc((l.nome || '?')[0])}</div>
+          <div class="grow" style="min-width:0"><b>${esc(l.nome)}</b> <span class="badge ${stC}">${stT}</span>${l.ativa ? '' : ' <span class="badge b-bad">Bloqueada</span>'}
+            <div class="small muted">${esc(l.dono_email || '')} · criada em ${new Date(l.criado_em).toLocaleDateString('pt-BR')}</div>
+            <div class="small muted">${l.pedidos} pedidos · ${l.produtos} produtos${l.nota_qtd ? ` · ★ ${l.nota_media} (${l.nota_qtd})` : ''}</div></div></div>
+        <dl>
+          <dt>Responsável</dt><dd>${esc(l.responsavel_nome || '—')}</dd>
+          <dt>CPF</dt><dd>${l.responsavel_cpf ? esc(fmtCpf(l.responsavel_cpf)) : '—'}</dd>
+          <dt>CNPJ</dt><dd>${l.cnpj ? esc(GP.fmtCnpj(l.cnpj)) + (GP.cnpjValido(l.cnpj) ? ' ✓' : ' ⚠ inválido') : '—'}</dd>
+          <dt>WhatsApp</dt><dd>${l.telefone ? `<a href="${GP.wa(l.telefone)}" target="_blank" rel="noopener" style="color:var(--ok);font-weight:700">${esc(l.telefone)}</a>` : '—'}</dd>
+          <dt>Endereço</dt><dd>${esc(l.endereco || '—')}</dd>
+          <dt>Pix</dt><dd>${esc(l.pix_tipo || '')} ${esc(l.pix_chave || '—')}${l.pix_nome ? ' · ' + esc(l.pix_nome) : ''}</dd>
+          ${l.verificacao_motivo ? `<dt>Motivo</dt><dd>${esc(l.verificacao_motivo)}</dd>` : ''}
+        </dl>
+        ${alertas.map(a => `<div class="warnline">⚠ ${esc(a)}</div>`).join('')}
+        <div class="acts">
+          ${l.verificacao !== 'verificada' ? `<button class="btn btn-ok btn-sm" data-ap="${l.id}">${ic('check')}Aprovar</button>` : ''}
+          ${l.verificacao !== 'recusada' ? `<button class="btn btn-bad btn-sm" data-rc="${l.id}">${ic('x')}Recusar</button>` : ''}
+          <a class="btn btn-ghost btn-sm" href="loja.html?l=${encodeURIComponent(l.slug)}" target="_blank" rel="noopener">${ic('ext')}Ver loja</a>
+          <button class="btn btn-ghost btn-sm" data-bl="${l.id}" data-ativa="${l.ativa ? 1 : 0}">${l.ativa ? 'Bloquear' : 'Desbloquear'}</button>
+        </div></article>`;
+    }).join('');
+  }
+  $('fil-lojas').onclick = (e) => { const b = e.target.closest('[data-f]'); if (!b) return; filtro = b.dataset.f; document.querySelectorAll('#fil-lojas .chip').forEach(x => x.classList.toggle('on', x === b)); renderLojas(); };
+  $('busca').addEventListener('input', (e) => { busca = e.target.value; renderLojas(); });
+  const pedirTexto = (titulo, texto, ph) => new Promise((res) => {
+    const w = document.createElement('div'); w.className = 'cfm-wrap';
+    w.innerHTML = `<div class="cfm" style="text-align:left"><h3>${esc(titulo)}</h3><p>${esc(texto)}</p><textarea class="input" style="margin-top:10px;min-height:80px" maxlength="300" placeholder="${esc(ph)}"></textarea>
+      <div class="cfm-acts"><button class="btn btn-ghost" data-r="0">Voltar</button><button class="btn btn-danger" data-r="1">Confirmar</button></div></div>`;
+    document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
+    const fim = (v) => { w.classList.remove('on'); setTimeout(() => w.remove(), 180); res(v); };
+    w.addEventListener('click', (e) => { if (e.target === w || e.target.closest('[data-r="0"]')) fim(null); if (e.target.closest('[data-r="1"]')) fim(w.querySelector('textarea').value.trim()); });
+    setTimeout(() => w.querySelector('textarea').focus(), 60);
+  });
+  $('lojas').onclick = async (e) => {
+    const ap = e.target.closest('[data-ap]'), rc = e.target.closest('[data-rc]'), bl = e.target.closest('[data-bl]');
+    if (ap) {
+      const l = lojas.find(x => x.id === ap.dataset.ap);
+      if (!(await GP.confirmar(`Aprovar "${l.nome}"?`, { texto: 'A loja passa a aparecer no site com o selo de verificada e pode receber pedidos.', ok: 'Aprovar', perigo: false, icone: 'check' }))) return;
+      const { error } = await sb.rpc('ff_admin_verificar', { p_loja: l.id, p_status: 'verificada', p_motivo: '' });
+      if (error) return GP.toast(GP.err(error), 'err'); GP.toast('Loja aprovada!', 'ok'); carregar();
+    }
+    if (rc) {
+      const l = lojas.find(x => x.id === rc.dataset.rc);
+      const m = await pedirTexto(`Recusar "${l.nome}"`, 'O lojista vai ver este motivo no painel.', 'Ex.: dados não conferem, envie o CNPJ…');
+      if (m == null) return;
+      const { error } = await sb.rpc('ff_admin_verificar', { p_loja: l.id, p_status: 'recusada', p_motivo: m });
+      if (error) return GP.toast(GP.err(error), 'err'); GP.toast('Loja recusada', 'ok'); carregar();
+    }
+    if (bl) {
+      const l = lojas.find(x => x.id === bl.dataset.bl), ativa = bl.dataset.ativa === '1';
+      if (!(await GP.confirmar(ativa ? `Bloquear "${l.nome}"?` : `Desbloquear "${l.nome}"?`, { texto: ativa ? 'A loja sai do site na hora e não recebe mais pedidos. Use em caso de golpe.' : 'A loja volta a aparecer se estiver verificada.', ok: ativa ? 'Bloquear' : 'Desbloquear', perigo: ativa }))) return;
+      const { error } = await sb.rpc('ff_admin_ativar', { p_loja: l.id, p_ativa: !ativa });
+      if (error) return GP.toast(GP.err(error), 'err'); GP.toast(ativa ? 'Loja bloqueada' : 'Loja desbloqueada', 'ok'); carregar();
+    }
+  };
+
+  // ---------- Denúncias ----------
+  function renderDen() {
+    $('denuncias').innerHTML = dens.length ? dens.map(d => `<div class="card dn ${d.resolvida ? 'ok' : ''}">
+      <div class="row between"><b>${esc(d.motivo)}</b><span class="small muted">${new Date(d.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span></div>
+      <div class="small" style="margin:4px 0">Loja: <a href="loja.html?l=${encodeURIComponent(d.slug)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--brand-2)">${esc(d.loja_nome)}</a></div>
+      ${d.detalhe ? `<p class="small muted">${esc(d.detalhe)}</p>` : ''}
+      <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
+        ${d.contato ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="${GP.wa(d.contato)}">${ic('chat')}Falar com quem denunciou</a>` : ''}
+        <button class="btn btn-ghost btn-sm" data-ver="${d.loja_id}">Ver loja no admin</button>
+        <button class="btn ${d.resolvida ? 'btn-ghost' : 'btn-dark'} btn-sm" data-res="${d.id}" data-v="${d.resolvida ? 0 : 1}">${d.resolvida ? 'Reabrir' : 'Marcar como resolvida'}</button>
+      </div></div>`).join('') : `<div class="empty"><div class="big">${ic('shield')}</div><h4>Nenhuma denúncia</h4><p>Quando um cliente denunciar uma loja, aparece aqui.</p></div>`;
+  }
+  $('denuncias').onclick = async (e) => {
+    const r = e.target.closest('[data-res]'), v = e.target.closest('[data-ver]');
+    if (r) { const { error } = await sb.rpc('ff_admin_resolver_denuncia', { p_id: r.dataset.res, p_resolvida: r.dataset.v === '1' }); if (error) return GP.toast(GP.err(error), 'err'); carregar(); }
+    if (v) { const l = lojas.find(x => x.id === v.dataset.ver); ir('lojas'); filtro = 'todas'; busca = l ? l.nome : ''; $('busca').value = busca; document.querySelectorAll('#fil-lojas .chip').forEach(x => x.classList.toggle('on', x.dataset.f === 'todas')); renderLojas(); }
+  };
+
+  // ---------- Planos ----------
+  const somaMes = (n) => { const d = new Date(); d.setMonth(d.getMonth() + n); return d.toISOString().slice(0, 10); };
+  document.querySelectorAll('[data-mes]').forEach(b => b.onclick = () => { $('pl-ate').value = somaMes(+b.dataset.mes); });
+  function renderPlanos() {
+    $('lojistas').innerHTML = lojistas.length ? lojistas.map(u => `<div class="card pl">
+      <div style="min-width:0"><b class="ellipsis" style="display:block">${esc(u.email)}</b>
+        <div class="small muted">Plano <b>${GP.planoNome(u.plano)}</b>${u.valido_ate ? ' até ' + u.valido_ate.split('-').reverse().join('/') : ''} · ${u.lojas} loja(s) · ${u.produtos} produto(s)</div></div>
+      <div class="ctl"><select data-pp="${esc(u.email)}">${['gratis', 'profissional', 'premium'].map(p => `<option value="${p}" ${p === u.plano ? 'selected' : ''}>${GP.planoNome(p)}</option>`).join('')}</select>
+        <input type="date" data-pd="${esc(u.email)}" value="${u.valido_ate || ''}">
+        <button class="btn btn-primary btn-sm" data-ps="${esc(u.email)}">Salvar</button></div></div>`).join('')
+      : '<p class="small muted">Nenhum lojista ainda.</p>';
+  }
+  $('lojistas').onclick = async (e) => {
+    const b = e.target.closest('[data-ps]'); if (!b) return;
+    const em = b.dataset.ps, plano = $('lojistas').querySelector(`[data-pp="${em}"]`).value, ate = $('lojistas').querySelector(`[data-pd="${em}"]`).value || null;
+    const { error } = await sb.rpc('ff_admin_set_plano', { p_email: em, p_plano: plano, p_valido_ate: ate });
+    if (error) return GP.toast(GP.err(error), 'err'); GP.toast('Plano atualizado', 'ok'); carregar();
+  };
+  $('f-plano').onsubmit = async (e) => {
+    e.preventDefault();
+    const { error } = await sb.rpc('ff_admin_set_plano', { p_email: $('pl-email').value.trim(), p_plano: $('pl-plano').value, p_valido_ate: $('pl-ate').value || null });
+    if (error) return GP.toast(GP.err(error), 'err');
+    GP.toast('Plano liberado!', 'ok'); $('f-plano').reset(); carregar();
+  };
+
+  boot();
+})();
+</script>
+</body>
+</html>

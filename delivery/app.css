@@ -213,3 +213,12 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ticket.on .tk-l{background:var(--ok)}
 .ticket.on .tk-act{color:var(--ok)}
 .ticket.dis{opacity:.5}
+
+.stars{color:#F5A623;letter-spacing:1px;white-space:nowrap}
+.stars .off{color:#DDD9D2}
+.verif{display:inline-flex;align-items:center;gap:4px;background:#E7F3FF;color:#1565C0;font-size:.72rem;font-weight:800;border-radius:999px;padding:3px 9px;vertical-align:middle}
+.verif .i{width:13px;height:13px;stroke-width:3}
+.starpick{display:flex;gap:6px;justify-content:center;margin:10px 0}
+.starpick button{font-size:2.3rem;color:#DDD9D2;line-height:1;transition:transform .1s,color .1s}
+.starpick button.on{color:#F5A623}
+.starpick button:active{transform:scale(1.2)}

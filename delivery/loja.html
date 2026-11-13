@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122339">
+<link rel="stylesheet" href="app.css?v=38799">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -53,6 +53,14 @@
   .need{animation:need .5s;outline:2.5px solid var(--bad);outline-offset:3px;border-radius:14px}
   .need .input,.need.input{border-color:var(--bad)!important;box-shadow:0 0 0 4px rgba(217,45,32,.12)!important}
   @keyframes need{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+  .lojaend{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:.88rem;color:var(--ink-2);flex-wrap:wrap}
+  .lojaend .grow{min-width:160px}
+  .modo-ent{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#ECEAE6;border-radius:14px;padding:4px;margin-bottom:14px}
+  .modo-ent button{height:46px;border-radius:11px;font-weight:800;color:var(--muted);display:flex;gap:8px;align-items:center;justify-content:center}
+  .modo-ent button.on{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+  .rev{padding:14px 0;border-top:1px solid var(--line)}
+  .rev:first-of-type{border-top:0}
+  .rev .resp{background:var(--bg);border-radius:12px;padding:8px 12px;margin-top:8px;font-size:.86rem}
   .alert.off{background:#F1F0ED;color:var(--ink-2)}
 
   .catnav{position:sticky;top:64px;z-index:30;background:var(--bg);padding:12px 0;margin-top:16px;border-bottom:1px solid var(--line)}
@@ -130,6 +138,7 @@
         <h1 id="s-nome"><span class="sk" style="display:block;height:30px;width:220px"></span></h1>
         <p class="desc" id="s-desc"></p>
         <div class="chips" id="s-chips"></div>
+        <div class="lojaend hide" id="s-end"></div>
         <div id="s-alert"></div>
         <div id="s-cupons" class="hide" style="margin-top:14px"><b class="small" style="display:block;margin-bottom:8px">🎟️ Cupons disponíveis</b><div class="tickets" id="tk-loja"></div></div>
       </div>
@@ -137,6 +146,8 @@
   </div>
   <nav class="catnav"><div class="wrap in" id="catnav"></div></nav>
   <main class="wrap" id="menu"></main>
+  <section class="wrap" id="reviews" style="margin-top:30px"></section>
+  <div class="wrap center" style="padding:26px 18px 10px"><button class="small muted" id="b-denuncia" style="text-decoration:underline">⚠ Denunciar esta loja</button></div>
 </div>
 
 <button class="bagbar hidden" id="bagbar">
@@ -190,11 +201,18 @@
         <label class="field"><span>Seu nome</span><input class="input" id="c-nome" autocomplete="name" maxlength="80" placeholder="Como te chamamos?"></label>
         <label class="field"><span>WhatsApp</span><input class="input" id="c-tel" inputmode="tel" autocomplete="tel" placeholder="(19) 99999-9999"></label>
       </div>
+      <div class="modo-ent hide" id="c-modo">
+        <button type="button" data-m="entrega" class="on"></button>
+        <button type="button" data-m="retirada"></button>
+      </div>
+      <div id="c-ret" class="hide"></div>
+      <div id="c-entrega">
       <div id="c-saved-wrap" class="hide"><b class="small" style="display:block;margin-bottom:8px">Seus endereços</b><div class="saved" id="c-saved"></div></div>
       <b class="small" style="display:block;margin:4px 0 10px">Endereço de entrega</b>
       <div id="c-addr"></div>
       <label class="check hide" id="c-save-wrap"><input type="checkbox" id="c-save" checked>Salvar este endereço na minha conta</label>
       <div id="c-fee"></div>
+      </div>
       <label class="field" style="margin-top:14px"><span>Observação do pedido <span class="muted">(opcional)</span></span>
         <textarea class="input" id="c-obs" maxlength="300" placeholder="Ex.: troco, interfone quebrado…" style="min-height:64px"></textarea></label>
     </section>
@@ -243,8 +261,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122339"></script>
-<script src="app.js?v=202611122339"></script>
+<script src="config.js?v=38799"></script>
+<script src="app.js?v=38799"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -276,13 +294,20 @@
   if (loja.capa_url || loja.imagem_url) $('cover').style.backgroundImage = `url('${loja.capa_url || loja.imagem_url}')`;
   if (loja.imagem_url) $('s-logo').style.backgroundImage = `url('${loja.imagem_url}')`;
   else $('s-logo').textContent = loja.nome.trim()[0].toUpperCase();
-  $('s-nome').textContent = loja.nome;
+  $('s-nome').innerHTML = esc(loja.nome) + (loja.verificacao === 'verificada' ? ` <span class="verif" title="Loja verificada pelo GoPedido">${ic('check')}Verificada</span>` : '');
+  if (loja.verificacao !== 'verificada') $('s-alert').insertAdjacentHTML('beforebegin', `<div class="alert off" style="background:var(--warn-soft);color:#7a4f0e">${ic('shield')}<span>Esta loja está em análise e ainda não aparece para os clientes nem recebe pedidos.</span></div>`);
+  if (loja.lat != null) {
+    $('s-end').classList.remove('hide');
+    $('s-end').innerHTML = `${ic('pin')}<span class="grow">${esc(loja.endereco || 'Ver localização da loja')}</span><a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${GP.mapsLink(loja.lat, loja.lng)}">${ic('ext')}Ver no mapa</a>`;
+  }
   $('s-desc').textContent = loja.descricao || '';
   if (loja.cnpj) $('s-desc').insertAdjacentHTML('afterend', `<p class="small muted" style="margin:-6px 0 12px">CNPJ ${esc(GP.fmtCnpj(loja.cnpj))}</p>`);
   const pags = [loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito', loja.aceita_dinheiro !== false && loja.aceita_dinheiro != null && 'Dinheiro'].filter(Boolean);
   $('s-chips').innerHTML = [
     `<span class="badge ${ST().cls}" id="s-status"><i class="dot"></i>${ST().texto}</span>`,
+    loja.nota_qtd ? `<a class="chip" href="#reviews" style="text-decoration:none"><span class="stars">★</span> <b>${String(loja.nota_media).replace('.', ',')}</b> <span class="muted">(${loja.nota_qtd} avaliaç${loja.nota_qtd === 1 ? 'ão' : 'ões'})</span></a>` : '<span class="chip">✨ Novo no GoPedido</span>',
     `<span class="chip">${ic('clock')}${esc(loja.tempo_entrega)}</span>`,
+    loja.aceita_retirada ? `<span class="chip">${ic('store')}Retirada no local</span>` : '',
     `<span class="chip">${ic('bike')}${GP.regraEntrega(loja)}</span>`,
     Number(loja.pedido_minimo) ? `<span class="chip">Pedido mín. ${brl(loja.pedido_minimo)}</span>` : '',
     pags.length ? `<span class="chip">${ic('card')}${pags.join(' · ')}</span>` : ''
@@ -483,7 +508,9 @@
     rotaKm = r; rotaCalc = false;
     renderFee(); updNext(); if (step === 3) renderPag();
   }
+  let modoEnt = 'entrega';
   const entrega = () => {
+    if (modoEnt === 'retirada') return { d: 0, t: 0, fora: false, rota: false, calc: false, ret: true };
     if (!pos || loja.lat == null) return null;
     const reta = GP.dist(loja.lat, loja.lng, pos.lat, pos.lng);
     const d = GP.distEntrega(reta, rotaKm);
@@ -538,7 +565,23 @@
   };
 
   let addr = null;
+  function modoUI() {
+    $('c-modo').classList.toggle('hide', !loja.aceita_retirada);
+    document.querySelectorAll('#c-modo button').forEach(b => b.classList.toggle('on', b.dataset.m === modoEnt));
+    $('c-entrega').classList.toggle('hide', modoEnt === 'retirada');
+    $('c-ret').classList.toggle('hide', modoEnt !== 'retirada');
+    $('c-ret').innerHTML = `<div class="fee ok" style="margin:0 0 14px">${ic('store')}<span class="grow"><b>Retirar na loja</b><br><span class="small">${esc(loja.endereco || '')}</span></span>${loja.lat != null ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="${GP.mapsLink(loja.lat, loja.lng)}">Ver no mapa</a>` : ''}</div><p class="small muted" style="margin:-6px 0 12px">Sem taxa de entrega. Avisamos quando o pedido estiver pronto.</p>`;
+  }
+  $('c-modo').querySelector('[data-m=entrega]').innerHTML = ic('bike') + 'Entrega';
+  $('c-modo').querySelector('[data-m=retirada]').innerHTML = ic('store') + 'Retirar no local';
+  $('c-modo').onclick = (e) => {
+    const b = e.target.closest('[data-m]'); if (!b) return;
+    modoEnt = b.dataset.m; modoUI();
+    if (modoEnt === 'entrega' && addr) { addr.refresh(); calcRota(); }
+    renderFee(); updNext();
+  };
   function renderEntrega() {
+    modoUI();
     if (!addr) {
       addr = GP.addressForm($('c-addr'), {
         inicio: pos, centro: loja.lat != null ? { lat: loja.lat, lng: loja.lng } : null,
@@ -590,7 +633,7 @@
     const e = entrega();
     $('s3-sub').textContent = brl(subtotal());
     $('s3-fee').textContent = e && e.t > 0 ? brl(e.t) : 'Grátis';
-    $('s3-dist').textContent = e ? `(${km(e.d)})` : '';
+    $('s3-dist').textContent = e && e.ret ? '(retirada no local)' : e ? `(${km(e.d)})` : '';
     if (cupom && Number(cupom.minimo) > subtotal()) { cupom = null; $('b-cupom').textContent = 'Aplicar'; $('cupom-msg').innerHTML = '<span style="color:var(--bad)">O subtotal ficou abaixo do mínimo do cupom.</span>'; }
     const dsc = descontoCalc();
     $('s3-desc-row').classList.toggle('hide', !dsc);
@@ -700,9 +743,9 @@
     } else if (step === 2) {
       const e = entrega();
       txt = 'Ir para o pagamento';
-      ok = $('c-nome').value.trim().length >= 2 && GP.digits($('c-tel').value).length >= 10 && addr && addr.valid() && e && !e.fora;
+      ok = $('c-nome').value.trim().length >= 2 && GP.digits($('c-tel').value).length >= 10 && (modoEnt === 'retirada' || (addr && addr.valid() && e && !e.fora));
       if (e && e.calc) { ok = false; txt = 'Calculando a rota…'; }
-      if (addr && !addr.valid() && $('c-nome').value.trim()) txt = 'Preencha rua, número e cidade';
+      if (modoEnt === 'entrega' && addr && !addr.valid() && $('c-nome').value.trim()) txt = 'Preencha rua, número e cidade';
     } else {
       txt = `Enviar pedido · ${brl(total())}`;
       ok = !!pag && (pag !== 'pix' || !!comprovante) && (pag !== 'dinheiro' || trocoOk());
@@ -726,6 +769,7 @@
     if (step === 2) {
       if ($('c-nome').value.trim().length < 2) return { el: $('c-nome'), msg: 'Digite seu nome.' };
       if (GP.digits($('c-tel').value).length < 10) return { el: $('c-tel'), msg: 'Digite seu WhatsApp com DDD.' };
+      if (modoEnt === 'retirada') return null;
       if (!addr) return null;
       const a = addr.get();
       if (a.rua.length < 3) return { el: fA('rua'), msg: 'Preencha a rua (ou digite o CEP).' };
@@ -756,16 +800,17 @@
     const f = faltaCheckout();
     if (f) return avisar(f);
     if (step < 3) {
-      if (step === 2) {
+      if (step === 2 && modoEnt === 'entrega') {
         const a = addr.get();
         GP.ls.set('gp_cliente', { nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), end: a, lat: pos.lat, lng: pos.lng });
-      }
+      } else if (step === 2) GP.ls.set('gp_cliente', { ...(GP.ls.get('gp_cliente', {}) || {}), nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim() });
       step++; renderStep(); return;
     }
     const b = $('co-next'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Enviando pedido…';
     const { data, error } = await sb.rpc('ff_criar_pedido', {
       p_loja: loja.id,
-      p_cliente: { cupom: cupom ? cupom.codigo : '', troco_para: pag === 'dinheiro' && !$('c-semtroco').checked ? GP.num($('c-troco').value) : null, nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: GP.fmtEnd(addr.get()), complemento: addr.get().complemento, observacao: $('c-obs').value.trim(), lat: pos.lat, lng: pos.lng, distancia_km: entrega() ? entrega().d : null },
+      p_cliente: Object.assign({ cupom: cupom ? cupom.codigo : '', troco_para: pag === 'dinheiro' && !$('c-semtroco').checked ? GP.num($('c-troco').value) : null, nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), observacao: $('c-obs').value.trim(), tipo: modoEnt },
+        modoEnt === 'entrega' ? { endereco: GP.fmtEnd(addr.get()), complemento: addr.get().complemento, lat: pos.lat, lng: pos.lng, distancia_km: entrega() ? entrega().d : null } : {}),
       p_itens: bag.map(i => ({ id: i.id, qtd: i.qtd, obs: i.obs, opcoes: i.opcoes || [] })),
       p_pagamento: pag,
       p_comprovante: pag === 'pix' ? comprovante : null
@@ -776,7 +821,7 @@
       try {
         const nome = $('c-nome').value.trim(), telefone = $('c-tel').value.trim();
         await sb.from('ff_clientes').upsert({ id: user.id, nome: (perfil && perfil.nome) || nome, telefone: (perfil && perfil.telefone) || telefone });
-        if (!endSel && $('c-save').checked) {
+        if (modoEnt === 'entrega' && !endSel && $('c-save').checked) {
           const a = addr.get();
           await sb.from('ff_enderecos').insert({ apelido: enderecos.length ? '' : 'Casa', cep: a.cep, rua: a.rua, numero: a.numero, bairro: a.bairro, cidade: a.cidade, uf: a.uf, complemento: a.complemento, lat: a.lat, lng: a.lng, principal: !enderecos.length });
         }
@@ -785,6 +830,44 @@
     const hist = GP.ls.get('gp_pedidos', []); hist.unshift({ t: data.token, n: data.numero, loja: loja.nome, em: Date.now() });
     GP.ls.set('gp_pedidos', hist.slice(0, 20));
     location.href = 'pedido.html?t=' + encodeURIComponent(data.token) + '&novo=1';
+  };
+
+  // ---------- Avaliações ----------
+  (async () => {
+    const { data } = await sb.rpc('ff_avaliacoes_loja', { p_loja: loja.id, p_limite: 20 });
+    const lst = data || [];
+    if (!lst.length) { $('reviews').innerHTML = ''; return; }
+    const dist = [5, 4, 3, 2, 1].map(n => lst.filter(a => a.nota === n).length);
+    $('reviews').innerHTML = `<div class="card pad">
+      <div class="row" style="gap:16px;flex-wrap:wrap"><div class="center"><div style="font-size:2.2rem;font-weight:800;letter-spacing:-.03em">${String(loja.nota_media || '').replace('.', ',')}</div>${GP.estrelas(loja.nota_media)}<div class="small muted">${loja.nota_qtd} avaliações</div></div>
+        <div class="grow" style="min-width:160px">${[5, 4, 3, 2, 1].map((n, i) => `<div class="row small" style="gap:8px"><span style="width:12px">${n}</span><span style="flex:1;height:6px;background:#ECEAE6;border-radius:9px;overflow:hidden"><i style="display:block;height:100%;width:${lst.length ? dist[i] / lst.length * 100 : 0}%;background:#F5A623"></i></span></div>`).join('')}</div></div>
+      <div class="divider"></div>
+      ${lst.map(a => `<div class="rev"><div class="row between"><b class="small">${esc(a.nome || 'Cliente')}</b><span class="small muted">${new Date(a.criado_em).toLocaleDateString('pt-BR')}</span></div>
+        ${GP.estrelas(a.nota)}${a.comentario ? `<p class="small" style="margin-top:4px">${esc(a.comentario)}</p>` : ''}
+        ${a.resposta ? `<div class="resp"><b>Resposta da loja:</b> ${esc(a.resposta)}</div>` : ''}</div>`).join('')}
+    </div>`;
+    $('reviews').insertAdjacentHTML('afterbegin', '<h2 style="font-size:1.15rem;font-weight:800;margin-bottom:12px">Avaliações dos clientes</h2>');
+  })();
+
+  // ---------- Denúncia ----------
+  $('b-denuncia').onclick = () => {
+    const w = document.createElement('div');
+    w.className = 'cfm-wrap';
+    w.innerHTML = `<div class="cfm" style="text-align:left"><div class="cfm-ic bad" style="margin-left:0">${ic('shield')}</div>
+      <h3>Denunciar ${esc(loja.nome)}</h3><p>A equipe do GoPedido vai analisar. Se for golpe, a loja é bloqueada.</p>
+      <label class="field" style="margin-top:12px"><span>Motivo</span><select class="input" id="dn-m"><option>Pedi e não recebi</option><option>Loja falsa / golpe</option><option>Cobrança errada</option><option>Produto diferente do anunciado</option><option>Outro</option></select></label>
+      <label class="field"><span>Conte o que aconteceu</span><textarea class="input" id="dn-d" maxlength="1000" style="min-height:80px"></textarea></label>
+      <label class="field"><span>Seu WhatsApp <span class="muted">(opcional, para retorno)</span></span><input class="input" id="dn-c" inputmode="tel" maxlength="30"></label>
+      <div class="cfm-acts"><button type="button" class="btn btn-ghost" data-r="0">Voltar</button><button type="button" class="btn btn-danger" data-r="1">Enviar denúncia</button></div></div>`;
+    document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
+    const fim = () => { w.classList.remove('on'); setTimeout(() => w.remove(), 180); };
+    w.addEventListener('click', async (e) => {
+      if (e.target === w || e.target.closest('[data-r="0"]')) return fim();
+      if (!e.target.closest('[data-r="1"]')) return;
+      const { error } = await sb.rpc('ff_denunciar', { p_loja: loja.id, p_motivo: w.querySelector('#dn-m').value, p_detalhe: w.querySelector('#dn-d').value, p_contato: w.querySelector('#dn-c').value });
+      if (error) return GP.toast(GP.err(error), 'err');
+      fim(); GP.toast('Denúncia enviada. Obrigado por avisar!', 'ok');
+    });
   };
 
   saveBag();

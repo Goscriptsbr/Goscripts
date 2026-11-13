@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122339">
+<link rel="stylesheet" href="app.css?v=38799">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -139,6 +139,19 @@
   .frow{display:grid;grid-template-columns:auto 1fr auto 1fr 36px;gap:8px;align-items:center;margin-bottom:8px;font-size:.88rem;color:var(--ink-2)}
   .frow .input{height:42px;min-width:0}
   .frow .icon-btn{width:36px;height:42px}
+  .vbanner{border-radius:var(--r);padding:16px;margin-bottom:16px;border:1px solid}
+  .vbanner.pend{background:var(--warn-soft);border-color:#F3D9A4;color:#6b4a10}
+  .vbanner.rec{background:var(--bad-soft);border-color:#F5C2BE;color:#8a1c14}
+  .vbanner .grid2{margin-top:12px}
+  .vbanner .input{background:#fff}
+  .avbox{margin-bottom:16px}
+  .avbox summary{display:flex;gap:10px;align-items:center;cursor:pointer;list-style:none}
+  .avbox summary::-webkit-details-marker{display:none}
+  .avbox summary .small{margin-left:auto}
+  .avbox .chev{width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:0 4px 4px 0}
+  .avbox[open] .chev{transform:rotate(-135deg);margin:4px 4px 0 0}
+  .avi{padding:12px 0;border-top:1px solid var(--line)}
+  .avi:first-child{border-top:0}
   .etp{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
   .etp:first-child{border-top:0}
   .ecat{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
@@ -227,7 +240,9 @@
     <section id="tab-pedidos">
       <div class="stline" id="stline"></div>
       <div class="card moto" id="moto"></div>
+      <div id="verif-banner"></div>
       <div class="stats" id="stats"></div>
+      <details class="card pad avbox" id="avbox"><summary><b>Avaliações dos clientes</b><span class="small muted" id="av-resumo"></span><span class="chev"></span></summary><div id="av-lista" style="margin-top:10px"></div></details>
       <div class="row between" style="margin-bottom:14px;flex-wrap:wrap">
         <div class="row" id="ofilter" style="gap:8px">
           <button class="chip on" data-f="abertos" style="cursor:pointer">Em andamento</button>
@@ -298,6 +313,7 @@
     </section>
 
     <section id="tab-loja" class="hide">
+      <div id="verif-banner2"></div>
       <div class="card pad" id="plano-box" style="margin-bottom:16px"></div>
       <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
       <form id="f-loja">
@@ -369,6 +385,7 @@
               <label class="switch"><input type="checkbox" id="l-deb"><i></i>Débito na entrega</label>
               <label class="switch"><input type="checkbox" id="l-cred"><i></i>Crédito na entrega</label>
               <label class="switch"><input type="checkbox" id="l-din"><i></i>Dinheiro (com troco)</label>
+              <label class="switch"><input type="checkbox" id="l-ret"><i></i>Aceitar retirada no local</label>
             </div>
             <div id="pix-cfg" class="grid2">
               <label class="field"><span>Tipo de chave Pix</span>
@@ -464,8 +481,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122339"></script>
-<script src="app.js?v=202611122339"></script>
+<script src="config.js?v=38799"></script>
+<script src="app.js?v=38799"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -594,7 +611,7 @@
     prods = []; pedidos = []; conhecidos = null; codigo = null;
     $('orders').innerHTML = ''; $('plist').innerHTML = '';
     $('welcome').classList.add('hide');
-    fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel();
+    fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel(); renderVerif(); loadAvaliacoes();
     await loadProds();
     go('pedidos');
     await loadPedidos();
@@ -630,6 +647,57 @@
   }
   $('tabs').onclick = (e) => { const b = e.target.closest('[data-t]'); if (b) go(b.dataset.t); };
 
+  // ---------- Verificação da loja ----------
+  async function renderVerif() {
+    const v = loja && loja.verificacao;
+    if (!loja || v === 'verificada') { $('verif-banner').innerHTML = ''; $('verif-banner2').innerHTML = ''; return; }
+    const { data: dv } = await sb.from('ff_verificacoes').select('*').eq('loja_id', loja.id).maybeSingle();
+    const msgWa = `Olá! Cadastrei a loja "${loja.nome}" no GoPedido e quero a verificação. E-mail: ${user.email}`;
+    const html = `<div class="vbanner ${v === 'recusada' ? 'rec' : 'pend'}">
+      <div class="row" style="align-items:flex-start;gap:10px">${ic('shield')}<div class="grow">
+        <b>${v === 'recusada' ? 'Sua loja não foi aprovada' : 'Sua loja está em análise'}</b>
+        <div class="small" style="margin-top:2px">${v === 'recusada' ? (esc(loja.verificacao_motivo) || 'Fale com a gente para entender.') : 'Para proteger os clientes contra golpes, toda loja nova é conferida antes de aparecer no site e receber pedidos. Enquanto isso, você já pode montar o cardápio.'}</div></div></div>
+      <div class="grid2">
+        <label class="field" style="margin:0"><span>Nome do responsável</span><input class="input vb-nome" maxlength="80" value="${esc(dv ? dv.responsavel_nome : '')}" placeholder="Nome completo"></label>
+        <label class="field" style="margin:0"><span>CPF do responsável${loja.cnpj ? ' (opcional, já tem CNPJ)' : ''}</span><input class="input vb-cpf" inputmode="numeric" maxlength="14" value="${esc(dv ? dv.responsavel_cpf : '')}" placeholder="000.000.000-00"></label>
+      </div>
+      <p class="small" style="margin:8px 0 10px">Esses dados não aparecem para os clientes. ${loja.cnpj ? '' : 'Se tiver CNPJ, coloque em Minha loja.'}</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-dark btn-sm vb-save">${ic('check')}Salvar dados</button>
+        <a class="btn btn-ok btn-sm" target="_blank" rel="noopener" href="https://wa.me/${GP.WHATS}?text=${encodeURIComponent(msgWa)}">${ic('chat')}Pedir verificação no WhatsApp</a></div>
+    </div>`;
+    $('verif-banner').innerHTML = html; $('verif-banner2').innerHTML = html;
+    document.querySelectorAll('.vb-cpf').forEach(el => el.addEventListener('input', () => { const d = GP.digits(el.value).slice(0, 11); el.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4'); }));
+    document.querySelectorAll('.vb-save').forEach(b => b.onclick = async () => {
+      const box = b.closest('.vbanner'), nome = box.querySelector('.vb-nome').value.trim(), cpf = box.querySelector('.vb-cpf').value.trim();
+      if (nome.length < 5) return GP.toast('Digite o nome completo do responsável.', 'err');
+      if (!loja.cnpj && GP.digits(cpf).length !== 11) return GP.toast('Digite o CPF do responsável (ou coloque o CNPJ da loja).', 'err');
+      const { error } = await sb.from('ff_verificacoes').upsert({ loja_id: loja.id, responsavel_nome: nome, responsavel_cpf: cpf, atualizado_em: new Date().toISOString() });
+      if (error) return GP.toast(GP.err(error), 'err');
+      GP.toast('Dados salvos! Agora é só pedir a verificação no WhatsApp.', 'ok'); renderVerif();
+    });
+  }
+
+  // ---------- Avaliações ----------
+  async function loadAvaliacoes() {
+    if (!loja) return;
+    const { data, error } = await sb.from('ff_avaliacoes').select('*').eq('loja_id', loja.id).order('criado_em', { ascending: false }).limit(50);
+    if (error) { $('avbox').classList.add('hide'); return; }
+    $('avbox').classList.remove('hide');
+    $('av-resumo').innerHTML = loja.nota_qtd ? `<span class="stars">★</span> ${String(loja.nota_media).replace('.', ',')} · ${loja.nota_qtd} avaliaç${loja.nota_qtd === 1 ? 'ão' : 'ões'}` : 'nenhuma ainda';
+    $('av-lista').innerHTML = data.length ? data.map(a => `<div class="avi"><div class="row between"><b class="small">${esc(a.nome || 'Cliente')}</b><span class="small muted">${new Date(a.criado_em).toLocaleDateString('pt-BR')}</span></div>
+      ${GP.estrelas(a.nota)}${a.comentario ? `<p class="small" style="margin-top:4px">${esc(a.comentario)}</p>` : ''}
+      ${a.resposta ? `<div class="small" style="background:var(--bg);border-radius:10px;padding:8px 10px;margin-top:6px"><b>Sua resposta:</b> ${esc(a.resposta)}</div>` : `<div class="row" style="gap:8px;margin-top:8px"><input class="input grow" data-respv="${a.id}" placeholder="Responder ao cliente…" maxlength="500" style="height:40px"><button class="btn btn-soft btn-sm" data-resp="${a.id}">Responder</button></div>`}</div>`).join('')
+      : '<p class="small muted">Quando os clientes avaliarem os pedidos entregues, as avaliações aparecem aqui.</p>';
+  }
+  $('av-lista').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-resp]'); if (!b) return;
+    const txt = $('av-lista').querySelector(`[data-respv="${b.dataset.resp}"]`).value.trim();
+    if (!txt) return GP.toast('Escreva a resposta.', 'err');
+    const { error } = await sb.rpc('ff_responder_avaliacao', { p_id: b.dataset.resp, p_texto: txt });
+    if (error) return GP.toast(GP.err(error), 'err');
+    GP.toast('Resposta publicada', 'ok'); loadAvaliacoes();
+  });
+
   function applyHeader() {
     renderLojaSel();
     const st = GP.statusLoja(loja);
@@ -642,6 +710,7 @@
   }
   $('sw-aberta').onchange = async (e) => {
     const v = e.target.checked;
+    if (v && loja.verificacao !== 'verificada') { e.target.checked = false; renderVerif(); return GP.toast(loja.verificacao === 'recusada' ? 'Sua loja não foi aprovada. Fale com o suporte.' : 'Sua loja ainda está em análise. Ela abre depois de verificada.', 'err'); }
     if (v) {
       const falta = [];
       if (loja.lat == null) falta.push('localização no mapa');
@@ -753,14 +822,17 @@
       return;
     }
     const PROX = { novo: ['preparando', 'Aceitar e preparar'], preparando: ['saiu', 'Saiu para entrega'], saiu: ['entregue', 'Marcar como entregue'] };
+    const PROX_RET = { novo: ['preparando', 'Aceitar e preparar'], preparando: ['saiu', 'Pronto para retirada'], saiu: ['entregue', 'Cliente retirou'] };
     $('orders').innerHTML = lst.map(p => {
-      const st = GP.STATUS[p.status], nx = PROX[p.status];
+      const ret = p.tipo_entrega === 'retirada';
+      const st = GP.statusTxt(p), nx = (ret ? PROX_RET : PROX)[p.status];
       const maps = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
       return `<article class="card order st-${p.status}">
         <div class="oh"><b style="font-size:1.08rem">#${p.numero}</b><span class="small muted">${GP.hora(p.criado_em)} · ${GP.ago(p.criado_em)}</span><div class="grow"></div><span class="badge ${st.c}"><i class="dot"></i>${st.t}</span></div>
         <div class="ob">
           <div class="line">${ic('phone')}<div><b>${esc(p.cliente_nome)}</b> · <a href="${GP.wa(p.cliente_telefone, `Olá ${p.cliente_nome}! Aqui é da ${loja.nome}, sobre seu pedido #${p.numero}.`)}" target="_blank" rel="noopener" style="color:var(--ok);font-weight:700">${esc(p.cliente_telefone)}</a></div></div>
-          <div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}<br><a href="${maps}" target="_blank" rel="noopener" class="small" style="color:var(--brand-2);font-weight:700">Abrir rota no mapa (${km(p.distancia_km)})</a></div></div>
+          ${ret ? `<div class="line">${ic('store')}<div><span class="badge b-brand">Retirada no local</span> <span class="small muted">o cliente vem buscar</span></div></div>`
+            : `<div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}<br><a href="${maps}" target="_blank" rel="noopener" class="small" style="color:var(--brand-2);font-weight:700">Abrir rota no mapa (${km(p.distancia_km)})</a></div></div>`}
           <div class="its">${p.ff_pedido_itens.map(i => `<div><span><b>${i.qtd}×</b> ${esc(i.nome)}${(i.opcoes || []).length ? `<br><span class="small muted">+ ${esc(GP.txtOpcoes(i.opcoes))}</span>` : ''}${i.obs ? `<br><span class="small muted">↳ ${esc(i.obs)}</span>` : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div>
           ${GP.troco(p) > 0 ? `<div class="fee" style="background:var(--warn-soft);color:#7a4f0e;display:flex;gap:10px;padding:10px 12px;border-radius:12px;margin-bottom:10px;font-weight:700">${ic('cash')}<span class="grow">Separar troco para o motoboy</span><span>${brl(GP.troco(p))}</span></div>` : ''}
           ${p.entregador_nome ? `<div class="line">${ic('bike')}<div class="small">Entregador: <b>${esc(p.entregador_nome)}</b></div></div>` : ''}
@@ -1306,7 +1378,7 @@
     document.querySelectorAll('input[name=taxa_modo]').forEach(r => r.checked = r.value === (l.taxa_modo || 'km'));
     modoUI();
     $('l-raio').value = Number(l.raio_km) ? String(l.raio_km).replace('.', ',') : ''; $('l-min').value = money(l.pedido_minimo);
-    $('l-pix').checked = loja ? l.aceita_pix : true; $('l-deb').checked = loja ? l.aceita_debito : true; $('l-cred').checked = loja ? l.aceita_credito : true; $('l-din').checked = loja ? l.aceita_dinheiro !== false : true;
+    $('l-pix').checked = loja ? l.aceita_pix : true; $('l-deb').checked = loja ? l.aceita_debito : true; $('l-cred').checked = loja ? l.aceita_credito : true; $('l-din').checked = loja ? l.aceita_dinheiro !== false : true; $('l-ret').checked = loja ? l.aceita_retirada !== false : true;
     $('l-pixtipo').value = l.pix_tipo || 'cpf'; $('l-pixchave').value = l.pix_chave || '';
     $('l-pixnome').value = l.pix_nome || ''; $('l-pixcidade').value = l.pix_cidade || '';
     $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
@@ -1455,7 +1527,7 @@
       nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
       endereco: $('l-end').value.trim(), lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
       ...cfgTaxa(), pedido_minimo: num($('l-min').value),
-      aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked,
+      aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked, aceita_retirada: $('l-ret').checked,
       horarios: lerHoras(), horario_auto: $('l-auto').checked,
       pix_tipo: $('l-pixtipo').value, pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()
     };
