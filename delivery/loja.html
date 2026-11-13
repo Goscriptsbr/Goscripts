@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122228">
+<link rel="stylesheet" href="app.css?v=202611122233">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -236,8 +236,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122228"></script>
-<script src="app.js?v=202611122228"></script>
+<script src="config.js?v=202611122233"></script>
+<script src="app.js?v=202611122233"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -557,7 +557,7 @@
     if (!code) return GP.toast('Digite o código do cupom.');
     const b = $('b-cupom'); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
     const e = entrega();
-    const { data, error } = await sb.rpc('ff_cupom_info', { p_loja: loja.id, p_codigo: code, p_sub: subtotal(), p_taxa: e ? e.t : 0 });
+    const { data, error } = await sb.rpc('ff_cupom_info', { p_loja: loja.id, p_codigo: code, p_sub: subtotal(), p_taxa: e ? e.t : 0, p_tel: $('c-tel').value });
     b.disabled = false; b.textContent = 'Aplicar';
     if (error || data.erro) {
       cupom = null;

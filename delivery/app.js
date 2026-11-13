@@ -128,6 +128,7 @@
     cupom_invalido: 'Cupom não encontrado para esta loja.',
     cupom_vencido: 'Este cupom já venceu.',
     cupom_esgotado: 'Este cupom já foi usado o máximo de vezes.',
+    cupom_ja_usado: 'Você já usou este cupom o máximo de vezes permitido.',
     cupom_minimo: 'O pedido não atingiu o valor mínimo para este cupom.',
     troco_invalido: 'O valor do troco precisa ser maior que o total do pedido.',
     codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
