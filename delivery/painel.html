@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=81529">
+<link rel="stylesheet" href="app.css?v=83708">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -779,8 +779,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=81529"></script>
-<script src="app.js?v=81529"></script>
+<script src="config.js?v=83708"></script>
+<script src="app.js?v=83708"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -945,7 +945,8 @@
         me_autorizacao: 'O Melhor Envio não autorizou a conexão. Tente conectar de novo.',
         so_dono: 'Só o dono da conta pode fazer isso.', sem_acesso: 'Você não tem acesso a esta loja.',
         loja_sem_cep: 'Coloque o CEP no endereço da loja.', envio_so_variedades: 'O envio pelo Melhor Envio é só para lojas do tipo Variedades.',
-        etiqueta_nao_gerada: 'Gere a etiqueta primeiro.', pedido_cancelado: 'Pedido cancelado.'
+        etiqueta_nao_gerada: 'Gere a etiqueta primeiro.', pedido_cancelado: 'Pedido cancelado.',
+        etiqueta_nao_cancela: 'A etiqueta já foi postada ou não pode mais ser cancelada pelo sistema. Veja no site do Melhor Envio.'
       };
       const msg = MSG[cod] || (cod === 'me_erro' && j.detalhe ? 'Melhor Envio: ' + j.detalhe : '') ||
         (/Failed to send|not found|404/i.test(error.message || '') && !cod ? 'A função ff-melhorenvio ainda não foi publicada no Supabase.' : (j && (j.detalhe || j.error)) || GP.err(error));
@@ -1459,8 +1460,8 @@
     const rast = p.rastreio ? `<a href="https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(p.rastreio)}" target="_blank" rel="noopener" style="color:var(--brand-2);font-weight:800">${esc(p.rastreio)}</a>` : '';
     return `<div class="line">${ic('box')}<div><span class="badge b-brand">Envio</span> <b>${esc(p.frete_nome || 'Transportadora')}</b>${p.frete_prazo ? ` <span class="small muted">· até ${p.frete_prazo} dia${p.frete_prazo > 1 ? 's' : ''} úteis</span>` : ''}</div></div>
       <div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}${docF ? `<br><span class="small muted">CPF/CNPJ: ${esc(docF)}</span>` : ''}</div></div>
-      ${cancel ? '' : `<div class="envbox">
-        <div class="small">${gerada ? `${ic('check')}<b>Etiqueta gerada</b>${rast ? ' · Rastreio ' + rast : ''}` : p.etiqueta_status === 'paga' || p.etiqueta_status === 'carrinho' ? '<b>Etiqueta em andamento</b> · toque para concluir' : 'A etiqueta é paga com o saldo do seu Melhor Envio.'}</div>
+      ${cancel ? (p.etiqueta_status === 'cancelada' ? `<div class="envbox"><div class="small"><b>Etiqueta cancelada</b> · o valor voltou para o saldo do Melhor Envio</div></div>` : '') : `<div class="envbox">
+        <div class="small">${p.etiqueta_status === 'cancelada' ? '<b>Etiqueta cancelada</b> · o valor voltou para o saldo do Melhor Envio' : gerada ? `${ic('check')}<b>Etiqueta gerada</b>${rast ? ' · Rastreio ' + rast : ''}` : p.etiqueta_status === 'paga' || p.etiqueta_status === 'carrinho' ? '<b>Etiqueta em andamento</b> · toque para concluir' : 'A etiqueta é paga com o saldo do seu Melhor Envio.'}</div>
         <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">
           ${gerada ? `<button class="btn btn-primary btn-sm" data-me="imprimir" data-id="${p.id}">${ic('receipt')}Imprimir etiqueta</button>
                       <button class="btn btn-ghost btn-sm" data-me="rastrear" data-id="${p.id}">${ic('refresh')}Rastreio</button>`
@@ -1506,7 +1507,23 @@
       return;
     }
     const b = e.target.closest('[data-st]'); if (!b) return;
-    if (b.dataset.st === 'cancelado' && !(await GP.confirmar('Cancelar este pedido?', { texto: 'O cliente vai ver o pedido como cancelado. Se ele usou cupom, o uso volta para o cupom.', ok: 'Cancelar pedido', cancelar: 'Voltar', icone: 'x' }))) return;
+    const pc = pedidos.find(x => x.id === b.dataset.id);
+    const comEtiqueta = pc && pc.tipo_entrega === 'envio' && ['carrinho', 'paga', 'gerada'].includes(pc.etiqueta_status);
+    if (b.dataset.st === 'cancelado') {
+      const pix = pc && pc.pagamento === 'pix';
+      const txt = 'O cliente vai ver o pedido como cancelado. Se ele usou cupom, o uso volta para o cupom.'
+        + (comEtiqueta ? ' A etiqueta também é cancelada no Melhor Envio e o valor volta para o seu saldo de lá.' : '')
+        + (pix ? ` O cliente pagou ${brl(pc.total)} por Pix: devolva o valor para ele pelo app do seu banco.` : '');
+      if (!(await GP.confirmar('Cancelar este pedido?', { texto: txt, ok: 'Cancelar pedido', cancelar: 'Voltar', icone: 'x' }))) return;
+      if (comEtiqueta) {
+        b.disabled = true;
+        try { await chamarME({ acao: 'cancelar', pedido: pc.id }); pc.etiqueta_status = 'cancelada'; }
+        catch (er) {
+          b.disabled = false;
+          if (!(await GP.confirmar('Não deu para cancelar a etiqueta', { texto: er.message + ' Quer cancelar o pedido no GoPedido mesmo assim?', ok: 'Cancelar só o pedido', cancelar: 'Voltar', perigo: true }))) return;
+        }
+      }
+    }
     b.disabled = true;
     const janela = b.dataset.st === 'preparando' && pcfg.auto ? window.open('', '_blank') : null;
     const { error } = await sb.from('ff_pedidos').update({ status: b.dataset.st }).eq('id', b.dataset.id);

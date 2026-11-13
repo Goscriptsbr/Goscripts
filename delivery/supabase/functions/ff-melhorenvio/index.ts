@@ -13,6 +13,7 @@
 //   { acao: 'etiqueta',    pedido }             → compra e gera a etiqueta com o saldo da conta (dono ou equipe)
 //   { acao: 'imprimir',    pedido }             → link do PDF da etiqueta (dono ou equipe)
 //   { acao: 'rastrear',    pedido | token }     → atualiza o código de rastreio (equipe, ou o cliente com o token)
+//   { acao: 'cancelar',    pedido }             → cancela a etiqueta no Melhor Envio e o valor volta para o saldo (dono ou equipe)
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
 //   nome: ff-melhorenvio → cole este arquivo inteiro → Deploy → em Details desligue "Verify JWT".
@@ -367,6 +368,23 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
     } catch (e) { if (!b.token) throw e; }
     if (rastreio && rastreio !== p.rastreio) ok(await admin.from('ff_pedidos').update({ rastreio: String(rastreio).slice(0, 60) }).eq('id', p.id), 'rastreio');
     return { status: 200, corpo: { rastreio, situacao } };
+  }
+
+  if (acao === 'cancelar') {
+    const p = await pegaPedido();
+    const l = await pegaLoja(p.loja_id); await exigeEquipe(l);
+    if (!p.me_pedido_id || p.etiqueta_status === 'cancelada') return { status: 200, corpo: { ok: true, cancelada: false } };
+    if (p.etiqueta_status === 'carrinho') {
+      // Ainda não foi paga: só tira do carrinho
+      await api(l.id, 'DELETE', '/api/v2/me/cart/' + encodeURIComponent(p.me_pedido_id)).catch(() => {});
+    } else {
+      const c = await api(l.id, 'POST', '/api/v2/me/shipment/cancellable', { orders: [p.me_pedido_id] });
+      const info = c && c[p.me_pedido_id];
+      if (info && info.cancellable === false) throw new Falha('etiqueta_nao_cancela', 400, 'a etiqueta já foi postada ou não pode mais ser cancelada');
+      await api(l.id, 'POST', '/api/v2/me/shipment/cancel', { order: { id: p.me_pedido_id, reason_id: '2', description: 'Pedido cancelado pela loja (GoPedido #' + p.numero + ')' } });
+    }
+    ok(await admin.from('ff_pedidos').update({ etiqueta_status: 'cancelada' }).eq('id', p.id), 'cancelada');
+    return { status: 200, corpo: { ok: true, cancelada: true } };
   }
 
   throw new Falha('acao_invalida');
