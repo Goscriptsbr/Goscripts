@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=96348">
+<link rel="stylesheet" href="app.css?v=97444">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -803,8 +803,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=96348"></script>
-<script src="app.js?v=96348"></script>
+<script src="config.js?v=97444"></script>
+<script src="app.js?v=97444"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1121,7 +1121,10 @@
           const r = await chamarME({ acao: 'recarregar', loja: loja.id, valor: v });
           if (janela) janela.location = r.url; else location.href = r.url;
           w.remove();
-          GP.toast(r.fallback ? 'Abrimos o Melhor Envio: vá em Financeiro → Inserir créditos. Depois toque em atualizar o saldo.' : 'Conclua o pagamento na tela que abriu. Depois toque em atualizar o saldo.', 'ok');
+          if (r.fallback) {
+            console.warn('Recarga pelo GoPedido não disponível:', r.motivo);
+            GP.toast('Abrimos o Melhor Envio: vá em Financeiro → Inserir créditos. Depois toque em atualizar o saldo.' + (r.motivo ? ' (Motivo: ' + r.motivo + ')' : ''), 'ok');
+          } else GP.toast('Conclua o pagamento na tela que abriu. Depois toque em atualizar o saldo.', 'ok');
         } catch (er) {
           if (janela) janela.close();
           b.disabled = false; b.textContent = 'Ir para o pagamento'; GP.toast(er.message, 'err');
