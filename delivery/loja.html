@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=73886">
+<link rel="stylesheet" href="app.css?v=74074">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -157,6 +157,10 @@
   .drop .ic{width:44px;height:44px;border-radius:14px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center}
   .drop.done .ic{background:#fff;color:var(--ok)}
   .lock{display:flex;gap:8px;align-items:center;justify-content:center;color:var(--muted);font-size:.8rem;margin-top:10px}
+  #bb-t small{display:block;font-size:.72rem;font-weight:600;opacity:.92;line-height:1.2;margin-top:1px}
+  #bb-t{line-height:1.15;text-align:left}
+  #s1-min.on{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);color:#7a4f0e;border-radius:12px;padding:10px 12px;font-size:.86rem;margin-top:10px}
+  #s1-min.on svg{width:18px;height:18px;flex:none;margin-top:1px}
 </style>
 </head>
 <body>
@@ -306,8 +310,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=73886"></script>
-<script src="app.js?v=73886"></script>
+<script src="config.js?v=74074"></script>
+<script src="app.js?v=74074"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -451,6 +455,8 @@
     GP.ls.set(KEY, bag);
     const n = count();
     $('bb-n').textContent = n; $('bb-v').textContent = brl(subtotal());
+    const faltaMin = Number(loja.pedido_minimo) - subtotal();
+    $('bb-t').innerHTML = faltaMin > 0 && n > 0 ? `Ver sacola<small>Faltam ${brl(faltaMin)} para o mínimo</small>` : 'Ver sacola';
     $('bagbar').classList.toggle('hidden', n === 0 || $('co').classList.contains('on'));
     $('b-bag').innerHTML = ic('bag') + `<span>${n ? brl(subtotal()) : 'Sacola'}</span>`;
     renderMenu();
@@ -601,7 +607,8 @@
     }).join('');
     $('s1-sub').textContent = brl(subtotal());
     const falta = Number(loja.pedido_minimo) - subtotal();
-    $('s1-min').textContent = falta > 0 ? `Pedido mínimo de ${brl(loja.pedido_minimo)} — faltam ${brl(falta)}.` : '';
+    $('s1-min').innerHTML = falta > 0 ? `${ic('bag')}<span>O pedido mínimo desta loja é <b>${brl(loja.pedido_minimo)}</b>. Adicione mais <b>${brl(falta)}</b> para continuar.</span>` : '';
+    $('s1-min').classList.toggle('on', falta > 0);
   }
   $('b-mais').innerHTML = ic('plus') + 'Adicionar mais itens';
   $('b-mais').onclick = () => { closeAll(); window.scrollTo({ top: document.querySelector('.catnav').offsetTop - 60, behavior: 'smooth' }); };
