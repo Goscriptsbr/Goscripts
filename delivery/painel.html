@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=73313">
+<link rel="stylesheet" href="app.css?v=73569">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -22,11 +22,13 @@
   .auth .side .lead b{color:#fff}
   .auth .side ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative}
   .auth .side li{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px}
-  .auth .side li .e{font-size:1.25rem;line-height:1;flex:none;margin-top:1px}
+  .auth .side li .e{width:34px;height:34px;border-radius:10px;background:rgba(242,69,28,.18);color:#FF8A65;display:grid;place-items:center;flex:none}
+  .auth .side li .e svg{width:18px;height:18px}
   .auth .side li b{display:block;font-size:.88rem;color:#fff;line-height:1.25}
   .auth .side li span{display:block;font-size:.76rem;color:#a9a9b5;line-height:1.4;margin-top:3px}
   .auth .side .plan-line{position:relative;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:#b9b9c4;margin-top:22px}
-  .auth .side .plan-line span:first-child{color:#fff;font-weight:700}
+  .auth .side .plan-line span:first-child{color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+  .auth .side .plan-line i{display:inline-grid;color:#FF8A65}.auth .side .plan-line i svg{width:16px;height:16px}
   .auth .form{display:grid;place-items:center;padding:30px 20px}
   .auth .box{width:min(400px,100%)}
   .auth h1{font-size:1.6rem;letter-spacing:-.03em;margin-bottom:4px}
@@ -82,6 +84,7 @@
 
   .plist{display:grid;gap:8px}
   @media(min-width:860px){.plist{grid-template-columns:1fr 1fr}}
+  .chip svg{width:15px;height:15px;margin-right:2px;vertical-align:-2px}
   .pitem{display:flex;gap:12px;align-items:center;padding:10px;border-radius:18px;cursor:pointer;transition:box-shadow .15s,transform .15s}
   .pitem:hover{box-shadow:0 6px 20px rgba(22,22,27,.08)}
   .pitem:active{transform:scale(.99)}
@@ -141,7 +144,9 @@
   .paytile{display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;min-width:0;position:relative}
   .paygrid .paytile{flex-direction:column;align-items:flex-start;gap:6px;padding:12px 12px 10px}
   .paygrid .paytile .switch{position:absolute;right:10px;top:10px}
-  .paytile .pi{font-size:1.25rem;flex:none}
+  .paytile .pi{width:34px;height:34px;border-radius:10px;background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;flex:none}
+  .paytile .pi svg{width:18px;height:18px}
+  .paytile:has(input:checked) .pi{background:#fff;color:var(--ok)}
   .paytile b{font-size:.84rem;line-height:1.2;display:block}
   .paytile small{font-size:.7rem;color:var(--muted);display:block}
   .paytile .switch{margin-left:auto;flex:none}
@@ -305,7 +310,12 @@
   .cup.off .stub{filter:grayscale(1);opacity:.55}.cup.off .code{color:var(--muted)}
   .tipos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
   .tipos button{border:1.5px solid var(--line);border-radius:14px;padding:12px 6px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.8rem;font-weight:700;color:var(--ink-2)}
-  .tipos button b{font-size:1.2rem;line-height:1}
+  .tipos button b{font-size:1.2rem;line-height:1;display:grid;place-items:center;height:22px}
+  .tipos button b svg{width:22px;height:22px}
+  .cup .stub b svg{width:30px;height:30px}
+  .cup .rg .vis{display:inline-flex;align-items:center;gap:4px}.cup .rg .vis svg{width:13px;height:13px}
+  .pp-ic{width:38px;height:38px;border-radius:12px;background:var(--bad-soft,#fde8e8);color:var(--bad);display:grid;place-items:center;flex:none}.pp-ic svg{width:20px;height:20px}
+  .empty .big svg{width:34px;height:34px}
   .tipos button.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-2)}
   .cprev{margin-bottom:16px;pointer-events:none}
   .cprev .cup{margin:0;border:1px solid var(--line)}
@@ -329,7 +339,7 @@
       <p class="lead">Seu próprio delivery, com link para divulgar no WhatsApp e no Instagram. <b>Sem comissão por pedido.</b></p>
       <ul id="perks"></ul>
     </div>
-    <div class="plan-line"><span>🎁 Grátis: 1 loja e 50 produtos</span><span>Planos a partir de R$ 50/mês</span></div>
+    <div class="plan-line"><span><i id="pl-gift"></i>Grátis: 1 loja e 50 produtos</span><span>Planos a partir de R$ 50/mês</span></div>
   </div>
   <div class="form">
     <div class="box">
@@ -494,7 +504,7 @@
             <p class="small muted" style="margin:-6px 0 12px">Digite o CEP e o número, que o pino vai sozinho para o lugar. Ou toque no mapa, ou use "Minha localização", que os campos se preenchem.</p>
             <div id="l-addr"></div>
             <p class="hide" id="l-coord"></p><div style="height:12px"></div>
-            <label class="paytile rettile"><span class="pi">🏪</span><span style="min-width:0"><b>Aceitar retirada no local</b><small>O cliente busca na loja, sem taxa de entrega</small></span><span class="switch"><input type="checkbox" id="l-ret"><i></i></span></label>
+            <label class="paytile rettile"><span class="pi" data-ic="store"></span><span style="min-width:0"><b>Aceitar retirada no local</b><small>O cliente busca na loja, sem taxa de entrega</small></span><span class="switch"><input type="checkbox" id="l-ret"><i></i></span></label>
             <div class="sub-t">Como cobrar a entrega</div>
             <div class="modos" id="l-modo">
               <label class="opt"><input type="radio" name="taxa_modo" value="km"><span class="grow"><b>Valor por km</b><div class="small muted">Ex.: R$ 2,00 por km rodado</div></span></label>
@@ -537,10 +547,10 @@
             <h3><span id="fi3"></span>Formas de pagamento</h3>
             <p class="fsub">Ligue as formas que sua loja aceita.</p>
             <div class="paygrid">
-              <label class="paytile"><span class="pi">⚡</span><span style="min-width:0"><b>Pix</b><small>Pago na hora</small></span><span class="switch"><input type="checkbox" id="l-pix"><i></i></span></label>
-              <label class="paytile"><span class="pi">💳</span><span style="min-width:0"><b>Débito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-deb"><i></i></span></label>
-              <label class="paytile"><span class="pi">💳</span><span style="min-width:0"><b>Crédito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-cred"><i></i></span></label>
-              <label class="paytile"><span class="pi">💵</span><span style="min-width:0"><b>Dinheiro</b><small>Com troco</small></span><span class="switch"><input type="checkbox" id="l-din"><i></i></span></label>
+              <label class="paytile"><span class="pi" data-ic="pix"></span><span style="min-width:0"><b>Pix</b><small>Pago na hora</small></span><span class="switch"><input type="checkbox" id="l-pix"><i></i></span></label>
+              <label class="paytile"><span class="pi" data-ic="card"></span><span style="min-width:0"><b>Débito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-deb"><i></i></span></label>
+              <label class="paytile"><span class="pi" data-ic="card"></span><span style="min-width:0"><b>Crédito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-cred"><i></i></span></label>
+              <label class="paytile"><span class="pi" data-ic="cash"></span><span style="min-width:0"><b>Dinheiro</b><small>Com troco</small></span><span class="switch"><input type="checkbox" id="l-din"><i></i></span></label>
             </div>
             <div id="pix-cfg" class="grid2 pixbox">
               <label class="field"><span>Tipo de chave Pix</span>
@@ -571,7 +581,7 @@
       <div class="tipos" id="c-tipos">
         <button type="button" class="on" data-tp="percentual"><b>%</b>Porcentagem</button>
         <button type="button" data-tp="valor"><b>R$</b>Valor fixo</button>
-        <button type="button" data-tp="frete"><b>🛵</b>Entrega grátis</button>
+        <button type="button" data-tp="frete"><b data-ic="bike"></b>Entrega grátis</button>
       </div>
       <div class="grid2">
         <label class="field"><span>Código do cupom</span><input class="input" id="c-cod" maxlength="20" placeholder="BEMVINDO10" style="text-transform:uppercase;font-weight:800;letter-spacing:.05em" required></label>
@@ -669,24 +679,26 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=73313"></script>
-<script src="app.js?v=73313"></script>
+<script src="config.js?v=73569"></script>
+<script src="app.js?v=73569"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
   const sb = GP.client(true);
   const cfg = GP.cfg;
   ['lg1', 'lg2', 'lg3'].forEach(id => $(id).innerHTML = ic('bag'));
+  document.querySelectorAll('[data-ic]').forEach(el => { el.innerHTML = ic(el.dataset.ic); });
+  $('pl-gift').innerHTML = ic('gift');
   $('perks').innerHTML = [
-    ['🔔', 'Pedidos ao vivo', 'Chegam na hora, com aviso sonoro e impressão na térmica.'],
-    ['📱', 'Cardápio completo', 'Fotos, categorias, adicionais e montagem (açaí, combos).'],
-    ['⚡', 'Pix na hora', 'QR Code com comprovante. Cartão e dinheiro com troco na entrega.'],
-    ['🛵', 'Taxa automática', 'Calculada pela rota até o cliente, por km ou por faixa.'],
-    ['🏍️', 'Área do motoboy', 'Código de acesso que troca sozinho a cada 8 horas.'],
-    ['🎟️', 'Cupons e promoções', 'Desconto, entrega grátis e preço "de/por".'],
-    ['⭐', 'Avaliações', 'Seus clientes avaliam e você responde.'],
-    ['🕒', 'Horário automático', 'Abre e fecha sozinha. Também aceita retirada no local.']
-  ].map(([e, t, d]) => `<li><span class="e">${e}</span><div><b>${t}</b><span>${d}</span></div></li>`).join('');
+    ['bell', 'Pedidos ao vivo', 'Chegam na hora, com aviso sonoro e impressão na térmica.'],
+    ['menu', 'Cardápio completo', 'Fotos, categorias, adicionais e montagem (açaí, combos).'],
+    ['pix', 'Pix na hora', 'QR Code com comprovante. Cartão e dinheiro com troco na entrega.'],
+    ['pin', 'Taxa automática', 'Calculada pela rota até o cliente, por km ou por faixa.'],
+    ['bike', 'Área do motoboy', 'Código de acesso que troca sozinho a cada 8 horas.'],
+    ['tag', 'Cupons e promoções', 'Desconto, entrega grátis e preço "de/por".'],
+    ['star', 'Avaliações', 'Seus clientes avaliam e você responde.'],
+    ['clock', 'Horário automático', 'Abre e fecha sozinha. Também aceita retirada no local.']
+  ].map(([e, t, d]) => `<li><span class="e">${ic(e)}</span><div><b>${t}</b><span>${d}</span></div></li>`).join('');
   $('ti1').innerHTML = ic('receipt'); $('ti2').innerHTML = ic('menu'); $('ti3').innerHTML = ic('store');
   $('fi1').innerHTML = ic('store'); $('fi2').innerHTML = ic('pin'); $('fi3').innerHTML = ic('card');
   $('b-ver').innerHTML = ic('ext'); $('b-admin').innerHTML = ic('shield'); $('b-sair').innerHTML = ic('logout'); $('w-ic').innerHTML = ic('store');
@@ -1056,7 +1068,7 @@
     const ids = new Set(data.map(p => p.id));
     if (conhecidos) {
       const novos = data.filter(p => !conhecidos.has(p.id));
-      if (novos.length) { beep(); GP.toast(`🔔 Novo pedido #${novos[0].numero}!`, 'ok'); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
+      if (novos.length) { beep(); GP.toast(`Novo pedido #${novos[0].numero}!`, 'ok'); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
     }
     conhecidos = ids; pedidos = data;
     updLabel();
@@ -1179,7 +1191,7 @@
     document.querySelector('.ptools').classList.toggle('hide', !prods.length);
     if (pCat && pCat !== '__promo' && !cats.includes(pCat)) pCat = '';
     const nPromo = prods.filter(p => GP.emPromo(p)).length;
-    $('p-cats').innerHTML = (cats.length > 1 || nPromo) ? `<button class="chip ${!pCat ? 'on' : ''}" data-pc="">Todas</button>` + (nPromo ? `<button class="chip ${pCat === '__promo' ? 'on' : ''}" data-pc="__promo">🔥 Em promoção <span class="muted">${nPromo}</span></button>` : '') + cats.map(c => `<button class="chip ${pCat === c ? 'on' : ''}" data-pc="${esc(c)}">${esc(c)} <span class="muted">${prods.filter(p => p.categoria === c).length}</span></button>`).join('') : '';
+    $('p-cats').innerHTML = (cats.length > 1 || nPromo) ? `<button class="chip ${!pCat ? 'on' : ''}" data-pc="">Todas</button>` + (nPromo ? `<button class="chip ${pCat === '__promo' ? 'on' : ''}" data-pc="__promo">${ic('fire')}Em promoção <span class="muted">${nPromo}</span></button>` : '') + cats.map(c => `<button class="chip ${pCat === c ? 'on' : ''}" data-pc="${esc(c)}">${esc(c)} <span class="muted">${prods.filter(p => p.categoria === c).length}</span></button>`).join('') : '';
     renderPromoProds();
     if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>Seu cardápio está vazio</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
     const q = norm(pBusca);
@@ -1297,7 +1309,7 @@
     box.classList.toggle('hide', !on || !(a > 0 && b > 0));
     box.classList.toggle('bad', b >= a);
     box.innerHTML = a > 0 && b > 0 ? (b < a
-      ? `<span class="pct">-${Math.round((1 - b / a) * 100)}%</span><span>De <s>${brl(a)}</s> por <b>${brl(b)}</b> · ${Math.round((1 - b / a) * 100)}% mais barato. Vai aparecer em <b>🔥 Promoções</b> no topo do cardápio.</span>`
+      ? `<span class="pct">-${Math.round((1 - b / a) * 100)}%</span><span>De <s>${brl(a)}</s> por <b>${brl(b)}</b> · ${Math.round((1 - b / a) * 100)}% mais barato. Vai aparecer em <b>Promoções</b> no topo do cardápio.</span>`
       : '<span>⚠ O preço da promoção precisa ser menor que o preço normal.</span>') : '';
   }
   ['p-promo', 'p-ppromo', 'p-preco'].forEach(id => $(id).addEventListener('input', promoUI));
@@ -1549,14 +1561,14 @@
   $('b-novocupom').innerHTML = ic('plus') + 'Novo cupom'; $('b-novocupom-fab').innerHTML = ic('plus') + 'Novo cupom'; $('cm-x').innerHTML = ic('x');
   $('b-novocupom').onclick = abrirCupom; $('b-novocupom-fab').onclick = abrirCupom; $('cm-x').onclick = fecharCupom; $('ov').addEventListener('click', fecharCupom);
   $('c-tipos').onclick = (e) => { const b = e.target.closest('[data-tp]'); if (!b) return; $('c-tipo').value = b.dataset.tp; tipoUI(); };
-  const stubCupom = (c) => c.tipo === 'frete' ? `<div class="stub frete"><b>🛵</b><small>Entrega grátis</small></div>`
+  const stubCupom = (c) => c.tipo === 'frete' ? `<div class="stub frete"><b>${ic('bike')}</b><small>Entrega grátis</small></div>`
     : c.tipo === 'percentual' ? `<div class="stub"><b>${Number(c.valor) || 0}%</b><small>de desconto</small></div>`
     : `<div class="stub valor"><b>${Number(c.valor) ? brl(c.valor).replace(',00', '') : 'R$ 0'}</b><small>de desconto</small></div>`;
   const regrasTxt = (c) => [Number(c.minimo) ? 'Pedido mínimo ' + brl(c.minimo) : 'Sem pedido mínimo', c.validade ? 'até ' + c.validade.split('-').reverse().join('/') : null, c.por_cliente ? `${c.por_cliente}x por cliente` : 'sem limite por cliente'].filter(Boolean).join(' · ');
   function previewCupom() {
     const t = $('c-tipo').value;
     const c = { tipo: t, codigo: $('c-cod').value || 'SEUCODIGO', valor: t === 'percentual' ? parseInt($('c-valor').value) || 0 : num($('c-valor').value), minimo: num($('c-min').value), validade: $('c-val').value || null, por_cliente: parseInt($('c-porcli').value) || null };
-    $('c-prev').innerHTML = `<div class="cup">${stubCupom(c)}<div class="bd"><div class="tp"><span class="code">${esc(c.codigo)}</span><span class="st ${$('c-pub').checked ? 'ok' : 'off'}">${$('c-pub').checked ? 'Aparece na loja' : '🔒 Oculto'}</span></div><div class="rg">${regrasTxt(c)}</div></div></div>`;
+    $('c-prev').innerHTML = `<div class="cup">${stubCupom(c)}<div class="bd"><div class="tp"><span class="code">${esc(c.codigo)}</span><span class="st ${$('c-pub').checked ? 'ok' : 'off'}">${$('c-pub').checked ? 'Aparece na loja' : 'Oculto'}</span></div><div class="rg">${regrasTxt(c)}</div></div></div>`;
   }
   $('f-cupom').addEventListener('input', previewCupom); $('f-cupom').addEventListener('change', previewCupom);
   function tipoUI() {
@@ -1591,7 +1603,7 @@
       return `<div class="cup ${sc !== 'ok' ? 'off' : ''}">${stubCupom(c)}
         <div class="bd">
           <div class="tp"><span class="code">${esc(c.codigo)}</span><span class="st ${sc}">${st}</span></div>
-          <div class="rg">${regrasTxt(c)}<br>${c.publico === false ? '🔒 Oculto: só quem souber o código' : '👁️ Aparece na página da loja'}</div>
+          <div class="rg">${regrasTxt(c)}<br><span class="vis">${c.publico === false ? ic('lock') + 'Oculto: só quem souber o código' : ic('eye') + 'Aparece na página da loja'}</span></div>
           <div class="us">${c.limite != null ? `<span class="bar"><i style="width:${pct}%"></i></span><span>${c.usos} de ${c.limite} usados</span>` : `<span>Usado ${c.usos || 0} vez${Number(c.usos) === 1 ? '' : 'es'} · sem limite total</span>`}</div>
           <div class="ac">
             <button type="button" class="lk" data-ccopy="${esc(c.codigo)}">${ic('copy')}Divulgar</button>
@@ -1600,7 +1612,7 @@
             <label class="switch" title="Ligar/pausar"><input type="checkbox" data-cativo="${c.id}" ${c.ativo ? 'checked' : ''}><i></i></label>
           </div>
         </div></div>`;
-    }).join('') : `<div class="card empty" style="padding:26px"><div class="big">🎟️</div><h4>Nenhum cupom ainda</h4><p>Crie um cupom e divulgue no WhatsApp para atrair pedidos.</p><button class="btn btn-primary" style="margin-top:14px" onclick="document.getElementById('b-novocupom').click()">${ic('plus')}Criar primeiro cupom</button></div>`;
+    }).join('') : `<div class="card empty" style="padding:26px"><div class="big">${ic('tag')}</div><h4>Nenhum cupom ainda</h4><p>Crie um cupom e divulgue no WhatsApp para atrair pedidos.</p><button class="btn btn-primary" style="margin-top:14px" onclick="document.getElementById('b-novocupom').click()">${ic('plus')}Criar primeiro cupom</button></div>`;
   }
   function renderPromoProds() {
     const ps = prods.filter(p => GP.emPromo(p));
@@ -1611,7 +1623,7 @@
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:3px"><b style="color:var(--bad)">${brl(p.preco_promo)}</b><s class="small muted">${brl(p.preco)}</s><span class="promo-tag">-${GP.descPct(p)}%</span></div>
         <div class="small muted">${p.promo_ate ? 'Acaba em ' + p.promo_ate.split('-').reverse().join('/') : 'Sem data para acabar'}</div></div>
       <span class="muted" style="flex:none">${ic('right')}</span></div>`).join('')
-      : `<div class="card pad small muted" style="display:flex;gap:10px;align-items:center"><span style="font-size:1.4rem">🔥</span><span>Para colocar um produto em promoção, abra ele no <b>Cardápio</b> e ligue "Colocar em promoção". Ele aparece aqui e na categoria Promoções da loja.</span></div>`;
+      : `<div class="card pad small muted" style="display:flex;gap:10px;align-items:center"><span class="pp-ic">${ic('fire')}</span><span>Para colocar um produto em promoção, abra ele no <b>Cardápio</b> e ligue "Colocar em promoção". Ele aparece aqui e na categoria Promoções da loja.</span></div>`;
   }
   $('promoprods').onclick = (e) => { const b = e.target.closest('[data-pedit]'); if (b) openProd(prods.find(p => p.id === b.dataset.pedit)); };
   $('f-cupom').onsubmit = async (e) => {
@@ -1747,7 +1759,7 @@
 
   const togglePix = () => $('pix-cfg').style.display = $('l-pix').checked ? '' : 'none';
   $('l-pix').onchange = togglePix;
-  const coord = () => $('l-coord').textContent = lojaPos ? '📍 Arraste o pino se precisar ajustar o ponto exato.' : 'Ainda sem ponto no mapa: digite o endereço ou toque no mapa.';
+  const coord = () => $('l-coord').textContent = lojaPos ? 'Arraste o pino se precisar ajustar o ponto exato.' : 'Ainda sem ponto no mapa: digite o endereço ou toque no mapa.';
   // ---------- Como cobrar a entrega ----------
   let faixas = [];
   $('b-faixa').innerHTML = ic('plus') + 'Adicionar faixa';

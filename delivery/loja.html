@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=73313">
+<link rel="stylesheet" href="app.css?v=73569">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -60,7 +60,10 @@
   .rcard .dt{font-size:.72rem;color:var(--muted)}
   .rcard p{font-size:.86rem;color:var(--ink-2);margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .rnew{display:flex;gap:12px;align-items:center;padding:14px}
-  .rnew .big{font-size:1.6rem}
+  .rnew-ic{width:40px;height:40px;border-radius:12px;background:#FFF4DB;color:#E39B00;display:grid;place-items:center;flex:none}.rnew-ic svg{width:20px;height:20px}
+  .h-promo{display:flex;align-items:center;gap:8px}.h-promo svg{width:22px;height:22px;color:var(--bad)}
+  .chip svg{width:15px;height:15px}
+  #cup-ic svg{width:16px;height:16px}
   @media(max-width:600px){.head .card{flex-direction:column;gap:12px}.head .lg{width:76px;height:76px;margin-top:-50px}}
   .alert{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:600;font-size:.9rem;display:flex;gap:10px;align-items:center}
   .horas{margin-top:12px;font-size:.88rem}
@@ -181,7 +184,7 @@
         <div class="stbar" id="s-stbar"></div>
         <div id="s-alert"></div>
         <div class="lojaend2 hide" id="s-end"></div>
-        <div id="s-cupons" class="hide" style="margin-top:14px"><b class="small" style="display:block;margin-bottom:8px">🎟️ Cupons disponíveis</b><div class="tickets" id="tk-loja"></div></div>
+        <div id="s-cupons" class="hide" style="margin-top:14px"><b class="small" style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span id="cup-ic" style="display:inline-grid;color:var(--brand-2)"></span>Cupons disponíveis</b><div class="tickets" id="tk-loja"></div></div>
       </div>
     </div>
   </div>
@@ -303,8 +306,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=73313"></script>
-<script src="app.js?v=73313"></script>
+<script src="config.js?v=73569"></script>
+<script src="app.js?v=73569"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -345,9 +348,10 @@
   $('s-desc').textContent = loja.descricao || '';
   if (loja.cnpj) $('s-end').insertAdjacentHTML('afterend', `<p class="small muted" style="margin-top:10px">CNPJ ${esc(GP.fmtCnpj(loja.cnpj))}</p>`);
   const pags = [loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito', loja.aceita_dinheiro !== false && loja.aceita_dinheiro != null && 'Dinheiro'].filter(Boolean);
+  if ($('cup-ic')) $('cup-ic').innerHTML = ic('tag');
   const nota = loja.nota_qtd ? String(loja.nota_media).replace('.', ',') : null;
   $('s-meta').innerHTML = [
-    nota ? `<a class="rt" href="#revs"><span class="stars">★</span><b>${nota}</b><span class="muted">(${loja.nota_qtd})</span></a>` : '<span>✨ Novo no GoPedido</span>',
+    nota ? `<a class="rt" href="#revs"><span class="stars">★</span><b>${nota}</b><span class="muted">(${loja.nota_qtd})</span></a>` : `<span>${ic('sparkle')}Novo no GoPedido</span>`,
     `<span>${ic('clock')}${esc(loja.tempo_entrega || '30–50 min')}</span>`,
     loja.verificacao === 'verificada' ? `<span>${ic('shield')}Loja verificada</span>` : ''
   ].filter(Boolean).join('');
@@ -418,14 +422,14 @@
     }
     const promos = lst.filter(p => p.disponivel && GP.emPromo(p));
     const cards = (ps) => ps.map(p => cardProd(p)).join('');
-    $('menu').innerHTML = (promos.length && !q ? `<section class="cat"><h2 id="cat-promo">🔥 Promoções</h2><div class="prods">${cards(promos)}</div></section>` : '') + cats.map((c, i) => {
+    $('menu').innerHTML = (promos.length && !q ? `<section class="cat"><h2 id="cat-promo" class="h-promo">${ic('fire')}Promoções</h2><div class="prods">${cards(promos)}</div></section>` : '') + cats.map((c, i) => {
       const ps = lst.filter(p => p.categoria === c);
       if (!ps.length) return '';
       return `<section class="cat"><h2 id="cat-${i}">${esc(c)}</h2><div class="prods">${cards(ps)}</div></section>`;
     }).join('');
   }
   $('catnav').innerHTML = `<label class="search">${ic('search')}<input id="m-q" placeholder="Buscar no cardápio"></label>` +
-    ((prods || []).some(p => p.disponivel && GP.emPromo(p)) ? `<button class="chip" data-c="promo">🔥 Promoções</button>` : '') +
+    ((prods || []).some(p => p.disponivel && GP.emPromo(p)) ? `<button class="chip" data-c="promo">${ic('fire')}Promoções</button>` : '') +
     cats.map((c, i) => `<button class="chip" data-c="${i}">${esc(c)}</button>`).join('');
   $('catnav').onclick = (e) => {
     const b = e.target.closest('[data-c]'); if (!b) return;
@@ -882,7 +886,7 @@
     const lst = data || [];
     const quando = (d) => { const dd = Math.floor((Date.now() - new Date(d)) / 864e5); return dd < 1 ? 'hoje' : dd === 1 ? 'ontem' : dd < 30 ? `há ${dd} dias` : new Date(d).toLocaleDateString('pt-BR'); };
     if (!lst.length) {
-      $('revs').innerHTML = `<div class="card rnew"><span class="big">⭐</span><div><b class="small" style="display:block">Ainda sem avaliações</b><span class="small muted">Peça e seja o primeiro a avaliar esta loja.</span></div></div>`;
+      $('revs').innerHTML = `<div class="card rnew"><span class="rnew-ic">${ic('star')}</span><div><b class="small" style="display:block">Ainda sem avaliações</b><span class="small muted">Peça e seja o primeiro a avaliar esta loja.</span></div></div>`;
       $('reviews').innerHTML = ''; return;
     }
     const comTexto = lst.filter(a => a.comentario).concat(lst.filter(a => !a.comentario)).slice(0, 10);
