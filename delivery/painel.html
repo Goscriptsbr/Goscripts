@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=85059">
+<link rel="stylesheet" href="app.css?v=85078">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -779,8 +779,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=85059"></script>
-<script src="app.js?v=85059"></script>
+<script src="config.js?v=85078"></script>
+<script src="app.js?v=85078"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1468,7 +1468,7 @@
     return `<div class="line">${ic('box')}<div><span class="badge b-brand">Envio</span> <b>${esc(p.frete_nome || 'Transportadora')}</b>${p.frete_prazo ? ` <span class="small muted">· até ${p.frete_prazo} dia${p.frete_prazo > 1 ? 's' : ''} úteis</span>` : ''}</div></div>
       <div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}${docF ? `<br><span class="small muted">CPF/CNPJ: ${esc(docF)}</span>` : ''}</div></div>
       ${cancel ? (p.etiqueta_status === 'cancelada' ? `<div class="envbox"><div class="small"><b>Etiqueta cancelada</b> · o valor voltou para o saldo do Melhor Envio</div></div>` : '') : `<div class="envbox">
-        <div class="small">${p.etiqueta_status === 'cancelada' ? '<b>Etiqueta cancelada</b> · o valor voltou para o saldo do Melhor Envio' : gerada ? `${ic('check')}<b>Etiqueta gerada</b>${rast ? ' · Rastreio ' + rast : ''}` : p.etiqueta_status === 'paga' || p.etiqueta_status === 'carrinho' ? '<b>Etiqueta em andamento</b> · toque para concluir' : 'A etiqueta é paga com o saldo do seu Melhor Envio.'}</div>
+        <div class="small">${p.etiqueta_status === 'cancelada' ? '<b>Etiqueta cancelada</b> · o valor voltou para o saldo do Melhor Envio' : gerada ? `${ic('check')}<b>Etiqueta gerada</b>${rast ? ' · Rastreio ' + rast + ` <button type="button" class="btn btn-ghost btn-sm" data-copiar="${esc(p.rastreio)}" style="padding:2px 8px;min-height:0;margin-left:4px">${ic('copy')}Copiar</button>` : ''}` : p.etiqueta_status === 'paga' || p.etiqueta_status === 'carrinho' ? '<b>Etiqueta em andamento</b> · toque para concluir' : 'A etiqueta é paga com o saldo do seu Melhor Envio.'}</div>
         <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">
           ${gerada ? `<button class="btn btn-primary btn-sm" data-me="imprimir" data-id="${p.id}">${ic('receipt')}Imprimir etiqueta</button>
                       <button class="btn btn-ghost btn-sm" data-me="rastrear" data-id="${p.id}">${ic('refresh')}Rastreio</button>`
@@ -1501,6 +1501,8 @@
     renderPedidos();
   };
   $('orders').onclick = async (e) => {
+    const cp = e.target.closest('[data-copiar]');
+    if (cp) return GP.copy(cp.dataset.copiar, 'Código de rastreio copiado!');
     const me = e.target.closest('[data-me]');
     if (me) return acaoEnvio(me);
     const pr = e.target.closest('[data-print]');

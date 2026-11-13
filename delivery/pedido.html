@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=85059">
+<link rel="stylesheet" href="app.css?v=85078">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -50,8 +50,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=85059"></script>
-<script src="app.js?v=85059"></script>
+<script src="config.js?v=85078"></script>
+<script src="app.js?v=85078"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -114,7 +114,7 @@
         </div>
         <div class="timeline">${tl}</div>
         ${env && !p.rastreio && !fim && p.status !== 'novo' ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('box')}<span>O código de rastreio aparece aqui assim que a loja gerar a etiqueta.</span></div>` : ''}
-        ${env && p.rastreio ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('box')}<span class="grow">Código de rastreio: <b>${esc(p.rastreio)}</b></span><a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(p.rastreio)}">Rastrear</a></div>` : ''}
+        ${env && p.rastreio ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('box')}<span class="grow">Código de rastreio: <b>${esc(p.rastreio)}</b></span><button type="button" class="btn btn-ghost btn-sm" id="b-rast-copy">${ic('copy')}Copiar</button><a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(p.rastreio)}">Rastrear</a></div>` : ''}
         ${!fim && env && p.frete_prazo ? `<div class="fee" style="margin-top:12px;background:var(--bg);display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('clock')}<span>${esc(p.frete_nome || 'Transportadora')}: chega em até <b>${p.frete_prazo} dia${p.frete_prazo > 1 ? 's' : ''} útei${p.frete_prazo > 1 ? 's' : 'l'}</b> depois de postado</span></div>` : ''}
         ${!fim && !env && l.tempo_entrega ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('clock')}<span>Previsão da loja: <b>${esc(l.tempo_entrega)}</b></span></div>` : ''}
       </div>
@@ -154,6 +154,7 @@
         <button class="btn btn-ghost grow" id="b-link">${ic('copy')}Copiar link</button>
         <a class="btn btn-dark grow" href="loja.html?l=${encodeURIComponent(l.slug)}">${ic('store')}Pedir de novo</a>
       </div>`;
+    if ($('b-rast-copy')) $('b-rast-copy').onclick = () => GP.copy(p.rastreio, 'Código de rastreio copiado!');
     $('b-link').onclick = () => GP.copy(location.origin + location.pathname + '?t=' + encodeURIComponent(token), 'Link do pedido copiado!');
     if ($('sp')) {
       let nota = 0;
