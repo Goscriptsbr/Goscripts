@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=75542">
+<link rel="stylesheet" href="app.css?v=75930">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -742,8 +742,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=75542"></script>
-<script src="app.js?v=75542"></script>
+<script src="config.js?v=75930"></script>
+<script src="app.js?v=75930"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -962,7 +962,8 @@
   // ---- Equipe (só o dono) ----
   let equipe = [], eqEdit = null, eqModo = 'todas';
   $('fi-eq').innerHTML = ic('user'); $('b-eq-add').innerHTML = ic('plus') + 'Adicionar'; $('eq-x').innerHTML = ic('x');
-  const lojasDoDono = () => lojas.filter(l => l.dono === user.id);
+  // O dono nunca é da equipe de outra pessoa: todas as lojas do painel dele são dele
+  const lojasDoDono = () => lojas.slice();
   async function loadEquipe() {
     const { data, error } = await sb.from('ff_equipe').select('*').order('criado_em');
     if (error) { $('sec-equipe').classList.add('hide'); $('nav-equipe').classList.add('hide'); return; }   // SQL v18 ainda não rodou
@@ -992,7 +993,7 @@
     $('eq-senha-lb').textContent = m ? 'Nova senha (opcional)' : 'Senha';
     $('eq-senha-dica').textContent = m ? 'Deixe a senha em branco para manter a atual.' : 'Mínimo de 6 caracteres. Passe o e-mail e a senha para a pessoa entrar no painel.';
     const sel = m && !m.todas ? m.lojas : [];
-    $('eq-lojas').innerHTML = lojasDoDono().map(l => `<label class="eq-loja"><input type="checkbox" value="${l.id}" ${sel.includes(l.id) ? 'checked' : ''}><span class="grow">${esc(l.nome)}</span><span class="small muted">${GP.tipo(l.tipo).curto}</span></label>`).join('');
+    $('eq-lojas').innerHTML = !lojasDoDono().length ? '<p class="small muted">Você ainda não tem lojas cadastradas.</p>' : lojasDoDono().map(l => `<label class="eq-loja"><input type="checkbox" value="${l.id}" ${sel.includes(l.id) ? 'checked' : ''}><span class="grow">${esc(l.nome)}</span><span class="small muted">${GP.tipo(l.tipo).curto}</span></label>`).join('');
     setEqModo(m && !m.todas ? 'algumas' : 'todas');
     $('eqmod').classList.add('on'); $('ov').classList.add('on');
     setTimeout(() => $('eq-nome').focus(), 250);
