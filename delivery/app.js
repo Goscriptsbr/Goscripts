@@ -597,7 +597,9 @@
         status('✓ endereço conferido nos Correios'); fire();
       } catch {}
     }
-    if (!pos && opts.centro) map.map.setView([opts.centro.lat, opts.centro.lng], 14);
+    // centro pode vir como {lat, lng} ou [lat, lng]
+    const ctr = Array.isArray(opts.centro) ? { lat: opts.centro[0], lng: opts.centro[1] } : opts.centro;
+    if (!pos && ctr && isFinite(ctr.lat) && isFinite(ctr.lng)) map.map.setView([ctr.lat, ctr.lng], 14);
 
     async function locateFromFields() {
       const e = api.get(); if (!e.rua || !e.cidade) return;
