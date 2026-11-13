@@ -57,6 +57,8 @@ $$;
 
 revoke all on function public.ff_dono_de(uuid), public.ff_sou_funcionario(), public.ff_minha_loja(uuid), public.ff_sou_dono(uuid) from public;
 grant execute on function public.ff_sou_funcionario(), public.ff_minha_loja(uuid), public.ff_sou_dono(uuid) to authenticated;
+-- a regra pública das lojas usa ff_minha_loja: visitantes (anon) também precisam poder chamar (para eles sempre dá falso)
+grant execute on function public.ff_minha_loja(uuid) to anon;
 
 -- Lojas: ver/editar também para a equipe; criar e apagar só o dono
 drop policy if exists ff_lojas_ver    on public.ff_lojas;
