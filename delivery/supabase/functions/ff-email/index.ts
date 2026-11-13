@@ -61,6 +61,17 @@ export function moldura({ previa, titulo, texto, corpo = '', botao = null, botao
 </table></td></tr></table></body></html>`;
 }
 
+// Versão em texto simples (os filtros de spam confiam mais em e-mails que têm as duas versões)
+export function textoSimples(html) {
+  return String(html)
+    .replace(/<head>[\s\S]*?<\/head>/i, '')
+    .replace(/<div style="display:none[^>]*>[\s\S]*?<\/div>/i, '')
+    .replace(/<a [^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (m, url, t) => t.replace(/<[^>]+>/g, '').trim() + ' (' + url.replace(/&amp;/g, '&') + ')')
+    .replace(/<\/(p|h1|tr|table|div)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<\/td>/gi, '  ')
+    .replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
+}
+
 export function montarEmail(tipo, p, l, itens) {
   const link = SITE + 'pedido.html?t=' + encodeURIComponent(p.token);
   const env = p.tipo_entrega === 'envio', ret = p.tipo_entrega === 'retirada';
@@ -134,14 +145,18 @@ export async function tratar(req, admin, enviar) {
   if (tipo === 'postado' && !(p.tipo_entrega === 'envio' && p.etiqueta_status === 'gerada' && p.rastreio && p.status !== 'cancelado')) return pula('situacao');
   if (tipo === 'cancelado' && p.status !== 'cancelado') return pula('situacao');
 
-  const { data: l } = ok(await admin.from('ff_lojas').select('nome, telefone, endereco').eq('id', p.loja_id).maybeSingle(), 'loja');
+  const { data: l } = ok(await admin.from('ff_lojas').select('nome, telefone, endereco, dono').eq('id', p.loja_id).maybeSingle(), 'loja');
   const { data: itens } = ok(await admin.from('ff_pedido_itens').select('nome, preco, qtd').eq('pedido_id', p.id), 'itens');
   const { assunto, html } = montarEmail(tipo, p, l || { nome: 'Loja' }, itens || []);
+  const texto = textoSimples(html);
+  // Quem responder o e-mail fala com a loja (e-mail de acesso do dono)
+  let responder = '';
+  try { const { data: u } = await admin.auth.admin.getUserById(l && l.dono); responder = (u && u.user && u.user.email) || ''; } catch (_) {}
 
   // Marca antes de enviar, para dois cliques ao mesmo tempo não mandarem dois e-mails
   ok(await admin.from('ff_pedidos').update({ emails: { ...ja, [tipo]: new Date().toISOString() } }).eq('id', p.id), 'marcar');
   try {
-    await enviar({ para: p.cliente_email, assunto, html });
+    await enviar({ para: p.cliente_email, assunto, html, texto, loja: (l && l.nome) || '', responder });
   } catch (e) {
     await admin.from('ff_pedidos').update({ emails: ja }).eq('id', p.id); // deixa tentar de novo
     throw new Falha('email_falhou', 502, String(e && e.message || e).slice(0, 300));
@@ -172,7 +187,12 @@ if (typeof Deno !== 'undefined') {
       // Porta 465 (as Edge Functions não deixam sair pela 25 nem pela 587)
       const transporte = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user: USER, pass: SENHA } });
       const nome = Deno.env.get('EMAIL_NOME') || 'GoPedido';
-      const enviar = ({ para, assunto, html }) => transporte.sendMail({ from: `"${nome}" <${USER}>`, to: para, subject: assunto, html });
+      const enviar = ({ para, assunto, html, texto, loja, responder }) => transporte.sendMail({
+        ...(responder ? { replyTo: responder } : {}),
+        from: `"${loja ? loja.replace(/["<>]/g, '') + ' via ' + nome : nome}" <${USER}>`,
+        to: para, subject: assunto, html, text: texto,
+        headers: { 'X-Entity-Ref-ID': 'gopedido-' + Date.now() }  // evita o Gmail agrupar e-mails de pedidos diferentes
+      });
       const r = await tratar(req, admin, enviar);
       return resp(r.status, r.corpo);
     } catch (e) {
