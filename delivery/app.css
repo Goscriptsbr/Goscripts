@@ -176,3 +176,26 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .cfm p{color:var(--muted);font-size:.92rem;margin-bottom:4px}
 .cfm-acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
 @media(max-width:600px){.cfm-wrap{align-items:flex-end;padding:0}.cfm{border-radius:22px 22px 0 0;width:100%;padding-bottom:calc(18px + env(safe-area-inset-bottom));transform:translateY(100%)}.cfm-acts .btn{height:50px}}
+
+/* planos */
+.planos-modal{width:min(880px,100%);max-height:92vh;overflow:auto;position:relative}
+.planos-modal .pl-x{position:absolute;right:14px;top:14px}
+.planos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;text-align:left}
+@media(max-width:760px){.planos{grid-template-columns:1fr}}
+.plano{border:1.5px solid var(--line);border-radius:18px;padding:18px 16px;position:relative;background:#fff;display:flex;flex-direction:column}
+.plano.dest{border-color:var(--brand);box-shadow:0 10px 30px rgba(242,69,28,.15)}
+.plano.atual{background:#FAFAF8}
+.pl-tag{position:absolute;top:-11px;left:16px;background:var(--brand);color:#fff;font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:999px}
+.pl-nome{font-size:1rem}
+.pl-preco{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;margin:4px 0 10px}
+.pl-preco small{font-size:.85rem;color:var(--muted);font-weight:600}
+.plano ul{list-style:none;display:grid;gap:7px;margin-bottom:14px;font-size:.88rem;color:var(--ink-2);flex:1}
+.plano li{display:flex;gap:8px;align-items:flex-start}
+.plano li .i{color:var(--ok);margin-top:1px}
+@media(max-width:600px){.planos-modal{max-height:94vh}}
+.pl-qtd{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.pl-qtd div{background:var(--bg);border-radius:12px;padding:8px 10px;text-align:center}
+.pl-qtd b{display:block;font-size:1.25rem;letter-spacing:-.02em}
+.pl-qtd span{font-size:.74rem;color:var(--muted);font-weight:600}
+.pl-ex{font-size:.78rem;color:var(--muted);margin-bottom:10px;text-align:center}
+.pl-nota{font-size:.82rem;color:var(--ink-2);background:var(--bg);border-radius:12px;padding:10px 12px;margin-top:12px;text-align:left}

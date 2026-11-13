@@ -118,6 +118,49 @@
     setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
   };
 
+  // ---------- Planos ----------
+  GP.WHATS = '5519988283178';
+  GP.PLANOS = [
+    { id: 'gratis', nome: 'Grátis', preco: 0, lojas: 1, produtos: 50, ex: '', itens: ['Pedidos ilimitados, sem comissão', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções'] },
+    { id: 'profissional', nome: 'Profissional', preco: 50, lojas: 2, produtos: 200, destaque: true, ex: 'Ex.: 120 produtos numa loja e 80 na outra', itens: ['Tudo do plano Grátis', 'Suporte pelo WhatsApp'] },
+    { id: 'premium', nome: 'Premium', preco: 100, lojas: 5, produtos: 500, ex: 'Ex.: 5 lojas com 100 produtos cada', itens: ['Tudo do Profissional', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
+  ];
+  GP.planoNome = (id) => (GP.PLANOS.find(p => p.id === id) || GP.PLANOS[0]).nome;
+  GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano.';
+  GP.planosHtml = (atual, email, publico) => GP.PLANOS.map(p => {
+    const msg = `Olá! Quero assinar o plano ${p.nome} (R$ ${p.preco}/mês) do GoPedido.${email ? ' Meu e-mail no painel: ' + email : ''}`;
+    return `<div class="plano ${p.destaque ? 'dest' : ''} ${p.id === atual ? 'atual' : ''}">
+      ${p.destaque ? '<span class="pl-tag">Mais escolhido</span>' : ''}
+      <b class="pl-nome">${p.nome}</b>
+      <div class="pl-preco">R$ ${p.preco}<small>/mês</small></div>
+      <div class="pl-qtd"><div><b>${p.lojas}</b><span>loja${p.lojas > 1 ? 's' : ''}</span></div><div><b>${p.produtos}</b><span>produtos no total</span></div></div>
+      ${p.ex ? `<div class="pl-ex">${p.ex}</div>` : ''}
+      <ul>${p.itens.map(i => `<li>${GP.ic('check')}${i}</li>`).join('')}</ul>
+      ${publico && !p.preco ? '<a class="btn btn-ghost btn-sm btn-block" href="painel.html">Começar grátis</a>'
+        : p.id === atual ? '<span class="btn btn-ghost btn-sm btn-block" style="pointer-events:none">Seu plano atual</span>'
+        : p.preco ? `<a class="btn ${p.destaque ? 'btn-primary' : 'btn-dark'} btn-sm btn-block" target="_blank" rel="noopener" href="https://wa.me/${GP.WHATS}?text=${encodeURIComponent(msg)}">${GP.ic('chat')}Assinar pelo WhatsApp</a>` : ''}
+    </div>`;
+  }).join('');
+  GP.mostrarPlanos = (o = {}) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'cfm-wrap';
+    wrap.innerHTML = `<div class="cfm planos-modal" role="dialog" aria-modal="true">
+      <button class="icon-btn pl-x" type="button">${GP.ic('x')}</button>
+      <div class="cfm-ic">${GP.ic('star')}</div>
+      <h3>${GP.esc(o.titulo || 'Planos do GoPedido')}</h3>
+      <p>${GP.esc(o.texto || 'Escolha o plano ideal para o tamanho do seu negócio. A liberação é feita pelo WhatsApp.')}</p>
+      <div class="planos">${GP.planosHtml(o.atual, o.email)}</div>
+      <p class="pl-nota">${GP.NOTA_PLANOS}</p>
+      <p class="small" style="margin-top:12px">Dúvidas? Chame no WhatsApp <a href="https://wa.me/${GP.WHATS}" target="_blank" rel="noopener" style="font-weight:700;color:var(--brand-2)">(19) 98828-3178</a></p>
+    </div>`;
+    document.body.appendChild(wrap);
+    requestAnimationFrame(() => wrap.classList.add('on'));
+    const fim = () => { wrap.classList.remove('on'); setTimeout(() => wrap.remove(), 180); document.removeEventListener('keydown', key, true); };
+    const key = (e) => { if (e.key === 'Escape') { e.stopPropagation(); fim(); } };
+    document.addEventListener('keydown', key, true);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('.pl-x')) fim(); });
+  };
+
   // ---------- Confirmação bonita (no lugar do confirm do navegador) ----------
   // await GP.confirmar('Excluir produto?', { texto: '...', ok: 'Excluir', perigo: true })
   GP.confirmar = (titulo, o = {}) => new Promise((resolve) => {
@@ -155,6 +198,8 @@
     cupom_invalido: 'Cupom não encontrado para esta loja.',
     cupom_vencido: 'Este cupom já venceu.',
     cupom_esgotado: 'Este cupom já foi usado o máximo de vezes.',
+    limite_lojas: 'Você chegou no limite de lojas do seu plano.',
+    limite_produtos: 'Você chegou no limite de produtos do seu plano.',
     cupom_ja_usado: 'Você já usou este cupom o máximo de vezes permitido.',
     cupom_minimo: 'O pedido não atingiu o valor mínimo para este cupom.',
     troco_invalido: 'O valor do troco precisa ser maior que o total do pedido.',

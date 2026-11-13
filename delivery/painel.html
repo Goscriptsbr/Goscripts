@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122254">
+<link rel="stylesheet" href="app.css?v=202611122308">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -105,6 +105,29 @@
   .orow{display:grid;grid-template-columns:1fr 110px 36px;gap:8px;margin-bottom:8px}
   .orow .input{height:40px}
   .orow .icon-btn{width:36px;height:40px}
+  .uso{display:flex;align-items:center;gap:10px;font-size:.84rem;margin:-6px 0 14px;flex-wrap:wrap}
+  .uso .bar{flex:1;min-width:120px;height:8px;border-radius:99px;background:#ECEAE6;overflow:hidden}
+  .uso .bar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+  .uso .bar i.warn{background:var(--warn)}.uso .bar i.full{background:var(--bad)}
+  .uso a,.uso button{color:var(--brand-2);font-weight:800}
+  .etp-box{margin-bottom:14px}
+  .etp-box summary{display:flex;gap:10px;align-items:center;cursor:pointer;list-style:none}
+  .etp-box summary::-webkit-details-marker{display:none}
+  .etp-box summary .small{margin-left:auto}
+  .etp-box .chev{width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;margin:0 4px 4px 0}
+  .etp-box[open] .chev{transform:rotate(-135deg);margin:4px 4px 0 0}
+  .ptools{position:sticky;top:64px;z-index:6;background:var(--bg);padding:8px 0 6px;margin-bottom:6px}
+  .psearch{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;height:46px;padding:0 12px;color:var(--muted)}
+  .psearch input{flex:1;border:0;outline:0;background:none;color:var(--ink);min-width:0}
+  .psearch button{font-size:1.3rem;color:var(--muted);width:28px}
+  .pfil{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:8px}
+  .pfil::-webkit-scrollbar{display:none}
+  .pfil .chip{flex:none;cursor:pointer}
+  .pcat-h{display:flex;align-items:center;gap:10px;margin:18px 0 10px;cursor:pointer;user-select:none}
+  .pcat-h b{font-size:.98rem}
+  .pcat-h .n{font-size:.75rem;font-weight:800;background:#ECEAE6;color:var(--ink-2);border-radius:99px;padding:2px 8px}
+  .pcat-h .chev{margin-left:auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+  .pcat-h.fechada .chev{transform:rotate(-45deg)}
   .etp{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
   .etp:first-child{border-top:0}
   .ecat{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
@@ -136,7 +159,7 @@
       <h2>Sua lanchonete recebendo pedidos online hoje.</h2>
       <ul id="perks"></ul>
     </div>
-    <p class="small" style="color:#8d8d99;position:relative">Grátis para começar · sem comissão por pedido</p>
+    <p class="small" style="color:#8d8d99;position:relative">Grátis: 1 loja e 50 produtos · Planos a partir de R$ 50/mês · sem comissão por pedido</p>
   </div>
   <div class="form">
     <div class="box">
@@ -216,10 +239,22 @@
         <div><h2 style="font-size:1.25rem;letter-spacing:-.02em">Cardápio</h2><p class="small muted" id="p-count"></p></div>
         <button class="btn btn-primary" id="b-novo"></button>
       </div>
-      <div class="card pad" style="margin-bottom:18px">
-        <div class="row between" style="flex-wrap:wrap;gap:10px"><div><b>Adicionais compartilhados</b><div class="small muted">Cadastre uma vez (ex.: adicionais de lanche) e use em vários produtos. Mudou o preço aqui, muda em todos.</div></div>
-          <button class="btn btn-soft btn-sm" id="b-novaetapa"></button></div>
+      <div class="uso" id="uso-prod"></div>
+      <details class="card pad etp-box" id="etp-box">
+        <summary><b>Adicionais compartilhados</b><span class="small muted" id="etp-n"></span><span class="chev"></span></summary>
+        <div class="small muted" style="margin-top:6px">Cadastre uma vez (ex.: adicionais de lanche) e use em vários produtos. Mudou o preço aqui, muda em todos.</div>
+        <button class="btn btn-soft btn-sm" id="b-novaetapa" style="margin-top:10px"></button>
         <div id="etapas" style="margin-top:12px"></div>
+      </details>
+      <div class="ptools">
+        <label class="psearch"><span id="ps-ic"></span><input id="p-busca" placeholder="Buscar produto…" autocomplete="off"><button type="button" class="hide" id="p-busca-x">×</button></label>
+        <div class="pfil" id="p-fil">
+          <button class="chip on" data-pf="todos">Todos</button>
+          <button class="chip" data-pf="disp">Disponíveis</button>
+          <button class="chip" data-pf="indisp">Indisponíveis</button>
+          <button class="chip" data-pf="promo">Em promoção</button>
+        </div>
+        <div class="pfil" id="p-cats"></div>
       </div>
       <div id="plist"></div>
     </section>
@@ -247,6 +282,7 @@
     </section>
 
     <section id="tab-loja" class="hide">
+      <div class="card pad" id="plano-box" style="margin-bottom:16px"></div>
       <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
       <form id="f-loja">
         <div class="formgrid">
@@ -391,8 +427,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122254"></script>
-<script src="app.js?v=202611122254"></script>
+<script src="config.js?v=202611122308"></script>
+<script src="app.js?v=202611122308"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -480,10 +516,34 @@
     const { data, error } = await sb.from('ff_lojas').select('*').eq('dono', user.id).order('criado_em');
     if (error) return GP.toast(GP.err(error), 'err');
     lojas = data || [];
+    loadPlano();
     if (!lojas.length) return novaLoja(true);
     const salva = GP.ls.get('gp_loja_sel');
     await abrirLoja(lojas.find(l => l.id === salva) || lojas[0]);
   }
+
+  // ================= PLANO =================
+  let plano = null;
+  async function loadPlano() {
+    const { data, error } = await sb.rpc('ff_meu_plano');
+    if (error) { plano = null; $('uso-prod').innerHTML = ''; return; }
+    plano = data; renderUso();
+  }
+  function renderUso() {
+    if (!plano) return;
+    const pct = Math.min(100, Math.round(plano.produtos / plano.produtos_max * 100));
+    $('uso-prod').innerHTML = `<span><b>${plano.produtos}</b> de ${plano.produtos_max} produtos${plano.lojas > 1 ? ' (somando suas lojas)' : ''} · plano <b>${GP.planoNome(plano.plano)}</b></span>
+      <span class="bar"><i class="${pct >= 100 ? 'full' : pct >= 80 ? 'warn' : ''}" style="width:${pct}%"></i></span>
+      <button type="button" id="b-planos">${plano.plano === 'premium' ? 'Ver planos' : 'Aumentar limite'}</button>`;
+    $('b-planos').onclick = () => verPlanos();
+    $('plano-box').innerHTML = `<div class="row between" style="flex-wrap:wrap;gap:10px"><div><b>Plano ${GP.planoNome(plano.plano)}</b>${plano.valido_ate ? `<span class="small muted"> · até ${plano.valido_ate.split('-').reverse().join('/')}</span>` : ''}
+      <div class="small muted">${plano.lojas} de ${plano.lojas_max} loja${plano.lojas_max > 1 ? 's' : ''} criada${plano.lojas_max > 1 ? 's' : ''} · ${plano.produtos} de ${plano.produtos_max} produtos no total da conta</div></div>
+      <button type="button" class="btn btn-soft btn-sm" id="b-planos2">${ic('star')}Ver planos</button></div>`;
+    $('b-planos2').onclick = () => verPlanos();
+  }
+  const verPlanos = (titulo, texto) => GP.mostrarPlanos({ atual: plano ? plano.plano : 'gratis', email: user && user.email, titulo, texto });
+  const limiteProd = () => plano && plano.produtos >= plano.produtos_max;
+  const limiteLoja = () => plano && plano.lojas >= plano.lojas_max;
 
   // ================= VÁRIAS LOJAS =================
   function renderLojaSel() {
@@ -515,7 +575,10 @@
   }
   $('t-loja').onchange = (e) => {
     const v = e.target.value;
-    if (v === '__nova') return novaLoja(false);
+    if (v === '__nova') {
+      if (limiteLoja()) { e.target.value = loja ? loja.id : ''; return verPlanos('Limite de lojas atingido', `Seu plano ${GP.planoNome(plano.plano)} permite ${plano.lojas_max} loja${plano.lojas_max > 1 ? 's' : ''}. Para cadastrar mais, escolha um plano maior.`); }
+      return novaLoja(false);
+    }
     const l = lojas.find(x => x.id === v); if (l) abrirLoja(l);
   };
   $('w-cancel').onclick = () => { const l = lojas.find(x => x.id === GP.ls.get('gp_loja_sel')) || lojas[0]; if (l) abrirLoja(l); };
@@ -719,19 +782,51 @@
     etapas = r.error ? [] : r.data;
     renderProds(); renderEtapas();
   }
+  let pBusca = '', pFiltro = 'todos', pCat = '', catFechada = new Set(GP.ls.get('gp_cat_fechada', []));
+  $('ps-ic').innerHTML = ic('search');
+  const norm = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  function linhaProd(p) {
+    const nEt = GP.grupos(p).length + (p.etapas_ids || []).length;
+    const preco = !Number(p.preco) && nEt ? '<b class="small">Preço pela montagem</b>'
+      : GP.emPromo(p) ? `<b class="small" style="color:var(--bad)">${brl(p.preco_promo)}</b> <s class="small muted">${brl(p.preco)}</s><span class="promo-tag">-${GP.descPct(p)}%</span>` : `<b class="small">${brl(p.preco)}</b>`;
+    return `<div class="card pitem ${p.disponivel ? '' : 'off'}">
+      <div class="th" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${p.imagem_url ? '' : ic('image')}</div>
+      <div class="grow"><b class="ellipsis" style="display:block">${esc(p.nome)}</b>${p.descricao ? `<div class="small muted ellipsis">${esc(p.descricao)}</div>` : ''}${preco}${nEt ? `<span class="small muted"> · ${nEt} etapa${nEt > 1 ? 's' : ''}</span>` : ''}${p.disponivel ? '' : ' <span class="badge b-off">Indisponível</span>'}</div>
+      <label class="switch" title="Disponível"><input type="checkbox" data-disp="${p.id}" ${p.disponivel ? 'checked' : ''}><i></i></label>
+      <button class="icon-btn" data-edit="${p.id}" title="Editar">${ic('edit')}</button>
+    </div>`;
+  }
   function renderProds() {
     const cats = [...new Set(prods.map(p => p.categoria))];
-    $('p-count').textContent = prods.length ? `${prods.length} produto${prods.length > 1 ? 's' : ''} · ${prods.filter(p => p.disponivel).length} disponíve${prods.filter(p => p.disponivel).length === 1 ? 'l' : 'is'}` : '';
-    if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>Seu cardápio está vazio</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
-    $('plist').innerHTML = cats.map(c => `<h3 style="font-size:.95rem;margin:18px 0 10px;color:var(--ink-2)">${esc(c)}</h3><div class="plist">${prods.filter(p => p.categoria === c).map(p => `
-      <div class="card pitem ${p.disponivel ? '' : 'off'}">
-        <div class="th" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${p.imagem_url ? '' : ic('image')}</div>
-        <div class="grow"><b class="ellipsis" style="display:block">${esc(p.nome)}</b><div class="small muted ellipsis">${esc(p.descricao)}</div>${GP.emPromo(p) ? `<b class="small" style="color:var(--bad)">${brl(p.preco_promo)}</b> <s class="small muted">${brl(p.preco)}</s><span class="promo-tag">-${GP.descPct(p)}%</span>` : `<b class="small">${brl(p.preco)}</b>`}${(GP.grupos(p).length + (p.etapas_ids || []).length) ? `<span class="small muted"> · ${GP.grupos(p).length + (p.etapas_ids || []).length} etapa${GP.grupos(p).length + (p.etapas_ids || []).length > 1 ? 's' : ''} de montagem</span>` : ''}</div>
-        <label class="switch" title="Disponível"><input type="checkbox" data-disp="${p.id}" ${p.disponivel ? 'checked' : ''}><i></i></label>
-        <button class="icon-btn" data-edit="${p.id}" title="Editar">${ic('edit')}</button>
-      </div>`).join('')}</div>`).join('');
+    const nDisp = prods.filter(p => p.disponivel).length;
+    $('p-count').textContent = prods.length ? `${prods.length} produto${prods.length > 1 ? 's' : ''} · ${nDisp} disponíve${nDisp === 1 ? 'l' : 'is'}` : '';
+    document.querySelector('.ptools').classList.toggle('hide', !prods.length);
+    if (pCat && !cats.includes(pCat)) pCat = '';
+    $('p-cats').innerHTML = cats.length > 1 ? `<button class="chip ${!pCat ? 'on' : ''}" data-pc="">Todas as categorias</button>` + cats.map(c => `<button class="chip ${pCat === c ? 'on' : ''}" data-pc="${esc(c)}">${esc(c)} <span class="muted">${prods.filter(p => p.categoria === c).length}</span></button>`).join('') : '';
     renderPromoProds();
+    if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>Seu cardápio está vazio</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
+    const q = norm(pBusca);
+    const lst = prods.filter(p => (!q || norm(p.nome + ' ' + p.descricao + ' ' + p.categoria).includes(q))
+      && (!pCat || p.categoria === pCat)
+      && (pFiltro === 'todos' || (pFiltro === 'disp' && p.disponivel) || (pFiltro === 'indisp' && !p.disponivel) || (pFiltro === 'promo' && GP.emPromo(p))));
+    if (!lst.length) { $('plist').innerHTML = `<div class="empty" style="padding:30px"><div class="big">${ic('search')}</div><h4>Nada encontrado</h4><p>Tente outra busca ou limpe os filtros.</p></div>`; return; }
+    const filtrando = !!(q || pCat || pFiltro !== 'todos');
+    $('plist').innerHTML = cats.map(c => {
+      const ps = lst.filter(p => p.categoria === c); if (!ps.length) return '';
+      const fechada = !filtrando && catFechada.has(c);
+      return `<div class="pcat-h ${fechada ? 'fechada' : ''}" data-cat="${esc(c)}"><b>${esc(c)}</b><span class="n">${ps.length}</span><span class="chev"></span></div>
+        ${fechada ? '' : `<div class="plist">${ps.map(linhaProd).join('')}</div>`}`;
+    }).join('');
   }
+  $('p-busca').addEventListener('input', (e) => { pBusca = e.target.value; $('p-busca-x').classList.toggle('hide', !pBusca); renderProds(); });
+  $('p-busca-x').onclick = () => { pBusca = ''; $('p-busca').value = ''; $('p-busca-x').classList.add('hide'); renderProds(); $('p-busca').focus(); };
+  $('p-fil').onclick = (e) => { const b = e.target.closest('[data-pf]'); if (!b) return; pFiltro = b.dataset.pf; document.querySelectorAll('#p-fil .chip').forEach(x => x.classList.toggle('on', x === b)); renderProds(); };
+  $('p-cats').onclick = (e) => { const b = e.target.closest('[data-pc]'); if (!b) return; pCat = b.dataset.pc; renderProds(); };
+  $('plist').addEventListener('click', (e) => {
+    const h = e.target.closest('.pcat-h'); if (!h) return;
+    const c = h.dataset.cat; catFechada.has(c) ? catFechada.delete(c) : catFechada.add(c);
+    GP.ls.set('gp_cat_fechada', [...catFechada]); renderProds();
+  });
   $('plist').onchange = async (e) => {
     const id = e.target.dataset.disp; if (!id) return;
     const v = e.target.checked;
@@ -745,7 +840,10 @@
   const ov = $('ov');
   const closeModal = () => { $('pmod').classList.remove('on'); ov.classList.remove('on'); };
   ov.onclick = closeModal; $('pm-x').onclick = closeModal;
-  $('b-novo').onclick = () => openProd(null);
+  $('b-novo').onclick = () => {
+    if (limiteProd()) return verPlanos('Limite de produtos atingido', `Seu plano ${GP.planoNome(plano.plano)} permite ${plano.produtos_max} produtos. Para cadastrar mais, escolha um plano maior.`);
+    openProd(null);
+  };
   function openProd(p) {
     editing = p; prodImg = p ? p.imagem_url : '';
     $('pm-title').textContent = p ? 'Editar produto' : 'Novo produto';
@@ -828,6 +926,7 @@
   $('em-x').innerHTML = ic('x'); $('e-del').innerHTML = ic('trash');
   const usoEtapa = (id) => prods.filter(p => (p.etapas_ids || []).includes(id)).length;
   function renderEtapas() {
+    $('etp-n').textContent = etapas.length ? `${etapas.length} cadastrado${etapas.length > 1 ? 's' : ''}` : 'nenhum';
     $('etapas').innerHTML = etapas.length ? etapas.map(e => `<div class="etp">
       <div class="grow" style="min-width:0"><b class="small">${esc(e.nome)}</b>
         <div class="small muted ellipsis">${(e.opcoes || []).map(o => esc(o.nome) + (Number(o.preco) ? ' ' + brl(o.preco) : '')).join(' · ')}</div>
@@ -1044,14 +1143,17 @@
     const q = editing ? sb.from('ff_produtos').update(row).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...row, loja_id: loja.id, ordem: prods.length });
     const { error } = await q;
     b.disabled = false;
-    if (error) return GP.toast(GP.err(error), 'err');
-    closeModal(); GP.toast(editing ? 'Produto atualizado' : 'Produto adicionado', 'ok'); loadProds();
+    if (error) {
+      if (/limite_produtos/.test(error.message)) { await loadPlano(); return verPlanos('Limite de produtos atingido', 'Para cadastrar mais produtos, escolha um plano maior.'); }
+      return GP.toast(GP.err(error), 'err');
+    }
+    closeModal(); GP.toast(editing ? 'Produto atualizado' : 'Produto adicionado', 'ok'); loadProds(); if (!editing) loadPlano();
   };
   $('p-del').onclick = async () => {
     if (!editing || !(await GP.confirmar(`Excluir "${editing.nome}"?`, { texto: 'O produto sai do cardápio. Os pedidos antigos continuam guardados. Se for só temporário, desligue "Disponível para venda".', ok: 'Excluir' }))) return;
     const { error } = await sb.from('ff_produtos').delete().eq('id', editing.id);
     if (error) return GP.toast(GP.err(error), 'err');
-    closeModal(); GP.toast('Produto excluído', 'ok'); loadProds();
+    closeModal(); GP.toast('Produto excluído', 'ok'); loadProds(); loadPlano();
   };
 
   // ================= PROMOÇÕES / CUPONS =================
@@ -1271,7 +1373,11 @@
       if (res.error && /slug/.test(res.error.message)) res = await sb.from('ff_lojas').insert({ ...row, slug: base + '-' + Math.random().toString(36).slice(2, 6) }).select().single();
     }
     b.disabled = false; b.textContent = t;
-    if (res.error) return GP.toast(GP.err(res.error), 'err');
+    if (res.error) {
+      if (/limite_lojas/.test(res.error.message)) { await loadPlano(); return verPlanos('Limite de lojas atingido', 'Para cadastrar mais lojas, escolha um plano maior.'); }
+      return GP.toast(GP.err(res.error), 'err');
+    }
+    loadPlano();
     if (!loja) {
       lojas.push(res.data);
       await abrirLoja(res.data);
