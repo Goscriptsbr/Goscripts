@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=85851">
+<link rel="stylesheet" href="app.css?v=89476">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -390,6 +390,7 @@
           <label class="field"><span>Senha</span><input class="input" type="password" id="a-pass" autocomplete="current-password" minlength="6" required></label>
           <label class="field up-only hide"><span>Confirme a senha</span><input class="input" type="password" id="a-pass2" minlength="6" autocomplete="new-password"></label>
           <p class="small muted up-only hide" style="margin:-4px 0 14px">Senha com no mínimo 6 caracteres.</p>
+          <label class="check up-only hide termos-ck"><input type="checkbox" id="a-termos"><span>Li e aceito os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a>. A minha loja é responsável pelas vendas, pagamentos, entregas, envios e reembolsos.</span></label>
           <button class="btn btn-primary btn-block" id="a-btn">Entrar</button>
         </form>
         <button class="small muted" id="a-forgot" style="margin-top:14px;text-decoration:underline">Esqueci minha senha</button>
@@ -779,8 +780,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=85851"></script>
-<script src="app.js?v=85851"></script>
+<script src="config.js?v=89476"></script>
+<script src="app.js?v=89476"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -843,7 +844,8 @@
       } else {
         if (email.toLowerCase() !== $('a-email2').value.trim().toLowerCase()) { $('a-email2').focus(); throw new Error('Os dois e-mails não são iguais. Confira e digite de novo.'); }
         if (password !== $('a-pass2').value) { $('a-pass2').focus(); throw new Error('As duas senhas não são iguais.'); }
-        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: cfg.siteUrl + 'painel.html' } });
+        if (!$('a-termos').checked) { $('a-termos').focus(); throw new Error('Para criar a conta, leia e aceite os Termos de Uso.'); }
+        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: cfg.siteUrl + 'painel.html', data: { termos_versao: TERMOS_VERSAO, termos_em: new Date().toISOString() } } });
         if (error) throw error;
         if (!data.session) GP.toast('Conta criada! Confirme pelo link enviado ao seu e-mail.', 'ok');
       }
@@ -893,6 +895,44 @@
 
   let booting = null;
   function boot() { if (!booting) booting = doBoot().finally(() => { booting = null; }); return booting; }
+  // ================= TERMOS DE USO =================
+  const TERMOS_VERSAO = '1';
+  async function conferirTermos() {
+    const { data, error } = await sb.from('ff_termos_aceite').select('versao').eq('user_id', user.id).maybeSingle();
+    if (error) return;                                    // SQL v22 ainda não rodou: não trava o painel
+    if (data && data.versao === TERMOS_VERSAO) return;
+    const md = user.user_metadata || {};
+    if (md.termos_versao === TERMOS_VERSAO) {             // aceitou no cadastro: só registra
+      await sb.from('ff_termos_aceite').upsert({ user_id: user.id, versao: TERMOS_VERSAO, aceito_em: md.termos_em || new Date().toISOString() });
+      return;
+    }
+    await new Promise((ok) => {
+      const w = document.createElement('div'); w.className = 'termos-wrap';
+      w.innerHTML = `<div class="termos-box" role="dialog" aria-modal="true">
+        <div class="termos-ic">${ic('shield')}</div>
+        <h3>Termos de Uso do GoPedido</h3>
+        <p>Para continuar usando o painel, leia e aceite os Termos de Uso. Em resumo:</p>
+        <ul>
+          <li>O GoPedido é só a ferramenta. Quem vende é a sua loja.</li>
+          <li>A loja é responsável pelos produtos, preços, cobrança, entregas, envios, trocas e reembolsos.</li>
+          <li>Os pagamentos vão direto para a loja.</li>
+          <li>Os fretes do Melhor Envio são pagos com o saldo da conta da loja.</li>
+        </ul>
+        <a href="termos.html" target="_blank" rel="noopener" class="btn btn-ghost btn-block btn-sm">Ler os Termos completos</a>
+        <label class="check" style="margin:14px 0"><input type="checkbox" id="tm-ck"><span>Li e aceito os Termos de Uso</span></label>
+        <button class="btn btn-primary btn-block" id="tm-ok" disabled>Aceitar e continuar</button>
+      </div>`;
+      document.body.appendChild(w);
+      w.querySelector('#tm-ck').onchange = (e) => { w.querySelector('#tm-ok').disabled = !e.target.checked; };
+      w.querySelector('#tm-ok').onclick = async () => {
+        const b = w.querySelector('#tm-ok'); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+        const { error: e2 } = await sb.from('ff_termos_aceite').upsert({ user_id: user.id, versao: TERMOS_VERSAO, aceito_em: new Date().toISOString() });
+        if (e2) { b.disabled = false; b.textContent = 'Aceitar e continuar'; return GP.toast(GP.err(e2), 'err'); }
+        w.remove(); GP.toast('Termos aceitos. Obrigado!', 'ok'); ok();
+      };
+    });
+  }
+
   async function doBoot() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return showAuth(false);
@@ -901,6 +941,7 @@
     if (chk.error && chk.error.status && chk.error.status >= 400 && chk.error.status < 500) { await sb.auth.signOut(); user = null; GP.toast("Sua sessão expirou. Entre de novo."); return showAuth(false); }
     user = session.user;
     $('v-auth').classList.add('hide'); $('v-app').classList.remove('hide');
+    await conferirTermos();
     sb.rpc('ff_is_admin').then(({ data }) => { $('b-admin').classList.toggle('hide', data !== true); });
     // Lojas que posso gerir (minhas ou da equipe). Sem o SQL v18, usa o jeito antigo.
     let { data, error } = await sb.rpc('ff_minhas_lojas');
@@ -965,11 +1006,13 @@
       box.innerHTML = `<div class="me-card">
         <div class="me-ic">${ic('box')}</div>
         <div class="grow" style="min-width:0"><b>Conecte sua conta do Melhor Envio</b>
-          <div class="small muted">O frete é calculado e as etiquetas são pagas com o saldo da <b>sua</b> conta. Não tem conta? É grátis em <a href="https://melhorenvio.com.br" target="_blank" rel="noopener" style="text-decoration:underline">melhorenvio.com.br</a>.</div></div>
+          <div class="small muted">O frete é calculado e as etiquetas são pagas com o saldo da <b>sua</b> conta. A loja é responsável pelos envios (<a href="termos.html" target="_blank" rel="noopener" style="text-decoration:underline">Termos de Uso</a>). Não tem conta? É grátis em <a href="https://melhorenvio.com.br" target="_blank" rel="noopener" style="text-decoration:underline">melhorenvio.com.br</a>.</div></div>
         ${souDono ? `<button type="button" class="btn btn-primary btn-sm" id="me-conectar">${ic('ext')}Conectar</button>` : ''}
       </div>${souDono ? '' : '<div class="warnline" style="margin-top:10px">Só o dono da conta pode conectar o Melhor Envio.</div>'}`;
       if ($('me-conectar')) $('me-conectar').onclick = async (e) => {
-        const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Abrindo…';
+        const b = e.currentTarget;
+        if (!(await GP.confirmar('Conectar o Melhor Envio da sua loja', { texto: 'As etiquetas de frete serão compradas e pagas com o saldo da SUA conta do Melhor Envio. A loja é responsável pelos envios, prazos, extravios e reembolsos, conforme os Termos de Uso do GoPedido.', ok: 'Entendi, conectar', cancelar: 'Voltar', icone: 'box' }))) return;
+        b.disabled = true; b.innerHTML = '<span class="spin"></span>Abrindo…';
         try { const r = await chamarME({ acao: 'url', loja: loja.id }); GP.ls.set('gp_me_loja', loja.id); location.href = r.url; }
         catch (er) { b.disabled = false; b.innerHTML = ic('ext') + 'Conectar'; GP.toast(er.message, 'err'); }
       };
@@ -1511,12 +1554,18 @@
     }).join('');
   }
   // Pedido com envio: transportadora, endereço completo e etiqueta
+  // Avisa o cliente por e-mail (o servidor confere a situação e manda cada e-mail uma vez só)
+  function emailCliente(p, tipo) {
+    if (!p || !p.token || !p.cliente_email) return;
+    sb.functions.invoke('ff-email', { body: { token: p.token, tipo } }).catch(() => {});
+  }
   const rastreioPedido = new Set();
   function envioBloco(p) {
     if (p.etiqueta_status === 'gerada' && p.status !== 'cancelado' && p.status !== 'entregue' && !rastreioPedido.has(p.id)) {
       rastreioPedido.add(p.id);
       chamarME({ acao: 'rastrear', pedido: p.id }).then(r => {
         if (r && ((r.rastreio && r.rastreio !== p.rastreio) || (r.status && r.status !== p.status))) { p.rastreio = r.rastreio || p.rastreio; p.status = r.status || p.status; renderPedidos(); }
+        if (p.rastreio) emailCliente(p, 'postado');
       }).catch(() => {});
     }
     const e = p.endereco_partes || {};
@@ -1551,7 +1600,7 @@
         if (!sim) { b.disabled = false; b.innerHTML = t; return; }
         r = await chamarME({ acao, pedido: p.id, confirmar_valor: true });
       }
-      if (acao === 'etiqueta') { if (r.agencia) p.me_agencia = r.agencia; p.etiqueta_status = 'gerada'; p.rastreio = r.rastreio || p.rastreio; GP.toast('Etiqueta gerada! Agora é só imprimir.', 'ok'); }
+      if (acao === 'etiqueta') { if (r.agencia) p.me_agencia = r.agencia; if (r.rastreio) { p.rastreio = r.rastreio; p.etiqueta_status = 'gerada'; emailCliente(p, 'postado'); } p.etiqueta_status = 'gerada'; p.rastreio = r.rastreio || p.rastreio; GP.toast('Etiqueta gerada! Agora é só imprimir.', 'ok'); }
       if (acao === 'imprimir') { if (janela) janela.location = r.url; else location.href = r.url; }
       if (acao === 'rastrear') { p.rastreio = r.rastreio || p.rastreio; if (r.status) p.status = r.status; GP.toast(r.rastreio ? 'Rastreio: ' + r.rastreio : 'O código de rastreio aparece depois que a transportadora recebe o pacote.', r.rastreio ? 'ok' : ''); }
     } catch (er) {
@@ -1606,6 +1655,7 @@
     const { error } = await sb.from('ff_pedidos').update({ status: b.dataset.st }).eq('id', b.dataset.id);
     if (error) { if (janela) janela.close(); b.disabled = false; return GP.toast(GP.err(error), 'err'); }
     const p = pedidos.find(x => x.id === b.dataset.id); if (p) p.status = b.dataset.st;
+    if (p && b.dataset.st === 'cancelado') emailCliente(p, 'cancelado');
     if (p && janela) imprimir(p, janela);
     renderPedidos(); GP.toast('Pedido atualizado: ' + GP.STATUS[b.dataset.st].t, 'ok');
   };

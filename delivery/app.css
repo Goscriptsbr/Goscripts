@@ -279,3 +279,18 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ag-txt small{display:block;color:var(--muted);font-size:.78rem}
 .ag-map{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;border-radius:10px;background:var(--brand-soft,#eef2ff);color:var(--brand-2);font-size:.68rem;font-weight:700;text-decoration:none}
 .ag-map .i{width:18px;height:18px}
+.gs-foot .gs-termos{color:var(--muted);font-size:.74rem;text-decoration:underline}
+.termos-ck{align-items:flex-start;font-size:.84rem;line-height:1.45;margin:0 0 16px}
+.termos-ck a{color:var(--brand-2);font-weight:700;text-decoration:underline}
+.termos-wrap{position:fixed;inset:0;z-index:300;background:rgba(15,15,20,.55);display:grid;place-items:center;padding:16px}
+.termos-box{background:#fff;border-radius:20px;max-width:440px;width:100%;padding:24px 22px;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.termos-box h3{font-size:1.2rem;margin:10px 0 6px}
+.termos-box p{font-size:.9rem;color:var(--muted)}
+.termos-box ul{padding-left:18px;margin:10px 0 14px}
+.termos-box li{font-size:.9rem;line-height:1.5;margin:4px 0}
+.termos-ic{width:46px;height:46px;border-radius:14px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center}
+.termos-ic .i{width:24px;height:24px}
+.check input{flex:none}
+.vendido{display:flex;gap:8px;align-items:flex-start;line-height:1.45;margin-top:12px}
+.vendido .i{width:16px;height:16px;flex:none;margin-top:2px}
+.vendido a{text-decoration:underline;color:inherit;font-weight:700}

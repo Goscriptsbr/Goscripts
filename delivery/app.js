@@ -223,6 +223,8 @@
     cotacao_vencida: 'O frete mudou. Escolha o frete de novo.',
     cpf_obrigatorio: 'Digite um CPF (ou CNPJ) válido de quem vai receber.',
     cpf_invalido: 'Esse CPF não é válido. Confira os números.',
+    email_obrigatorio: 'Digite seu e-mail para receber o código de rastreio.',
+    email_invalido: 'Confira o e-mail: parece que falta alguma parte.',
     avaliacao_cedo: 'Você pode avaliar depois que o pedido for entregue.',
     avaliacao_feita: 'Este pedido já foi avaliado. Obrigado!',
     avaliacao_expirada: 'O prazo para avaliar este pedido acabou.',
@@ -896,7 +898,8 @@
     const f = document.createElement('footer'); f.className = 'gs-foot';
     const zap = GP.wa(GP.WHATS, 'Olá! Vim pelo GoPedido e gostaria de falar com vocês.');
     f.innerHTML = `<a class="gs-zap" href="${zap}" target="_blank" rel="noopener">${GP.ic('chat')}<span>Fale conosco no WhatsApp</span></a>
-      <a class="gs-by" href="https://goscripts.com.br" target="_blank" rel="noopener"><span>Desenvolvido por</span><img src="../logo-192.png" alt="" width="22" height="22"><b>GoScripts</b></a>`;
+      <a class="gs-by" href="https://goscripts.com.br" target="_blank" rel="noopener"><span>Desenvolvido por</span><img src="../logo-192.png" alt="" width="22" height="22"><b>GoScripts</b></a>
+      <a class="gs-termos" href="termos.html">Termos de Uso</a>`;
     document.body.appendChild(f);
     // Páginas com tela cheia (login do painel) marcam onde o rodapé deve aparecer
     document.querySelectorAll('[data-rodape-aqui]').forEach(el => el.appendChild(f.cloneNode(true)));
