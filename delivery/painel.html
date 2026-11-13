@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=42782">
+<link rel="stylesheet" href="app.css?v=43146">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -646,8 +646,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=42782"></script>
-<script src="app.js?v=42782"></script>
+<script src="config.js?v=43146"></script>
+<script src="app.js?v=43146"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -813,9 +813,9 @@
     fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel(); renderVerif(); loadAvaliacoes();
     await loadProds();
     go('pedidos');
-    await loadPedidos();
+    verPed = null; await checarPedidos();
     clearInterval(timer);
-    timer = setInterval(() => { if (!document.hidden) loadPedidos(); }, 15000);
+    timer = setInterval(() => { if (!document.hidden) checarPedidos(); }, 15000);
   }
   function novaLoja(primeira) {
     clearInterval(timer);
@@ -986,8 +986,21 @@
       });
     } catch {}
   };
+  // Consulta leve: só pergunta qual foi a última alteração nos pedidos da loja (poucos bytes).
+  // A lista completa só é baixada quando algo mudou (pedido novo, status, cancelamento) ou a cada 10 min.
+  let verPed = null, ultCheio = 0;
+  async function checarPedidos() {
+    if (!loja) return;
+    const { data, error } = await sb.from('ff_pedidos').select('atualizado_em').eq('loja_id', loja.id).order('atualizado_em', { ascending: false }).limit(1);
+    if (error) { $('upd').textContent = 'Sem conexão · tentando de novo'; return; }
+    const v = data && data[0] ? data[0].atualizado_em : '';
+    if (v !== verPed || Date.now() - ultCheio > 10 * 60e3) { verPed = v; return loadPedidos(); }
+    $('upd').textContent = 'Conferido às ' + GP.hora(new Date());
+    renderPedidos();
+  }
   async function loadPedidos() {
     if (!loja) return;
+    ultCheio = Date.now();
     const desde = new Date(Date.now() - 7 * 864e5).toISOString();
     const { data, error } = await sb.from('ff_pedidos').select('*, ff_pedido_itens(*)')
       .eq('loja_id', loja.id).gte('criado_em', desde).order('criado_em', { ascending: false }).limit(200);
@@ -1081,7 +1094,7 @@
     if (p && janela) imprimir(p, janela);
     renderPedidos(); GP.toast('Pedido atualizado: ' + GP.STATUS[b.dataset.st].t, 'ok');
   };
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && loja) loadPedidos(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && loja) checarPedidos(); });
 
   // ================= CARDÁPIO =================
   async function loadProds() {
