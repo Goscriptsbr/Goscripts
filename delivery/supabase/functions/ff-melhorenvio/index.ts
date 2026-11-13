@@ -373,10 +373,14 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
       } catch (_) {}
       if (cid && cid !== 1) {
         escolhida = (l.me_agencias || {})[String(cid)] || null;
-        if (escolhida && escolhida.id) candidatas = [escolhida];
+        const sandbox = BASE.includes('sandbox');
+        if (escolhida && escolhida.id && !sandbox) candidatas = [escolhida];
         else {
+          // No sandbox as agências reais da lista nem sempre valem para etiqueta de teste: tenta a escolhida e depois as outras
           candidatas = (await agenciasDe(l.id, cid, de.uf, de.cidade).catch(() => [])).slice(0, 6);
-          if (BASE.includes('sandbox') && !candidatas.some(a => a.id === 1)) candidatas.push({ id: 1, nome: 'Agência de teste (sandbox)', endereco: '' });
+          if (escolhida && escolhida.id) candidatas = [escolhida, ...candidatas.filter(a => a.id !== Number(escolhida.id))];
+          if (sandbox && !candidatas.some(a => a.id === 1)) candidatas.push({ id: 1, nome: 'Agência de teste (sandbox)', endereco: '' });
+          if (sandbox) escolhida = null; // no teste não trava na escolhida
         }
       }
       let r = null, ultimo = null, usada = null;
