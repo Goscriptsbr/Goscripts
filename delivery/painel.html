@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=41800">
+<link rel="stylesheet" href="app.css?v=42057">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -40,11 +40,12 @@
   .tabs button.on{color:var(--ink);border-color:var(--brand)}
   .tabs button[disabled]{opacity:.35;pointer-events:none}
   .tabs .count{background:var(--brand);color:#fff;border-radius:999px;font-size:.72rem;min-width:20px;height:20px;padding:0 6px;display:grid;place-items:center}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
-  .stat{padding:14px 16px}
-  .stat .l{font-size:.78rem;color:var(--muted);font-weight:600}
-  .stat .v{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin-top:2px}
-  @media(max-width:700px){.stats{grid-template-columns:1fr 1fr}}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:10px;padding:0;overflow:hidden}
+  .stat{padding:12px 14px;border-left:1px solid var(--line);min-width:0}
+  .stat:first-child{border-left:0}
+  .stat .l{font-size:.72rem;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stat .v{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;margin-top:2px;white-space:nowrap}
+  @media(max-width:700px){.stats{grid-template-columns:1fr 1fr}.stat:nth-child(3){border-left:0}.stat:nth-child(n+3){border-top:1px solid var(--line)}}
   .orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
   @media(max-width:420px){.orders{grid-template-columns:1fr}}
   .order{display:flex;flex-direction:column}
@@ -134,17 +135,33 @@
   .linkbox{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:12px;padding:8px 8px 8px 14px}
   .linkbox code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.86rem}
   .savebar{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--bg) 30%);padding:20px 0 calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:flex-end;gap:10px;z-index:5}
-  .moto{padding:16px 18px;margin-bottom:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:linear-gradient(135deg,#16161B,#2a2a33);color:#fff;border:0}
-  .moto .ic{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none}
-  .moto .code{font-family:ui-monospace,Menlo,monospace;font-size:1.5rem;font-weight:800;letter-spacing:.12em}
-  .moto .sub{color:#b9b9c4;font-size:.8rem}
-  .moto .acts{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
-  .moto .btn-ghost{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff}
-  @media(max-width:600px){.moto .acts{margin-left:0;width:100%}.moto .acts .btn{flex:1}}
-  .printcfg{margin-bottom:14px;overflow:hidden}
-  .printcfg summary{list-style:none;display:flex;gap:10px;align-items:center;padding:12px 16px;cursor:pointer}
+  .moto{padding:12px 12px 12px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,#16161B,#2a2a33);color:#fff;border:0}
+  .moto .ic{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none}
+  .moto .ic svg{width:20px;height:20px}
+  .moto .mt{flex:1;min-width:0}
+  .moto .code{font-family:ui-monospace,Menlo,monospace;font-size:1.12rem;font-weight:800;letter-spacing:.1em;line-height:1.2}
+  .moto .sub{color:#b9b9c4;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .moto .acts{display:flex;gap:6px;flex:none}
+  .moto .code{white-space:nowrap}
+  @media(max-width:420px){.moto .ic{display:none}.moto .mb{width:38px;height:38px}.moto .acts{gap:5px}}
+  .moto .mb{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.1);color:#fff}
+  .moto .mb svg{width:19px;height:19px}
+  .moto .mb.wa{background:var(--ok)}
+  .tools2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;align-items:start}
+  @media(max-width:700px){.tools2{grid-template-columns:1fr;gap:0}}
+  .tools2 .tic{width:34px;height:34px;border-radius:10px;background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;flex:none;font-size:1rem}
+  .tools2 .tic svg{width:18px;height:18px}
+  .tools2 .tt{flex:1;min-width:0}
+  .tools2 .tt b{display:block;font-size:.9rem}
+  .tools2 .tt span{display:block;font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tools2 .chev{width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:0 4px 4px 0;flex:none;transition:transform .2s}
+  .tools2 details[open] .chev{transform:rotate(-135deg);margin:4px 4px 0 0}
+  .ohead{display:flex;align-items:center;gap:10px;margin:8px 0 12px;flex-wrap:wrap}
+  .ohead .seg3{flex:1;min-width:260px;margin-top:0}
+  #stline{margin:2px 0 0}
+  .printcfg{margin-bottom:10px;overflow:hidden}
+  .printcfg summary{list-style:none;display:flex;gap:12px;align-items:center;padding:10px 14px;cursor:pointer}
   .printcfg summary::-webkit-details-marker{display:none}
-  .printcfg summary .small{margin-left:auto}
   .printcfg .pc-body{padding:0 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
   .printcfg .pc-body .check,.printcfg .pc-body p{grid-column:1/-1}
   @media(max-width:600px){.printcfg .pc-body{grid-template-columns:1fr}}
@@ -213,12 +230,9 @@
   .vbanner.rec{background:var(--bad-soft);border-color:#F5C2BE;color:#8a1c14}
   .vbanner .grid2{margin-top:12px}
   .vbanner .input{background:#fff}
-  .avbox{margin-bottom:16px}
-  .avbox summary{display:flex;gap:10px;align-items:center;cursor:pointer;list-style:none}
+  .avbox{margin-bottom:10px;padding:10px 14px}
+  .avbox summary{display:flex;gap:12px;align-items:center;cursor:pointer;list-style:none}
   .avbox summary::-webkit-details-marker{display:none}
-  .avbox summary .small{margin-left:auto}
-  .avbox .chev{width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:0 4px 4px 0}
-  .avbox[open] .chev{transform:rotate(-135deg);margin:4px 4px 0 0}
   .avi{padding:12px 0;border-top:1px solid var(--line)}
   .avi:first-child{border-top:0}
   .etp{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
@@ -349,21 +363,16 @@
 
     <!-- Pedidos -->
     <section id="tab-pedidos">
-      <div class="stline" id="stline"></div>
-      <div class="card moto" id="moto"></div>
-      <div id="verif-banner"></div>
-      <div class="stats" id="stats"></div>
-      <details class="card pad avbox" id="avbox"><summary><b>Avaliações dos clientes</b><span class="small muted" id="av-resumo"></span><span class="chev"></span></summary><div id="av-lista" style="margin-top:10px"></div></details>
-      <div class="row between" style="margin-bottom:14px;flex-wrap:wrap">
-        <div class="row" id="ofilter" style="gap:8px">
-          <button class="chip on" data-f="abertos" style="cursor:pointer">Em andamento</button>
-          <button class="chip" data-f="fim" style="cursor:pointer">Finalizados</button>
-          <button class="chip" data-f="todos" style="cursor:pointer">Todos</button>
-        </div>
-        <span class="small muted" id="upd"></span>
+      <div class="cm-head">
+        <div class="grow" style="min-width:0"><h2>Pedidos</h2><div class="stline" id="stline"></div></div>
       </div>
+      <div id="verif-banner"></div>
+      <div class="card stats" id="stats"></div>
+      <div class="card moto" id="moto"></div>
+      <div class="tools2">
+      <details class="card avbox" id="avbox"><summary><span class="tic">★</span><span class="tt"><b>Avaliações</b><span id="av-resumo"></span></span><span class="chev"></span></summary><div id="av-lista" style="margin-top:10px"></div></details>
       <details class="card printcfg" id="printcfg">
-        <summary><span id="pc-ic"></span><b>Impressora térmica</b><span class="small muted" id="pc-resumo"></span></summary>
+        <summary><span class="tic" id="pc-ic"></span><span class="tt"><b>Impressora</b><span id="pc-resumo"></span></span><span class="chev"></span></summary>
         <div class="pc-body">
           <label class="field"><span>Largura do papel</span><select class="input" id="pc-largura"><option value="80">80 mm (mais comum)</option><option value="58">58 mm (mini impressora)</option></select></label>
           <label class="field"><span>Vias por pedido</span><select class="input" id="pc-vias"><option value="ambas">Entrega + Cozinha</option><option value="entrega">Só a via da entrega</option><option value="cozinha">Só a via da cozinha</option></select></label>
@@ -371,6 +380,15 @@
           <p class="small muted" style="margin-top:6px">No celular, instale o app da sua impressora (ex.: RawBT para Bluetooth) para ela aparecer na hora de imprimir. No computador, escolha a impressora térmica e marque "sem margens".</p>
         </div>
       </details>
+      </div>
+      <div class="ohead">
+        <div class="seg3" id="ofilter">
+          <button class="on" data-f="abertos">Em andamento</button>
+          <button data-f="fim">Finalizados</button>
+          <button data-f="todos">Todos</button>
+        </div>
+        <span class="small muted" id="upd"></span>
+      </div>
       <div class="orders" id="orders"></div>
     </section>
 
@@ -628,8 +646,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=41800"></script>
-<script src="app.js?v=41800"></script>
+<script src="config.js?v=42057"></script>
+<script src="app.js?v=42057"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -885,7 +903,7 @@
     $('sw-aberta').checked = loja.aberta;
     $('sw-txt').textContent = loja.horario_auto ? (loja.aberta ? (st.aberta ? 'Aberta' : 'Fora do horário') : 'Pausada') : (loja.aberta ? 'Aberta' : 'Fechada');
     $('sw-wrap').title = loja.horario_auto ? 'Automático pelo horário · desligue para pausar os pedidos' : 'Abrir/fechar a loja';
-    $('stline').innerHTML = `<span class="badge ${st.cls}"><i class="dot"></i>${st.texto}</span>${loja.horario_auto ? '<span class="small muted">automático pelo horário</span>' : '<span class="small muted">abertura manual</span>'}`;
+    $('stline').innerHTML = `<span class="badge ${st.cls}"><i class="dot"></i>${st.texto}</span><span class="small muted">${loja.horario_auto ? '· automático' : '· manual'}</span>`;
     $('b-ver').href = $('b-ver2').href = 'loja.html?l=' + encodeURIComponent(loja.slug);
     $('l-link').textContent = cfg.siteUrl + 'loja.html?l=' + loja.slug;
   }
@@ -922,12 +940,12 @@
     const exp = new Date(codigo.expira), h = Math.max(0, (exp - Date.now()) / 36e5);
     const resta = h >= 1 ? Math.floor(h) + 'h' + String(Math.round((h % 1) * 60)).padStart(2, '0') : Math.round(h * 60) + ' min';
     $('moto').innerHTML = `<div class="ic">${ic('bike')}</div>
-      <div><div class="sub">Código do motoboy</div><div class="code">${fmtCod(codigo.codigo)}</div>
-      <div class="sub">Vale até ${GP.hora(exp)} (faltam ${resta}) · troca sozinho a cada 8h</div></div>
+      <div class="mt"><div class="sub">Código do motoboy</div><div class="code">${fmtCod(codigo.codigo)}</div>
+      <div class="sub">Vale até ${GP.hora(exp)} · faltam ${resta}</div></div>
       <div class="acts">
-        <button class="btn btn-ghost btn-sm" id="m-copy">${ic('copy')}Copiar</button>
-        <a class="btn btn-ok btn-sm" id="m-wa" target="_blank" rel="noopener">${ic('chat')}Enviar</a>
-        <button class="btn btn-ghost btn-sm" id="m-novo">${ic('refresh')}Gerar novo</button>
+        <button class="mb" id="m-copy" title="Copiar código e link">${ic('copy')}</button>
+        <button class="mb" id="m-novo" title="Gerar novo código">${ic('refresh')}</button>
+        <a class="mb wa" id="m-wa" target="_blank" rel="noopener" title="Enviar no WhatsApp">${ic('chat')}</a>
       </div>`;
     const link = cfg.siteUrl + 'entregador.html?c=' + codigo.codigo;
     const msg = `Entregas da ${loja.nome} 🛵\nAcesse: ${link}\nCódigo: ${fmtCod(codigo.codigo)} (vale até ${GP.hora(exp)})`;
@@ -992,10 +1010,12 @@
     const andamento = pedidos.filter(p => ['novo', 'preparando', 'saiu'].includes(p.status)).length;
     $('cnt').textContent = novos; $('cnt').classList.toggle('hide', !novos);
     document.title = (novos ? `(${novos}) ` : '') + 'Painel da loja · GoPedido';
+    const nFim = pedidos.filter(p => ['entregue', 'cancelado'].includes(p.status)).length;
+    document.querySelectorAll('#ofilter [data-f]').forEach(b => { b.innerHTML = { abertos: 'Em andamento', fim: 'Finalizados', todos: 'Todos' }[b.dataset.f] + ` <span>${{ abertos: andamento, fim: nFim, todos: pedidos.length }[b.dataset.f]}</span>`; });
     $('stats').innerHTML = [
       ['Pedidos hoje', ph.length], ['Faturamento hoje', brl(ph.reduce((s, p) => s + Number(p.total), 0))],
       ['Em andamento', andamento], ['Ticket médio', brl(ph.length ? ph.reduce((s, p) => s + Number(p.subtotal), 0) / ph.length : 0)]
-    ].map(([l, v]) => `<div class="card stat"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
+    ].map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
 
     const lst = pedidos.filter(p => ofiltro === 'todos' ? true : ofiltro === 'fim' ? ['entregue', 'cancelado'].includes(p.status) : ['novo', 'preparando', 'saiu'].includes(p.status));
     if (!lst.length) {
@@ -1037,7 +1057,7 @@
   $('ofilter').onclick = (e) => {
     const b = e.target.closest('[data-f]'); if (!b) return;
     ofiltro = b.dataset.f;
-    document.querySelectorAll('#ofilter .chip').forEach(c => c.classList.toggle('on', c === b));
+    document.querySelectorAll('#ofilter [data-f]').forEach(c => c.classList.toggle('on', c === b));
     renderPedidos();
   };
   $('orders').onclick = async (e) => {
