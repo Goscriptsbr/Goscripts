@@ -156,7 +156,10 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
       throw new Falha('me_desconectado');
     }
     if (!r.ok) {
-      const det = j.message || j.error || (j.errors ? JSON.stringify(j.errors) : '') || ('HTTP ' + r.status);
+      // O Melhor Envio manda o motivo por campo em "errors": junta tudo numa frase legível
+      const campos = j.errors && typeof j.errors === 'object'
+        ? Object.entries(j.errors).map(([k, v]) => k + ': ' + (Array.isArray(v) ? v.join(' ') : String(v))).join(' | ') : '';
+      const det = [j.message || j.error, campos].filter(Boolean).join(' · ') || ('HTTP ' + r.status);
       if (/saldo|balance|insufficient|insuficiente/i.test(det)) throw new Falha('me_saldo', 400, det);
       throw new Falha('me_erro', 400, det);
     }
@@ -287,7 +290,8 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
       // Remetente: dados da conta do lojista no Melhor Envio + endereço da loja
       const me = await api(l.id, 'GET', '/api/v2/me');
       const de = parseEnd(l.endereco);
-      const docLoja = so(l.cnpj);
+      const falta = [!de.rua && 'rua', !de.cidade && 'cidade', !de.uf && 'UF', de.cep.length !== 8 && 'CEP'].filter(Boolean);
+      if (falta.length) throw new Falha('me_erro', 400, 'o endereço da loja está incompleto (falta ' + falta.join(', ') + '). Arrume em Minha loja e salve.');
       const para = p.endereco_partes || {};
       const { data: itens } = ok(await admin.from('ff_pedido_itens').select('nome, preco, qtd, produto_id, variacao_id').eq('pedido_id', p.id), 'itens');
       const ids = [...new Set((itens || []).map(i => i.produto_id).filter(Boolean))];
@@ -308,13 +312,14 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
         service: p.frete_servico,
         from: {
           name: (l.nome || '').slice(0, 60), phone: so(l.telefone) || so(me.phone && me.phone.phone),
-          email: me.email || '',
-          ...(docLoja.length === 14 ? { company_document: docLoja, document: so(me.document) } : { document: so(me.document) }),
+          ...(me.email ? { email: me.email } : {}),
+          // Remetente com o documento da própria conta do Melhor Envio (o CNPJ da loja pode não estar cadastrado lá)
+          document: so(me.document),
           address: de.rua, number: de.numero || 'S/N', district: de.bairro, city: de.cidade,
           state_abbr: de.uf, postal_code: de.cep, country_id: 'BR'
         },
         to: {
-          name: (p.cliente_nome || '').slice(0, 60), phone: so(p.cliente_telefone), email: '',
+          name: (p.cliente_nome || '').slice(0, 60), phone: so(p.cliente_telefone),
           ...(doc.length === 14 ? { company_document: doc } : { document: doc }),
           address: para.rua || p.endereco, complement: para.complemento || p.complemento || '',
           number: para.numero || 'S/N', district: para.bairro || '', city: para.cidade || '',
@@ -324,7 +329,7 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
         // Mesmas caixas da cotação que o cliente pagou; sem elas, monta uma caixa com a soma dos produtos
         volumes: (Array.isArray(p.frete_pacotes) && p.frete_pacotes.length) ? p.frete_pacotes
           : [{ height: Math.min(Math.ceil(alt), 100), width: Math.ceil(larg), length: Math.ceil(comp), weight: Math.round(peso * 1000) / 1000 }],
-        options: { insurance_value: Number(p.subtotal), receipt: false, own_hand: false, reverse: false, non_commercial: true, platform: 'GoPedido', tags: [{ tag: 'Pedido #' + p.numero }] }
+        options: { insurance_value: Number(p.subtotal), receipt: false, own_hand: false, reverse: false, non_commercial: true, platform: 'GoPedido', tags: [{ tag: 'Pedido #' + p.numero, url: null }] }
       };
       const r = await api(l.id, 'POST', '/api/v2/me/cart', corpo);
       meId = String(r.id || '');
