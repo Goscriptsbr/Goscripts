@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=89568">
+<link rel="stylesheet" href="app.css?v=90655">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -33,6 +33,10 @@
   .live{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted)}
   .live i{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pl 1.6s infinite}
   @keyframes pl{0%{box-shadow:0 0 0 0 rgba(20,148,90,.5)}100%{box-shadow:0 0 0 10px rgba(20,148,90,0)}}
+  .aviso-email{display:flex;gap:12px;align-items:flex-start;background:#FFF7E6;border:1px solid #F6D58E;border-radius:16px;padding:14px 16px;margin-top:14px;font-size:.88rem;line-height:1.5;color:#5c4210}
+  .aviso-email .i{width:20px;height:20px;flex:none;margin-top:2px;color:#B7791F}
+  .aviso-email > div > b{display:block;margin-bottom:2px;color:#3d2c07}
+  .aviso-email span{display:block}
 </style>
 </head>
 <body>
@@ -50,8 +54,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=89568"></script>
-<script src="app.js?v=89568"></script>
+<script src="config.js?v=90655"></script>
+<script src="app.js?v=90655"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -60,6 +64,8 @@
   const qs = new URLSearchParams(location.search);
   const token = qs.get('t');
   const novo = qs.get('novo') === '1';
+  let emailPedido = '';
+  try { if (novo) { emailPedido = sessionStorage.getItem('gp_email_pedido') || ''; sessionStorage.removeItem('gp_email_pedido'); } } catch (_) {}
   if (novo) history.replaceState(null, '', 'pedido.html?t=' + encodeURIComponent(token));
 
   const ORDEM = ['novo', 'preparando', 'saiu', 'entregue'];
@@ -111,6 +117,7 @@
     const msg = `Olá! Sou ${p.cliente_nome}, fiz o pedido #${p.numero} pelo GoPedido.`;
     $('main').innerHTML = `
       ${novo ? `<div class="ok-hero"><div class="big">${ic('check')}</div><h1>${env ? 'Pedido feito!' : 'Pedido enviado!'}</h1><p class="muted">${env ? 'A loja já recebeu e vai separar e postar seu pedido. Guarde este link: o código de rastreio aparece aqui.' : 'A loja já recebeu. Guarde este link para acompanhar.'}</p></div>` : '<div style="height:24px"></div>'}
+      ${novo && emailPedido ? `<div class="aviso-email">${ic('bell')}<div><b>Enviamos um e-mail para ${esc(emailPedido)}</b><span>Com o resumo e o link do pedido${env ? ' (e, quando a loja postar, o código de rastreio)' : ''}. <b>Não chegou em alguns minutos?</b> Olhe a pasta <b>Spam</b> ou <b>Promoções</b> e marque como "Não é spam" para receber os próximos.</span></div></div>` : ''}
       <div class="card pad" style="margin-top:14px">
         <div class="row between" style="margin-bottom:18px">
           <div><div class="small muted">Pedido</div><b style="font-size:1.3rem">#${p.numero}</b></div>

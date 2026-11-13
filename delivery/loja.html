@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=89568">
+<link rel="stylesheet" href="app.css?v=90655">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -319,8 +319,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=89568"></script>
-<script src="app.js?v=89568"></script>
+<script src="config.js?v=90655"></script>
+<script src="app.js?v=90655"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -625,7 +625,7 @@
   $('c-email').addEventListener('input', () => updNext());
   function emailUI(envio) {
     $('c-email-opc').textContent = envio ? '(obrigatório)' : '(opcional)';
-    $('c-email-dica').textContent = envio ? 'É por aqui que chegam o resumo do pedido e o código de rastreio.' : 'Para receber o resumo e o link para acompanhar o pedido.';
+    $('c-email-dica').textContent = (envio ? 'É por aqui que chegam o resumo do pedido e o código de rastreio.' : 'Para receber o resumo e o link para acompanhar o pedido.') + ' Se não achar, olhe o Spam.';
   }
   $('c-cpf').addEventListener('input', (e) => {
     const d = GP.digits(e.target.value).slice(0, 14);
@@ -1006,6 +1006,7 @@
     }
     const hist = GP.ls.get('gp_pedidos', []); hist.unshift({ t: data.token, n: data.numero, loja: loja.nome, em: Date.now() });
     GP.ls.set('gp_pedidos', hist.slice(0, 20));
+    try { sessionStorage.setItem('gp_email_pedido', emailOk() ? emailTxt() : ''); } catch (_) {}
     location.href = 'pedido.html?t=' + encodeURIComponent(data.token) + '&novo=1';
   };
 
