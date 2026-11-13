@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=40620">
+<link rel="stylesheet" href="app.css?v=40706">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -489,8 +489,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=40620"></script>
-<script src="app.js?v=40620"></script>
+<script src="config.js?v=40706"></script>
+<script src="app.js?v=40706"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -518,7 +518,7 @@
   let user = null, loja = null, lojas = [], prods = [], pedidos = [], conhecidos = null, ofiltro = 'abertos', timer = null;
 
   // ================= AUTENTICAÇÃO =================
-  let modo = 'in', recovering = /type=recovery/.test(location.hash + location.search), trocando = false;
+  let modo = 'in', recovering = /type=recovery/.test(location.hash + location.search), trocando = false, saindo = false;
   { const h = new URLSearchParams(location.hash.slice(1));
     if (h.get('error_code') || h.get('error')) {
       recovering = false; history.replaceState(null, '', location.pathname + location.search);
@@ -567,21 +567,27 @@
     const { error } = await sb.auth.updateUser({ password: $('r-pass').value });
     b.disabled = false; b.textContent = 'Salvar nova senha';
     if (error) {
-      GP.toast(GP.err(error), 'err');
-      if (/session missing/i.test(error.message || '')) { await sb.auth.signOut(); recovering = false; trocando = false; $('f-reset').reset(); showAuth(false); }
+      const semSessao = /session missing/i.test(error.message || '');
+      GP.toast(semSessao && trocando ? 'Sua sessão expirou. Entre de novo e troque a senha.' : GP.err(error), 'err');
+      if (semSessao) { user = null; await sb.auth.signOut(); recovering = false; trocando = false; $('f-reset').reset(); showAuth(false); }
       return;
     }
     $('f-reset').reset(); recovering = false; trocando = false;
     if (/type=recovery/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
     GP.toast('Senha alterada!', 'ok'); boot();
   };
-  $('b-sair').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  $('b-sair').onclick = async () => { saindo = true; await sb.auth.signOut(); location.reload(); };
 
   sb.auth.onAuthStateChange((ev, session) => {
     if (ev === 'PASSWORD_RECOVERY') { recovering = true; showAuth(true); return; }
+    if (ev === 'SIGNED_OUT' && user && !saindo) { user = null; trocando = false; GP.toast('Sua sessão expirou. Entre de novo.'); showAuth(false); return; }
     if (ev === 'SIGNED_IN' && !recovering && !trocando && (!user || user.id !== session.user.id)) setTimeout(boot, 0);
   });
-  $('b-trocar-senha').onclick = () => { trocando = true; showAuth(true); setTimeout(() => $('r-pass').focus(), 50); };
+  $('b-trocar-senha').onclick = async () => {
+    const { data: { session: ss } } = await sb.auth.getSession();
+    if (!ss) { GP.toast('Sua sessão expirou. Entre de novo para trocar a senha.'); user = null; return showAuth(false); }
+    trocando = true; showAuth(true); setTimeout(() => $('r-pass').focus(), 50);
+  };
   $('r-cancel').onclick = () => { trocando = false; $('f-reset').reset(); boot(); };
   function showAuth(reset) {
     $('v-app').classList.add('hide'); $('v-auth').classList.remove('hide');
@@ -596,7 +602,7 @@
     if (!session) return showAuth(false);
     if (recovering) return showAuth(true);
     const chk = await sb.auth.getUser();
-    if (chk.error && chk.error.status && chk.error.status >= 400 && chk.error.status < 500) { await sb.auth.signOut(); GP.toast('Sua sessão expirou. Entre de novo.'); return showAuth(false); }
+    if (chk.error && chk.error.status && chk.error.status >= 400 && chk.error.status < 500) { await sb.auth.signOut(); user = null; GP.toast("Sua sessão expirou. Entre de novo."); return showAuth(false); }
     user = session.user;
     $('v-auth').classList.add('hide'); $('v-app').classList.remove('hide');
     sb.rpc('ff_is_admin').then(({ data }) => { $('b-admin').classList.toggle('hide', data !== true); });
