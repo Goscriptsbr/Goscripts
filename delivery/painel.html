@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=80360">
+<link rel="stylesheet" href="app.css?v=81035">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -778,8 +778,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=80360"></script>
-<script src="app.js?v=80360"></script>
+<script src="config.js?v=81035"></script>
+<script src="app.js?v=81035"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -979,6 +979,7 @@
         <button type="button" class="icon-btn" id="me-atu" title="Atualizar saldo">${ic('refresh')}</button>
       </div>
       <label class="switch" style="margin:14px 0 6px"><input type="checkbox" id="l-envio" ${loja.envio_externo ? 'checked' : ''} ${souDono ? '' : 'disabled'}><i></i>Oferecer envio para clientes fora da área de entrega</label>
+      ${loja.taxa_modo !== 'tabela' && !(Number(loja.raio_km) > 0) ? `<div class="warnline" style="margin-bottom:10px">Sua entrega local está sem raio máximo. Com o envio ligado, o motoboy atende até <b>30 km</b> e, depois disso, o cliente vê o frete. Para mudar, defina o <b>Raio máximo</b> em Entrega.</div>` : ''}
       <p class="small muted" style="margin:0 0 10px">Quando ligado, quem está fora do seu raio vê as opções de frete (Correios, Jadlog…) no checkout. Pedidos com envio são pagos por <b>Pix</b>${loja.aceita_pix ? '' : ' (ligue o Pix nas formas de pagamento)'}. Cadastre o peso e as medidas nos produtos para o frete sair certo.</p>
       <div class="row" style="gap:8px;flex-wrap:wrap">
         <a class="btn btn-soft btn-sm" href="https://melhorenvio.com.br" target="_blank" rel="noopener">${ic('cash')}Adicionar saldo</a>

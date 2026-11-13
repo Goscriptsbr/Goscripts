@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=80360">
+<link rel="stylesheet" href="app.css?v=81035">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -317,8 +317,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=80360"></script>
-<script src="app.js?v=80360"></script>
+<script src="config.js?v=81035"></script>
+<script src="app.js?v=81035"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -602,6 +602,7 @@
   let modoEnt = 'entrega';
   // Envio para outras cidades (Melhor Envio): só lojas de Variedades com a conta conectada e Pix ligado
   const podeEnvio = () => loja.tipo === 'variedades' && loja.envio_externo && loja.me_conectado && loja.aceita_pix;
+  const RAIO_ENVIO = 30;
   let frete = { chave: '', opcoes: null, sel: null, carregando: false, erro: '' };
   const entrega = () => {
     if (modoEnt === 'retirada') return { d: 0, t: 0, fora: false, rota: false, calc: false, ret: true };
@@ -609,6 +610,8 @@
     const reta = GP.dist(loja.lat, loja.lng, pos.lat, pos.lng);
     const d = GP.distEntrega(reta, rotaKm);
     const base = { d, t: GP.taxa(loja, d), fora: GP.foraArea(loja, d), rota: rotaKm != null && d === Math.round(rotaKm * 100) / 100, calc: rotaCalc };
+    // Com envio ligado e sem raio definido, a entrega local vai até 30 km; depois disso é envio
+    if (!base.fora && podeEnvio() && loja.taxa_modo !== 'tabela' && !(Number(loja.raio_km) > 0) && d > RAIO_ENVIO) base.fora = true;
     if (base.fora && !base.calc && podeEnvio()) return { ...base, fora: false, envio: true, t: frete.sel ? frete.sel.preco : 0 };
     return base;
   };

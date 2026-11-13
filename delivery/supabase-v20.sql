@@ -192,6 +192,10 @@ begin
                    else round(v_reta * 1.3, 2) end;
     v_taxa := public.ff_taxa_entrega(l.taxa_modo, l.taxa_km, l.taxa_minima, l.km_arredonda, l.taxa_tabela, l.raio_km, v_dist);
     if v_taxa is null then raise exception 'fora_da_area'; end if;
+    -- loja com envio para outras cidades e sem raio definido: entrega local vai até 30 km
+    if l.envio_externo and l.me_conectado and coalesce(l.taxa_modo, 'km') <> 'tabela' and coalesce(l.raio_km, 0) <= 0 and v_dist > 30 then
+      raise exception 'fora_da_area';
+    end if;
   end if;
 
   insert into public.ff_pedidos
