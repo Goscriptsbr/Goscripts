@@ -262,3 +262,7 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .frete .fp{margin-left:auto;font-weight:800;white-space:nowrap}
 .me-card>.grow{flex:1 1 150px}
 #p-peso{padding-right:76px}
+.ag-box{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 12px}
+.ag-sel{display:flex;gap:8px;align-items:flex-start;font-size:.88rem;margin-top:6px}
+.ag-sel .i{width:16px;height:16px;flex:none;margin-top:2px;color:var(--brand-2)}
+.envbox .small .i{color:var(--brand-2)}

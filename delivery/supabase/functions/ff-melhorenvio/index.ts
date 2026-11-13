@@ -14,6 +14,7 @@
 //   { acao: 'imprimir',    pedido }             → link do PDF da etiqueta (dono ou equipe)
 //   { acao: 'rastrear',    pedido | token }     → atualiza o código de rastreio (equipe, ou o cliente com o token)
 //   { acao: 'cancelar',    pedido }             → cancela a etiqueta no Melhor Envio e o valor volta para o saldo (dono ou equipe)
+//   { acao: 'agencias',    loja }               → agências de postagem perto da loja, por transportadora (dono ou equipe)
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
 //   nome: ff-melhorenvio → cole este arquivo inteiro → Deploy → em Details desligue "Verify JWT".
@@ -192,6 +193,24 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
     return { codigo: String(codigo || '').slice(0, 60), situacao: String(situacao || '') };
   };
 
+  // Agências de postagem
+  const textoAgencia = (a) => {
+    const e = a.address || {};
+    const cid = e.city || {};
+    return [[e.address, e.number].filter(Boolean).join(', '), e.district, [cid.city, cid.state && cid.state.state_abbr].filter(Boolean).join('/')]
+      .filter(Boolean).join(' - ');
+  };
+  const agenciasDe = async (lojaId, cid, uf, cidade) => {
+    const q = (extra) => '/api/v2/me/shipment/agencies?company=' + cid + '&country=BR&state=' + encodeURIComponent(uf) + extra;
+    const daEmpresa = (lista) => (Array.isArray(lista) ? lista : []).filter(a => a && a.id && (
+      !a.companies && !a.company_id ? true
+      : Number(a.company_id) === cid || (Array.isArray(a.companies) && a.companies.some(c => Number(c.id) === cid))
+    ) && (!a.status || a.status === 'available'));
+    let ags = daEmpresa(await api(lojaId, 'GET', q('&city=' + encodeURIComponent(cidade))).catch(() => []));
+    if (!ags.length) ags = daEmpresa(await api(lojaId, 'GET', q('')).catch(() => []));
+    return ags.slice(0, 40).map(a => ({ id: Number(a.id), nome: String(a.name || a.company_name || 'Agência ' + a.id).slice(0, 80), endereco: textoAgencia(a).slice(0, 160) }));
+  };
+
   // ================= ações =================
   if (acao === 'url') {
     const l = await pegaLoja(b.loja); exigeDono(l);
@@ -232,7 +251,7 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
   if (acao === 'saldo') {
     const l = await pegaLoja(b.loja); await exigeEquipe(l);
     const j = await api(l.id, 'GET', '/api/v2/me/balance');
-    return { status: 200, corpo: { saldo: Number(j.balance || 0), reservado: Number(j.reserved || 0), conta: l.me_conta || '' } };
+    return { status: 200, corpo: { saldo: Number(j.balance || 0), reservado: Number(j.reserved || 0), conta: l.me_conta || '', ambiente: BASE.includes('sandbox') ? 'sandbox' : 'producao' } };
   }
 
   if (acao === 'cotar') {
@@ -299,7 +318,7 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
     if (p.status === 'cancelado') throw new Falha('pedido_cancelado');
     if (p.etiqueta_status === 'gerada') return { status: 200, corpo: { ok: true, status: 'gerada', rastreio: p.rastreio } };
 
-    let meId = p.me_pedido_id;
+    let meId = p.me_pedido_id, precoEtiqueta = null, agenciaPedido = p.me_agencia || {};
     if (!meId) {
       // Remetente: dados da conta do lojista no Melhor Envio + endereço da loja
       const me = await api(l.id, 'GET', '/api/v2/me');
@@ -346,43 +365,54 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
         options: { insurance_value: Number(p.subtotal), receipt: false, own_hand: false, reverse: false, non_commercial: true, platform: 'GoPedido', tags: [{ tag: 'Pedido #' + p.numero, url: null }] }
       };
       // Transportadoras que não são os Correios (Jadlog, Azul, Latam…) pedem a agência onde o pacote será postado.
-      // Busca as agências dessa transportadora perto da loja e tenta uma por uma até o Melhor Envio aceitar.
-      let candidatas = [];
+      // Usa a agência que o lojista escolheu; sem escolha, tenta as agências perto da loja até o Melhor Envio aceitar.
+      let candidatas = [], escolhida = null, cid = 0;
       try {
         const sv = await api(l.id, 'GET', '/api/v2/me/shipment/services/' + encodeURIComponent(p.frete_servico));
-        const cid = Number(sv && (sv.company && sv.company.id || sv.company_id));
-        if (cid && cid !== 1) {
-          const q = (extra) => '/api/v2/me/shipment/agencies?company=' + cid + '&country=BR&state=' + encodeURIComponent(de.uf) + extra;
-          const daEmpresa = (lista) => (Array.isArray(lista) ? lista : []).filter(a => a && a.id && (
-            !a.companies && !a.company_id ? true
-            : Number(a.company_id) === cid || (Array.isArray(a.companies) && a.companies.some(c => Number(c.id) === cid))
-          ) && (!a.status || a.status === 'available'));
-          let ags = daEmpresa(await api(l.id, 'GET', q('&city=' + encodeURIComponent(de.cidade))).catch(() => []));
-          if (!ags.length) ags = daEmpresa(await api(l.id, 'GET', q('')).catch(() => []));
-          candidatas = ags.slice(0, 6).map(a => Number(a.id));
-          if (BASE.includes('sandbox') && !candidatas.includes(1)) candidatas.push(1); // agência de teste do sandbox
+        cid = Number(sv && (sv.company && sv.company.id || sv.company_id)) || 0;
+      } catch (_) {}
+      if (cid && cid !== 1) {
+        escolhida = (l.me_agencias || {})[String(cid)] || null;
+        if (escolhida && escolhida.id) candidatas = [escolhida];
+        else {
+          candidatas = (await agenciasDe(l.id, cid, de.uf, de.cidade).catch(() => [])).slice(0, 6);
+          if (BASE.includes('sandbox') && !candidatas.some(a => a.id === 1)) candidatas.push({ id: 1, nome: 'Agência de teste (sandbox)', endereco: '' });
         }
-      } catch (_) { /* segue sem agência */ }
-      let r = null, ultimo = null;
+      }
+      let r = null, ultimo = null, usada = null;
       for (const ag of (candidatas.length ? candidatas : [null])) {
-        if (ag) corpo.agency = ag; else delete corpo.agency;
-        try { r = await api(l.id, 'POST', '/api/v2/me/cart', corpo); break; }
-        catch (e) { ultimo = e; if (!/agenc|agency/i.test(e.detalhe || '')) throw e; }
+        if (ag) corpo.agency = Number(ag.id); else delete corpo.agency;
+        try { r = await api(l.id, 'POST', '/api/v2/me/cart', corpo); usada = ag; break; }
+        catch (e) {
+          ultimo = e;
+          if (!/agenc|agency/i.test(e.detalhe || '')) throw e;
+          if (escolhida) throw new Falha('agencia_recusada', 400, 'A agência escolhida (' + escolhida.nome + ') não aceita este envio. Escolha outra em Minha loja → Envio.');
+        }
       }
       if (!r) throw ultimo || new Falha('me_erro', 400, 'nenhuma agência aceitou o envio');
+      precoEtiqueta = Number(r.price) || null;
       meId = String(r.id || '');
       if (!meId) throw new Falha('me_erro', 400, 'o Melhor Envio não devolveu o número da etiqueta');
-      ok(await admin.from('ff_pedidos').update({ me_pedido_id: meId, etiqueta_status: 'carrinho' }).eq('id', p.id), 'salvar etiqueta');
+      agenciaPedido = usada ? usada : (cid === 1 ? { id: 0, nome: 'Qualquer agência dos Correios', endereco: '' } : {});
+      ok(await admin.from('ff_pedidos').update({ me_pedido_id: meId, etiqueta_status: 'carrinho', me_agencia: agenciaPedido }).eq('id', p.id), 'salvar etiqueta');
     }
 
     if (p.etiqueta_status !== 'paga') {
+      // Confere o preço da etiqueta com o frete que o cliente pagou antes de gastar o saldo
+      if (precoEtiqueta == null) {
+        try { const c = await api(l.id, 'GET', '/api/v2/me/cart/' + encodeURIComponent(meId)); precoEtiqueta = Number(c && (c.price || (c.data && c.data.price))) || null; } catch (_) {}
+      }
+      const pago = Number(p.taxa_entrega) || 0;
+      if (precoEtiqueta != null && Math.abs(precoEtiqueta - pago) >= 0.01 && !b.confirmar_valor) {
+        return { status: 200, corpo: { ok: false, status: 'confirmar', preco_etiqueta: precoEtiqueta, preco_cliente: pago } };
+      }
       await api(l.id, 'POST', '/api/v2/me/shipment/checkout', { orders: [meId] }); // paga com o saldo (erro me_saldo se faltar)
       ok(await admin.from('ff_pedidos').update({ etiqueta_status: 'paga' }).eq('id', p.id), 'paga');
     }
     await api(l.id, 'POST', '/api/v2/me/shipment/generate', { orders: [meId] });
     const { codigo: rastreio } = await lerRastreio(l.id, meId);
     ok(await admin.from('ff_pedidos').update({ etiqueta_status: 'gerada', rastreio }).eq('id', p.id), 'gerada');
-    return { status: 200, corpo: { ok: true, status: 'gerada', rastreio } };
+    return { status: 200, corpo: { ok: true, status: 'gerada', rastreio, agencia: agenciaPedido } };
   }
 
   if (acao === 'imprimir') {
@@ -424,6 +454,20 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
     }
     ok(await admin.from('ff_pedidos').update({ etiqueta_status: 'cancelada' }).eq('id', p.id), 'cancelada');
     return { status: 200, corpo: { ok: true, cancelada: true } };
+  }
+
+  if (acao === 'agencias') {
+    const l = await pegaLoja(b.loja); await exigeEquipe(l);
+    const de = parseEnd(l.endereco);
+    if (!de.uf || !de.cidade) throw new Falha('me_erro', 400, 'coloque cidade e UF no endereço da loja');
+    const empresas = await api(l.id, 'GET', '/api/v2/me/shipment/companies').catch(() => []);
+    const lista = (Array.isArray(empresas) ? empresas : []).filter(c => c && Number(c.id) && Number(c.id) !== 1);
+    const saida = [];
+    for (const c of lista.slice(0, 10)) {
+      const ags = await agenciasDe(l.id, Number(c.id), de.uf, de.cidade).catch(() => []);
+      if (ags.length) saida.push({ id: Number(c.id), nome: String(c.name || ''), logo: c.picture || '', agencias: ags });
+    }
+    return { status: 200, corpo: { transportadoras: saida, escolhidas: l.me_agencias || {}, cidade: de.cidade + '/' + de.uf } };
   }
 
   throw new Falha('acao_invalida');
