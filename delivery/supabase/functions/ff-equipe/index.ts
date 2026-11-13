@@ -10,7 +10,8 @@
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
 //   nome: ff-equipe  → cole este arquivo inteiro → Deploy.
-// As variáveis SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY já existem na Edge Function.
+// As chaves já existem na Edge Function: usa as novas (SUPABASE_SECRET_KEYS / SUPABASE_PUBLISHABLE_KEYS)
+// e, se o projeto ainda for das chaves antigas, SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY.
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -141,17 +142,30 @@ export async function tratar(req, admin, comoUsuario) {
   throw new Falha('acao_invalida');
 }
 
+// Lê uma chave do dicionário novo do Supabase ({"default": "sb_..."}), ou da variável antiga
+function chave(novo, antigo) {
+  try {
+    const d = JSON.parse(Deno.env.get(novo) || '{}');
+    const v = d.default || Object.values(d)[0];
+    if (v) return v;
+  } catch (_) { /* não é JSON */ }
+  return Deno.env.get(antigo) || '';
+}
+
 if (typeof Deno !== 'undefined') {
   Deno.serve(async (req) => {
     const resp = (status, corpo) => new Response(typeof corpo === 'string' ? corpo : JSON.stringify(corpo), {
       status, headers: { ...CORS, 'Content-Type': typeof corpo === 'string' ? 'text/plain' : 'application/json' }
     });
     try {
-      const admin = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), {
+      const SECRETA = chave('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY');
+      const PUBLICA = chave('SUPABASE_PUBLISHABLE_KEYS', 'SUPABASE_ANON_KEY');
+      if (!SECRETA) return resp(500, { error: 'erro_banco', detalhe: 'a Edge Function não encontrou a chave secreta do projeto' });
+      const admin = createClient(Deno.env.get('SUPABASE_URL'), SECRETA, {
         auth: { persistSession: false, autoRefreshToken: false }
       });
       // Cliente com o login de quem chamou (respeita as regras de segurança do banco)
-      const comoUsuario = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), {
+      const comoUsuario = createClient(Deno.env.get('SUPABASE_URL'), PUBLICA || SECRETA, {
         auth: { persistSession: false, autoRefreshToken: false },
         global: { headers: { Authorization: req.headers.get('Authorization') || '' } }
       });
