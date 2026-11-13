@@ -299,3 +299,6 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .pit-link{display:flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;color:var(--brand-2);background:var(--brand-soft,#eef2ff);border-radius:8px;padding:4px 8px}
 .pit-link .i{width:13px;height:13px}
 .pitem .side.pit-link{flex-direction:row;gap:4px}
+.rc-vals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.rc-vals button{border:1.5px solid var(--line);border-radius:12px;padding:10px 4px;font-weight:800;background:#fff}
+.rc-vals button.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-2)}
