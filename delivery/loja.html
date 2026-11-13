@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122327">
+<link rel="stylesheet" href="app.css?v=202611122331">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -48,6 +48,7 @@
   .cupbox{background:var(--bg);border-radius:14px;padding:12px;margin-top:6px}
   .bagbar.pulse{animation:pulse .5s}
   @keyframes pulse{50%{transform:translate(-50%,0) scale(1.05)}}
+  .head .card>.grow{align-self:stretch;min-width:0;max-width:100%}
   .alert.off{background:#F1F0ED;color:var(--ink-2)}
 
   .catnav{position:sticky;top:64px;z-index:30;background:var(--bg);padding:12px 0;margin-top:16px;border-bottom:1px solid var(--line)}
@@ -126,6 +127,7 @@
         <p class="desc" id="s-desc"></p>
         <div class="chips" id="s-chips"></div>
         <div id="s-alert"></div>
+        <div id="s-cupons" class="hide" style="margin-top:14px"><b class="small" style="display:block;margin-bottom:8px">🎟️ Cupons disponíveis</b><div class="tickets" id="tk-loja"></div></div>
       </div>
     </div>
   </div>
@@ -218,7 +220,8 @@
       </div>
       <div class="divider"></div>
       <div class="cupbox">
-        <div class="row" style="gap:8px"><div class="grow"><input class="input" id="c-cupom" placeholder="Tem cupom de desconto?" maxlength="20" style="text-transform:uppercase"></div><button class="btn btn-dark" id="b-cupom" type="button">Aplicar</button></div>
+        <div id="co-cupons" class="hide"><b class="small" style="display:block;margin-bottom:8px">Escolha um cupom</b><div class="tickets" id="tk-co" style="margin-bottom:10px"></div></div>
+        <div class="row" style="gap:8px"><div class="grow"><input class="input" id="c-cupom"  placeholder="Tem outro código de cupom?" maxlength="20" style="text-transform:uppercase"></div><button class="btn btn-dark" id="b-cupom" type="button">Aplicar</button></div>
         <div class="small" id="cupom-msg" style="margin-top:6px"></div>
       </div>
       <div class="divider"></div>
@@ -236,8 +239,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122327"></script>
-<script src="app.js?v=202611122327"></script>
+<script src="config.js?v=202611122331"></script>
+<script src="app.js?v=202611122331"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -291,6 +294,31 @@
     $('s-alert').insertAdjacentHTML('beforebegin', `<details class="horas"><summary>${ic('clock')}Horário de funcionamento <span class="muted">· hoje ${lin[hoje]}</span></summary><div>${GP.DIAS.map((d, i) => `<div class="${i === hoje ? 'hoje' : ''}"><span>${d}</span><span>${lin[i]}</span></div>`).join('')}</div></details>`);
   }
   setInterval(() => { renderAlert(); if ($('co').classList.contains('on')) updNext(); }, 30000);
+
+  // ---------- Cupons públicos ----------
+  let cuponsPub = [];
+  try { const r = await sb.rpc('ff_cupons_publicos', { p_loja: loja.id }); cuponsPub = r.data || []; } catch {}
+  const ticket = (c, ctx) => {
+    const on = cupom && cupom.codigo === c.codigo;
+    const falta = ctx === 'co' && Number(c.minimo) > subtotal();
+    return `<button type="button" class="ticket ${on ? 'on' : ''} ${falta ? 'dis' : ''}" data-tk="${esc(c.codigo)}">
+      <span class="tk-l">${GP.descCupom(c).replace(' OFF', '<br>OFF')}</span>
+      <span class="tk-r"><code>${esc(c.codigo)}</code><span class="small">${esc(GP.regrasCupom(c))}</span>
+      <span class="tk-act">${on ? '✓ Aplicado' : falta ? `Faltam ${brl(Number(c.minimo) - subtotal())}` : ctx === 'co' ? 'Toque para usar' : 'Usar no pedido'}</span></span></button>`;
+  };
+  function renderTickets() {
+    $('s-cupons').classList.toggle('hide', !cuponsPub.length);
+    $('tk-loja').innerHTML = cuponsPub.map(c => ticket(c, 'loja')).join('');
+    $('co-cupons').classList.toggle('hide', !cuponsPub.length);
+    $('tk-co').innerHTML = cuponsPub.map(c => ticket(c, 'co')).join('');
+  }
+  let cupomPendente = null;
+  $('tk-loja').onclick = (e) => {
+    const b = e.target.closest('[data-tk]'); if (!b) return;
+    cupomPendente = b.dataset.tk;
+    GP.toast(`Cupom ${cupomPendente} separado! Ele será aplicado no pagamento.`, 'ok');
+    renderTickets();
+  };
 
   // ---------- Cardápio ----------
   const cats = [];
@@ -480,7 +508,7 @@
     $('co').querySelector('.sheet-body').scrollTop = 0;
     if (step === 1) renderBag();
     if (step === 2) renderEntrega();
-    if (step === 3) renderPag();
+    if (step === 3) { renderPag(); if (cupomPendente && !cupom) { const c = cupomPendente; cupomPendente = null; aplicarCupom(c); } }
     updNext();
   }
 
@@ -565,11 +593,19 @@
     $('s3-desc').textContent = '-' + brl(dsc);
     $('s3-desc-lb').textContent = cupom ? `Desconto (${cupom.codigo})` : 'Desconto';
     $('s3-tot').textContent = brl(total());
+    renderTickets();
     renderPix();
   }
   $('pay-opts').onchange = (e) => { pag = e.target.value; renderPag(); updNext(); };
   $('c-cupom').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
   $('c-cupom').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('b-cupom').click(); } });
+  async function aplicarCupom(code) {
+    $('c-cupom').value = code;
+    if (cupom && cupom.codigo === code) { cupom = null; $('c-cupom').value = ''; $('b-cupom').textContent = 'Aplicar'; $('cupom-msg').innerHTML = ''; renderPag(); updNext(); return; }
+    cupom = null;
+    await $('b-cupom').onclick();
+  }
+  $('tk-co').onclick = (e) => { const b = e.target.closest('[data-tk]'); if (b) aplicarCupom(b.dataset.tk); };
   $('b-cupom').onclick = async () => {
     const code = $('c-cupom').value.trim();
     if (cupom && (!code || code === cupom.codigo)) { cupom = null; $('c-cupom').value = ''; $('b-cupom').textContent = 'Aplicar'; $('cupom-msg').innerHTML = ''; renderPag(); updNext(); return; }
@@ -705,6 +741,7 @@
   };
 
   saveBag();
+  renderTickets();
 })();
 </script>
 </body>

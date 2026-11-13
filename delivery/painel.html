@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122327">
+<link rel="stylesheet" href="app.css?v=202611122331">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -149,6 +149,7 @@
   .cup{display:flex;gap:12px;align-items:center;padding:12px 14px;margin-bottom:10px}
   .cup .code{font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:1.05rem;letter-spacing:.06em;background:var(--brand-soft);color:var(--brand-2);padding:6px 10px;border-radius:10px;border:1.5px dashed #F7A58C}
   .cup.off{opacity:.55}
+  .link-btn{color:var(--brand-2);font-weight:800;text-decoration:underline;font-size:inherit}
   @media(max-width:600px){.cup{flex-wrap:wrap}.cup .grow{order:5;flex-basis:100%}.cup .code{margin-right:auto}}
   @media(max-width:600px){.tabs button{font-size:.86rem;padding:0 6px}}
   .welcome{background:linear-gradient(135deg,#FFF1EB,#fff);border:1px solid #FAD3C5;border-radius:var(--r);padding:18px;margin-bottom:18px;display:flex;gap:14px;align-items:center}
@@ -277,6 +278,7 @@
           <label class="field"><span>Pedido mínimo <span class="muted">(opcional)</span></span><div class="prefix"><i>R$</i><input class="input" id="c-min" placeholder="0,00"></div></label>
           <label class="field"><span>Válido até <span class="muted">(opcional)</span></span><input class="input" type="date" id="c-val"></label>
           <label class="field"><span>Quantidade total de cupons</span><input class="input" type="number" min="1" id="c-lim" placeholder="Sem limite"><small>Ex.: 100 = só os 100 primeiros pedidos usam</small></label>
+          <label class="switch" style="grid-column:1/-1;margin-bottom:12px"><input type="checkbox" id="c-pub" checked><i></i>Mostrar este cupom na página da loja (desligado = código oculto, só quem souber usa)</label>
           <label class="field"><span>Usos por cliente</span><input class="input" type="number" min="1" id="c-porcli" value="1" placeholder="Sem limite"><small>Conferido pelo WhatsApp do cliente. Vazio = sem limite</small></label>
         </div>
         <button class="btn btn-primary" id="c-save">Criar cupom</button>
@@ -325,7 +327,7 @@
                 <label class="field"><span>Taxa por km</span><div class="prefix"><i>R$</i><input class="input" id="l-taxakm" inputmode="numeric" placeholder="0,00"></div></label>
                 <label class="field"><span>Taxa mínima</span><div class="prefix"><i>R$</i><input class="input" id="l-taxamin" inputmode="numeric" placeholder="0,00"></div></label>
               </div>
-              <label class="switch" style="margin-bottom:14px"><input type="checkbox" id="l-arred" checked><i></i>Arredondar km para cima (4,3 km = 5 km)</label>
+              <label class="switch" style="margin-bottom:14px"><input type="checkbox" id="l-arred" checked><i></i>Arredondar o km (4,3 km = 4 km · 4,6 km = 5 km)</label>
             </div>
             <div id="modo-tab" class="hide">
               <div id="faixas"></div>
@@ -448,8 +450,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122327"></script>
-<script src="app.js?v=202611122327"></script>
+<script src="config.js?v=202611122331"></script>
+<script src="app.js?v=202611122331"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1209,7 +1211,7 @@
       return `<div class="card cup ${st !== 'Ativo' ? 'off' : ''}">
         <span class="code">${esc(c.codigo)}</span>
         <div class="grow" style="min-width:0"><b class="small">${descCupom(c)}</b>
-          <div class="small muted">${Number(c.minimo) ? 'Mínimo ' + brl(c.minimo) + ' · ' : ''}${c.validade ? 'até ' + c.validade.split('-').reverse().join('/') + ' · ' : ''}${c.por_cliente ? c.por_cliente + 'x por cliente' : 'sem limite por cliente'} · ${c.limite != null ? `${c.usos} de ${c.limite} usados` : `usado ${c.usos}x`} · <b>${st}</b></div></div>
+          <div class="small muted">${Number(c.minimo) ? 'Mínimo ' + brl(c.minimo) + ' · ' : ''}${c.validade ? 'até ' + c.validade.split('-').reverse().join('/') + ' · ' : ''}${c.por_cliente ? c.por_cliente + 'x por cliente' : 'sem limite por cliente'} · ${c.limite != null ? `${c.usos} de ${c.limite} usados` : `usado ${c.usos}x`} · <b>${st}</b> · ${c.publico === false ? '🔒 oculto' : '👁️ aparece na loja'} <button type="button" class="link-btn" data-cpub="${c.id}">${c.publico === false ? 'mostrar' : 'ocultar'}</button></div></div>
         <label class="switch" title="Ativo"><input type="checkbox" data-cativo="${c.id}" ${c.ativo ? 'checked' : ''}><i></i></label>
         <button class="icon-btn" data-cdel="${c.id}" title="Excluir">${ic('trash')}</button>
         <button class="icon-btn" data-ccopy="${esc(c.codigo)}" title="Copiar divulgação">${ic('copy')}</button>
@@ -1232,12 +1234,12 @@
     const valor = tipo === 'frete' ? 0 : tipo === 'percentual' ? parseInt($('c-valor').value) || 0 : num($('c-valor').value);
     if (tipo === 'percentual' && (valor < 1 || valor > 100)) return GP.toast('A porcentagem precisa ser de 1 a 100.', 'err');
     if (tipo === 'valor' && !(valor > 0)) return GP.toast('Informe o valor do desconto.', 'err');
-    const row = { loja_id: loja.id, codigo, tipo, valor, minimo: num($('c-min').value), validade: $('c-val').value || null, limite: parseInt($('c-lim').value) || null, por_cliente: parseInt($('c-porcli').value) || null };
+    const row = { loja_id: loja.id, codigo, tipo, valor, minimo: num($('c-min').value), validade: $('c-val').value || null, limite: parseInt($('c-lim').value) || null, por_cliente: parseInt($('c-porcli').value) || null, publico: $('c-pub').checked };
     const b = $('c-save'); b.disabled = true;
     const { error } = await sb.from('ff_cupons').insert(row);
     b.disabled = false;
     if (error) return GP.toast(/duplicate|unique/i.test(error.message) ? 'Já existe um cupom com esse código.' : GP.err(error), 'err');
-    $('f-cupom').reset(); $('c-porcli').value = '1'; tipoUI(); GP.toast('Cupom criado!', 'ok'); loadCupons();
+    $('f-cupom').reset(); $('c-porcli').value = '1'; $('c-pub').checked = true; tipoUI(); GP.toast('Cupom criado!', 'ok'); loadCupons();
   };
   $('cupons').onchange = async (e) => {
     const id = e.target.dataset.cativo; if (!id) return;
@@ -1245,6 +1247,13 @@
     if (error) return GP.toast(GP.err(error), 'err');
     loadCupons();
   };
+  $('cupons').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-cpub]'); if (!b) return;
+    const c = cupons.find(x => x.id === b.dataset.cpub);
+    const { error } = await sb.from('ff_cupons').update({ publico: c.publico === false }).eq('id', c.id);
+    if (error) return GP.toast(GP.err(error), 'err');
+    GP.toast(c.publico === false ? 'Agora o cupom aparece na loja' : 'Cupom ocultado da loja', 'ok'); loadCupons();
+  });
   $('cupons').onclick = async (e) => {
     const d = e.target.closest('[data-cdel]'), cp = e.target.closest('[data-ccopy]');
     if (cp) { const c = cupons.find(x => x.codigo === cp.dataset.ccopy); return GP.copy(`🎁 Cupom ${c.codigo}: ${descCupom(c)}${Number(c.minimo) ? ' em pedidos a partir de ' + brl(c.minimo) : ''} na ${loja.nome}!\nPeça aqui: ${cfg.siteUrl}loja.html?l=${loja.slug}`, 'Texto de divulgação copiado!'); }

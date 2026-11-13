@@ -238,7 +238,8 @@
   GP.taxaOuNada = (loja, dist) => {
     if (Number(loja.raio_km) > 0 && dist > Number(loja.raio_km)) return null;
     if (loja.taxa_modo === 'tabela') { const f = GP.faixas(loja).find(x => dist <= Number(x.ate)); return f ? Math.round(Number(f.valor) * 100) / 100 : null; }
-    const d = loja.km_arredonda === false ? dist : Math.ceil(dist);
+    // arredondamento normal: só sobe se passar de ,5 (4,3 = 4 · 4,6 = 5); mínimo 1 km
+    const d = loja.km_arredonda === false ? dist : Math.max(1, (dist - Math.floor(dist)) > 0.5 + 1e-9 ? Math.ceil(dist) : Math.floor(dist));
     return Math.max(Number(loja.taxa_minima) || 0, Math.round(d * (Number(loja.taxa_km) || 0) * 100) / 100);
   };
   GP.taxa = (loja, dist) => { const t = GP.taxaOuNada(loja, dist); return t == null ? 0 : t; };
@@ -676,6 +677,9 @@
   }).filter(Boolean);
   GP.precoItem = (p, sel) => GP.precoAtual(p) + GP.opcoesEscolhidas(p, sel).reduce((t, o) => t + o.preco, 0);
   GP.txtOpcoes = (ops) => (ops || []).map(o => o.nome + (Number(o.preco) ? ` (+${GP.brl(o.preco)})` : '')).join(', ');
+
+  GP.descCupom = (c) => c.tipo === 'frete' ? 'Entrega grátis' : c.tipo === 'percentual' ? `${Number(c.valor)}% OFF` : `${GP.brl(c.valor)} OFF`;
+  GP.regrasCupom = (c) => [Number(c.minimo) ? 'pedidos a partir de ' + GP.brl(c.minimo) : 'em qualquer pedido', c.validade ? 'até ' + c.validade.split('-').reverse().join('/') : '', c.por_cliente === 1 ? '1 por cliente' : '', c.restantes != null && c.restantes <= 20 ? `restam ${c.restantes}` : ''].filter(Boolean).join(' · ');
 
   GP.STATUS = {
     novo: { t: 'Recebido', c: 'b-brand', d: 'A loja recebeu seu pedido' },
