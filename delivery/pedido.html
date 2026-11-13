@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=89476">
+<link rel="stylesheet" href="app.css?v=89568">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -50,8 +50,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=89476"></script>
-<script src="app.js?v=89476"></script>
+<script src="config.js?v=89568"></script>
+<script src="app.js?v=89568"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -129,7 +129,7 @@
           <div class="grow"><b>${esc(l.nome)}</b>${l.cnpj ? `<div class="small muted">CNPJ ${esc(GP.fmtCnpj(l.cnpj))}</div>` : ''}<div class="small muted">${esc(new Date(p.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))}</div></div>
           ${l.telefone ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="${GP.wa(l.telefone, msg)}">${ic('chat')}WhatsApp</a>` : ''}
         </div>
-        <p class="small muted vendido" style="margin-top:12px">${ic('store')}<span>Pedido vendido e entregue por <b>${esc(l.nome)}</b>. Dúvidas, trocas e reembolsos: fale com a loja${l.telefone ? ' pelo WhatsApp' : ''}.</span></p>
+        <p class="small muted vendido" style="margin-top:12px">${ic('store')}<span>Pedido vendido e entregue por <b>${esc(l.nome)}</b>. Dúvidas, trocas e reembolsos: fale com a loja${l.telefone ? ' pelo WhatsApp' : ''}. <a href="entregas.html" target="_blank" rel="noopener">Como funcionam entregas e reembolsos</a></span></p>
         <div class="divider"></div>
         ${p.itens.map(i => `<div class="item"><span><b>${i.qtd}×</b> ${esc(i.nome)}${(i.opcoes || []).length ? `<div class="small muted">${esc(GP.txtOpcoes(i.opcoes))}</div>` : ''}${i.obs ? `<div class="small muted">Obs.: ${esc(i.obs)}</div>` : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}
         <div class="divider"></div>

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=89476">
+<link rel="stylesheet" href="app.css?v=89568">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -390,7 +390,7 @@
           <label class="field"><span>Senha</span><input class="input" type="password" id="a-pass" autocomplete="current-password" minlength="6" required></label>
           <label class="field up-only hide"><span>Confirme a senha</span><input class="input" type="password" id="a-pass2" minlength="6" autocomplete="new-password"></label>
           <p class="small muted up-only hide" style="margin:-4px 0 14px">Senha com no mínimo 6 caracteres.</p>
-          <label class="check up-only hide termos-ck"><input type="checkbox" id="a-termos"><span>Li e aceito os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a>. A minha loja é responsável pelas vendas, pagamentos, entregas, envios e reembolsos.</span></label>
+          <label class="check up-only hide termos-ck"><input type="checkbox" id="a-termos"><span>Li e aceito os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>. A minha loja é responsável pelas vendas, pagamentos, entregas, envios e reembolsos.</span></label>
           <button class="btn btn-primary btn-block" id="a-btn">Entrar</button>
         </form>
         <button class="small muted" id="a-forgot" style="margin-top:14px;text-decoration:underline">Esqueci minha senha</button>
@@ -780,8 +780,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=89476"></script>
-<script src="app.js?v=89476"></script>
+<script src="config.js?v=89568"></script>
+<script src="app.js?v=89568"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;

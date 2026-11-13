@@ -294,3 +294,4 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .vendido{display:flex;gap:8px;align-items:flex-start;line-height:1.45;margin-top:12px}
 .vendido .i{width:16px;height:16px;flex:none;margin-top:2px}
 .vendido a{text-decoration:underline;color:inherit;font-weight:700}
+.gs-foot .gs-legal{font-size:.74rem;color:var(--muted)}.gs-foot .gs-legal a{color:var(--muted);text-decoration:underline}

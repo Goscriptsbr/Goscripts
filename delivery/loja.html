@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=89476">
+<link rel="stylesheet" href="app.css?v=89568">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -319,8 +319,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=89476"></script>
-<script src="app.js?v=89476"></script>
+<script src="config.js?v=89568"></script>
+<script src="app.js?v=89568"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -801,7 +801,7 @@
     $('s3-desc').textContent = '-' + brl(dsc);
     $('s3-desc-lb').textContent = cupom ? `Desconto (${cupom.codigo})` : 'Desconto';
     $('s3-tot').textContent = brl(total());
-    $('s3-vendido').innerHTML = `${ic('store')}<span>Vendido e entregue por <b>${esc(loja.nome)}</b>. Dúvidas, trocas e reembolsos são com a loja. Ao enviar o pedido, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a>.</span>`;
+    $('s3-vendido').innerHTML = `${ic('store')}<span>Vendido e entregue por <b>${esc(loja.nome)}</b>. Dúvidas, trocas e reembolsos são com a loja. Ao enviar o pedido, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</span>`;
     renderTickets();
     renderPix();
   }
