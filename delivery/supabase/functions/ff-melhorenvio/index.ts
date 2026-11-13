@@ -331,6 +331,17 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
           : [{ height: Math.min(Math.ceil(alt), 100), width: Math.ceil(larg), length: Math.ceil(comp), weight: Math.round(peso * 1000) / 1000 }],
         options: { insurance_value: Number(p.subtotal), receipt: false, own_hand: false, reverse: false, non_commercial: true, platform: 'GoPedido', tags: [{ tag: 'Pedido #' + p.numero, url: null }] }
       };
+      // Transportadoras que não são os Correios (Jadlog, Azul, Latam…) pedem a agência onde o pacote será postado
+      try {
+        const sv = await api(l.id, 'GET', '/api/v2/me/shipment/services/' + encodeURIComponent(p.frete_servico));
+        const cid = Number(sv && (sv.company && sv.company.id || sv.company_id));
+        if (cid && cid !== 1) {
+          const q = (extra) => '/api/v2/me/shipment/agencies?company=' + cid + '&country=BR&state=' + encodeURIComponent(de.uf) + extra;
+          let ags = await api(l.id, 'GET', q('&city=' + encodeURIComponent(de.cidade))).catch(() => []);
+          if (!Array.isArray(ags) || !ags.length) ags = await api(l.id, 'GET', q('')).catch(() => []);
+          if (Array.isArray(ags) && ags.length) corpo.agency = Number(ags[0].id);
+        }
+      } catch (_) { /* sem agência: o Melhor Envio usa a configurada na conta */ }
       const r = await api(l.id, 'POST', '/api/v2/me/cart', corpo);
       meId = String(r.id || '');
       if (!meId) throw new Falha('me_erro', 400, 'o Melhor Envio não devolveu o número da etiqueta');
