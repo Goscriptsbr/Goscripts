@@ -295,3 +295,7 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .vendido .i{width:16px;height:16px;flex:none;margin-top:2px}
 .vendido a{text-decoration:underline;color:inherit;font-weight:700}
 .gs-foot .gs-legal{font-size:.74rem;color:var(--muted)}.gs-foot .gs-legal a{color:var(--muted);text-decoration:underline}
+.pitem .side-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
+.pit-link{display:flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;color:var(--brand-2);background:var(--brand-soft,#eef2ff);border-radius:8px;padding:4px 8px}
+.pit-link .i{width:13px;height:13px}
+.pitem .side.pit-link{flex-direction:row;gap:4px}

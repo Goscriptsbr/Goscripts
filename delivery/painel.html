@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=90752">
+<link rel="stylesheet" href="app.css?v=94191">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -780,8 +780,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=90752"></script>
-<script src="app.js?v=90752"></script>
+<script src="config.js?v=94191"></script>
+<script src="app.js?v=94191"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1691,7 +1691,8 @@
         ${p.descricao ? `<div class="ds">${esc(p.descricao)}</div>` : ''}
         <div class="pr">${preco}${nEt ? `<span class="tg">${nEt} etapa${nEt > 1 ? 's' : ''}</span>` : ''}${GP.variacoes(p).length ? `<span class="tg">${GP.variacoes(p).length} opç${GP.variacoes(p).length > 1 ? 'ões' : 'ão'}</span>` : ''}${estTag(p)}${p.disponivel ? '' : '<span class="tg off">Pausado</span>'}</div>
       </div>
-      <label class="side" title="Disponível para venda"><span class="switch"><input type="checkbox" data-disp="${p.id}" ${p.disponivel ? 'checked' : ''}><i></i></span><small>${p.disponivel ? 'Ativo' : 'Pausado'}</small></label>
+      <div class="side-col"><label class="side" title="Disponível para venda"><span class="switch"><input type="checkbox" data-disp="${p.id}" ${p.disponivel ? 'checked' : ''}><i></i></span><small>${p.disponivel ? 'Ativo' : 'Pausado'}</small></label>
+        <button type="button" class="pit-link side" data-link="${p.id}" title="Copiar o link deste produto">${ic('copy')}<span>Link</span></button></div>
     </div>`;
   }
   function renderProds() {
@@ -1736,7 +1737,16 @@
     if (error) { e.target.checked = !v; return GP.toast(GP.err(error), 'err'); }
     prods.find(p => p.id === id).disponivel = v; renderProds();
   };
-  $('plist').onclick = (e) => { if (e.target.closest('.side')) return; const b = e.target.closest('[data-edit]'); if (b) openProd(prods.find(p => p.id === b.dataset.edit)); };
+  $('plist').onclick = (e) => {
+    const lk = e.target.closest('[data-link]');
+    if (lk) {
+      const pr = prods.find(p => p.id === lk.dataset.link); if (!pr || !loja) return;
+      const url = new URL('loja.html?l=' + encodeURIComponent(loja.slug) + '&p=' + encodeURIComponent(pr.id), location.href).href;
+      if (navigator.share) { navigator.share({ title: pr.nome + ' na ' + loja.nome, url }).catch(() => GP.copy(url, 'Link do produto copiado!')); }
+      else GP.copy(url, 'Link do produto copiado! Cole no TikTok, Instagram ou WhatsApp.');
+      return;
+    }
+    if (e.target.closest('.side')) return; const b = e.target.closest('[data-edit]'); if (b) openProd(prods.find(p => p.id === b.dataset.edit)); };
 
   let editing = null, prodImg = null;
   const ov = $('ov');

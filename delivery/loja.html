@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=90752">
+<link rel="stylesheet" href="app.css?v=94191">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -134,6 +134,8 @@
 
   /* modal produto */
   .pm-img{height:240px;background:#F1EFEA center/cover;flex:none}
+  .pm-share{position:absolute;right:58px;top:12px;z-index:3;height:38px;padding:0 12px;border-radius:12px;background:#fff;display:flex;align-items:center;gap:6px;font-weight:700;font-size:.82rem;box-shadow:var(--sh);color:var(--ink)}
+  .pm-share .i{width:17px;height:17px}
   .pm-close{position:absolute;right:12px;top:12px;z-index:3;width:38px;height:38px;border-radius:12px;background:#fff;display:grid;place-items:center;box-shadow:var(--sh)}
 
   /* checkout */
@@ -212,6 +214,7 @@
 <!-- Modal do produto -->
 <div class="sheet modal" id="pm" role="dialog" aria-modal="true">
   <button class="pm-close" id="pm-x" aria-label="Fechar"></button>
+  <button class="pm-share" id="pm-share" aria-label="Compartilhar produto"></button>
   <div class="pm-img" id="pm-img"></div>
   <div class="sheet-body">
     <h3 id="pm-nome" style="font-size:1.3rem;letter-spacing:-.02em"></h3>
@@ -319,8 +322,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=90752"></script>
-<script src="app.js?v=90752"></script>
+<script src="config.js?v=94191"></script>
+<script src="app.js?v=94191"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -486,13 +489,25 @@
   let cur = null, curQ = 1;
   const ov = $('ov');
   const openSheet = (el) => { el.classList.add('on'); ov.classList.add('on'); document.body.style.overflow = 'hidden'; };
-  const closeAll = () => { ['pm', 'co'].forEach(id => $(id).classList.remove('on')); ov.classList.remove('on'); document.body.style.overflow = ''; saveBag(); };
+  const closeAll = () => {
+    if ($('pm').classList.contains('on')) { try { history.replaceState(null, '', location.pathname + '?l=' + encodeURIComponent(slug)); } catch (_) {} }
+    ['pm', 'co'].forEach(id => $(id).classList.remove('on')); ov.classList.remove('on'); document.body.style.overflow = ''; saveBag(); };
   ov.onclick = closeAll; $('pm-x').onclick = closeAll; $('co-x').onclick = closeAll;
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
   let escolha = {};   // grupoId -> [opcaoId]
   let escV = null;   // variação escolhida
   const varDisp = (p, v) => !(v.estoque !== null && v.estoque !== undefined && v.estoque !== '' && Number(v.estoque) - naSacola(p.id, v.id) <= 0);
+  // Link próprio de cada produto: loja.html?l=<loja>&p=<produto>
+  const linkProduto = (p) => location.origin + location.pathname + '?l=' + encodeURIComponent(slug) + '&p=' + encodeURIComponent(p.id);
+  $('pm-share').innerHTML = ic('ext') + '<span>Compartilhar</span>';
+  $('pm-share').onclick = async () => {
+    if (!cur) return;
+    const url = linkProduto(cur), texto = `${cur.nome} na ${loja.nome}`;
+    if (navigator.share) { try { await navigator.share({ title: texto, text: texto, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    GP.copy(url, 'Link do produto copiado! Cole onde quiser.');
+  };
   function openProd(p) {
+    try { history.replaceState(null, '', linkProduto(p)); } catch (_) {}
     cur = p; curQ = 1; escolha = {}; escV = null;
     const livres = GP.variacoes(p).filter(v => varDisp(p, v)); if (livres.length === 1) escV = livres[0].id;
     GP.grupos(p).forEach(g => { escolha[g.id] = []; if (Number(g.min) === 1 && Number(g.max) === 1 && g.opcoes.length === 1) escolha[g.id] = [g.opcoes[0].id]; });
@@ -1009,6 +1024,17 @@
     try { sessionStorage.setItem('gp_email_pedido', emailOk() ? emailTxt() : ''); } catch (_) {}
     location.href = 'pedido.html?t=' + encodeURIComponent(data.token) + '&novo=1';
   };
+
+  // Abriu pelo link de um produto: mostra ele direto
+  {
+    const pid = new URLSearchParams(location.search).get('p');
+    if (pid && P[pid]) setTimeout(() => {
+      const card = document.querySelector(`[data-p="${CSS.escape(pid)}"]`);
+      if (card) card.scrollIntoView({ block: 'center' });
+      if (card) card.click(); else openProd(P[pid]);
+    }, 250);
+    else if (pid) GP.toast('Esse produto não está mais disponível. Veja os outros da loja!');
+  }
 
   // ---------- Avaliações ----------
   (async () => {
