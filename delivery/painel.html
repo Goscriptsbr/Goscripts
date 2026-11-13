@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=79720">
+<link rel="stylesheet" href="app.css?v=80360">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -712,7 +712,7 @@
         <b>Peso e medidas (para o frete)</b>
         <p class="small muted" style="margin:4px 0 12px">Usados para calcular o envio pelo Melhor Envio. Considere o produto já embalado.</p>
         <div class="grid2">
-          <label class="field"><span>Peso</span><div class="prefix-r"><input class="input" id="p-peso" inputmode="decimal" placeholder="0,300"><i class="small muted" style="font-style:normal">kg</i></div></label>
+          <label class="field"><span>Peso com embalagem</span><div class="prefix-r"><input class="input" id="p-peso" inputmode="numeric" maxlength="6" placeholder="Ex.: 300"><i class="small muted" style="font-style:normal">gramas</i></div><small id="p-peso-info">Em gramas. 1 kg = 1000 g</small></label>
           <label class="field"><span>Altura</span><div class="prefix-r"><input class="input" id="p-alt" inputmode="decimal" placeholder="4"><i class="small muted" style="font-style:normal">cm</i></div></label>
           <label class="field"><span>Largura</span><div class="prefix-r"><input class="input" id="p-larg" inputmode="decimal" placeholder="11"><i class="small muted" style="font-style:normal">cm</i></div></label>
           <label class="field"><span>Comprimento</span><div class="prefix-r"><input class="input" id="p-comp" inputmode="decimal" placeholder="16"><i class="small muted" style="font-style:normal">cm</i></div></label>
@@ -778,8 +778,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=79720"></script>
-<script src="app.js?v=79720"></script>
+<script src="config.js?v=80360"></script>
+<script src="app.js?v=80360"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1631,6 +1631,16 @@
     }));
   }
 
+  // Peso em gramas, mostrando quanto dá em kg para não confundir
+  function pesoInfo() {
+    const el = $('p-peso'); el.value = GP.digits(el.value).slice(0, 6);
+    const g = parseInt(el.value) || 0, kg = (g / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
+    $('p-peso-info').innerHTML = !g ? 'Em gramas. 1 kg = 1000 g'
+      : g > 30000 ? `<span style="color:var(--bad);font-weight:700">${kg} kg: passa do máximo de 30 kg</span>`
+      : g >= 1000 ? `<b>= ${kg} kg</b>${g >= 10000 ? ' <span style="color:#b26a00">· confira se está certo</span>' : ''}`
+      : `<b>= ${g} g</b> (${kg} kg)`;
+  }
+  $('p-peso').addEventListener('input', pesoInfo);
   function openProd(p) {
     editing = p; prodImg = p ? p.imagem_url : '';
     $('pm-title').textContent = p ? 'Editar produto' : 'Novo produto';
@@ -1649,7 +1659,7 @@
     renderVars();
     const dec = (v) => v != null && v !== '' ? String(v).replace('.', ',') : '';
     $('p-envio').classList.toggle('hide', !(loja && loja.tipo === 'variedades'));
-    $('p-peso').value = dec(p && p.peso_kg); $('p-alt').value = dec(p && p.altura_cm);
+    $('p-peso').value = p && Number(p.peso_kg) > 0 ? String(Math.round(p.peso_kg * 1000)) : ''; pesoInfo(); $('p-alt').value = dec(p && p.altura_cm);
     $('p-larg').value = dec(p && p.largura_cm); $('p-comp').value = dec(p && p.comprimento_cm);
     gruposEd = JSON.parse(JSON.stringify(p ? GP.grupos(p) : []));
     renderGrupos();
@@ -1946,7 +1956,9 @@
     if (new Set(variacoes.map(v => v.nome.toLowerCase())).size !== variacoes.length) return GP.toast('Há variações com o mesmo nome.', 'err');
     const estoque = $('p-est-on').checked && !variacoes.length ? Math.max(0, parseInt($('p-est').value) || 0) : null;
     const medida = (id, max) => { const v = parseFloat(String($(id).value).replace(',', '.')); return v > 0 ? Math.min(v, max) : null; };
-    const medidas = loja && loja.tipo === 'variedades' ? { peso_kg: medida('p-peso', 30), altura_cm: medida('p-alt', 100), largura_cm: medida('p-larg', 100), comprimento_cm: medida('p-comp', 100) } : {};
+    const gramas = parseInt(GP.digits($('p-peso').value)) || 0;
+    if (gramas > 30000) { $('p-peso').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('O peso máximo para envio é 30 kg (30000 g).', 'err'); }
+    const medidas = loja && loja.tipo === 'variedades' ? { peso_kg: gramas > 0 ? gramas / 1000 : null, altura_cm: medida('p-alt', 100), largura_cm: medida('p-larg', 100), comprimento_cm: medida('p-comp', 100) } : {};
     const row = { ...medidas, nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)), estoque, variacoes };
     const b = $('p-save'); b.disabled = true;
     const salvar = (r) => editing ? sb.from('ff_produtos').update(r).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...r, loja_id: loja.id, ordem: prods.length });

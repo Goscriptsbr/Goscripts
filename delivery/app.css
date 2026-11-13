@@ -261,3 +261,4 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .frete b{display:block}.frete small{color:var(--muted)}
 .frete .fp{margin-left:auto;font-weight:800;white-space:nowrap}
 .me-card>.grow{flex:1 1 150px}
+#p-peso{padding-right:76px}
