@@ -15,7 +15,6 @@
 //   { acao: 'rastrear',    pedido | token }     → atualiza o código de rastreio (equipe, ou o cliente com o token)
 //   { acao: 'cancelar',    pedido }             → cancela a etiqueta no Melhor Envio e o valor volta para o saldo (dono ou equipe)
 //   { acao: 'agencias',    loja }               → agências de postagem perto da loja, por transportadora (dono ou equipe)
-//   { acao: 'recarregar',  loja, valor }        → cria uma recarga de saldo no Melhor Envio e devolve o link de pagamento (só o dono)
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
 //   nome: ff-melhorenvio → cole este arquivo inteiro → Deploy → em Details desligue "Verify JWT".
@@ -473,45 +472,6 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
       if (ags.length) saida.push({ id: Number(c.id), nome: String(c.name || ''), logo: c.picture || '', agencias: ags });
     }
     return { status: 200, corpo: { transportadoras: saida, escolhidas: l.me_agencias || {}, cidade: de.cidade + '/' + de.uf } };
-  }
-
-  if (acao === 'recarregar') {
-    const l = await pegaLoja(b.loja); exigeDono(l);
-    const valor = Math.round(Number(String(b.valor || '').replace(',', '.')) * 100) / 100;
-    if (!(valor >= 10) || valor > 10000) throw new Falha('valor_invalido', 400, 'escolha um valor entre R$ 10 e R$ 10.000');
-    const voltar = REDIRECT + (REDIRECT.includes('?') ? '&' : '?') + 'me_saldo=1';
-    const site = BASE.includes('sandbox') ? 'https://app-sandbox.melhorenvio.com.br' : 'https://app.melhorenvio.com.br';
-    // O pagamento é feito na tela do meio de pagamento do próprio Melhor Envio; o GoPedido só pede o link
-    const gateways = ['mercado-pago', 'pagseguro', 'picpay', 'moip'];
-    // Procura um link https em qualquer campo da resposta (o nome do campo varia)
-    const acharLink = (o, d = 0) => {
-      if (!o || d > 4) return '';
-      if (typeof o === 'string') return /^https:\/\/\S+$/i.test(o) && !/\.(png|jpe?g|svg|gif)(\?|$)/i.test(o) ? o : '';
-      if (Array.isArray(o)) { for (const x of o) { const u = acharLink(x, d + 1); if (u) return u; } return ''; }
-      if (typeof o === 'object') {
-        const pri = ['redirect', 'url', 'payment_url', 'redirect_url', 'checkout_url', 'link', 'init_point', 'href'];
-        for (const k of pri) { const u = acharLink(o[k], d + 1); if (u) return u; }
-        for (const k of Object.keys(o)) { const u = acharLink(o[k], d + 1); if (u) return u; }
-      }
-      return '';
-    };
-    let ultimo = '';
-    for (const gateway of gateways) {
-      let j;
-      try { j = await api(l.id, 'POST', '/api/v2/me/balance', { gateway, redirect: voltar, value: valor }); }
-      catch (e) {
-        if (e.message === 'me_desconectado') throw new Falha('me_permissao', 400, 'reconecte o Melhor Envio para liberar a recarga pelo GoPedido');
-        ultimo = gateway + ': ' + (e.detalhe || e.message);
-        continue;   // esse meio de pagamento não foi aceito: tenta o próximo
-      }
-      const url = acharLink(j);
-      if (url) return { status: 200, corpo: { url, gateway } };
-      // Aceitou mas não mandou link: para aqui (não cria várias recargas) e mostra o que veio
-      ultimo = gateway + ' respondeu sem link: ' + JSON.stringify(j).slice(0, 240);
-      break;
-    }
-    // Não deu pela API: devolve o site do Melhor Envio para recarregar por lá
-    return { status: 200, corpo: { url: site, fallback: true, motivo: ultimo } };
   }
 
   throw new Falha('acao_invalida');

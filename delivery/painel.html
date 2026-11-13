@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=97444">
+<link rel="stylesheet" href="app.css?v=97780">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -803,8 +803,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=97444"></script>
-<script src="app.js?v=97444"></script>
+<script src="config.js?v=97780"></script>
+<script src="app.js?v=97780"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1097,39 +1097,13 @@
       catch (er) { $('me-saldo').textContent = '—'; GP.toast(er.message, 'err'); if (er.codigo === 'me_desconectado') { loja.me_conectado = false; renderEnvio(); } }
     };
     saldo(); $('me-atu').onclick = saldo;
-    if ($('me-recarga')) $('me-recarga').onclick = () => {
-      const w = document.createElement('div'); w.className = 'termos-wrap';
-      w.innerHTML = `<div class="termos-box" role="dialog" aria-modal="true">
-        <div class="termos-ic">${ic('cash')}</div>
-        <h3>Adicionar saldo no Melhor Envio</h3>
-        <p>O pagamento é feito na tela de pagamento do Melhor Envio (Pix ou cartão). O valor cai na sua carteira de lá e é usado para pagar as etiquetas.</p>
-        <div class="rc-vals">${[30, 50, 100, 200].map(v => `<button type="button" data-v="${v}">R$ ${v}</button>`).join('')}</div>
-        <label class="field" style="margin-top:10px"><span>Ou digite o valor</span><div class="prefix"><i>R$</i><input class="input" id="rc-v" inputmode="numeric" placeholder="0,00"></div><small>Mínimo de R$ 10.</small></label>
-        <div class="row" style="gap:8px;margin-top:6px"><button class="btn btn-ghost grow" id="rc-x" type="button">Cancelar</button><button class="btn btn-primary grow" id="rc-ok" type="button">Ir para o pagamento</button></div>
-      </div>`;
-      document.body.appendChild(w);
-      GP.moneyMask(w.querySelector('#rc-v'));
-      w.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { w.querySelector('#rc-v').value = GP.fmtMoeda(Number(b.dataset.v)); w.querySelectorAll('[data-v]').forEach(x => x.classList.toggle('on', x === b)); });
-      w.querySelector('#rc-x').onclick = () => w.remove();
-      w.onclick = (e) => { if (e.target === w) w.remove(); };
-      w.querySelector('#rc-ok').onclick = async () => {
-        const v = GP.num(w.querySelector('#rc-v').value);
-        if (!(v >= 10)) return GP.toast('Escolha um valor de pelo menos R$ 10.', 'err');
-        const b = w.querySelector('#rc-ok'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Abrindo…';
-        const janela = window.open('', '_blank');
-        try {
-          const r = await chamarME({ acao: 'recarregar', loja: loja.id, valor: v });
-          if (janela) janela.location = r.url; else location.href = r.url;
-          w.remove();
-          if (r.fallback) {
-            console.warn('Recarga pelo GoPedido não disponível:', r.motivo);
-            GP.toast('Abrimos o Melhor Envio: vá em Financeiro → Inserir créditos. Depois toque em atualizar o saldo.' + (r.motivo ? ' (Motivo: ' + r.motivo + ')' : ''), 'ok');
-          } else GP.toast('Conclua o pagamento na tela que abriu. Depois toque em atualizar o saldo.', 'ok');
-        } catch (er) {
-          if (janela) janela.close();
-          b.disabled = false; b.textContent = 'Ir para o pagamento'; GP.toast(er.message, 'err');
-        }
-      };
+    // Recarga: o Melhor Envio só permite inserir saldo no site dele, então abrimos direto lá
+    if ($('me-recarga')) $('me-recarga').onclick = async () => {
+      const ok = await GP.confirmar('Adicionar saldo no Melhor Envio', {
+        texto: 'Vamos abrir o site do Melhor Envio. Lá, toque no menu ☰ → Financeiro → Inserir créditos, escolha o valor e pague por Pix ou cartão. Depois volte aqui e toque em atualizar o saldo.',
+        ok: 'Abrir o Melhor Envio', cancelar: 'Agora não', icone: 'cash' });
+      if (!ok) return;
+      window.open($('me-saldo-link').href, '_blank', 'noopener');
     };
     // ---- agências de postagem ----
     const resumoAg = () => {
