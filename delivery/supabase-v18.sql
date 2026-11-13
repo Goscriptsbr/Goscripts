@@ -74,7 +74,7 @@ create policy ff_lojas_editar on public.ff_lojas for update to authenticated
 create policy ff_lojas_apagar on public.ff_lojas for delete to authenticated
   using (dono = auth.uid());
 
--- Proteção da loja: além de verificação e notas, a equipe não muda dono, Pix nem o bloqueio
+-- Proteção da loja: além de verificação e notas, a equipe não muda dono, bloqueio, Pix nem formas de pagamento
 create or replace function public.ff_protege_loja()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -90,6 +90,8 @@ begin
       new.dono := old.dono; new.ativa := old.ativa;
       new.pix_tipo := old.pix_tipo; new.pix_chave := old.pix_chave;
       new.pix_nome := old.pix_nome; new.pix_cidade := old.pix_cidade;
+      new.aceita_pix := old.aceita_pix; new.aceita_debito := old.aceita_debito;
+      new.aceita_credito := old.aceita_credito; new.aceita_dinheiro := old.aceita_dinheiro;
     elsif auth.uid() is not null then
       new.dono := old.dono; new.ativa := old.ativa;   -- o dono também não troca o dono nem se desbloqueia
     end if;

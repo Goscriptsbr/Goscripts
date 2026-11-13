@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=76301">
+<link rel="stylesheet" href="app.css?v=77378">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -360,6 +360,7 @@
   .vrow .prefix{min-width:0}
   .pitem .tg.esg{background:#FDE8E8;color:var(--bad)}
   .pitem .tg.poucos{background:#FEF3C7;color:#B45309}
+  body.e-equipe .paytile{cursor:not-allowed;opacity:.75}
 </style>
 </head>
 <body>
@@ -590,13 +591,13 @@
           <div class="card pad fs ml-anchor" id="sec-pag" style="grid-column:1/-1">
             <h3><span id="fi3"></span>Formas de pagamento</h3>
             <p class="fsub">Ligue as formas que sua loja aceita.</p>
+            <div class="warnline hide" id="pix-dono" style="margin-bottom:12px">Só o dono da conta pode alterar as formas de pagamento e a chave Pix. Isso protege o dinheiro da loja.</div>
             <div class="paygrid">
               <label class="paytile"><span class="pi" data-ic="pix"></span><span style="min-width:0"><b>Pix</b><small>Pago na hora</small></span><span class="switch"><input type="checkbox" id="l-pix"><i></i></span></label>
               <label class="paytile"><span class="pi" data-ic="card"></span><span style="min-width:0"><b>Débito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-deb"><i></i></span></label>
               <label class="paytile"><span class="pi" data-ic="card"></span><span style="min-width:0"><b>Crédito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-cred"><i></i></span></label>
               <label class="paytile"><span class="pi" data-ic="cash"></span><span style="min-width:0"><b>Dinheiro</b><small>Com troco</small></span><span class="switch"><input type="checkbox" id="l-din"><i></i></span></label>
             </div>
-            <div class="warnline hide" id="pix-dono" style="margin-top:10px">Só o dono da conta pode alterar a chave Pix. Isso protege os pagamentos da loja.</div>
             <div id="pix-cfg" class="grid2 pixbox">
               <label class="field"><span>Tipo de chave Pix</span>
                 <select class="input" id="l-pixtipo"><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="telefone">Telefone</option><option value="email">E-mail</option><option value="aleatoria">Chave aleatória</option></select></label>
@@ -759,8 +760,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=76301"></script>
-<script src="app.js?v=76301"></script>
+<script src="config.js?v=77378"></script>
+<script src="app.js?v=77378"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -905,7 +906,7 @@
   // Quem é da equipe não mexe em plano, Pix, equipe nem cria lojas
   function aplicarPapel() {
     document.body.classList.toggle('e-equipe', !souDono);
-    ['l-pixtipo', 'l-pixchave', 'l-pixnome', 'l-pixcidade', 'l-pix'].forEach(id => { if ($(id)) $(id).disabled = !souDono; });
+    ['l-pixtipo', 'l-pixchave', 'l-pixnome', 'l-pixcidade', 'l-pix', 'l-deb', 'l-cred', 'l-din'].forEach(id => { if ($(id)) $(id).disabled = !souDono; });
     $('pix-dono').classList.toggle('hide', souDono);
     $('sec-equipe').classList.toggle('hide', !souDono);
     $('nav-equipe').classList.toggle('hide', !souDono);
