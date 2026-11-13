@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=43146">
+<link rel="stylesheet" href="app.css?v=43432">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -646,8 +646,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=43146"></script>
-<script src="app.js?v=43146"></script>
+<script src="config.js?v=43432"></script>
+<script src="app.js?v=43432"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -814,11 +814,13 @@
     await loadProds();
     go('pedidos');
     verPed = null; await checarPedidos();
+    ligarRealtime();
     clearInterval(timer);
-    timer = setInterval(() => { if (!document.hidden) checarPedidos(); }, 15000);
+    // Reserva: com o tempo real ligado, confere só a cada 1 min; sem ele, a cada 15 s.
+    timer = setInterval(() => { if (!document.hidden && (!rtOk || Date.now() - ultCheck > 60e3)) checarPedidos(); }, 15000);
   }
   function novaLoja(primeira) {
-    clearInterval(timer);
+    clearInterval(timer); desligarRealtime();
     loja = null; prods = []; pedidos = []; conhecidos = null; codigo = null;
     fillLoja(); renderLojaSel(); setTabsLocked(true); go('loja');
     $('welcome').classList.remove('hide');
@@ -988,14 +990,32 @@
   };
   // Consulta leve: só pergunta qual foi a última alteração nos pedidos da loja (poucos bytes).
   // A lista completa só é baixada quando algo mudou (pedido novo, status, cancelamento) ou a cada 10 min.
-  let verPed = null, ultCheio = 0;
+  let verPed = null, ultCheio = 0, ultCheck = 0, rtOk = false, canal = null, rtDeb = null;
+  // Tempo real: o Supabase avisa na hora quando entra ou muda um pedido desta loja.
+  function ligarRealtime() {
+    desligarRealtime();
+    if (!loja || !sb.channel) return;
+    const id = loja.id;
+    canal = sb.channel('pedidos-' + id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ff_pedidos', filter: 'loja_id=eq.' + id }, () => {
+        clearTimeout(rtDeb); rtDeb = setTimeout(() => { if (loja && loja.id === id) loadPedidos(); }, 500);
+      })
+      .subscribe((st) => {
+        const ok = st === 'SUBSCRIBED';
+        if (ok && !rtOk && loja) checarPedidos();
+        rtOk = ok; updLabel();
+      });
+  }
+  function desligarRealtime() { if (canal) { try { sb.removeChannel(canal); } catch {} canal = null; } rtOk = false; }
+  function updLabel() { $('upd').innerHTML = rtOk ? '<span style="color:var(--ok);font-weight:700">● Ao vivo</span>' : 'Conferido às ' + GP.hora(new Date()); }
   async function checarPedidos() {
     if (!loja) return;
+    ultCheck = Date.now();
     const { data, error } = await sb.from('ff_pedidos').select('atualizado_em').eq('loja_id', loja.id).order('atualizado_em', { ascending: false }).limit(1);
     if (error) { $('upd').textContent = 'Sem conexão · tentando de novo'; return; }
     const v = data && data[0] ? data[0].atualizado_em : '';
     if (v !== verPed || Date.now() - ultCheio > 10 * 60e3) { verPed = v; return loadPedidos(); }
-    $('upd').textContent = 'Conferido às ' + GP.hora(new Date());
+    updLabel();
     renderPedidos();
   }
   async function loadPedidos() {
@@ -1013,7 +1033,7 @@
       if (novos.length) { beep(); GP.toast(`🔔 Novo pedido #${novos[0].numero}!`, 'ok'); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
     }
     conhecidos = ids; pedidos = data;
-    $('upd').textContent = 'Atualizado às ' + GP.hora(new Date());
+    updLabel();
     renderPedidos();
   }
   function renderPedidos() {

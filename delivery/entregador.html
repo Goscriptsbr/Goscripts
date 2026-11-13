@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=43146">
+<link rel="stylesheet" href="app.css?v=43432">
 <style>
   body{background:#F2F1EE}
   .entry{min-height:100vh;display:grid;place-items:center;padding:24px 18px;background:radial-gradient(800px 400px at 50% -10%,rgba(242,69,28,.25),transparent 60%),var(--ink);color:#fff}
@@ -83,8 +83,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=43146"></script>
-<script src="app.js?v=43146"></script>
+<script src="config.js?v=43432"></script>
+<script src="app.js?v=43432"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -92,7 +92,8 @@
   $('e-ic').innerHTML = ic('bike'); $('b-sair').innerHTML = ic('logout');
 
   let cod = GP.ls.get('gp_moto_cod', ''), nome = GP.ls.get('gp_moto_nome', '');
-  let info = null, lista = [], aba = 'retirar', conhecidos = null, timer = null;
+  let info = null, lista = [], aba = 'retirar', conhecidos = null, timer = null, rt = null, ultCarga = 0;
+  const meu = (p) => !p.entregador_nome || p.entregador_nome.toLowerCase() === nome.toLowerCase();
 
   const qc = new URLSearchParams(location.search).get('c');
   if (qc) { cod = qc.toUpperCase().replace(/[^A-Z0-9]/g, ''); history.replaceState(null, '', 'entregador.html'); }
@@ -103,7 +104,7 @@
   });
 
   function sair(msg) {
-    clearInterval(timer); GP.ls.del('gp_moto_cod'); cod = ''; info = null;
+    clearInterval(timer); if (rt) rt.parar(); rt = null; GP.ls.del('gp_moto_cod'); cod = ''; info = null;
     $('v-app').classList.add('hide'); $('v-entry').classList.remove('hide');
     $('e-cod').value = ''; if (msg) GP.toast(msg, 'err');
   }
@@ -118,7 +119,10 @@
     $('h-loja').textContent = l.nome;
     if (l.imagem_url) { $('h-lg').style.backgroundImage = `url('${l.imagem_url}')`; $('h-lg').textContent = ''; } else $('h-lg').textContent = l.nome.trim()[0];
     await carregar();
-    clearInterval(timer); timer = setInterval(() => { if (!document.hidden) carregar(); }, 15000);
+    if (rt) rt.parar();
+    rt = GP.ouvir(sb, 'entregas-' + c, () => { if (cod) carregar(); });
+    // Reserva: com o tempo real ligado, confere a cada 1 min; sem ele, a cada 15 s.
+    clearInterval(timer); timer = setInterval(() => { if (!document.hidden && (!(rt && rt.ativo()) || Date.now() - ultCarga > 60e3)) carregar(); }, 15000);
     return null;
   }
   $('f-entry').onsubmit = async (e) => {
@@ -137,6 +141,7 @@
   const beep = () => { try { const a = new (window.AudioContext || window.webkitAudioContext)(); const o = a.createOscillator(), g = a.createGain(); o.frequency.value = 988; g.gain.setValueAtTime(.3, a.currentTime); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + .4); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + .4); } catch {} };
 
   async function carregar() {
+    ultCarga = Date.now();
     const { data, error } = await sb.rpc('ff_entregador_pedidos', { p_codigo: cod });
     if (error) {
       if (/codigo_invalido/.test(error.message)) return sair('Seu código venceu ou foi trocado pela loja. Peça o novo código.');
@@ -148,13 +153,15 @@
     lista = data;
     const exp = new Date(info.expira);
     $('h-sub').textContent = `${nome} · acesso até ${GP.hora(exp)}`;
-    $('upd').textContent = 'Atualizado às ' + GP.hora(new Date()) + ' · atualiza sozinho';
+    $('upd').innerHTML = rt && rt.ativo() ? '<span style="color:var(--ok);font-weight:700">● Ao vivo</span> · atualiza na hora' : 'Atualizado às ' + GP.hora(new Date()) + ' · atualiza sozinho';
     render();
   }
 
   function render() {
-    const by = { retirar: lista.filter(p => p.status === 'preparando'), rota: lista.filter(p => p.status === 'saiu'), feitas: lista.filter(p => p.status === 'entregue').reverse() };
-    ['retirar', 'rota'].forEach(k => { $('n-' + k).textContent = by[k].length; $('n-' + k).classList.toggle('hide', !by[k].length); });
+    const rotaTodas = lista.filter(p => p.status === 'saiu');
+    const by = { retirar: lista.filter(p => p.status === 'preparando'), rota: rotaTodas.filter(meu).concat(rotaTodas.filter(p => !meu(p))), feitas: lista.filter(p => p.status === 'entregue').reverse() };
+    const nMeu = rotaTodas.filter(meu).length;
+    [['retirar', by.retirar.length], ['rota', nMeu]].forEach(([k, n]) => { $('n-' + k).textContent = n; $('n-' + k).classList.toggle('hide', !n); });
     const arr = by[aba];
     if (!arr.length) {
       const t = { retirar: ['Nenhuma entrega para retirar', 'Quando a loja aceitar um pedido, ele aparece aqui.'], rota: ['Nenhuma entrega em rota', 'Depois de retirar um pedido, ele vem para cá.'], feitas: ['Nenhuma entrega hoje', 'As entregas finalizadas nas últimas 12h aparecem aqui.'] }[aba];
@@ -162,6 +169,7 @@
       return;
     }
     $('lista').innerHTML = arr.map(p => {
+      if (p.status === 'saiu' && !meu(p)) return `<article class="card del" style="opacity:.65"><div class="top"><b style="font-size:1.1rem">#${p.numero}</b><span class="small muted">${esc(p.endereco)}</span><div class="grow"></div><span class="badge b-off"><i class="dot"></i>Com ${esc(p.entregador_nome)}</span></div></article>`;
       const rota = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving`;
       const waze = `https://waze.com/ul?ll=${p.lat},${p.lng}&navigate=yes`;
       const pago = p.pagamento === 'pix';

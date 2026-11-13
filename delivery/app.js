@@ -216,6 +216,7 @@
     codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
     status_invalido: 'Este pedido já mudou de situação. Atualize a lista.',
     pedido_invalido: 'Pedido não encontrado.',
+    ja_pegou: 'Outro motoboy já pegou este pedido.', pedido_de_outro: 'Esta entrega está com outro motoboy.',
     sem_loja: 'Cadastre sua loja primeiro.',
     comprovante_obrigatorio: 'Anexe o comprovante do Pix para enviar o pedido.',
     dados_incompletos: 'Preencha nome, telefone e endereço.',
@@ -789,6 +790,19 @@
     return p.pagamento === 'debito' ? 'Débito na entrega' : 'Crédito na entrega';
   };
 
+
+  // ---------- tempo real: escuta "toques" do banco num canal e chama aoMudar ----------
+  // Devolve { parar(), ativo() }. Se o Realtime não estiver disponível, ativo() fica false e a tela usa a conferência de reserva.
+  GP.ouvir = (sb, canal, aoMudar) => {
+    let ch = null, ok = false, deb = null;
+    if (sb && sb.channel) {
+      try {
+        ch = sb.channel(canal).on('broadcast', { event: 'mudou' }, () => { clearTimeout(deb); deb = setTimeout(aoMudar, 400); })
+          .subscribe((st) => { const novo = st === 'SUBSCRIBED'; if (novo && !ok) aoMudar(); ok = novo; });
+      } catch { ch = null; }
+    }
+    return { ativo: () => ok, parar: () => { ok = false; if (ch) { try { sb.removeChannel(ch); } catch {} ch = null; } } };
+  };
 
   // ---------- olho para ver a senha (em todos os campos de senha) ----------
   GP.olhoSenha = (raiz = document) => {

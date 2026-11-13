@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=43146">
+<link rel="stylesheet" href="app.css?v=43432">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -50,8 +50,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=43146"></script>
-<script src="app.js?v=43146"></script>
+<script src="config.js?v=43432"></script>
+<script src="app.js?v=43432"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -67,6 +67,7 @@
   let last = null;
 
   async function load() {
+    ultLoad = Date.now();
     if (!token) return notFound();
     const { data, error } = await sb.rpc('ff_acompanhar', { p_token: token });
     if (error) { if (!last) $('main').innerHTML = `<div class="empty" style="padding-top:80px"><h4>Não foi possível carregar</h4><p>${esc(GP.err(error))}</p></div>`; return; }
@@ -159,8 +160,12 @@
     }
   }
 
+  let ultLoad = 0;
   await load();
-  setInterval(() => { if (!document.hidden) load(); }, 12000);
+  // Tempo real: o banco avisa este pedido na hora em que a loja ou o motoboy mudam a situação.
+  const rt = token ? GP.ouvir(sb, 'pedido-' + token, () => load()) : null;
+  // Reserva: com o tempo real ligado, confere a cada 1 min; sem ele, a cada 12 s.
+  setInterval(() => { if (!document.hidden && (!(rt && rt.ativo()) || Date.now() - ultLoad > 60e3)) load(); }, 12000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
 })();
 </script>
