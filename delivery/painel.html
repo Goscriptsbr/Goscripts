@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=96223">
+<link rel="stylesheet" href="app.css?v=96348">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -130,10 +130,24 @@
   .fs h3>span:first-child svg{width:19px;height:19px}
   .fs .fsub{font-size:.82rem;color:var(--muted);margin:0 0 16px 46px;line-height:1.4}
   .fs .sub-t{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;margin:18px 0 10px}
-  .ml-nav{position:sticky;top:64px;z-index:6;background:var(--bg);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 0;margin-bottom:8px}
+  .ml-off{display:none!important}
+  .ml-nav{position:sticky;top:64px;z-index:6;background:var(--bg);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 0 10px;margin-bottom:6px}
   .ml-nav::-webkit-scrollbar{display:none}
-  .ml-nav a{flex:none;height:34px;padding:0 14px;border-radius:99px;background:#fff;border:1px solid var(--line);font-size:.82rem;font-weight:700;display:flex;align-items:center;color:var(--ink-2)}
-  .ml-nav a:active{background:var(--brand-soft)}
+  .ml-nav button{flex:none;display:flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:12px;background:#fff;border:1.5px solid var(--line);font-size:.85rem;font-weight:700;color:var(--ink-2)}
+  .ml-nav button i{display:grid}.ml-nav button svg{width:17px;height:17px;color:var(--muted)}
+  .ml-nav button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .ml-nav button.on svg{color:#fff}
+  #tab-loja:not(.ml-tudo) .formgrid>.fs{grid-column:1/-1}
+  .ml-tudo .ml-nav{display:none}
+  @media(min-width:980px){
+    .ml-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
+    .ml-tudo .ml-layout{grid-template-columns:1fr}
+    .ml-nav{flex-direction:column;top:84px;padding:6px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);gap:2px}
+    .ml-nav button{width:100%;border:0;background:none;height:44px;border-radius:12px}
+    .ml-nav button:hover{background:var(--bg)}
+    .ml-nav button.on{background:var(--brand-soft);color:var(--brand-2)}
+    .ml-nav button.on svg{color:var(--brand-2)}
+  }
   .ml-anchor{scroll-margin-top:120px}
   .brandbox{position:relative;margin-bottom:66px}
   .brandbox .pv{width:100%!important;height:150px!important;border-radius:16px!important;border:0!important;background:#F1EFEA center/cover;display:grid;place-items:center;color:#c9c5bc}
@@ -506,21 +520,28 @@
 
     <section id="tab-loja" class="hide">
       <div class="cm-head">
-        <div class="grow" style="min-width:0"><h2>Minha loja</h2><p class="small muted">Dados, entrega, horários e pagamentos.</p></div>
+        <div class="grow" style="min-width:0"><h2>Minha loja</h2><p class="small muted">Escolha uma parte no menu para configurar.</p></div>
         <a class="btn btn-ghost btn-sm" id="b-ver2" target="_blank" rel="noopener"></a>
       </div>
       <div id="verif-banner2"></div>
-      <div class="card cm-plan" id="plano-box"></div>
-      <nav class="ml-nav" id="ml-nav"><a href="#sec-dados">Dados</a><a href="#sec-entrega">Entrega</a><a href="#sec-horario">Horários</a><a href="#sec-pag">Pagamentos</a><a href="#sec-envio" id="nav-envio" class="hide">Envio</a><a href="#sec-equipe" id="nav-equipe" class="hide">Equipe</a><a href="#sec-conta">Conta</a></nav>
+      <div class="ml-layout"><nav class="ml-nav" id="ml-nav" aria-label="Módulos da loja">
+        <button type="button" data-m="dados" class="on"><i data-mi="store"></i><span>Dados da loja</span></button>
+        <button type="button" data-m="entrega"><i data-mi="pin"></i><span>Entrega</span></button>
+        <button type="button" data-m="horario"><i data-mi="clock"></i><span>Horários</span></button>
+        <button type="button" data-m="pag"><i data-mi="card"></i><span>Pagamentos</span></button>
+        <button type="button" data-m="envio" id="nav-envio" class="hide"><i data-mi="box"></i><span>Envio</span></button>
+        <button type="button" data-m="equipe" id="nav-equipe" class="hide"><i data-mi="user"></i><span>Equipe</span></button>
+        <button type="button" data-m="conta"><i data-mi="star"></i><span>Plano e conta</span></button>
+      </nav><div class="ml-body">
       <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
       <section class="card pad tipo-pick hide" id="tipo-pick">
         <h3 style="font-size:1.1rem;letter-spacing:-.02em">Que tipo de loja você vai cadastrar?</h3>
         <p class="small muted" style="margin:2px 0 14px">Cada loja tem o seu tipo. Se depois você criar outra loja, ela pode ser de um tipo diferente.</p>
         <div class="tipos-g" id="tipos-g"></div>
       </section>
-      <form id="f-loja">
+      <form id="f-loja" novalidate>
         <div class="formgrid">
-          <div class="card pad fs ml-anchor" id="sec-dados">
+          <div class="card pad fs ml-anchor" id="sec-dados" data-mod="dados">
             <h3><span id="fi1"></span>Dados da loja</h3>
             <p class="fsub">É assim que os clientes veem sua loja.</p>
             <div class="brandbox">
@@ -544,7 +565,7 @@
               <div class="linkbox"><code id="l-link">—</code><button type="button" class="btn btn-ghost btn-sm" id="b-copylink"></button></div></div>
           </div>
 
-          <div class="card pad fs ml-anchor" id="sec-entrega">
+          <div class="card pad fs ml-anchor" id="sec-entrega" data-mod="entrega">
             <h3><span id="fi2"></span>Localização e entrega</h3>
             <p class="fsub">De onde sai a entrega e quanto você cobra.</p>
             <p class="small muted" style="margin:-6px 0 12px">Digite o CEP e o número, que o pino vai sozinho para o lugar. Ou toque no mapa, ou use "Minha localização", que os campos se preenchem.</p>
@@ -580,7 +601,7 @@
             </div>
           </div>
 
-          <div class="card pad fs ml-anchor" id="sec-horario" style="grid-column:1/-1">
+          <div class="card pad fs ml-anchor" id="sec-horario" data-mod="horario" style="grid-column:1/-1">
             <h3><span id="fi4"></span>Horário de funcionamento</h3>
             <p class="fsub">Os dias e horários em que a loja recebe pedidos.</p>
             <label class="switch" style="margin-bottom:6px"><input type="checkbox" id="l-auto"><i></i>Abrir e fechar sozinha pelo horário</label>
@@ -589,7 +610,7 @@
             <button type="button" class="btn btn-ghost btn-sm" id="b-copiahora" style="margin-top:6px"></button>
           </div>
 
-          <div class="card pad fs ml-anchor" id="sec-pag" style="grid-column:1/-1">
+          <div class="card pad fs ml-anchor" id="sec-pag" data-mod="pag" style="grid-column:1/-1">
             <h3><span id="fi3"></span>Formas de pagamento</h3>
             <p class="fsub">Ligue as formas que sua loja aceita.</p>
             <div class="warnline hide" id="pix-dono" style="margin-bottom:12px">Só o dono da conta pode alterar as formas de pagamento e a chave Pix. Isso protege o dinheiro da loja.</div>
@@ -608,22 +629,24 @@
             </div>
           </div>
 
-          <div class="card pad fs ml-anchor hide" id="sec-envio" style="grid-column:1/-1">
+          <div class="card pad fs ml-anchor hide" id="sec-envio" data-mod="envio" style="grid-column:1/-1">
             <h3><span id="fi-env"></span>Envio para outras cidades</h3>
             <p class="fsub">Para clientes fora da sua área de entrega. O cliente escolhe a transportadora no checkout e você gera e imprime a etiqueta aqui, pela sua conta do Melhor Envio.</p>
             <div id="me-box"></div>
           </div>
         </div>
-        <div class="savebar"><button class="btn btn-primary" id="b-salvar" style="min-width:200px">Salvar loja</button></div>
+        <div class="savebar" id="ml-save"><button class="btn btn-primary" id="b-salvar" style="min-width:200px">Salvar loja</button></div>
       </form>
-      <section class="card pad fs ml-anchor hide" id="sec-equipe" style="margin-top:16px">
+      <section class="card pad fs ml-anchor hide" id="sec-equipe" data-mod="equipe">
         <h3><span id="fi-eq"></span>Equipe</h3>
         <p class="fsub">Pessoas que podem administrar suas lojas. Você escolhe quais lojas cada uma pode ver.</p>
         <div class="eq-top"><span id="eq-uso"></span><button type="button" class="btn btn-primary btn-sm" id="b-eq-add"></button></div>
         <div id="eq-lista"></div>
         <p class="small muted" style="margin-top:12px">Quem é da equipe cuida de pedidos, cardápio, promoções, horários e entrega. Só você mexe na chave Pix, na equipe, no plano e cria lojas.</p>
       </section>
-      <div class="card pad row between ml-anchor" id="sec-conta" style="margin-top:16px;gap:10px;flex-wrap:wrap"><div><b>Senha de acesso</b><div class="small muted">Troque a senha que você usa para entrar no painel.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-senha">Trocar senha</button></div>
+      <div class="card cm-plan" id="plano-box" data-mod="conta" style="margin-bottom:12px"></div>
+      <div class="card pad row between ml-anchor" id="sec-conta" data-mod="conta" style="gap:10px;flex-wrap:wrap"><div><b>Senha de acesso</b><div class="small muted">Troque a senha que você usa para entrar no painel.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-senha">Trocar senha</button></div>
+      </div></div>
     </section>
   </main>
 </div>
@@ -780,8 +803,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=96223"></script>
-<script src="app.js?v=96223"></script>
+<script src="config.js?v=96348"></script>
+<script src="app.js?v=96348"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -806,7 +829,31 @@
   $('b-novo').innerHTML = ic('plus') + 'Novo produto'; $('b-novo-fab').innerHTML = ic('plus') + 'Novo produto'; $('b-novo-fab').onclick = () => $('b-novo').click(); $('etp-ic').innerHTML = ic('menu'); $('pm-x').innerHTML = ic('x');
   $('p-del').innerHTML = ic('trash'); $('b-copylink').innerHTML = ic('copy');
   $('pv-logo').innerHTML = ic('image'); $('pv-capa').innerHTML = ic('image'); $('cam1').innerHTML = ic('image'); $('cam2').innerHTML = ic('edit'); $('b-ver2').innerHTML = ic('ext') + 'Ver loja';
-  $('ml-nav').onclick = (e) => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); const el = document.querySelector(a.getAttribute('href')); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  // ---- Minha loja em módulos: mostra uma parte por vez ----
+  document.querySelectorAll('#ml-nav [data-mi]').forEach(el => { el.innerHTML = ic(el.dataset.mi); });
+  let modAtual = GP.ls.get('gp_ml_mod') || 'dados';
+  const MOD_SALVAR = ['dados', 'entrega', 'horario', 'pag'];
+  function setMod(m, rolar) {
+    const btn = document.querySelector(`#ml-nav [data-m="${m}"]`);
+    if (!btn || btn.classList.contains('hide')) m = 'dados';
+    modAtual = m; GP.ls.set('gp_ml_mod', m);
+    const tudo = !loja;   // loja nova: mostra o formulário inteiro
+    $('tab-loja').classList.toggle('ml-tudo', tudo);
+    document.querySelectorAll('#ml-nav [data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    document.querySelectorAll('#tab-loja [data-mod]').forEach(el => el.classList.toggle('ml-off', !tudo && el.dataset.mod !== m));
+    $('ml-save').classList.toggle('ml-off', !tudo && !MOD_SALVAR.includes(m));
+    if (m === 'entrega' && typeof initMap === 'function') setTimeout(initMap, 30);
+    if (rolar) { const t = $('ml-nav').getBoundingClientRect().top + scrollY - 70; if (scrollY > t) window.scrollTo({ top: t, behavior: 'smooth' }); }
+  }
+  window.__mlSetMod = setMod;
+  $('ml-nav').onclick = (e) => { const b = e.target.closest('[data-m]'); if (b) setMod(b.dataset.m, true); };
+  // Se algum aviso precisar mostrar um campo de outro módulo, abre o módulo dele antes
+  const _siv = Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView = function (...a) {
+    const sec = this.closest && this.closest('#tab-loja [data-mod]');
+    if (sec && sec.classList.contains('ml-off')) setMod(sec.dataset.mod);
+    return _siv.apply(this, a);
+  };
   GP.phoneMask($('l-tel'));
 
   let etapas = [];
@@ -970,7 +1017,7 @@
     ['l-pixtipo', 'l-pixchave', 'l-pixnome', 'l-pixcidade', 'l-pix', 'l-deb', 'l-cred', 'l-din'].forEach(id => { if ($(id)) $(id).disabled = !souDono; });
     $('pix-dono').classList.toggle('hide', souDono);
     $('sec-equipe').classList.toggle('hide', !souDono);
-    $('nav-equipe').classList.toggle('hide', !souDono);
+    $('nav-equipe').classList.toggle('hide', !souDono); if (window.__mlSetMod && loja) window.__mlSetMod(modAtual);
     if (souDono) loadEquipe();
   }
   // ================= ENVIO (MELHOR ENVIO) =================
@@ -1001,6 +1048,7 @@
   function renderEnvio() {
     const variedades = $('l-tipo').value === 'variedades' && !!loja;
     $('sec-envio').classList.toggle('hide', !variedades); $('nav-envio').classList.toggle('hide', !variedades);
+    if (!variedades && modAtual === 'envio' && window.__mlSetMod) window.__mlSetMod('dados');
     if (!variedades) return;
     const box = $('me-box');
     if (!('me_conectado' in loja)) { box.innerHTML = '<div class="warnline">Falta rodar o SQL v20 no Supabase para ligar o envio.</div>'; return; }
@@ -2326,6 +2374,7 @@
     togglePix(); sim(); coord(); pixPrev();
     renderHoras(l.horarios); $('l-auto').checked = !!l.horario_auto;
     renderEnvio();
+    setMod(modAtual);
   }
   const NOMES_PIX = { cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória' };
   const PH_PIX = { cpf: '000.000.000-00', cnpj: '00.000.000/0000-00', telefone: '(19) 99999-9999', email: 'nome@email.com', aleatoria: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' };
@@ -2453,13 +2502,13 @@
   $('f-loja').onsubmit = async (e) => {
     e.preventDefault();
     const nome = $('l-nome').value.trim();
-    if (!nome) return GP.toast('Informe o nome da loja.', 'err');
+    if (!nome) { $('l-nome').scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => $('l-nome').focus({ preventScroll: true }), 300); return GP.toast('Informe o nome da loja.', 'err'); }
     if (GP.digits($('l-cnpj').value) && !cnpjMsg()) { $('l-cnpj').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('CNPJ inválido. Corrija ou deixe em branco.', 'err'); }
     const ende = lojaAddr ? lojaAddr.get() : GP.parseEnd(lojaEnd);
     if (!ende.rua || !ende.numero || !ende.cidade) { GP.toast('Preencha o endereço da loja: rua, número e cidade.', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     if (!lojaPos) { GP.toast('Confirme a localização da loja no mapa.', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     const pix = $('l-pix').checked;
-    if (pix && !$('l-pixchave').value.trim()) return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err');
+    if (pix && !$('l-pixchave').value.trim()) { $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err'); }
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }
     if (modoAtual() === 'tabela' && !cfgTaxa().taxa_tabela.length) { $('faixas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Coloque pelo menos uma faixa na tabela de entrega.', 'err'); }
     if ($('l-auto').checked && !Object.values(lerHoras()).some(x => x.aberto)) { $('horas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Marque pelo menos um dia aberto no horário de funcionamento.', 'err'); }
