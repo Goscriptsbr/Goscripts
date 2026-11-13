@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=74936">
+<link rel="stylesheet" href="app.css?v=75542">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -342,6 +342,16 @@
   .tipo-atual{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--bg)}
   .tipo-atual b{display:block;font-size:.9rem}.tipo-atual small{display:block;font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   @media(max-width:520px){.tipos-g{grid-template-columns:1fr}}
+  .eq-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .eq-top #eq-uso{font-size:.86rem;color:var(--muted)}
+  .eqm{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:#fff}
+  .eqm .av{width:40px;height:40px;border-radius:50%;background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;font-weight:800;flex:none}
+  .eqm .tx{flex:1;min-width:0}.eqm .tx b{display:block;font-size:.92rem}
+  .eqm .tx span{display:block;font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .eqm .ac{display:flex;gap:6px;flex:none}
+  .eq-loja{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;cursor:pointer}
+  .eq-loja input{width:18px;height:18px;accent-color:var(--brand)}
+  body.e-equipe .cm-plan .btn,body.e-equipe #b-planos,body.e-equipe #b-planos2{display:none}
 </style>
 </head>
 <body>
@@ -491,7 +501,7 @@
       </div>
       <div id="verif-banner2"></div>
       <div class="card cm-plan" id="plano-box"></div>
-      <nav class="ml-nav" id="ml-nav"><a href="#sec-dados">Dados</a><a href="#sec-entrega">Entrega</a><a href="#sec-horario">Horários</a><a href="#sec-pag">Pagamentos</a><a href="#sec-conta">Conta</a></nav>
+      <nav class="ml-nav" id="ml-nav"><a href="#sec-dados">Dados</a><a href="#sec-entrega">Entrega</a><a href="#sec-horario">Horários</a><a href="#sec-pag">Pagamentos</a><a href="#sec-equipe" id="nav-equipe" class="hide">Equipe</a><a href="#sec-conta">Conta</a></nav>
       <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
       <section class="card pad tipo-pick hide" id="tipo-pick">
         <h3 style="font-size:1.1rem;letter-spacing:-.02em">Que tipo de loja você vai cadastrar?</h3>
@@ -578,6 +588,7 @@
               <label class="paytile"><span class="pi" data-ic="card"></span><span style="min-width:0"><b>Crédito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-cred"><i></i></span></label>
               <label class="paytile"><span class="pi" data-ic="cash"></span><span style="min-width:0"><b>Dinheiro</b><small>Com troco</small></span><span class="switch"><input type="checkbox" id="l-din"><i></i></span></label>
             </div>
+            <div class="warnline hide" id="pix-dono" style="margin-top:10px">Só o dono da conta pode alterar a chave Pix. Isso protege os pagamentos da loja.</div>
             <div id="pix-cfg" class="grid2 pixbox">
               <label class="field"><span>Tipo de chave Pix</span>
                 <select class="input" id="l-pixtipo"><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="telefone">Telefone</option><option value="email">E-mail</option><option value="aleatoria">Chave aleatória</option></select></label>
@@ -589,6 +600,13 @@
         </div>
         <div class="savebar"><button class="btn btn-primary" id="b-salvar" style="min-width:200px">Salvar loja</button></div>
       </form>
+      <section class="card pad fs ml-anchor hide" id="sec-equipe" style="margin-top:16px">
+        <h3><span id="fi-eq"></span>Equipe</h3>
+        <p class="fsub">Pessoas que podem administrar suas lojas. Você escolhe quais lojas cada uma pode ver.</p>
+        <div class="eq-top"><span id="eq-uso"></span><button type="button" class="btn btn-primary btn-sm" id="b-eq-add"></button></div>
+        <div id="eq-lista"></div>
+        <p class="small muted" style="margin-top:12px">Quem é da equipe cuida de pedidos, cardápio, promoções, horários e entrega. Só você mexe na chave Pix, na equipe, no plano e cria lojas.</p>
+      </section>
       <div class="card pad row between ml-anchor" id="sec-conta" style="margin-top:16px;gap:10px;flex-wrap:wrap"><div><b>Senha de acesso</b><div class="small muted">Troque a senha que você usa para entrar no painel.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-senha">Trocar senha</button></div>
     </section>
   </main>
@@ -597,6 +615,25 @@
 <div class="overlay" id="ov"></div>
 
 <!-- Modal produto -->
+<div class="sheet modal" id="eqmod" role="dialog" aria-modal="true">
+  <div class="sheet-head"><h3 id="eq-tit">Adicionar administrador</h3><button class="icon-btn" id="eq-x" type="button"></button></div>
+  <form id="f-eq" style="display:contents">
+    <div class="sheet-body">
+      <label class="field"><span>Nome</span><input class="input" id="eq-nome" maxlength="60" required placeholder="Ex.: Ana Souza"></label>
+      <label class="field"><span>E-mail de acesso</span><input class="input" type="email" id="eq-email" maxlength="120" required autocomplete="off"></label>
+      <div class="grid2">
+        <label class="field"><span id="eq-senha-lb">Senha</span><input class="input" type="password" id="eq-senha" minlength="6" autocomplete="new-password"></label>
+        <label class="field"><span>Repita a senha</span><input class="input" type="password" id="eq-senha2" minlength="6" autocomplete="new-password"></label>
+      </div>
+      <p class="small muted" id="eq-senha-dica" style="margin:-4px 0 14px">Mínimo de 6 caracteres. Passe o e-mail e a senha para a pessoa entrar no painel.</p>
+      <div class="fsec">Acesso às lojas</div>
+      <div class="seg3" id="eq-modo" style="grid-template-columns:1fr 1fr;margin:0 0 10px"><button type="button" class="on" data-m="todas">Todas as lojas</button><button type="button" data-m="algumas">Escolher lojas</button></div>
+      <div id="eq-lojas" class="hide"></div>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-primary btn-block" id="eq-save">Adicionar</button></div>
+  </form>
+</div>
+
 <div class="sheet modal" id="cmod" role="dialog" aria-modal="true">
   <div class="sheet-head"><h3>Novo cupom</h3><button class="icon-btn" id="cm-x" type="button"></button></div>
   <form id="f-cupom" style="display:contents">
@@ -705,8 +742,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=74936"></script>
-<script src="app.js?v=74936"></script>
+<script src="config.js?v=75542"></script>
+<script src="app.js?v=75542"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -828,10 +865,13 @@
     user = session.user;
     $('v-auth').classList.add('hide'); $('v-app').classList.remove('hide');
     sb.rpc('ff_is_admin').then(({ data }) => { $('b-admin').classList.toggle('hide', data !== true); });
-    const { data, error } = await sb.from('ff_lojas').select('*').eq('dono', user.id).order('criado_em');
+    // Lojas que posso gerir (minhas ou da equipe). Sem o SQL v18, usa o jeito antigo.
+    let { data, error } = await sb.rpc('ff_minhas_lojas');
+    if ((error && /ff_minhas_lojas|function|schema cache/i.test(error.message || '')) || (!error && !Array.isArray(data))) ({ data, error } = await sb.from('ff_lojas').select('*').eq('dono', user.id).order('criado_em'));
     if (error) return GP.toast(GP.err(error), 'err');
     lojas = data || [];
-    loadPlano();
+    await loadPlano();
+    if (!lojas.length && !souDono) return semAcesso();
     if (!lojas.length) return novaLoja(true);
     const salva = GP.ls.get('gp_loja_sel');
     await abrirLoja(lojas.find(l => l.id === salva) || lojas[0]);
@@ -839,10 +879,28 @@
 
   // ================= PLANO =================
   let plano = null;
+  let souDono = true;
   async function loadPlano() {
     const { data, error } = await sb.rpc('ff_meu_plano');
     if (error) { plano = null; $('uso-prod').innerHTML = ''; $('uso-prod').classList.add('hide'); return; }
-    plano = data; renderUso();
+    plano = data; souDono = plano.sou_dono !== false; renderUso(); aplicarPapel();
+  }
+  // Quem é da equipe não mexe em plano, Pix, equipe nem cria lojas
+  function aplicarPapel() {
+    document.body.classList.toggle('e-equipe', !souDono);
+    ['l-pixtipo', 'l-pixchave', 'l-pixnome', 'l-pixcidade', 'l-pix'].forEach(id => { if ($(id)) $(id).disabled = !souDono; });
+    $('pix-dono').classList.toggle('hide', souDono);
+    $('sec-equipe').classList.toggle('hide', !souDono);
+    $('nav-equipe').classList.toggle('hide', !souDono);
+    if (souDono) loadEquipe();
+  }
+  function semAcesso() {
+    setTabsLocked(true); go('loja');
+    $('f-loja').classList.add('hide'); $('tipo-pick').classList.add('hide');
+    $('welcome').classList.remove('hide');
+    $('w-tit').textContent = 'Você ainda não tem acesso a nenhuma loja';
+    $('welcome').querySelector('.small').textContent = 'Peça para o dono da loja liberar o seu acesso na equipe.';
+    $('w-cancel').classList.add('hide');
   }
   function renderUso() {
     if (!plano) return;
@@ -866,7 +924,7 @@
   function renderLojaSel() {
     $('t-loja').innerHTML = lojas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('')
       + (loja ? '' : '<option value="" selected>Nova loja</option>')
-      + '<option value="__nova">+ Cadastrar outra loja</option>';
+      + (souDono ? '<option value="__nova">+ Cadastrar outra loja</option>' : '');
     $('t-loja').value = loja ? loja.id : '';
   }
   async function abrirLoja(l) {
@@ -901,6 +959,84 @@
     }
     const l = lojas.find(x => x.id === v); if (l) abrirLoja(l);
   };
+  // ---- Equipe (só o dono) ----
+  let equipe = [], eqEdit = null, eqModo = 'todas';
+  $('fi-eq').innerHTML = ic('user'); $('b-eq-add').innerHTML = ic('plus') + 'Adicionar'; $('eq-x').innerHTML = ic('x');
+  const lojasDoDono = () => lojas.filter(l => l.dono === user.id);
+  async function loadEquipe() {
+    const { data, error } = await sb.from('ff_equipe').select('*').order('criado_em');
+    if (error) { $('sec-equipe').classList.add('hide'); $('nav-equipe').classList.add('hide'); return; }   // SQL v18 ainda não rodou
+    equipe = (data || []).filter(m => m.dono === user.id); renderEquipe();
+  }
+  function renderEquipe() {
+    const max = plano && plano.equipe_max != null ? plano.equipe_max : 1;
+    $('eq-uso').innerHTML = `<b>${equipe.length}</b> de ${max} administrador${max > 1 ? 'es' : ''} no plano ${plano ? GP.planoNome(plano.plano) : 'Grátis'}`;
+    const nome = (id) => (lojas.find(l => l.id === id) || {}).nome || 'loja removida';
+    $('eq-lista').innerHTML = equipe.length ? equipe.map(m => `<div class="eqm"><span class="av">${esc((m.nome || '?').trim()[0].toUpperCase())}</span>
+      <span class="tx"><b>${esc(m.nome)}</b><span>${esc(m.email)}</span><span>${m.todas ? 'Acesso a todas as lojas' : 'Acesso: ' + esc(m.lojas.map(nome).join(', '))}</span></span>
+      <span class="ac"><button type="button" class="icon-btn" data-eqe="${m.id}" title="Editar">${ic('edit')}</button><button type="button" class="icon-btn" data-eqr="${m.id}" title="Remover" style="color:var(--bad)">${ic('trash')}</button></span></div>`).join('')
+      : '<p class="small muted" style="margin:4px 0 0">Ninguém na equipe ainda.</p>';
+  }
+  function setEqModo(m) {
+    eqModo = m; document.querySelectorAll('#eq-modo [data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    $('eq-lojas').classList.toggle('hide', m !== 'algumas');
+  }
+  $('eq-modo').onclick = (e) => { const b = e.target.closest('[data-m]'); if (b) setEqModo(b.dataset.m); };
+  function abrirEq(m) {
+    eqEdit = m || null;
+    $('eq-tit').textContent = m ? 'Editar administrador' : 'Adicionar administrador';
+    $('eq-save').textContent = m ? 'Salvar alterações' : 'Adicionar';
+    $('eq-nome').value = m ? m.nome : ''; $('eq-email').value = m ? m.email : '';
+    $('eq-senha').value = ''; $('eq-senha2').value = '';
+    $('eq-senha').required = $('eq-senha2').required = !m;
+    $('eq-senha-lb').textContent = m ? 'Nova senha (opcional)' : 'Senha';
+    $('eq-senha-dica').textContent = m ? 'Deixe a senha em branco para manter a atual.' : 'Mínimo de 6 caracteres. Passe o e-mail e a senha para a pessoa entrar no painel.';
+    const sel = m && !m.todas ? m.lojas : [];
+    $('eq-lojas').innerHTML = lojasDoDono().map(l => `<label class="eq-loja"><input type="checkbox" value="${l.id}" ${sel.includes(l.id) ? 'checked' : ''}><span class="grow">${esc(l.nome)}</span><span class="small muted">${GP.tipo(l.tipo).curto}</span></label>`).join('');
+    setEqModo(m && !m.todas ? 'algumas' : 'todas');
+    $('eqmod').classList.add('on'); $('ov').classList.add('on');
+    setTimeout(() => $('eq-nome').focus(), 250);
+  }
+  const fecharEq = () => { $('eqmod').classList.remove('on'); $('ov').classList.remove('on'); };
+  $('eq-x').onclick = fecharEq; $('ov').addEventListener('click', fecharEq);
+  $('b-eq-add').onclick = () => {
+    const max = plano && plano.equipe_max != null ? plano.equipe_max : 1;
+    if (equipe.length >= max) return verPlanos('Limite da equipe atingido', `Seu plano ${GP.planoNome(plano ? plano.plano : 'gratis')} permite ${max} administrador${max > 1 ? 'es' : ''}. Para adicionar mais pessoas, escolha um plano maior.`);
+    abrirEq(null);
+  };
+  async function chamarEquipe(body) {
+    const { data, error } = await sb.functions.invoke('ff-equipe', { body });
+    if (!error) return data;
+    let cod = '';
+    try { cod = (await error.context.json()).error || ''; } catch {}
+    if (!cod) throw new Error('Não foi possível falar com o servidor da equipe. Confira se a Edge Function "ff-equipe" foi publicada no Supabase.');
+    throw new Error(GP.err({ message: cod }));
+  }
+  $('f-eq').onsubmit = async (e) => {
+    e.preventDefault();
+    const senha = $('eq-senha').value;
+    if (senha !== $('eq-senha2').value) { $('eq-senha2').focus(); return GP.toast('As duas senhas não são iguais.', 'err'); }
+    const lojasSel = [...document.querySelectorAll('#eq-lojas input:checked')].map(i => i.value);
+    if (eqModo === 'algumas' && !lojasSel.length) return GP.toast('Marque pelo menos uma loja.', 'err');
+    const body = { nome: $('eq-nome').value.trim(), email: $('eq-email').value.trim(), todas: eqModo === 'todas', lojas: lojasSel };
+    if (senha) body.senha = senha;
+    if (eqEdit) { body.acao = 'editar'; body.id = eqEdit.id; } else body.acao = 'criar';
+    const b = $('eq-save'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+    try { await chamarEquipe(body); fecharEq(); GP.toast(eqEdit ? 'Administrador atualizado' : 'Administrador adicionado. Passe o e-mail e a senha para ele.', 'ok'); await loadPlano(); }
+    catch (er) { GP.toast(er.message, 'err'); }
+    b.disabled = false; b.textContent = t;
+  };
+  $('eq-lista').onclick = async (e) => {
+    const ed = e.target.closest('[data-eqe]'), rm = e.target.closest('[data-eqr]');
+    if (ed) return abrirEq(equipe.find(m => m.id === ed.dataset.eqe));
+    if (rm) {
+      const m = equipe.find(x => x.id === rm.dataset.eqr);
+      if (!(await GP.confirmar(`Remover ${m.nome} da equipe?`, { texto: 'A pessoa perde o acesso na hora e a conta dela é apagada.', ok: 'Remover', perigo: true, icone: 'trash' }))) return;
+      try { await chamarEquipe({ acao: 'remover', id: m.id }); GP.toast('Removido da equipe', 'ok'); await loadPlano(); }
+      catch (er) { GP.toast(er.message, 'err'); }
+    }
+  };
+
   // ---- Tipo de loja: primeira escolha ao criar uma loja ----
   $('tipos-g').innerHTML = GP.TIPOS.map(t => `<button type="button" data-tipo="${t.id}"><span class="ti">${ic(t.ic)}</span><span><b>${t.nome}</b><small>${t.desc}</small></span></button>`).join('');
   function mostrarTipo() {

@@ -137,9 +137,9 @@
   // ---------- Planos ----------
   GP.WHATS = '5519988283178';
   GP.PLANOS = [
-    { id: 'gratis', nome: 'Grátis', preco: 0, lojas: 1, produtos: 50, ex: '', itens: ['Pedidos ilimitados, sem comissão', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções'] },
-    { id: 'profissional', nome: 'Profissional', preco: 50, lojas: 2, produtos: 200, destaque: true, ex: 'Ex.: 120 produtos numa loja e 80 na outra', itens: ['Tudo do plano Grátis', 'Suporte pelo WhatsApp'] },
-    { id: 'premium', nome: 'Premium', preco: 100, lojas: 5, produtos: 500, ex: 'Ex.: 5 lojas com 100 produtos cada', itens: ['Tudo do Profissional', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
+    { id: 'gratis', nome: 'Grátis', preco: 0, lojas: 1, produtos: 50, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 administrador além de você', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções'] },
+    { id: 'profissional', nome: 'Profissional', preco: 50, lojas: 2, produtos: 200, destaque: true, ex: 'Ex.: 120 produtos numa loja e 80 na outra', itens: ['Tudo do plano Grátis', '4 administradores além de você', 'Suporte pelo WhatsApp'] },
+    { id: 'premium', nome: 'Premium', preco: 100, lojas: 5, produtos: 500, ex: 'Ex.: 5 lojas com 100 produtos cada', itens: ['Tudo do Profissional', '8 administradores além de você', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
   ];
   GP.planoNome = (id) => (GP.PLANOS.find(p => p.id === id) || GP.PLANOS[0]).nome;
   GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano.';
@@ -228,6 +228,12 @@
     codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
     status_invalido: 'Este pedido já mudou de situação. Atualize a lista.',
     pedido_invalido: 'Pedido não encontrado.',
+    so_dono: 'Só o dono da conta pode gerenciar a equipe.', nao_logado: 'Sua sessão expirou. Entre de novo.',
+    nome_invalido: 'Digite o nome da pessoa.', email_invalido: 'Digite um e-mail válido.', senha_curta: 'A senha precisa ter pelo menos 6 caracteres.',
+    senha_fraca: 'Escolha uma senha mais forte.', email_existe: 'Este e-mail já tem uma conta no GoPedido. Use outro e-mail.',
+    escolha_lojas: 'Marque pelo menos uma das suas lojas.', limite_equipe: 'Você atingiu o limite de administradores do seu plano.',
+    membro_invalido: 'Essa pessoa não está mais na sua equipe.', erro_conta: 'Não foi possível salvar a conta. Tente de novo.',
+    ja_e_lojista: 'Essa pessoa já é dona de uma loja.', acao_invalida: 'Ação inválida.',
     ja_pegou: 'Outro motoboy já pegou este pedido.', pedido_de_outro: 'Esta entrega está com outro motoboy.',
     sem_loja: 'Cadastre sua loja primeiro.',
     comprovante_obrigatorio: 'Anexe o comprovante do Pix para enviar o pedido.',
