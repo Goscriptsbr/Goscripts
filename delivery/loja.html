@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=38799">
+<link rel="stylesheet" href="app.css?v=39080">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -261,8 +261,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=38799"></script>
-<script src="app.js?v=38799"></script>
+<script src="config.js?v=39080"></script>
+<script src="app.js?v=39080"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -858,13 +858,42 @@
       <label class="field" style="margin-top:12px"><span>Motivo</span><select class="input" id="dn-m"><option>Pedi e não recebi</option><option>Loja falsa / golpe</option><option>Cobrança errada</option><option>Produto diferente do anunciado</option><option>Outro</option></select></label>
       <label class="field"><span>Conte o que aconteceu</span><textarea class="input" id="dn-d" maxlength="1000" style="min-height:80px"></textarea></label>
       <label class="field"><span>Seu WhatsApp <span class="muted">(opcional, para retorno)</span></span><input class="input" id="dn-c" inputmode="tel" maxlength="30"></label>
+      <div class="field"><span>Comprovante de pagamento <span class="muted">(opcional)</span></span>
+        <label class="drop" id="dn-drop" style="min-height:0;padding:12px"><input type="file" id="dn-f" accept="image/*,application/pdf" hidden><span class="ic">${ic('upload')}</span><b>Anexar comprovante</b><span class="small muted">Print do Pix ou da cobrança (JPG, PNG ou PDF)</span></label></div>
       <div class="cfm-acts"><button type="button" class="btn btn-ghost" data-r="0">Voltar</button><button type="button" class="btn btn-danger" data-r="1">Enviar denúncia</button></div></div>`;
     document.body.appendChild(w); requestAnimationFrame(() => w.classList.add('on'));
     const fim = () => { w.classList.remove('on'); setTimeout(() => w.remove(), 180); };
+    let dnComp = null, dnEnviando = false;
+    const dnDrop = w.querySelector('#dn-drop');
+    const dnRender = (txt) => {
+      dnDrop.classList.toggle('done', !!dnComp && !dnEnviando);
+      dnDrop.querySelector('.ic').innerHTML = dnEnviando ? '<span class="spin"></span>' : ic(dnComp ? 'check' : 'upload');
+      dnDrop.querySelector('b').textContent = dnEnviando ? 'Enviando…' : dnComp ? 'Comprovante anexado' : 'Anexar comprovante';
+      dnDrop.querySelector('.small').textContent = txt || (dnComp ? 'Toque para trocar o arquivo' : 'Print do Pix ou da cobrança (JPG, PNG ou PDF)');
+    };
+    w.querySelector('#dn-f').onchange = async (e) => {
+      let f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      if (!/^image\/|application\/pdf/.test(f.type)) return GP.toast('Envie uma imagem ou PDF.', 'err');
+      dnEnviando = true; dnRender();
+      try {
+        f = await GP.compress(f, 1600, 0.85);
+        if (f.size > 8 * 1024 * 1024) throw new Error('Arquivo muito grande (máx. 8 MB).');
+        const path = `denuncias/${loja.id}/${GP.uid()}.${GP.ext(f)}`;
+        const { error } = await sb.storage.from('ff-comprovantes').upload(path, f, { contentType: f.type, upsert: false });
+        if (error) throw error;
+        dnComp = path;
+      } catch (er) { dnComp = null; GP.toast(GP.err(er), 'err'); }
+      dnEnviando = false; dnRender(dnComp ? f.name : '');
+    };
     w.addEventListener('click', async (e) => {
       if (e.target === w || e.target.closest('[data-r="0"]')) return fim();
-      if (!e.target.closest('[data-r="1"]')) return;
-      const { error } = await sb.rpc('ff_denunciar', { p_loja: loja.id, p_motivo: w.querySelector('#dn-m').value, p_detalhe: w.querySelector('#dn-d').value, p_contato: w.querySelector('#dn-c').value });
+      const bt = e.target.closest('[data-r="1"]');
+      if (!bt) return;
+      if (dnEnviando) return GP.toast('Espere o comprovante terminar de enviar.');
+      bt.disabled = true;
+      const { error } = await sb.rpc('ff_denunciar', { p_loja: loja.id, p_motivo: w.querySelector('#dn-m').value, p_detalhe: w.querySelector('#dn-d').value, p_contato: w.querySelector('#dn-c').value, p_comprovante: dnComp });
+      bt.disabled = false;
       if (error) return GP.toast(GP.err(error), 'err');
       fim(); GP.toast('Denúncia enviada. Obrigado por avisar!', 'ok');
     });

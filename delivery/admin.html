@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=38799">
+<link rel="stylesheet" href="app.css?v=39080">
 <style>
   .hdr{background:var(--ink);color:#fff;position:sticky;top:0;z-index:30}
   .hdr .wrap{display:flex;align-items:center;gap:12px;height:62px}
@@ -112,8 +112,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=38799"></script>
-<script src="app.js?v=38799"></script>
+<script src="config.js?v=39080"></script>
+<script src="app.js?v=39080"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -238,12 +238,20 @@
       ${d.detalhe ? `<p class="small muted">${esc(d.detalhe)}</p>` : ''}
       <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
         ${d.contato ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="${GP.wa(d.contato)}">${ic('chat')}Falar com quem denunciou</a>` : ''}
+        ${d.comprovante ? `<button class="btn btn-soft btn-sm" data-comp="${esc(d.comprovante)}">${ic('upload')}Ver comprovante</button>` : '<span class="small muted" style="align-self:center">Sem comprovante</span>'}
         <button class="btn btn-ghost btn-sm" data-ver="${d.loja_id}">Ver loja no admin</button>
         <button class="btn ${d.resolvida ? 'btn-ghost' : 'btn-dark'} btn-sm" data-res="${d.id}" data-v="${d.resolvida ? 0 : 1}">${d.resolvida ? 'Reabrir' : 'Marcar como resolvida'}</button>
       </div></div>`).join('') : `<div class="empty"><div class="big">${ic('shield')}</div><h4>Nenhuma denúncia</h4><p>Quando um cliente denunciar uma loja, aparece aqui.</p></div>`;
   }
   $('denuncias').onclick = async (e) => {
-    const r = e.target.closest('[data-res]'), v = e.target.closest('[data-ver]');
+    const r = e.target.closest('[data-res]'), v = e.target.closest('[data-ver]'), cp = e.target.closest('[data-comp]');
+    if (cp) {
+      const win = window.open('', '_blank');
+      const { data, error } = await sb.storage.from('ff-comprovantes').createSignedUrl(cp.dataset.comp, 600);
+      if (error || !data) { if (win) win.close(); return GP.toast('Não consegui abrir o comprovante. Confira se rodou o SQL v15.', 'err'); }
+      if (win) win.location = data.signedUrl; else location.href = data.signedUrl;
+      return;
+    }
     if (r) { const { error } = await sb.rpc('ff_admin_resolver_denuncia', { p_id: r.dataset.res, p_resolvida: r.dataset.v === '1' }); if (error) return GP.toast(GP.err(error), 'err'); carregar(); }
     if (v) { const l = lojas.find(x => x.id === v.dataset.ver); ir('lojas'); filtro = 'todas'; busca = l ? l.nome : ''; $('busca').value = busca; document.querySelectorAll('#fil-lojas .chip').forEach(x => x.classList.toggle('on', x.dataset.f === 'todas')); renderLojas(); }
   };

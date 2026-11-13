@@ -207,7 +207,7 @@
     avaliacao_cedo: 'Você pode avaliar depois que o pedido for entregue.',
     avaliacao_feita: 'Este pedido já foi avaliado. Obrigado!',
     avaliacao_expirada: 'O prazo para avaliar este pedido acabou.',
-    sem_permissao: 'Você não tem permissão para isso.',
+    sem_permissao: 'Você não tem permissão para isso.', comprovante_invalido: 'Não conseguimos conferir o comprovante. Anexe de novo.',
     cupom_ja_usado: 'Você já usou este cupom o máximo de vezes permitido.',
     cupom_minimo: 'O pedido não atingiu o valor mínimo para este cupom.',
     troco_invalido: 'O valor do troco precisa ser maior que o total do pedido.',
