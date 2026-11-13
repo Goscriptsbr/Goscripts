@@ -520,6 +520,22 @@
     return [l1, l2].filter(Boolean).join(' - ') + (e.cep ? ' - CEP ' + e.cep : '');
   };
 
+  // Desfaz o texto de GP.fmtEnd ("Rua, 123 - Bairro, Cidade/UF - CEP 00000-000") em campos
+  GP.parseEnd = (t) => {
+    const o = {}; let s = String(t || '').trim();
+    const mc = s.match(/\s*-\s*CEP\s*(\d{5}-?\d{3})\s*$/i);
+    if (mc) { o.cep = mc[1]; s = s.slice(0, mc.index); }
+    const i = s.indexOf(' - '), l1 = i >= 0 ? s.slice(0, i) : s, l2 = i >= 0 ? s.slice(i + 3) : '';
+    const m1 = l1.match(/^(.*),\s*([^,]{1,12})$/);
+    if (m1) { o.rua = m1[1].trim(); o.numero = m1[2].trim(); } else o.rua = l1.trim();
+    if (l2) {
+      const j = l2.lastIndexOf(','), bairro = j >= 0 ? l2.slice(0, j).trim() : '', resto = (j >= 0 ? l2.slice(j + 1) : l2).trim();
+      const m3 = resto.match(/^(.*?)(?:\/([A-Za-z]{2}))?$/);
+      o.bairro = bairro; o.cidade = (m3 ? m3[1] : resto).trim(); o.uf = m3 && m3[2] ? m3[2].toUpperCase() : '';
+    }
+    return o;
+  };
+
   // Formulário de endereço completo: CEP + campos + mapa que se preenchem sozinhos
   GP.addressForm = (root, opts = {}) => {
     const id = 'af' + Math.random().toString(36).slice(2, 7);

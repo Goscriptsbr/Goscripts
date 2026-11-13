@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=43432">
+<link rel="stylesheet" href="app.css?v=69824">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -467,10 +467,9 @@
           <div class="card pad fs ml-anchor" id="sec-entrega">
             <h3><span id="fi2"></span>Localização e entrega</h3>
             <p class="fsub">De onde sai a entrega e quanto você cobra.</p>
-            <label class="field"><span>Endereço da loja</span><input class="input" id="l-end" maxlength="200" placeholder="Rua, número, bairro, cidade"></label>
-            <div class="row between" style="margin-bottom:8px"><b class="small">Ponto no mapa (de onde sai a entrega)</b><button type="button" class="btn btn-soft btn-sm" id="b-geo"></button></div>
-            <div class="map" id="l-map" style="height:220px"></div>
-            <p class="small muted" style="margin:6px 0 16px" id="l-coord">Toque no mapa para marcar a loja.</p>
+            <p class="small muted" style="margin:-6px 0 12px">Digite o CEP e o número, que o pino vai sozinho para o lugar. Ou toque no mapa, ou use "Minha localização", que os campos se preenchem.</p>
+            <div id="l-addr"></div>
+            <p class="hide" id="l-coord"></p><div style="height:12px"></div>
             <label class="paytile rettile"><span class="pi">🏪</span><span style="min-width:0"><b>Aceitar retirada no local</b><small>O cliente busca na loja, sem taxa de entrega</small></span><span class="switch"><input type="checkbox" id="l-ret"><i></i></span></label>
             <div class="sub-t">Como cobrar a entrega</div>
             <div class="modos" id="l-modo">
@@ -646,8 +645,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=43432"></script>
-<script src="app.js?v=43432"></script>
+<script src="config.js?v=69824"></script>
+<script src="app.js?v=69824"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -667,7 +666,6 @@
   $('b-ver').innerHTML = ic('ext'); $('b-admin').innerHTML = ic('shield'); $('b-sair').innerHTML = ic('logout'); $('w-ic').innerHTML = ic('store');
   $('b-novo').innerHTML = ic('plus') + 'Novo produto'; $('b-novo-fab').innerHTML = ic('plus') + 'Novo produto'; $('b-novo-fab').onclick = () => $('b-novo').click(); $('etp-ic').innerHTML = ic('menu'); $('pm-x').innerHTML = ic('x');
   $('p-del').innerHTML = ic('trash'); $('b-copylink').innerHTML = ic('copy');
-  $('b-geo').innerHTML = ic('locate') + 'Usar localização atual';
   $('pv-logo').innerHTML = ic('image'); $('pv-capa').innerHTML = ic('image'); $('cam1').innerHTML = ic('image'); $('cam2').innerHTML = ic('edit'); $('b-ver2').innerHTML = ic('ext') + 'Ver loja';
   $('ml-nav').onclick = (e) => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); const el = document.querySelector(a.getAttribute('href')); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   GP.phoneMask($('l-tel'));
@@ -1626,7 +1624,7 @@
   };
 
   // ================= MINHA LOJA =================
-  let lojaImg = '', lojaCapa = '', lojaPos = null, lmap = null;
+  let lojaImg = '', lojaCapa = '', lojaPos = null, lojaAddr = null, lojaEnd = '';
   bindImg('in-logo', 'pv-logo', 600, (u) => lojaImg = u);
   bindImg('in-capa', 'pv-capa', 1600, (u) => lojaCapa = u);
   const money = (v) => (Number(v) ? GP.fmtMoeda(v) : '');
@@ -1635,10 +1633,12 @@
     const l = loja || {};
     lojaImg = l.imagem_url || ''; lojaCapa = l.capa_url || '';
     lojaPos = l.lat != null ? { lat: l.lat, lng: l.lng } : null;
+    lojaEnd = l.endereco || ''; lojaAddr = null; $('l-addr').innerHTML = '';
+    if (!$('tab-loja').classList.contains('hide')) setTimeout(initMap, 0);
     setPv('pv-logo', lojaImg); setPv('pv-capa', lojaCapa);
     $('l-nome').value = l.nome || ''; $('l-desc').value = l.descricao || ''; $('l-tel').value = l.telefone || '';
     $('l-cnpj').value = l.cnpj ? GP.fmtCnpj(l.cnpj) : ''; cnpjMsg();
-    $('l-tempo').value = l.tempo_entrega || '30–50 min'; $('l-end').value = l.endereco || '';
+    $('l-tempo').value = l.tempo_entrega || '30–50 min'; 
     $('l-taxakm').value = money(l.taxa_km); $('l-taxamin').value = money(l.taxa_minima);
     $('l-arred').checked = l.km_arredonda !== false;
     faixas = Array.isArray(l.taxa_tabela) ? JSON.parse(JSON.stringify(l.taxa_tabela)) : []; renderFaixas();
@@ -1651,7 +1651,6 @@
     $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
     togglePix(); sim(); coord(); pixPrev();
     renderHoras(l.horarios); $('l-auto').checked = !!l.horario_auto;
-    if (lmap && lojaPos) lmap.set(lojaPos.lat, lojaPos.lng);
   }
   const NOMES_PIX = { cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória' };
   const PH_PIX = { cpf: '000.000.000-00', cnpj: '00.000.000/0000-00', telefone: '(19) 99999-9999', email: 'nome@email.com', aleatoria: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' };
@@ -1720,7 +1719,7 @@
 
   const togglePix = () => $('pix-cfg').style.display = $('l-pix').checked ? '' : 'none';
   $('l-pix').onchange = togglePix;
-  const coord = () => $('l-coord').textContent = lojaPos ? `📍 ${lojaPos.lat.toFixed(5)}, ${lojaPos.lng.toFixed(5)} — arraste o pino para ajustar.` : 'Toque no mapa para marcar onde fica a loja.';
+  const coord = () => $('l-coord').textContent = lojaPos ? '📍 Arraste o pino se precisar ajustar o ponto exato.' : 'Ainda sem ponto no mapa: digite o endereço ou toque no mapa.';
   // ---------- Como cobrar a entrega ----------
   let faixas = [];
   $('b-faixa').innerHTML = ic('plus') + 'Adicionar faixa';
@@ -1765,25 +1764,25 @@
   $('sim-km').addEventListener('input', sim);
   ['l-taxakm', 'l-taxamin', 'l-raio'].forEach(id => $(id).addEventListener('input', sim));
   $('l-arred').addEventListener('change', sim);
+  // Endereço da loja: mesmo formulário dos clientes (CEP, campos separados e mapa que se preenchem sozinhos)
   function initMap() {
-    if (lmap) return lmap.refresh();
-    lmap = GP.mapPicker($('l-map'), lojaPos, async (lat, lng) => {
-      lojaPos = { lat, lng }; coord();
-      try { const e = await GP.reverse(lat, lng); const t = GP.fmtEnd(e); if (t) $('l-end').value = t; } catch {}
+    if (lojaAddr) return lojaAddr.refresh();
+    lojaAddr = GP.addressForm($('l-addr'), {
+      complemento: false, mapaTitulo: 'Ponto de onde sai a entrega', inicio: lojaPos, centro: GP.cfg.centro,
+      onChange: (a) => { lojaPos = a.pos; coord(); }
     });
+    if (lojaEnd || lojaPos) lojaAddr.set({ ...GP.parseEnd(lojaEnd), ...(lojaPos || {}) });
+    coord();
   }
-  $('b-geo').onclick = async () => {
-    const b = $('b-geo'), o = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…';
-    try { const p = await GP.geo(); lmap.set(p.lat, p.lng); } catch (e) { GP.toast(e.message, 'err'); }
-    b.innerHTML = o;
-  };
 
   $('f-loja').onsubmit = async (e) => {
     e.preventDefault();
     const nome = $('l-nome').value.trim();
     if (!nome) return GP.toast('Informe o nome da loja.', 'err');
     if (GP.digits($('l-cnpj').value) && !cnpjMsg()) { $('l-cnpj').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('CNPJ inválido. Corrija ou deixe em branco.', 'err'); }
-    if (!lojaPos) { GP.toast('Marque a localização da loja no mapa.', 'err'); $('l-map').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    const ende = lojaAddr ? lojaAddr.get() : GP.parseEnd(lojaEnd);
+    if (!ende.rua || !ende.numero || !ende.cidade) { GP.toast('Preencha o endereço da loja: rua, número e cidade.', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (!lojaPos) { GP.toast('Confirme a localização da loja no mapa.', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     const pix = $('l-pix').checked;
     if (pix && !$('l-pixchave').value.trim()) return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err');
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }
@@ -1792,7 +1791,7 @@
     if (!pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
     const row = {
       nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
-      endereco: $('l-end').value.trim(), lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
+      endereco: lojaAddr ? lojaAddr.texto() : lojaEnd, lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
       ...cfgTaxa(), pedido_minimo: num($('l-min').value),
       aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked, aceita_retirada: $('l-ret').checked,
       horarios: lerHoras(), horario_auto: $('l-auto').checked,
