@@ -848,7 +848,9 @@
   GP.rodape = () => {
     if (document.querySelector('.gs-foot') || document.body.dataset.semRodape != null) return;
     const f = document.createElement('footer'); f.className = 'gs-foot';
-    f.innerHTML = `<a href="https://goscripts.com.br" target="_blank" rel="noopener"><span>Desenvolvido por</span><img src="../logo-192.png" alt="" width="22" height="22"><b>GoScripts</b></a>`;
+    const zap = GP.wa(GP.WHATS, 'Olá! Vim pelo GoPedido e gostaria de falar com vocês.');
+    f.innerHTML = `<a class="gs-zap" href="${zap}" target="_blank" rel="noopener">${GP.ic('chat')}<span>Fale conosco no WhatsApp</span></a>
+      <a class="gs-by" href="https://goscripts.com.br" target="_blank" rel="noopener"><span>Desenvolvido por</span><img src="../logo-192.png" alt="" width="22" height="22"><b>GoScripts</b></a>`;
     document.body.appendChild(f);
   };
   const iniciar = () => { GP.olhoSenha(); GP.rodape(); };
