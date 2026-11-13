@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122220">
+<link rel="stylesheet" href="app.css?v=202611122228">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -25,11 +25,29 @@
   @media(max-width:600px){.head .card{flex-direction:column;gap:12px}.head .lg{width:76px;height:76px;margin-top:-50px}}
   .alert{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:600;font-size:.9rem;display:flex;gap:10px;align-items:center}
   .horas{margin-top:12px;font-size:.88rem}
-  .horas summary{display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:700;list-style:none}
+  .horas summary{display:flex;gap:6px;align-items:center;flex-wrap:wrap;cursor:pointer;font-weight:700;list-style:none}
   .horas summary::-webkit-details-marker{display:none}
   .horas>div{margin-top:8px;background:var(--bg);border-radius:12px;padding:8px 12px;max-width:340px}
   .horas>div>div{display:flex;justify-content:space-between;padding:3px 0;color:var(--ink-2)}
   .horas .hoje{font-weight:800;color:var(--ink)}
+  .grp{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .grp-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .grp-h b{flex:1}
+  .grp-h .req{font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--ink);color:#fff}
+  .grp-h .req.ok{background:var(--ok)}
+  .grp-h .req.opt{background:#E9E7E2;color:var(--ink-2)}
+  .gopt{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid #F0EEEA;cursor:pointer}
+  .gopt:last-child{border-bottom:0}
+  .gopt input{width:20px;height:20px;accent-color:var(--brand);flex:none}
+  .gopt span{flex:1}
+  .gopt em{font-style:normal;font-weight:700;color:var(--ink-2);font-size:.9rem}
+  .gopt.dis{opacity:.4;pointer-events:none}
+  .promo-old{text-decoration:line-through;color:var(--muted);font-weight:500;font-size:.85em;margin-left:6px}
+  .promo-tag{display:inline-block;background:var(--bad);color:#fff;border-radius:6px;font-size:.7rem;font-weight:800;padding:2px 6px;margin-left:6px;vertical-align:2px}
+  .prod .ph .ptag{position:absolute;left:6px;top:6px;background:var(--bad);color:#fff;border-radius:8px;font-size:.72rem;font-weight:800;padding:2px 7px}
+  .cupbox{background:var(--bg);border-radius:14px;padding:12px;margin-top:6px}
+  .bagbar.pulse{animation:pulse .5s}
+  @keyframes pulse{50%{transform:translate(-50%,0) scale(1.05)}}
   .alert.off{background:#F1F0ED;color:var(--ink-2)}
 
   .catnav{position:sticky;top:64px;z-index:30;background:var(--bg);padding:12px 0;margin-top:16px;border-bottom:1px solid var(--line)}
@@ -130,6 +148,7 @@
     <h3 id="pm-nome" style="font-size:1.3rem;letter-spacing:-.02em"></h3>
     <p id="pm-desc" class="muted" style="margin:6px 0 10px"></p>
     <p id="pm-preco" style="font-weight:800;font-size:1.1rem"></p>
+    <div id="pm-grupos"></div>
     <label class="field" style="margin-top:16px"><span>Alguma observação?</span>
       <textarea class="input" id="pm-obs" maxlength="200" placeholder="Ex.: sem cebola, ponto da carne…" style="min-height:70px"></textarea></label>
   </div>
@@ -151,6 +170,7 @@
     <!-- 1. sacola -->
     <section id="step1">
       <div id="bag-list"></div>
+      <button class="btn btn-soft btn-block btn-sm" id="b-mais" style="margin-top:10px"></button>
       <div class="divider"></div>
       <div class="sum-row"><span>Subtotal</span><b id="s1-sub"></b></div>
       <div class="sum-row muted small"><span>Taxa de entrega</span><span>calculada no próximo passo</span></div>
@@ -197,8 +217,14 @@
         <div class="lock" id="pix-lock"></div>
       </div>
       <div class="divider"></div>
+      <div class="cupbox">
+        <div class="row" style="gap:8px"><div class="grow"><input class="input" id="c-cupom" placeholder="Tem cupom de desconto?" maxlength="20" style="text-transform:uppercase"></div><button class="btn btn-dark" id="b-cupom" type="button">Aplicar</button></div>
+        <div class="small" id="cupom-msg" style="margin-top:6px"></div>
+      </div>
+      <div class="divider"></div>
       <div class="sum-row"><span>Subtotal</span><span id="s3-sub"></span></div>
       <div class="sum-row"><span>Entrega <span class="muted small" id="s3-dist"></span></span><span id="s3-fee"></span></div>
+      <div class="sum-row hide" id="s3-desc-row" style="color:var(--ok)"><span id="s3-desc-lb">Desconto</span><span id="s3-desc"></span></div>
       <div class="sum-row total"><span>Total</span><span id="s3-tot"></span></div>
     </section>
   </div>
@@ -210,8 +236,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122220"></script>
-<script src="app.js?v=202611122220"></script>
+<script src="config.js?v=202611122228"></script>
+<script src="app.js?v=202611122228"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -267,6 +293,18 @@
   const cats = [];
   (prods || []).forEach(p => { if (!cats.includes(p.categoria)) cats.push(p.categoria); });
   let busca = '';
+  function cardProd(p) {
+        const n = qtdNo(p.id);
+        return `<button class="card prod ${p.disponivel ? '' : 'off'}" data-p="${p.id}">
+          <div class="tx"><h3>${esc(p.nome)}${n ? `<span class="badge b-brand inbag">${n}×</span>` : ''}</h3>
+          <p class="clamp2">${esc(p.descricao)}</p>
+          <div class="pr">${!p.disponivel ? '<span class="muted">Indisponível</span>' : (temMin(p) ? '<span class="small muted" style="font-weight:600">a partir de </span>' : '') + (GP.emPromo(p) ? `<span style="color:var(--bad)">${brl(GP.precoAtual(p) + minExtra(p))}</span><span class="promo-old">${brl(Number(p.preco) + minExtra(p))}</span>` : brl(GP.precoAtual(p) + minExtra(p)))}</div></div>
+          <div class="ph" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${GP.emPromo(p) ? `<span class="ptag">-${GP.descPct(p)}%</span>` : ''}${p.imagem_url ? '' : `<span style="position:absolute;inset:0;display:grid;place-items:center;color:#c9c5bc">${ic('image')}</span>`}<span class="add">${ic('plus')}</span></div>
+        </button>`;
+  }
+  // preço mínimo das escolhas obrigatórias (para o "a partir de")
+  const minExtra = (p) => GP.grupos(p).filter(g => Number(g.min) > 0).reduce((t, g) => t + Math.min(...(g.opcoes || []).map(o => Number(o.preco) || 0)), 0);
+  const temMin = (p) => GP.grupos(p).some(g => Number(g.min) > 0 && (g.opcoes || []).some(o => Number(o.preco) > Math.min(...g.opcoes.map(x => Number(x.preco) || 0))));
   function renderMenu() {
     const q = busca.toLowerCase();
     const lst = (prods || []).filter(p => !q || (p.nome + ' ' + p.descricao).toLowerCase().includes(q));
@@ -274,21 +312,16 @@
       $('menu').innerHTML = `<div class="empty"><div class="big">${ic('menu')}</div><h4>${prods && prods.length ? 'Nada encontrado' : 'Cardápio em preparação'}</h4><p>${prods && prods.length ? 'Tente outro termo.' : 'Esta loja ainda não cadastrou produtos.'}</p></div>`;
       return;
     }
-    $('menu').innerHTML = cats.map((c, i) => {
+    const promos = lst.filter(p => p.disponivel && GP.emPromo(p));
+    const cards = (ps) => ps.map(p => cardProd(p)).join('');
+    $('menu').innerHTML = (promos.length && !q ? `<section class="cat"><h2 id="cat-promo">🔥 Promoções</h2><div class="prods">${cards(promos)}</div></section>` : '') + cats.map((c, i) => {
       const ps = lst.filter(p => p.categoria === c);
       if (!ps.length) return '';
-      return `<section class="cat"><h2 id="cat-${i}">${esc(c)}</h2><div class="prods">${ps.map(p => {
-        const n = qtdNo(p.id);
-        return `<button class="card prod ${p.disponivel ? '' : 'off'}" data-p="${p.id}">
-          <div class="tx"><h3>${esc(p.nome)}${n ? `<span class="badge b-brand inbag">${n}×</span>` : ''}</h3>
-          <p class="clamp2">${esc(p.descricao)}</p>
-          <div class="pr">${p.disponivel ? brl(p.preco) : '<span class="muted">Indisponível</span>'}</div></div>
-          <div class="ph" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${p.imagem_url ? '' : `<span style="position:absolute;inset:0;display:grid;place-items:center;color:#c9c5bc">${ic('image')}</span>`}<span class="add">${ic('plus')}</span></div>
-        </button>`;
-      }).join('')}</div></section>`;
+      return `<section class="cat"><h2 id="cat-${i}">${esc(c)}</h2><div class="prods">${cards(ps)}</div></section>`;
     }).join('');
   }
   $('catnav').innerHTML = `<label class="search">${ic('search')}<input id="m-q" placeholder="Buscar no cardápio"></label>` +
+    ((prods || []).some(p => p.disponivel && GP.emPromo(p)) ? `<button class="chip" data-c="promo">🔥 Promoções</button>` : '') +
     cats.map((c, i) => `<button class="chip" data-c="${i}">${esc(c)}</button>`).join('');
   $('catnav').onclick = (e) => {
     const b = e.target.closest('[data-c]'); if (!b) return;
@@ -300,9 +333,11 @@
 
   // ---------- Sacola ----------
   const KEY = 'gp_bag_' + loja.id;
-  let bag = (GP.ls.get(KEY, []) || []).filter(it => P[it.id] && P[it.id].disponivel);
+  let bag = (GP.ls.get(KEY, []) || []).filter(it => P[it.id] && P[it.id].disponivel)
+    .filter(it => { const p = P[it.id]; return GP.grupos(p).every(g => { const n = (it.opcoes || []).filter(x => x.g === g.id).length; return n >= (Number(g.min) || 0) && n <= (Number(g.max) || 1); }) && GP.opcoesEscolhidas(p, it.opcoes).length === (it.opcoes || []).length; });
   const qtdNo = (id) => bag.filter(i => i.id === id).reduce((s, i) => s + i.qtd, 0);
-  const subtotal = () => bag.reduce((s, i) => s + Number(P[i.id].preco) * i.qtd, 0);
+  const precoIt = (it) => GP.precoItem(P[it.id], it.opcoes);
+  const subtotal = () => Math.round(bag.reduce((s, i) => s + precoIt(i) * i.qtd, 0) * 100) / 100;
   const count = () => bag.reduce((s, i) => s + i.qtd, 0);
   function saveBag() {
     GP.ls.set(KEY, bag);
@@ -320,25 +355,62 @@
   const closeAll = () => { ['pm', 'co'].forEach(id => $(id).classList.remove('on')); ov.classList.remove('on'); document.body.style.overflow = ''; saveBag(); };
   ov.onclick = closeAll; $('pm-x').onclick = closeAll; $('co-x').onclick = closeAll;
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+  let escolha = {};   // grupoId -> [opcaoId]
   function openProd(p) {
-    cur = p; curQ = 1;
+    cur = p; curQ = 1; escolha = {};
+    GP.grupos(p).forEach(g => { escolha[g.id] = []; if (Number(g.min) === 1 && Number(g.max) === 1 && g.opcoes.length === 1) escolha[g.id] = [g.opcoes[0].id]; });
     $('pm-img').style.backgroundImage = p.imagem_url ? `url('${p.imagem_url}')` : '';
     $('pm-img').style.display = p.imagem_url ? '' : 'none';
     $('pm-nome').textContent = p.nome; $('pm-desc').textContent = p.descricao || '';
-    $('pm-preco').textContent = brl(p.preco); $('pm-obs').value = '';
-    updProd(); openSheet($('pm'));
+    $('pm-preco').innerHTML = GP.emPromo(p) ? `<span style="color:var(--bad)">${brl(p.preco_promo)}</span><span class="promo-old">${brl(p.preco)}</span><span class="promo-tag">-${GP.descPct(p)}%</span>` : brl(p.preco);
+    if (!Number(p.preco) && GP.grupos(p).length) $('pm-preco').innerHTML = '<span class="small muted">O preço depende das opções escolhidas</span>';
+    $('pm-obs').value = '';
+    renderGrupos(); updProd(); openSheet($('pm'));
+    $('pm').querySelector('.sheet-body').scrollTop = 0;
   }
+  const selList = () => Object.entries(escolha).flatMap(([g, os]) => os.map(o => ({ g, o })));
+  const faltando = () => GP.grupos(cur).filter(g => (escolha[g.id] || []).length < (Number(g.min) || 0));
+  function renderGrupos() {
+    $('pm-grupos').innerHTML = GP.grupos(cur).map(g => {
+      const sel = escolha[g.id] || [], max = Number(g.max) || 1, min = Number(g.min) || 0, um = max === 1;
+      const okReq = sel.length >= min;
+      return `<div class="grp" data-g="${g.id}">
+        <div class="grp-h"><b>${esc(g.nome)}</b><span class="req ${min ? (okReq ? 'ok' : '') : 'opt'}">${min ? (okReq ? '✓ OK' : 'Obrigatório') : 'Opcional'}</span></div>
+        <div class="small muted" style="margin:-4px 0 6px">${GP.regraGrupo(g)}${!um ? ` · ${sel.length}/${max} escolhido${sel.length === 1 ? '' : 's'}` : ''}</div>
+        ${g.opcoes.map(o => {
+          const on = sel.includes(o.id), dis = !um && !on && sel.length >= max;
+          return `<label class="gopt ${dis ? 'dis' : ''}"><input type="${um ? 'radio' : 'checkbox'}" name="g-${g.id}" data-g="${g.id}" data-o="${o.id}" ${on ? 'checked' : ''}><span>${esc(o.nome)}</span>${Number(o.preco) ? `<em>+ ${brl(o.preco)}</em>` : ''}</label>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  }
+  $('pm-grupos').addEventListener('change', (e) => {
+    const g = e.target.dataset.g, o = e.target.dataset.o; if (!g) return;
+    const grp = GP.grupos(cur).find(x => x.id === g), max = Number(grp.max) || 1;
+    if (max === 1) escolha[g] = [o];
+    else escolha[g] = e.target.checked ? [...new Set([...(escolha[g] || []), o])].slice(0, max) : (escolha[g] || []).filter(x => x !== o);
+    renderGrupos(); updProd();
+  });
   function updProd() {
     $('pm-q').textContent = curQ;
-    $('pm-add').innerHTML = `Adicionar · ${brl(cur.preco * curQ)}`;
+    const falta = faltando();
+    const unit = GP.precoItem(cur, selList());
+    $('pm-add').disabled = false;
+    $('pm-add').classList.toggle('btn-dark', falta.length > 0);
+    $('pm-add').classList.toggle('btn-primary', !falta.length);
+    $('pm-add').innerHTML = falta.length ? `Escolha: ${esc(falta[0].nome)}` : `Adicionar · ${brl(unit * curQ)}`;
   }
   $('pm-m').onclick = () => { curQ = Math.max(1, curQ - 1); updProd(); };
   $('pm-p').onclick = () => { curQ = Math.min(99, curQ + 1); updProd(); };
+  const chaveOps = (ops) => (ops || []).map(x => x.g + ':' + x.o).sort().join('|');
   $('pm-add').onclick = () => {
-    const obs = $('pm-obs').value.trim();
-    const ex = bag.find(i => i.id === cur.id && i.obs === obs);
-    if (ex) ex.qtd = Math.min(99, ex.qtd + curQ); else bag.push({ id: cur.id, qtd: curQ, obs });
-    closeAll(); GP.toast(`${cur.nome} adicionado à sacola`, 'ok');
+    if (faltando().length) { const g = faltando()[0]; const el = $('pm-grupos').querySelector(`.grp[data-g="${g.id}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); GP.toast('Escolha: ' + g.nome, 'err'); return; }
+    const obs = $('pm-obs').value.trim(), opcoes = selList();
+    const ex = bag.find(i => i.id === cur.id && i.obs === obs && chaveOps(i.opcoes) === chaveOps(opcoes));
+    if (ex) ex.qtd = Math.min(99, ex.qtd + curQ); else bag.push({ id: cur.id, qtd: curQ, obs, opcoes });
+    closeAll();
+    GP.toast(`${cur.nome} na sacola! Continue escolhendo ou toque na sacola para finalizar.`, 'ok');
+    $('bagbar').classList.remove('pulse'); void $('bagbar').offsetWidth; $('bagbar').classList.add('pulse');
   };
 
   // ---------- Checkout ----------
@@ -368,7 +440,14 @@
     const d = GP.dist(loja.lat, loja.lng, pos.lat, pos.lng);
     return { d, t: GP.taxa(loja, d), fora: GP.foraArea(loja, d) };
   };
-  const total = () => { const e = entrega(); return Math.round((subtotal() + (e ? e.t : 0)) * 100) / 100; };
+  let cupom = null;   // {codigo, tipo, valor, minimo}
+  const descontoCalc = () => {
+    if (!cupom) return 0;
+    const e = entrega(), sub = subtotal(), taxa = e ? e.t : 0;
+    const d = cupom.tipo === 'percentual' ? Math.round(sub * Math.min(Number(cupom.valor), 100)) / 100 : cupom.tipo === 'valor' ? Math.min(Number(cupom.valor), sub) : taxa;
+    return Math.min(Math.round(d * 100) / 100, sub + taxa);
+  };
+  const total = () => { const e = entrega(); return Math.max(0, Math.round((subtotal() + (e ? e.t : 0) - descontoCalc()) * 100) / 100); };
 
   const openCheckout = () => {
     if (!count()) return GP.toast('Sua sacola está vazia');
@@ -393,13 +472,15 @@
     else $('bag-list').innerHTML = bag.map((it, k) => {
       const p = P[it.id];
       return `<div class="bag-item"><div class="th" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}"></div>
-        <div class="grow"><b class="small">${esc(p.nome)}</b>${it.obs ? `<div class="small muted ellipsis">${esc(it.obs)}</div>` : ''}<div class="small" style="font-weight:700;margin-top:2px">${brl(p.preco * it.qtd)}</div></div>
+        <div class="grow"><b class="small">${esc(p.nome)}</b>${(it.opcoes || []).length ? `<div class="small muted">${esc(GP.txtOpcoes(GP.opcoesEscolhidas(p, it.opcoes)))}</div>` : ''}${it.obs ? `<div class="small muted ellipsis">Obs.: ${esc(it.obs)}</div>` : ''}<div class="small" style="font-weight:700;margin-top:2px">${brl(precoIt(it) * it.qtd)}</div></div>
         <div class="qty"><button data-k="${k}" data-d="-1">${it.qtd === 1 ? ic('trash') : ic('minus')}</button><span>${it.qtd}</span><button data-k="${k}" data-d="1">${ic('plus')}</button></div></div>`;
     }).join('');
     $('s1-sub').textContent = brl(subtotal());
     const falta = Number(loja.pedido_minimo) - subtotal();
     $('s1-min').textContent = falta > 0 ? `Pedido mínimo de ${brl(loja.pedido_minimo)} — faltam ${brl(falta)}.` : '';
   }
+  $('b-mais').innerHTML = ic('plus') + 'Adicionar mais itens';
+  $('b-mais').onclick = () => { closeAll(); window.scrollTo({ top: document.querySelector('.catnav').offsetTop - 60, behavior: 'smooth' }); };
   $('bag-list').onclick = (e) => {
     const b = e.target.closest('[data-k]'); if (!b) return;
     const it = bag[+b.dataset.k]; it.qtd += +b.dataset.d;
@@ -459,10 +540,35 @@
     $('s3-sub').textContent = brl(subtotal());
     $('s3-fee').textContent = e && e.t > 0 ? brl(e.t) : 'Grátis';
     $('s3-dist').textContent = e ? `(${km(e.d)})` : '';
+    if (cupom && Number(cupom.minimo) > subtotal()) { cupom = null; $('b-cupom').textContent = 'Aplicar'; $('cupom-msg').innerHTML = '<span style="color:var(--bad)">O subtotal ficou abaixo do mínimo do cupom.</span>'; }
+    const dsc = descontoCalc();
+    $('s3-desc-row').classList.toggle('hide', !dsc);
+    $('s3-desc').textContent = '-' + brl(dsc);
+    $('s3-desc-lb').textContent = cupom ? `Desconto (${cupom.codigo})` : 'Desconto';
     $('s3-tot').textContent = brl(total());
     renderPix();
   }
   $('pay-opts').onchange = (e) => { pag = e.target.value; renderPag(); updNext(); };
+  $('c-cupom').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+  $('c-cupom').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('b-cupom').click(); } });
+  $('b-cupom').onclick = async () => {
+    const code = $('c-cupom').value.trim();
+    if (cupom && (!code || code === cupom.codigo)) { cupom = null; $('c-cupom').value = ''; $('b-cupom').textContent = 'Aplicar'; $('cupom-msg').innerHTML = ''; renderPag(); updNext(); return; }
+    if (!code) return GP.toast('Digite o código do cupom.');
+    const b = $('b-cupom'); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+    const e = entrega();
+    const { data, error } = await sb.rpc('ff_cupom_info', { p_loja: loja.id, p_codigo: code, p_sub: subtotal(), p_taxa: e ? e.t : 0 });
+    b.disabled = false; b.textContent = 'Aplicar';
+    if (error || data.erro) {
+      cupom = null;
+      const msg = error ? GP.err(error) : data.erro === 'cupom_minimo' ? `Este cupom vale para pedidos a partir de ${brl(data.minimo)}.` : GP.err({ message: data.erro });
+      $('cupom-msg').innerHTML = `<span style="color:var(--bad);font-weight:700">⚠ ${esc(msg)}</span>`;
+    } else {
+      cupom = data; b.textContent = 'Remover';
+      $('cupom-msg').innerHTML = `<span style="color:var(--ok);font-weight:700">✓ Cupom ${esc(data.codigo)} aplicado: ${data.tipo === 'frete' ? 'entrega grátis' : data.tipo === 'percentual' ? Number(data.valor) + '% de desconto' : brl(data.valor) + ' de desconto'}</span>`;
+    }
+    renderPag(); updNext();
+  };
 
   GP.moneyMask($('c-troco'));
   function trocoOk() {
@@ -556,8 +662,8 @@
     const b = $('co-next'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Enviando pedido…';
     const { data, error } = await sb.rpc('ff_criar_pedido', {
       p_loja: loja.id,
-      p_cliente: { troco_para: pag === 'dinheiro' && !$('c-semtroco').checked ? GP.num($('c-troco').value) : null, nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: GP.fmtEnd(addr.get()), complemento: addr.get().complemento, observacao: $('c-obs').value.trim(), lat: pos.lat, lng: pos.lng },
-      p_itens: bag.map(i => ({ id: i.id, qtd: i.qtd, obs: i.obs })),
+      p_cliente: { cupom: cupom ? cupom.codigo : '', troco_para: pag === 'dinheiro' && !$('c-semtroco').checked ? GP.num($('c-troco').value) : null, nome: $('c-nome').value.trim(), telefone: $('c-tel').value.trim(), endereco: GP.fmtEnd(addr.get()), complemento: addr.get().complemento, observacao: $('c-obs').value.trim(), lat: pos.lat, lng: pos.lng },
+      p_itens: bag.map(i => ({ id: i.id, qtd: i.qtd, obs: i.obs, opcoes: i.opcoes || [] })),
       p_pagamento: pag,
       p_comprovante: pag === 'pix' ? comprovante : null
     });

@@ -124,6 +124,11 @@
     loja_fechada: 'A loja está fechada no momento.',
     loja_sem_localizacao: 'A loja ainda não configurou a localização.',
     pagamento_invalido: 'Forma de pagamento não aceita por esta loja.',
+    opcoes_invalidas: 'Revise as opções escolhidas no produto (algum item obrigatório ficou sem escolher).',
+    cupom_invalido: 'Cupom não encontrado para esta loja.',
+    cupom_vencido: 'Este cupom já venceu.',
+    cupom_esgotado: 'Este cupom já foi usado o máximo de vezes.',
+    cupom_minimo: 'O pedido não atingiu o valor mínimo para este cupom.',
     troco_invalido: 'O valor do troco precisa ser maior que o total do pedido.',
     codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
     status_invalido: 'Este pedido já mudou de situação. Atualize a lista.',
@@ -548,6 +553,26 @@
     return linhas;
   };
 
+  // ---------- Preço promocional e montagem ----------
+  GP.hojeSP = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+  GP.emPromo = (p) => p.preco_promo != null && Number(p.preco_promo) < Number(p.preco) && (!p.promo_ate || p.promo_ate >= GP.hojeSP());
+  GP.precoAtual = (p) => GP.emPromo(p) ? Number(p.preco_promo) : Number(p.preco);
+  GP.descPct = (p) => Math.round((1 - Number(p.preco_promo) / Number(p.preco)) * 100);
+  GP.grupos = (p) => Array.isArray(p.grupos) ? p.grupos : [];
+  GP.regraGrupo = (g) => {
+    const min = Number(g.min) || 0, max = Number(g.max) || 1;
+    if (min && min === max) return `Escolha ${min}`;
+    if (min) return `Escolha de ${min} a ${max}`;
+    return max === 1 ? 'Escolha até 1' : `Escolha até ${max}`;
+  };
+  // opções escolhidas [{g,o}] -> [{grupo,nome,preco}]
+  GP.opcoesEscolhidas = (p, sel) => (sel || []).map(s => {
+    const g = GP.grupos(p).find(x => x.id === s.g), o = g && (g.opcoes || []).find(x => x.id === s.o);
+    return g && o ? { grupo: g.nome, nome: o.nome, preco: Number(o.preco) || 0 } : null;
+  }).filter(Boolean);
+  GP.precoItem = (p, sel) => GP.precoAtual(p) + GP.opcoesEscolhidas(p, sel).reduce((t, o) => t + o.preco, 0);
+  GP.txtOpcoes = (ops) => (ops || []).map(o => o.nome + (Number(o.preco) ? ` (+${GP.brl(o.preco)})` : '')).join(', ');
+
   GP.STATUS = {
     novo: { t: 'Recebido', c: 'b-brand', d: 'A loja recebeu seu pedido' },
     preparando: { t: 'Em preparo', c: 'b-warn', d: 'Seu pedido está sendo preparado' },
@@ -572,7 +597,8 @@
       : p.pagamento === 'dinheiro'
         ? `<div class="box">COBRAR EM DINHEIRO<br><span class="big">${brl(p.total)}</span><br>${troco > 0 ? `Cliente paga com ${brl(p.troco_para)}<br><span class="big">LEVAR TROCO: ${brl(troco)}</span>` : 'Sem troco (valor certo)'}</div>`
         : `<div class="box">COBRAR NA ENTREGA<br>${p.pagamento === 'debito' ? 'CARTÃO DE DÉBITO' : 'CARTÃO DE CRÉDITO'}<br><span class="big">${brl(p.total)}</span><br><small>levar maquininha</small></div>`;
-    const itens = itensArr.map(i => `<div class="it"><span><b>${i.qtd}x</b> ${e(i.nome)}</span><span>${brl(i.preco * i.qtd)}</span></div>${i.obs ? `<div class="obs">&gt; ${e(i.obs)}</div>` : ''}`).join('');
+    const ops = (i) => (i.opcoes || []).map(o => `<div class="obs">+ ${e(o.nome)}${Number(o.preco) ? ' ' + brl(o.preco) : ''}</div>`).join('');
+    const itens = itensArr.map(i => `<div class="it"><span><b>${i.qtd}x</b> ${e(i.nome)}</span><span>${brl(i.preco * i.qtd)}</span></div>${ops(i)}${i.obs ? `<div class="obs">&gt; ${e(i.obs)}</div>` : ''}`).join('');
     const viaEntrega = `<section class="via">
       <div class="c"><div class="loja">${e(L.nome)}</div>${L.cnpj ? `<div>CNPJ ${e(GP.fmtCnpj(L.cnpj))}</div>` : ''}${L.telefone ? `<div>${e(L.telefone)}</div>` : ''}</div>
       ${linha}<div class="c"><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div class="tag">VIA DA ENTREGA</div></div>${linha}
@@ -582,6 +608,7 @@
       ${linha}${itens}${linha}
       <div class="it"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
       <div class="it"><span>Taxa de entrega</span><span>${brl(p.taxa_entrega)}</span></div>
+      ${Number(p.desconto) ? `<div class="it"><span>Desconto${p.cupom ? ' (' + e(p.cupom) + ')' : ''}</span><span>-${brl(p.desconto)}</span></div>` : ''}
       <div class="it tot"><span>TOTAL</span><span>${brl(p.total)}</span></div>
       ${linha}${pag}
       ${p.observacao ? `${linha}<div><b>OBS:</b> ${e(p.observacao)}</div>` : ''}
@@ -590,7 +617,7 @@
     </section>`;
     const viaCozinha = `<section class="via">
       <div class="c"><div class="tag">COZINHA</div><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div>${e(p.cliente_nome)}</div></div>${linha}
-      ${itensArr.map(i => `<div class="kit"><b>${i.qtd}x</b> ${e(i.nome)}</div>${i.obs ? `<div class="kobs">&gt; ${e(i.obs)}</div>` : ''}`).join('')}
+      ${itensArr.map(i => `<div class="kit"><b>${i.qtd}x</b> ${e(i.nome)}</div>${(i.opcoes || []).map(o => `<div class="kobs">+ ${e(o.nome)}</div>`).join('')}${i.obs ? `<div class="kobs">&gt; ${e(i.obs)}</div>` : ''}`).join('')}
       ${p.observacao ? `${linha}<div class="kobs">OBS: ${e(p.observacao)}</div>` : ''}${linha}
       <div class="box">${p.pagamento === 'pix' ? 'PIX — JÁ PAGO' : p.pagamento === 'dinheiro' ? `DINHEIRO · ${brl(p.total)}${troco > 0 ? ` · TROCO ${brl(troco)}` : ''}` : `COBRAR NA ENTREGA · ${p.pagamento === 'debito' ? 'DÉBITO' : 'CRÉDITO'} · ${brl(p.total)}`}</div>
     </section>`;
