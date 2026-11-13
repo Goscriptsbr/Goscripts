@@ -252,7 +252,7 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .me-ic .i{width:22px;height:22px}
 .me-saldo{text-align:right;line-height:1.15}.me-saldo small{display:block;font-size:.72rem;color:var(--muted)}.me-saldo b{font-size:1.05rem}
 .envbox{background:var(--bg-2,#f7f8fb);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
-.envbox .i{width:15px;height:15px;vertical-align:-2px;margin-right:4px;color:var(--ok)}
+.envbox .small > .i:first-child{width:15px;height:15px;vertical-align:-2px;margin-right:4px;color:var(--ok)}
 .fretes{display:grid;gap:8px;margin:8px 0 12px}
 .frete{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
 .frete.on{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft,#eef2ff)}
