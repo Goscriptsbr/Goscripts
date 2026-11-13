@@ -96,7 +96,7 @@
     const l = p.loja;
     const msg = `Olá! Sou ${p.cliente_nome}, fiz o pedido #${p.numero} pelo GoPedido.`;
     $('main').innerHTML = `
-      ${novo ? `<div class="ok-hero"><div class="big">${ic('check')}</div><h1>Pedido enviado!</h1><p class="muted">A loja já recebeu. Guarde este link para acompanhar.</p></div>` : '<div style="height:24px"></div>'}
+      ${novo ? `<div class="ok-hero"><div class="big">${ic('check')}</div><h1>${env ? 'Pedido feito!' : 'Pedido enviado!'}</h1><p class="muted">${env ? 'A loja já recebeu e vai separar e postar seu pedido. Guarde este link: o código de rastreio aparece aqui.' : 'A loja já recebeu. Guarde este link para acompanhar.'}</p></div>` : '<div style="height:24px"></div>'}
       <div class="card pad" style="margin-top:14px">
         <div class="row between" style="margin-bottom:18px">
           <div><div class="small muted">Pedido</div><b style="font-size:1.3rem">#${p.numero}</b></div>
