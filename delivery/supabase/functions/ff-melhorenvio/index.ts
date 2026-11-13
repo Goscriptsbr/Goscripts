@@ -331,18 +331,31 @@ export async function tratar(req, admin, comoUsuario, env, http = fetch) {
           : [{ height: Math.min(Math.ceil(alt), 100), width: Math.ceil(larg), length: Math.ceil(comp), weight: Math.round(peso * 1000) / 1000 }],
         options: { insurance_value: Number(p.subtotal), receipt: false, own_hand: false, reverse: false, non_commercial: true, platform: 'GoPedido', tags: [{ tag: 'Pedido #' + p.numero, url: null }] }
       };
-      // Transportadoras que não são os Correios (Jadlog, Azul, Latam…) pedem a agência onde o pacote será postado
+      // Transportadoras que não são os Correios (Jadlog, Azul, Latam…) pedem a agência onde o pacote será postado.
+      // Busca as agências dessa transportadora perto da loja e tenta uma por uma até o Melhor Envio aceitar.
+      let candidatas = [];
       try {
         const sv = await api(l.id, 'GET', '/api/v2/me/shipment/services/' + encodeURIComponent(p.frete_servico));
         const cid = Number(sv && (sv.company && sv.company.id || sv.company_id));
         if (cid && cid !== 1) {
           const q = (extra) => '/api/v2/me/shipment/agencies?company=' + cid + '&country=BR&state=' + encodeURIComponent(de.uf) + extra;
-          let ags = await api(l.id, 'GET', q('&city=' + encodeURIComponent(de.cidade))).catch(() => []);
-          if (!Array.isArray(ags) || !ags.length) ags = await api(l.id, 'GET', q('')).catch(() => []);
-          if (Array.isArray(ags) && ags.length) corpo.agency = Number(ags[0].id);
+          const daEmpresa = (lista) => (Array.isArray(lista) ? lista : []).filter(a => a && a.id && (
+            !a.companies && !a.company_id ? true
+            : Number(a.company_id) === cid || (Array.isArray(a.companies) && a.companies.some(c => Number(c.id) === cid))
+          ) && (!a.status || a.status === 'available'));
+          let ags = daEmpresa(await api(l.id, 'GET', q('&city=' + encodeURIComponent(de.cidade))).catch(() => []));
+          if (!ags.length) ags = daEmpresa(await api(l.id, 'GET', q('')).catch(() => []));
+          candidatas = ags.slice(0, 6).map(a => Number(a.id));
+          if (BASE.includes('sandbox') && !candidatas.includes(1)) candidatas.push(1); // agência de teste do sandbox
         }
-      } catch (_) { /* sem agência: o Melhor Envio usa a configurada na conta */ }
-      const r = await api(l.id, 'POST', '/api/v2/me/cart', corpo);
+      } catch (_) { /* segue sem agência */ }
+      let r = null, ultimo = null;
+      for (const ag of (candidatas.length ? candidatas : [null])) {
+        if (ag) corpo.agency = ag; else delete corpo.agency;
+        try { r = await api(l.id, 'POST', '/api/v2/me/cart', corpo); break; }
+        catch (e) { ultimo = e; if (!/agenc|agency/i.test(e.detalhe || '')) throw e; }
+      }
+      if (!r) throw ultimo || new Falha('me_erro', 400, 'nenhuma agência aceitou o envio');
       meId = String(r.id || '');
       if (!meId) throw new Falha('me_erro', 400, 'o Melhor Envio não devolveu o número da etiqueta');
       ok(await admin.from('ff_pedidos').update({ me_pedido_id: meId, etiqueta_status: 'carrinho' }).eq('id', p.id), 'salvar etiqueta');
