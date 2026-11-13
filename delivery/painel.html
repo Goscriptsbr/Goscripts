@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122038">
+<link rel="stylesheet" href="app.css?v=202611122220">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -85,6 +85,16 @@
   .printcfg .pc-body{padding:0 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
   .printcfg .pc-body .check,.printcfg .pc-body p{grid-column:1/-1}
   @media(max-width:600px){.printcfg .pc-body{grid-template-columns:1fr}}
+  .hrow{padding:10px 0;border-bottom:1px solid var(--line)}
+  .hrow:last-child{border-bottom:0}
+  .hrow .hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .hrow .hd b{font-size:.92rem}
+  .hrow .hd .st{font-size:.8rem;color:var(--muted);margin-left:auto;margin-right:6px}
+  .hrow .tm{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:8px;max-width:360px}
+  .hrow .tm .input{height:42px;padding:0 10px;min-width:0}
+  .hrow .tm span{color:var(--muted);font-size:.85rem}
+  .hrow.off .tm{display:none}
+  .stline{display:flex;gap:8px;align-items:center;font-size:.86rem;font-weight:700;margin-bottom:12px}
   .welcome{background:linear-gradient(135deg,#FFF1EB,#fff);border:1px solid #FAD3C5;border-radius:var(--r);padding:18px;margin-bottom:18px;display:flex;gap:14px;align-items:center}
   .welcome .big{width:48px;height:48px;border-radius:14px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
 </style>
@@ -149,6 +159,7 @@
 
     <!-- Pedidos -->
     <section id="tab-pedidos">
+      <div class="stline" id="stline"></div>
       <div class="card moto" id="moto"></div>
       <div class="stats" id="stats"></div>
       <div class="row between" style="margin-bottom:14px;flex-wrap:wrap">
@@ -218,6 +229,14 @@
           </div>
 
           <div class="card pad fs" style="grid-column:1/-1">
+            <h3><span id="fi4"></span>Horário de funcionamento</h3>
+            <label class="switch" style="margin-bottom:6px"><input type="checkbox" id="l-auto"><i></i>Abrir e fechar sozinha pelo horário</label>
+            <p class="small muted" style="margin-bottom:14px">Ligado: a loja abre e fecha nos horários abaixo (horário de Brasília). O botão lá em cima serve para <b>pausar</b> os pedidos quando precisar. Desligado: você abre e fecha manualmente.</p>
+            <div id="horas"></div>
+            <button type="button" class="btn btn-ghost btn-sm" id="b-copiahora" style="margin-top:6px"></button>
+          </div>
+
+          <div class="card pad fs" style="grid-column:1/-1">
             <h3><span id="fi3"></span>Formas de pagamento</h3>
             <div class="row" style="gap:22px;flex-wrap:wrap;margin-bottom:18px">
               <label class="switch"><input type="checkbox" id="l-pix"><i></i>Pix</label>
@@ -269,8 +288,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122038"></script>
-<script src="app.js?v=202611122038"></script>
+<script src="config.js?v=202611122220"></script>
+<script src="app.js?v=202611122220"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -408,7 +427,11 @@
 
   function applyHeader() {
     renderLojaSel();
-    $('sw-aberta').checked = loja.aberta; $('sw-txt').textContent = loja.aberta ? 'Aberta' : 'Fechada';
+    const st = GP.statusLoja(loja);
+    $('sw-aberta').checked = loja.aberta;
+    $('sw-txt').textContent = loja.horario_auto ? (loja.aberta ? (st.aberta ? 'Aberta' : 'Fora do horário') : 'Pausada') : (loja.aberta ? 'Aberta' : 'Fechada');
+    $('sw-wrap').title = loja.horario_auto ? 'Automático pelo horário · desligue para pausar os pedidos' : 'Abrir/fechar a loja';
+    $('stline').innerHTML = `<span class="badge ${st.cls}"><i class="dot"></i>${st.texto}</span>${loja.horario_auto ? '<span class="small muted">automático pelo horário</span>' : '<span class="small muted">abertura manual</span>'}`;
     $('b-ver').href = 'loja.html?l=' + encodeURIComponent(loja.slug);
     $('l-link').textContent = cfg.siteUrl + 'loja.html?l=' + loja.slug;
   }
@@ -424,7 +447,9 @@
     }
     const { error } = await sb.from('ff_lojas').update({ aberta: v }).eq('id', loja.id);
     if (error) { e.target.checked = !v; return GP.toast(GP.err(error), 'err'); }
-    loja.aberta = v; applyHeader(); GP.toast(v ? 'Loja aberta! Já pode receber pedidos.' : 'Loja fechada.', 'ok');
+    loja.aberta = v; applyHeader();
+    const st = GP.statusLoja(loja);
+    GP.toast(loja.horario_auto ? (v ? (st.aberta ? 'Pedidos liberados. ' + st.texto : 'Liberado. ' + st.texto) : 'Pedidos pausados.') : (v ? 'Loja aberta! Já pode receber pedidos.' : 'Loja fechada.'), 'ok');
   };
   $('b-copylink').onclick = () => loja && GP.copy(cfg.siteUrl + 'loja.html?l=' + loja.slug, 'Link da loja copiado!');
 
@@ -495,6 +520,7 @@
       .eq('loja_id', loja.id).gte('criado_em', desde).order('criado_em', { ascending: false }).limit(200);
     if (error) { $('upd').textContent = 'Erro ao atualizar'; return; }
     if (!codigo || new Date(codigo.expira) <= new Date()) loadCodigo(); else renderCodigo();
+    applyHeader();
     const ids = new Set(data.map(p => p.id));
     if (conhecidos) {
       const novos = data.filter(p => !conhecidos.has(p.id));
@@ -518,7 +544,7 @@
 
     const lst = pedidos.filter(p => ofiltro === 'todos' ? true : ofiltro === 'fim' ? ['entregue', 'cancelado'].includes(p.status) : ['novo', 'preparando', 'saiu'].includes(p.status));
     if (!lst.length) {
-      $('orders').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('receipt')}</div><h4>${ofiltro === 'abertos' ? 'Nenhum pedido em andamento' : 'Nenhum pedido aqui'}</h4><p>${loja.aberta ? 'Quando chegar um pedido, ele aparece aqui com um aviso sonoro.' : 'Sua loja está fechada. Abra no botão lá em cima para receber pedidos.'}</p></div>`;
+      $('orders').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('receipt')}</div><h4>${ofiltro === 'abertos' ? 'Nenhum pedido em andamento' : 'Nenhum pedido aqui'}</h4><p>${GP.statusLoja(loja).aberta ? 'Quando chegar um pedido, ele aparece aqui com um aviso sonoro.' : GP.statusLoja(loja).texto + '. ' + (loja.horario_auto ? 'Os pedidos voltam sozinhos no próximo horário.' : 'Abra no botão lá em cima para receber pedidos.')}</p></div>`;
       return;
     }
     const PROX = { novo: ['preparando', 'Aceitar e preparar'], preparando: ['saiu', 'Saiu para entrega'], saiu: ['entregue', 'Marcar como entregue'] };
@@ -706,6 +732,7 @@
     $('l-pixnome').value = l.pix_nome || ''; $('l-pixcidade').value = l.pix_cidade || '';
     $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
     togglePix(); sim(); coord(); pixPrev();
+    renderHoras(l.horarios); $('l-auto').checked = !!l.horario_auto;
     if (lmap && lojaPos) lmap.set(lojaPos.lat, lojaPos.lng);
   }
   const NOMES_PIX = { cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória' };
@@ -747,6 +774,32 @@
     return ok;
   }
   $('l-cnpj').addEventListener('input', (e) => { e.target.value = GP.fmtCnpj(e.target.value); cnpjMsg(); });
+  // ---------- Horário de funcionamento ----------
+  $('fi4').innerHTML = ic('clock'); $('b-copiahora').innerHTML = ic('copy') + 'Copiar o horário de segunda para todos os dias';
+  const ORDEM_DIAS = [1, 2, 3, 4, 5, 6, 0];
+  function renderHoras(h) {
+    h = h || {};
+    $('horas').innerHTML = ORDEM_DIAS.map(d => {
+      const x = h[d] || { aberto: false, ini: '18:00', fim: '23:00' };
+      return `<div class="hrow ${x.aberto ? '' : 'off'}" data-d="${d}">
+        <div class="hd"><b>${GP.DIAS[d]}</b><span class="st">${x.aberto ? 'Aberto' : 'Fechado'}</span><label class="switch"><input type="checkbox" data-k="aberto" ${x.aberto ? 'checked' : ''}><i></i></label></div>
+        <div class="tm"><input class="input" type="time" data-k="ini" value="${x.ini || '18:00'}"><span>às</span><input class="input" type="time" data-k="fim" value="${x.fim || '23:00'}"></div></div>`;
+    }).join('');
+  }
+  function lerHoras() {
+    const h = {};
+    document.querySelectorAll('#horas .hrow').forEach(r => {
+      h[r.dataset.d] = { aberto: r.querySelector('[data-k=aberto]').checked, ini: r.querySelector('[data-k=ini]').value || '00:00', fim: r.querySelector('[data-k=fim]').value || '23:59' };
+    });
+    return h;
+  }
+  $('horas').addEventListener('change', (e) => {
+    const r = e.target.closest('.hrow'); if (!r) return;
+    const on = r.querySelector('[data-k=aberto]').checked;
+    r.classList.toggle('off', !on); r.querySelector('.st').textContent = on ? 'Aberto' : 'Fechado';
+  });
+  $('b-copiahora').onclick = () => { const h = lerHoras(), seg = h[1]; ORDEM_DIAS.forEach(d => h[d] = { ...seg }); renderHoras(h); GP.toast('Horário copiado para todos os dias', 'ok'); };
+
   const togglePix = () => $('pix-cfg').style.display = $('l-pix').checked ? '' : 'none';
   $('l-pix').onchange = togglePix;
   const coord = () => $('l-coord').textContent = lojaPos ? `📍 ${lojaPos.lat.toFixed(5)}, ${lojaPos.lng.toFixed(5)} — arraste o pino para ajustar.` : 'Toque no mapa para marcar onde fica a loja.';
@@ -778,12 +831,14 @@
     const pix = $('l-pix').checked;
     if (pix && !$('l-pixchave').value.trim()) return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err');
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }
+    if ($('l-auto').checked && !Object.values(lerHoras()).some(x => x.aberto)) { $('horas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Marque pelo menos um dia aberto no horário de funcionamento.', 'err'); }
     if (!pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
     const row = {
       nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
       endereco: $('l-end').value.trim(), lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
       taxa_km: num($('l-taxakm').value), taxa_minima: num($('l-taxamin').value), raio_km: num($('l-raio').value), pedido_minimo: num($('l-min').value),
       aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked,
+      horarios: lerHoras(), horario_auto: $('l-auto').checked,
       pix_tipo: $('l-pixtipo').value, pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()
     };
     const b = $('b-salvar'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>Salvando…';

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122038">
+<link rel="stylesheet" href="app.css?v=202611122220">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -24,6 +24,12 @@
   .head .chips{display:flex;flex-wrap:wrap;gap:8px}
   @media(max-width:600px){.head .card{flex-direction:column;gap:12px}.head .lg{width:76px;height:76px;margin-top:-50px}}
   .alert{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:600;font-size:.9rem;display:flex;gap:10px;align-items:center}
+  .horas{margin-top:12px;font-size:.88rem}
+  .horas summary{display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:700;list-style:none}
+  .horas summary::-webkit-details-marker{display:none}
+  .horas>div{margin-top:8px;background:var(--bg);border-radius:12px;padding:8px 12px;max-width:340px}
+  .horas>div>div{display:flex;justify-content:space-between;padding:3px 0;color:var(--ink-2)}
+  .horas .hoje{font-weight:800;color:var(--ink)}
   .alert.off{background:#F1F0ED;color:var(--ink-2)}
 
   .catnav{position:sticky;top:64px;z-index:30;background:var(--bg);padding:12px 0;margin-top:16px;border-bottom:1px solid var(--line)}
@@ -204,8 +210,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122038"></script>
-<script src="app.js?v=202611122038"></script>
+<script src="config.js?v=202611122220"></script>
+<script src="app.js?v=202611122220"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -228,6 +234,7 @@
   const { data: prods } = await sb.from('ff_produtos').select('*').eq('loja_id', loja.id).order('ordem').order('nome');
   const P = {}; (prods || []).forEach(p => P[p.id] = p);
   document.title = `${loja.nome} · GoPedido`;
+  const ST = () => GP.statusLoja(loja);
 
   // ---------- Cabeçalho ----------
   if (loja.capa_url || loja.imagem_url) $('cover').style.backgroundImage = `url('${loja.capa_url || loja.imagem_url}')`;
@@ -238,13 +245,23 @@
   if (loja.cnpj) $('s-desc').insertAdjacentHTML('afterend', `<p class="small muted" style="margin:-6px 0 12px">CNPJ ${esc(GP.fmtCnpj(loja.cnpj))}</p>`);
   const pags = [loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito', loja.aceita_dinheiro !== false && loja.aceita_dinheiro != null && 'Dinheiro'].filter(Boolean);
   $('s-chips').innerHTML = [
-    `<span class="badge ${loja.aberta ? 'b-ok' : 'b-off'}"><i class="dot"></i>${loja.aberta ? 'Aberta agora' : 'Fechada'}</span>`,
+    `<span class="badge ${ST().cls}" id="s-status"><i class="dot"></i>${ST().texto}</span>`,
     `<span class="chip">${ic('clock')}${esc(loja.tempo_entrega)}</span>`,
     `<span class="chip">${ic('bike')}${Number(loja.taxa_km) ? brl(loja.taxa_km) + '/km' : 'Entrega grátis'}${Number(loja.taxa_minima) ? ' · mín. ' + brl(loja.taxa_minima) : ''}</span>`,
     Number(loja.pedido_minimo) ? `<span class="chip">Pedido mín. ${brl(loja.pedido_minimo)}</span>` : '',
     pags.length ? `<span class="chip">${ic('card')}${pags.join(' · ')}</span>` : ''
   ].join('');
-  if (!loja.aberta) $('s-alert').innerHTML = `<div class="alert off">${ic('clock')}A loja está fechada agora. Você pode ver o cardápio, mas os pedidos estão pausados.</div>`;
+  function renderAlert() {
+    const st = ST();
+    $('s-alert').innerHTML = st.aberta ? '' : `<div class="alert off">${ic('clock')}<span>${st.texto}. Você pode ver o cardápio, mas os pedidos estão pausados.</span></div>`;
+    const b = $('s-status'); if (b) { b.className = 'badge ' + st.cls; b.innerHTML = '<i class="dot"></i>' + st.texto; }
+  }
+  renderAlert();
+  if (loja.horario_auto) {
+    const hoje = GP.agoraSP().dow, lin = GP.resumoHorarios(loja.horarios);
+    $('s-alert').insertAdjacentHTML('beforebegin', `<details class="horas"><summary>${ic('clock')}Horário de funcionamento <span class="muted">· hoje ${lin[hoje]}</span></summary><div>${GP.DIAS.map((d, i) => `<div class="${i === hoje ? 'hoje' : ''}"><span>${d}</span><span>${lin[i]}</span></div>`).join('')}</div></details>`);
+  }
+  setInterval(() => { renderAlert(); if ($('co').classList.contains('on')) updNext(); }, 30000);
 
   // ---------- Cardápio ----------
   const cats = [];
@@ -524,7 +541,7 @@
       txt = `Enviar pedido · ${brl(total())}`;
       ok = !!pag && (pag !== 'pix' || !!comprovante) && (pag !== 'dinheiro' || trocoOk());
     }
-    if (!loja.aberta) { ok = false; txt = 'Loja fechada no momento'; }
+    if (!ST().aberta) { ok = false; txt = 'Loja fechada no momento'; }
     b.textContent = txt; b.disabled = !ok || busy === true;
   }
 

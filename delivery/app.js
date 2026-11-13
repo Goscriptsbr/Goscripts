@@ -502,6 +502,52 @@
     return api;
   };
 
+  // ---------- Horário de funcionamento (horário de Brasília) ----------
+  GP.DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  GP.DIAS_C = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+  const hm = (t) => { const [h, m] = String(t || '').split(':').map(Number); return isNaN(h) ? null : h * 60 + (m || 0); };
+  const fmtHm = (min) => { min = ((min % 1440) + 1440) % 1440; return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'); };
+  GP.agoraSP = (d = new Date()) => {
+    const f = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(d);
+    const g = (t) => (f.find(x => x.type === t) || {}).value;
+    const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(g('weekday'));
+    return { dow, min: (Number(g('hour')) % 24) * 60 + Number(g('minute')) };
+  };
+  GP.intervalos = (h) => {
+    const out = [];
+    for (let d = 0; d < 7; d++) {
+      const x = h && h[d];
+      if (!x || !x.aberto) continue;
+      const i = hm(x.ini), f = hm(x.fim);
+      if (i == null || f == null) continue;
+      const s = d * 1440 + i, e = f > i ? d * 1440 + f : (d + 1) * 1440 + f;
+      [-10080, 0, 10080].forEach(k => out.push([s + k, e + k]));
+    }
+    return out.sort((a, b) => a[0] - b[0]);
+  };
+  // { aberta, texto, curto, cls }
+  GP.statusLoja = (l, quando) => {
+    if (!l.horario_auto) return l.aberta ? { aberta: true, texto: 'Aberta agora', curto: 'Aberta', cls: 'b-ok' } : { aberta: false, texto: 'Fechada no momento', curto: 'Fechada', cls: 'b-off' };
+    if (!l.aberta) return { aberta: false, texto: 'Pedidos pausados pela loja', curto: 'Pausada', cls: 'b-off' };
+    const a = GP.agoraSP(quando), W = a.dow * 1440 + a.min, iv = GP.intervalos(l.horarios);
+    const cur = iv.find(([s, e]) => s <= W && W < e);
+    if (cur) {
+      const falta = cur[1] - W;
+      return { aberta: true, curto: 'Aberta', cls: falta <= 30 ? 'b-warn' : 'b-ok', texto: falta <= 60 ? `Aberta · fecha em ${falta} min` : `Aberta · fecha às ${fmtHm(cur[1])}`, fechaEm: falta };
+    }
+    const prox = iv.find(([s]) => s > W);
+    if (!prox) return { aberta: false, texto: 'Fechada · sem horário definido', curto: 'Fechada', cls: 'b-off' };
+    const diaProx = Math.floor((((prox[0] % 10080) + 10080) % 10080) / 1440), dif = prox[0] - W;
+    const quandoTxt = dif < 1440 && diaProx === a.dow ? 'hoje' : diaProx === (a.dow + 1) % 7 && dif < 2880 ? 'amanhã' : GP.DIAS[diaProx].toLowerCase();
+    return { aberta: false, curto: 'Fechada', cls: 'b-off', texto: dif <= 60 ? `Fechada · abre em ${dif} min` : `Fechada · abre ${quandoTxt} às ${fmtHm(prox[0])}` };
+  };
+  // Lista "Seg a Sex 18:00–23:00" para mostrar ao cliente
+  GP.resumoHorarios = (h) => {
+    const linhas = [];
+    for (let d = 0; d < 7; d++) { const x = h && h[d]; linhas.push(x && x.aberto && x.ini && x.fim ? `${x.ini}–${x.fim}` : 'Fechado'); }
+    return linhas;
+  };
+
   GP.STATUS = {
     novo: { t: 'Recebido', c: 'b-brand', d: 'A loja recebeu seu pedido' },
     preparando: { t: 'Em preparo', c: 'b-warn', d: 'Seu pedido está sendo preparado' },
