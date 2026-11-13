@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=94537">
+<link rel="stylesheet" href="app.css?v=94944">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -181,6 +181,23 @@
   .faq details[open] summary::after{content:"–"}
   .faq details p{color:var(--ink-2);font-size:.92rem;line-height:1.6;padding:0 0 16px;margin:-4px 0 0}
   .faq details a{color:var(--brand-2);font-weight:700;text-decoration:underline}
+  html{scroll-behavior:smooth}
+  [id]{scroll-margin-top:76px}
+  .topnav{display:flex;gap:4px;margin-left:18px}
+  .topnav a{padding:8px 11px;border-radius:10px;font-size:.88rem;font-weight:600;color:var(--ink-2);white-space:nowrap}
+  .topnav a:hover{background:var(--bg);color:var(--ink)}
+  .menu-btn{display:none}
+  @media(max-width:1060px){.topnav{display:none}.menu-btn{display:grid}}
+  .dw-ov{position:fixed;inset:0;background:rgba(15,15,20,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:90}
+  .dw-ov.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(320px,86vw);background:#fff;z-index:91;transform:translateX(100%);transition:transform .25s ease;padding:16px 16px calc(20px + env(safe-area-inset-bottom));overflow-y:auto;box-shadow:-20px 0 50px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:2px}
+  .drawer.on{transform:none}
+  .dw-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .drawer .btn-block{margin-bottom:8px}
+  .dw-sec{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 4px 4px}
+  .dw-it{display:flex;align-items:center;gap:12px;padding:11px 10px;border-radius:12px;font-weight:600;color:var(--ink)}
+  .dw-it:hover,.dw-it:active{background:var(--bg)}
+  .dw-it .i{width:20px;height:20px;color:var(--brand-2);flex:none}
 </style>
 </head>
 <body>
@@ -188,12 +205,35 @@
 <header class="topbar">
   <div class="wrap">
     <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
+    <nav class="topnav" aria-label="Seções">
+      <a href="#titulo">Lojas</a><a href="#como">Como funciona</a><a href="#lojistas">Para lojistas</a><a href="#planos-sec">Planos</a><a href="#duvidas">Dúvidas</a>
+    </nav>
     <div class="grow"></div>
     <button class="chip btnchip" id="loc-chip"></button>
     <a class="icon-btn" href="conta.html" id="btn-conta" aria-label="Minha conta"></a>
     <a class="btn btn-ghost btn-sm" href="painel.html" id="btn-loja"></a>
+    <button class="icon-btn menu-btn" id="menu-btn" aria-label="Abrir menu" aria-expanded="false"></button>
   </div>
 </header>
+
+<div class="dw-ov" id="dw-ov"></div>
+<aside class="drawer" id="drawer" aria-label="Menu" aria-hidden="true">
+  <div class="dw-head"><a class="logo" href="./"><b id="lg3"></b><span>Go<em>Pedido</em></span></a><button class="icon-btn" id="dw-x" aria-label="Fechar menu"></button></div>
+  <a class="btn btn-primary btn-block" href="painel.html?criar=1" id="dw-criar"></a>
+  <div class="dw-sec">Explorar</div>
+  <a class="dw-it" href="#titulo" data-dic="store">Lojas</a>
+  <a class="dw-it" href="#como" data-dic="list">Como funciona</a>
+  <a class="dw-it" href="#lojistas" data-dic="box">Para lojistas e envio</a>
+  <a class="dw-it" href="#planos-sec" data-dic="star">Planos</a>
+  <a class="dw-it" href="#duvidas" data-dic="chat">Perguntas frequentes</a>
+  <div class="dw-sec">Acessar</div>
+  <a class="dw-it" href="conta.html" data-dic="user">Minha conta</a>
+  <a class="dw-it" href="painel.html" data-dic="grid">Painel do lojista</a>
+  <a class="dw-it" href="entregador.html" data-dic="bike">Sou entregador</a>
+  <div class="dw-sec">Ajuda</div>
+  <a class="dw-it" href="https://wa.me/5519988283178" target="_blank" rel="noopener" data-dic="phone">Fale conosco no WhatsApp</a>
+  <a class="dw-it" href="termos.html" data-dic="shield">Termos e privacidade</a>
+</aside>
 
 <section class="hero">
   <div class="wrap">
@@ -232,7 +272,7 @@
   <h2 class="sec-title" id="titulo">Lojas</h2>
   <div class="grid" id="lista"></div>
 
-  <h2 class="sec-title">Como funciona</h2>
+  <h2 class="sec-title" id="como">Como funciona</h2>
   <div class="how" id="how"></div>
 
   <section class="lj" id="lojistas">
@@ -281,13 +321,13 @@
     <a class="btn btn-primary" href="painel.html?criar=1">Cadastrar minha loja</a>
   </div>
 
-  <h2 class="sec-title" style="text-align:center;margin-top:44px">Planos para lojistas</h2>
+  <h2 class="sec-title" id="planos-sec" style="text-align:center;margin-top:44px">Planos para lojistas</h2>
   <p class="muted center" style="margin:-6px auto 18px;max-width:520px">Comece grátis. Quando crescer, é só escolher um plano — sem comissão por pedido.</p>
   <div class="planos" id="planos"></div>
   <p class="pl-nota" id="nota-planos" style="max-width:760px;margin:14px auto 0"></p>
   <p class="small muted center" style="margin-top:12px">Para assinar, fale com a gente no WhatsApp <a href="https://wa.me/5519988283178" target="_blank" rel="noopener" style="font-weight:700;color:var(--brand-2)">(19) 98828-3178</a></p>
 
-  <section class="faq">
+  <section class="faq" id="duvidas">
     <h2 class="sec-title" style="text-align:center">Perguntas frequentes</h2>
     <details><summary>Quanto custa usar o GoPedido?</summary><p>Começar é grátis e não cobramos comissão sobre os pedidos. Planos pagos liberam mais produtos, lojas e pessoas na equipe.</p></details>
     <details><summary>O dinheiro das vendas passa pelo GoPedido?</summary><p>Não. O Pix vai direto para a chave da loja, e os pagamentos na entrega são feitos à própria loja.</p></details>
@@ -306,8 +346,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=94537"></script>
-<script src="app.js?v=94537"></script>
+<script src="config.js?v=94944"></script>
+<script src="app.js?v=94944"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -316,6 +356,18 @@
   $('ic-search').innerHTML = ic('search');
   $('btn-loja').innerHTML = ic('store') + '<span>Sou lojista</span>';
   $('btn-conta').innerHTML = ic('user');
+  // Menu: links no topo (computador) e menu lateral (celular)
+  $('lg3').innerHTML = ic('bag'); $('menu-btn').innerHTML = ic('menu'); $('dw-x').innerHTML = ic('x');
+  $('dw-criar').innerHTML = ic('plus') + 'Cadastrar minha loja grátis';
+  document.querySelectorAll(".dw-it[data-dic]").forEach(a => { a.innerHTML = ic(a.dataset.dic) + '<span>' + a.textContent + '</span>'; });
+  const menu = (abrir) => {
+    $('drawer').classList.toggle('on', abrir); $('dw-ov').classList.toggle('on', abrir);
+    $('drawer').setAttribute('aria-hidden', String(!abrir)); $('menu-btn').setAttribute('aria-expanded', String(abrir));
+    document.body.style.overflow = abrir ? 'hidden' : '';
+  };
+  $('menu-btn').onclick = () => menu(true); $('dw-x').onclick = () => menu(false); $('dw-ov').onclick = () => menu(false);
+  $('drawer').addEventListener('click', (e) => { if (e.target.closest('a')) menu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') menu(false); });
   $('planos').innerHTML = GP.planosHtml(null, null, true);
   $('nota-planos').textContent = GP.NOTA_PLANOS;
   document.querySelectorAll('[data-ic]').forEach(el => { el.innerHTML = ic(el.dataset.ic); }); $('hb-ic').innerHTML = ic('bolt');
