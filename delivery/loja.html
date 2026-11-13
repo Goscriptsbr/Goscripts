@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122332">
+<link rel="stylesheet" href="app.css?v=202611122339">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -49,6 +49,10 @@
   .bagbar.pulse{animation:pulse .5s}
   @keyframes pulse{50%{transform:translate(-50%,0) scale(1.05)}}
   .head .card>.grow{align-self:stretch;min-width:0;max-width:100%}
+  .btn.is-off{opacity:.55;box-shadow:none}
+  .need{animation:need .5s;outline:2.5px solid var(--bad);outline-offset:3px;border-radius:14px}
+  .need .input,.need.input{border-color:var(--bad)!important;box-shadow:0 0 0 4px rgba(217,45,32,.12)!important}
+  @keyframes need{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
   .alert.off{background:#F1F0ED;color:var(--ink-2)}
 
   .catnav{position:sticky;top:64px;z-index:30;background:var(--bg);padding:12px 0;margin-top:16px;border-bottom:1px solid var(--line)}
@@ -239,8 +243,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122332"></script>
-<script src="app.js?v=202611122332"></script>
+<script src="config.js?v=202611122339"></script>
+<script src="app.js?v=202611122339"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -704,10 +708,53 @@
       ok = !!pag && (pag !== 'pix' || !!comprovante) && (pag !== 'dinheiro' || trocoOk());
     }
     if (!ST().aberta) { ok = false; txt = 'Loja fechada no momento'; }
-    b.textContent = txt; b.disabled = !ok || busy === true;
+    b.textContent = txt;
+    b.disabled = busy === true || (step === 2 && entrega() && entrega().calc);
+    b.classList.toggle('is-off', !ok);
+  }
+
+  // O que está faltando no passo atual? -> { el, msg }
+  function faltaCheckout() {
+    const fA = (k) => $('c-addr').querySelector(`[id$="-${k}"]`);
+    if (!ST().aberta) return { msg: ST().texto + '. Os pedidos estão pausados.' };
+    if (step === 1) {
+      if (!count()) return { msg: 'Sua sacola está vazia. Escolha algo no cardápio.' };
+      const f = Number(loja.pedido_minimo) - subtotal();
+      if (f > 0) return { el: $('s1-min'), msg: `Pedido mínimo de ${brl(loja.pedido_minimo)}. Faltam ${brl(f)}.` };
+      return null;
+    }
+    if (step === 2) {
+      if ($('c-nome').value.trim().length < 2) return { el: $('c-nome'), msg: 'Digite seu nome.' };
+      if (GP.digits($('c-tel').value).length < 10) return { el: $('c-tel'), msg: 'Digite seu WhatsApp com DDD.' };
+      if (!addr) return null;
+      const a = addr.get();
+      if (a.rua.length < 3) return { el: fA('rua'), msg: 'Preencha a rua (ou digite o CEP).' };
+      if (!a.numero) return { el: fA('numero'), msg: 'Preencha o número da casa.' };
+      if (a.cidade.length < 2) return { el: fA('cidade'), msg: 'Preencha a cidade.' };
+      if (!addr.pos) return { el: $('c-addr').querySelector('.map'), msg: 'Marque sua localização no mapa (toque no mapa ou em "Minha localização").' };
+      const e = entrega();
+      if (e && e.calc) return { el: $('c-fee'), msg: 'Aguarde, calculando a rota…' };
+      if (e && e.fora) return { el: $('c-fee'), msg: 'Esse endereço está fora da área de entrega da loja.' };
+      return null;
+    }
+    if (!pag) return { el: $('pay-opts'), msg: 'Escolha a forma de pagamento.' };
+    if (pag === 'pix' && !comprovante) return { el: $('pix-drop'), msg: 'Pague o Pix e anexe o comprovante para enviar o pedido.' };
+    if (pag === 'dinheiro' && !trocoOk()) return { el: $('c-troco'), msg: `Informe o troco (maior que ${brl(total())}) ou marque "Não preciso de troco".` };
+    return null;
+  }
+  function avisar(f) {
+    GP.toast(f.msg, 'err');
+    if (!f.el) return;
+    f.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const alvo = f.el.closest('.field, .opt, .drop, .fee, .map, #pay-opts') || f.el;
+    alvo.classList.remove('need'); void alvo.offsetWidth; alvo.classList.add('need');
+    setTimeout(() => alvo.classList.remove('need'), 2200);
+    if (f.el.matches('input, textarea')) setTimeout(() => f.el.focus({ preventScroll: true }), 350);
   }
 
   $('co-next').onclick = async () => {
+    const f = faltaCheckout();
+    if (f) return avisar(f);
     if (step < 3) {
       if (step === 2) {
         const a = addr.get();

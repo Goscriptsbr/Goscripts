@@ -111,7 +111,9 @@
   GP.toast = (msg, type = '') => {
     let box = GP.$('toasts');
     if (!box) { box = document.createElement('div'); box.id = 'toasts'; document.body.appendChild(box); }
+    [...box.children].forEach(x => { if (x.dataset.tipo === (type || 'n') || box.children.length > 2) x.remove(); });
     const t = document.createElement('div');
+    t.dataset.tipo = type || 'n';
     t.className = 'toast ' + type;
     t.innerHTML = (type === 'ok' ? GP.ic('check') : '') + '<span>' + GP.esc(msg) + '</span>';
     box.appendChild(t);

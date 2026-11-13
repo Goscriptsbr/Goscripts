@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=202611122332">
+<link rel="stylesheet" href="app.css?v=202611122339">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -148,6 +148,9 @@
   .ecat input{width:18px;height:18px;accent-color:var(--brand)}
   .petp{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;font-size:.9rem;cursor:pointer;background:#fff}
   .petp input{width:18px;height:18px;accent-color:var(--brand)}
+  .promo-prev{display:flex;gap:10px;align-items:center;background:var(--ok-soft);color:#0d6b41;border-radius:12px;padding:10px 12px;font-size:.86rem;margin-top:-4px}
+  .promo-prev .pct{background:var(--bad);color:#fff;font-weight:800;border-radius:8px;padding:4px 8px;flex:none}
+  .promo-prev.bad{background:var(--bad-soft);color:var(--bad)}
   .g-add{width:100%;border:2px dashed #F7A58C;background:#FFF9F6;color:var(--brand-2);border-radius:14px;padding:14px;font-weight:800;display:flex;gap:8px;align-items:center;justify-content:center}
   .g-add:hover{background:var(--brand-soft)}
   .promo-tag{display:inline-block;background:var(--bad);color:#fff;border-radius:6px;font-size:.7rem;font-weight:800;padding:1px 6px;margin-left:6px;vertical-align:1px}
@@ -406,9 +409,10 @@
       <div class="psec">
         <label class="switch"><input type="checkbox" id="p-promo"><i></i>Colocar em promoção</label>
         <div class="grid2 hide" id="p-promo-box" style="margin-top:12px">
-          <label class="field"><span>Preço promocional</span><div class="prefix"><i>R$</i><input class="input" id="p-ppromo" placeholder="0,00"></div><small id="p-promo-pct"></small></label>
+          <label class="field"><span>Preço na promoção (por)</span><div class="prefix"><i>R$</i><input class="input" id="p-ppromo" placeholder="0,00"></div></label>
           <label class="field"><span>Válido até <span class="muted">(opcional)</span></span><input class="input" type="date" id="p-pate"></label>
         </div>
+        <div class="promo-prev hide" id="p-promo-pct"></div>
       </div>
 
       <div class="psec">
@@ -460,8 +464,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=202611122332"></script>
-<script src="app.js?v=202611122332"></script>
+<script src="config.js?v=202611122339"></script>
+<script src="app.js?v=202611122339"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -834,13 +838,14 @@
     const nDisp = prods.filter(p => p.disponivel).length;
     $('p-count').textContent = prods.length ? `${prods.length} produto${prods.length > 1 ? 's' : ''} · ${nDisp} disponíve${nDisp === 1 ? 'l' : 'is'}` : '';
     document.querySelector('.ptools').classList.toggle('hide', !prods.length);
-    if (pCat && !cats.includes(pCat)) pCat = '';
-    $('p-cats').innerHTML = cats.length > 1 ? `<button class="chip ${!pCat ? 'on' : ''}" data-pc="">Todas as categorias</button>` + cats.map(c => `<button class="chip ${pCat === c ? 'on' : ''}" data-pc="${esc(c)}">${esc(c)} <span class="muted">${prods.filter(p => p.categoria === c).length}</span></button>`).join('') : '';
+    if (pCat && pCat !== '__promo' && !cats.includes(pCat)) pCat = '';
+    const nPromo = prods.filter(p => GP.emPromo(p)).length;
+    $('p-cats').innerHTML = (cats.length > 1 || nPromo) ? `<button class="chip ${!pCat ? 'on' : ''}" data-pc="">Todas as categorias</button>` + (nPromo ? `<button class="chip ${pCat === '__promo' ? 'on' : ''}" data-pc="__promo">🔥 Em promoção <span class="muted">${nPromo}</span></button>` : '') + cats.map(c => `<button class="chip ${pCat === c ? 'on' : ''}" data-pc="${esc(c)}">${esc(c)} <span class="muted">${prods.filter(p => p.categoria === c).length}</span></button>`).join('') : '';
     renderPromoProds();
     if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>Seu cardápio está vazio</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
     const q = norm(pBusca);
     const lst = prods.filter(p => (!q || norm(p.nome + ' ' + p.descricao + ' ' + p.categoria).includes(q))
-      && (!pCat || p.categoria === pCat)
+      && (!pCat || (pCat === '__promo' ? GP.emPromo(p) : p.categoria === pCat))
       && (pFiltro === 'todos' || (pFiltro === 'disp' && p.disponivel) || (pFiltro === 'indisp' && !p.disponivel) || (pFiltro === 'promo' && GP.emPromo(p))));
     if (!lst.length) { $('plist').innerHTML = `<div class="empty" style="padding:30px"><div class="big">${ic('search')}</div><h4>Nada encontrado</h4><p>Tente outra busca ou limpe os filtros.</p></div>`; return; }
     const filtrando = !!(q || pCat || pFiltro !== 'todos');
@@ -945,9 +950,16 @@
   // ---------- Promoção do produto ----------
   GP.moneyMask($('p-ppromo'));
   function promoUI() {
-    $('p-promo-box').classList.toggle('hide', !$('p-promo').checked);
+    const on = $('p-promo').checked;
+    $('p-promo-box').classList.toggle('hide', !on);
+    $('p-preco-wrap').querySelector('span').textContent = on ? 'Preço normal (de)' : 'Preço';
     const a = num($('p-preco').value), b = num($('p-ppromo').value);
-    $('p-promo-pct').innerHTML = a > 0 && b > 0 ? (b < a ? `<span style="color:var(--ok);font-weight:700">${Math.round((1 - b / a) * 100)}% de desconto</span>` : '<span style="color:var(--bad);font-weight:700">Tem que ser menor que o preço normal</span>') : '';
+    const box = $('p-promo-pct');
+    box.classList.toggle('hide', !on || !(a > 0 && b > 0));
+    box.classList.toggle('bad', b >= a);
+    box.innerHTML = a > 0 && b > 0 ? (b < a
+      ? `<span class="pct">-${Math.round((1 - b / a) * 100)}%</span><span>De <s>${brl(a)}</s> por <b>${brl(b)}</b> · ${Math.round((1 - b / a) * 100)}% mais barato. Vai aparecer em <b>🔥 Promoções</b> no topo do cardápio.</span>`
+      : '<span>⚠ O preço da promoção precisa ser menor que o preço normal.</span>') : '';
   }
   ['p-promo', 'p-ppromo', 'p-preco'].forEach(id => $(id).addEventListener('input', promoUI));
   $('p-promo').addEventListener('change', promoUI);
