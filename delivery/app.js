@@ -218,6 +218,10 @@
     limite_produtos: 'Você chegou no limite de produtos do seu plano.',
     loja_em_analise: 'Esta loja ainda está em análise e não recebe pedidos.',
     retirada_indisponivel: 'Esta loja não aceita retirada no local.',
+    envio_indisponivel: 'Esta loja não está enviando para outras cidades no momento.',
+    pagamento_envio: 'Pedidos enviados por transportadora são pagos por Pix.',
+    cotacao_vencida: 'O frete mudou. Escolha o frete de novo.',
+    cpf_obrigatorio: 'Digite o CPF (ou CNPJ) de quem vai receber.',
     avaliacao_cedo: 'Você pode avaliar depois que o pedido for entregue.',
     avaliacao_feita: 'Este pedido já foi avaliado. Obrigado!',
     avaliacao_expirada: 'O prazo para avaliar este pedido acabou.',
@@ -754,6 +758,11 @@
     if (p.tipo_entrega === 'retirada') {
       if (s === 'saiu') return { t: 'Pronto para retirar', c: 'b-ok', d: 'Pode vir buscar na loja' };
       if (s === 'entregue') return { t: 'Retirado', c: 'b-off', d: 'Pedido retirado. Bom apetite!' };
+    }
+    if (p.tipo_entrega === 'envio') {
+      if (s === 'preparando') return { t: 'Separando', c: 'b-warn', d: 'A loja está separando e embalando' };
+      if (s === 'saiu') return { t: 'Enviado', c: 'b-brand', d: 'Postado na transportadora' };
+      if (s === 'entregue') return { t: 'Entregue', c: 'b-off', d: 'Pedido entregue' };
     }
     return GP.STATUS[s];
   };

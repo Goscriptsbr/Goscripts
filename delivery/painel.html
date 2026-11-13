@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=77394">
+<link rel="stylesheet" href="app.css?v=78770">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -510,7 +510,7 @@
       </div>
       <div id="verif-banner2"></div>
       <div class="card cm-plan" id="plano-box"></div>
-      <nav class="ml-nav" id="ml-nav"><a href="#sec-dados">Dados</a><a href="#sec-entrega">Entrega</a><a href="#sec-horario">Horários</a><a href="#sec-pag">Pagamentos</a><a href="#sec-equipe" id="nav-equipe" class="hide">Equipe</a><a href="#sec-conta">Conta</a></nav>
+      <nav class="ml-nav" id="ml-nav"><a href="#sec-dados">Dados</a><a href="#sec-entrega">Entrega</a><a href="#sec-horario">Horários</a><a href="#sec-pag">Pagamentos</a><a href="#sec-envio" id="nav-envio" class="hide">Envio</a><a href="#sec-equipe" id="nav-equipe" class="hide">Equipe</a><a href="#sec-conta">Conta</a></nav>
       <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
       <section class="card pad tipo-pick hide" id="tipo-pick">
         <h3 style="font-size:1.1rem;letter-spacing:-.02em">Que tipo de loja você vai cadastrar?</h3>
@@ -605,6 +605,12 @@
               <label class="field"><span>Nome do recebedor</span><input class="input" id="l-pixnome" maxlength="60" placeholder="Como aparece no banco"><small>Usado para gerar o QR Code com o valor certo.</small></label>
               <label class="field"><span>Cidade do recebedor</span><input class="input" id="l-pixcidade" maxlength="40" placeholder="Mogi Guaçu"></label>
             </div>
+          </div>
+
+          <div class="card pad fs ml-anchor hide" id="sec-envio" style="grid-column:1/-1">
+            <h3><span id="fi-env"></span>Envio para outras cidades</h3>
+            <p class="fsub">Para clientes fora da sua área de entrega. O cliente escolhe a transportadora no checkout e você gera e imprime a etiqueta aqui, pela sua conta do Melhor Envio.</p>
+            <div id="me-box"></div>
           </div>
         </div>
         <div class="savebar"><button class="btn btn-primary" id="b-salvar" style="min-width:200px">Salvar loja</button></div>
@@ -702,6 +708,18 @@
         <button type="button" class="btn btn-soft btn-sm" id="p-var-add"></button>
       </div>
 
+      <div class="psec hide" id="p-envio">
+        <b>Peso e medidas (para o frete)</b>
+        <p class="small muted" style="margin:4px 0 12px">Usados para calcular o envio pelo Melhor Envio. Considere o produto já embalado.</p>
+        <div class="grid2">
+          <label class="field"><span>Peso</span><div class="prefix-r"><input class="input" id="p-peso" inputmode="decimal" placeholder="0,300"><i class="small muted" style="font-style:normal">kg</i></div></label>
+          <label class="field"><span>Altura</span><div class="prefix-r"><input class="input" id="p-alt" inputmode="decimal" placeholder="4"><i class="small muted" style="font-style:normal">cm</i></div></label>
+          <label class="field"><span>Largura</span><div class="prefix-r"><input class="input" id="p-larg" inputmode="decimal" placeholder="11"><i class="small muted" style="font-style:normal">cm</i></div></label>
+          <label class="field"><span>Comprimento</span><div class="prefix-r"><input class="input" id="p-comp" inputmode="decimal" placeholder="16"><i class="small muted" style="font-style:normal">cm</i></div></label>
+        </div>
+        <p class="small muted" style="margin:0">Em branco, usamos 300 g e 4 × 11 × 16 cm.</p>
+      </div>
+
       <div class="psec">
         <label class="switch"><input type="checkbox" id="p-promo"><i></i>Colocar em promoção</label>
         <div class="grid2 hide" id="p-promo-box" style="margin-top:12px">
@@ -760,8 +778,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=77394"></script>
-<script src="app.js?v=77394"></script>
+<script src="config.js?v=78770"></script>
+<script src="app.js?v=78770"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -893,6 +911,7 @@
     if (!lojas.length) return novaLoja(true);
     const salva = GP.ls.get('gp_loja_sel');
     await abrirLoja(lojas.find(l => l.id === salva) || lojas[0]);
+    await voltaMelhorEnvio();
   }
 
   // ================= PLANO =================
@@ -912,6 +931,99 @@
     $('nav-equipe').classList.toggle('hide', !souDono);
     if (souDono) loadEquipe();
   }
+  // ================= ENVIO (MELHOR ENVIO) =================
+  async function chamarME(body) {
+    const { data, error } = await sb.functions.invoke('ff-melhorenvio', { body });
+    if (error) {
+      let j = null; try { j = error.context && await error.context.json(); } catch (_) {}
+      const cod = j && j.error || '';
+      const MSG = {
+        me_nao_configurado: 'O envio ainda não foi configurado na plataforma (faltam as chaves do Melhor Envio no Supabase).',
+        me_desconectado: 'A conta do Melhor Envio desconectou. Conecte de novo em Minha loja → Envio.',
+        me_saldo: 'Saldo insuficiente no Melhor Envio. Adicione saldo na sua carteira do Melhor Envio e tente de novo.',
+        me_autorizacao: 'O Melhor Envio não autorizou a conexão. Tente conectar de novo.',
+        so_dono: 'Só o dono da conta pode fazer isso.', sem_acesso: 'Você não tem acesso a esta loja.',
+        loja_sem_cep: 'Coloque o CEP no endereço da loja.', envio_so_variedades: 'O envio pelo Melhor Envio é só para lojas do tipo Variedades.',
+        etiqueta_nao_gerada: 'Gere a etiqueta primeiro.', pedido_cancelado: 'Pedido cancelado.'
+      };
+      const msg = MSG[cod] || (cod === 'me_erro' && j.detalhe ? 'Melhor Envio: ' + j.detalhe : '') ||
+        (/Failed to send|not found|404/i.test(error.message || '') && !cod ? 'A função ff-melhorenvio ainda não foi publicada no Supabase.' : (j && (j.detalhe || j.error)) || GP.err(error));
+      const e = new Error(msg); e.codigo = cod; throw e;
+    }
+    return data;
+  }
+  function renderEnvio() {
+    const variedades = $('l-tipo').value === 'variedades' && !!loja;
+    $('sec-envio').classList.toggle('hide', !variedades); $('nav-envio').classList.toggle('hide', !variedades);
+    if (!variedades) return;
+    const box = $('me-box');
+    if (!('me_conectado' in loja)) { box.innerHTML = '<div class="warnline">Falta rodar o SQL v20 no Supabase para ligar o envio.</div>'; return; }
+    if (!loja.me_conectado) {
+      box.innerHTML = `<div class="me-card">
+        <div class="me-ic">${ic('box')}</div>
+        <div class="grow" style="min-width:0"><b>Conecte sua conta do Melhor Envio</b>
+          <div class="small muted">O frete é calculado e as etiquetas são pagas com o saldo da <b>sua</b> conta. Não tem conta? É grátis em <a href="https://melhorenvio.com.br" target="_blank" rel="noopener" style="text-decoration:underline">melhorenvio.com.br</a>.</div></div>
+        ${souDono ? `<button type="button" class="btn btn-primary btn-sm" id="me-conectar">${ic('ext')}Conectar</button>` : ''}
+      </div>${souDono ? '' : '<div class="warnline" style="margin-top:10px">Só o dono da conta pode conectar o Melhor Envio.</div>'}`;
+      if ($('me-conectar')) $('me-conectar').onclick = async (e) => {
+        const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Abrindo…';
+        try { const r = await chamarME({ acao: 'url', loja: loja.id }); GP.ls.set('gp_me_loja', loja.id); location.href = r.url; }
+        catch (er) { b.disabled = false; b.innerHTML = ic('ext') + 'Conectar'; GP.toast(er.message, 'err'); }
+      };
+      return;
+    }
+    box.innerHTML = `<div class="me-card">
+        <div class="me-ic ok">${ic('check')}</div>
+        <div class="grow" style="min-width:0"><b>Melhor Envio conectado</b><div class="small muted">${esc(loja.me_conta || 'Conta conectada')}</div></div>
+        <div class="me-saldo"><small>Saldo</small><b id="me-saldo">…</b></div>
+        <button type="button" class="icon-btn" id="me-atu" title="Atualizar saldo">${ic('refresh')}</button>
+      </div>
+      <label class="switch" style="margin:14px 0 6px"><input type="checkbox" id="l-envio" ${loja.envio_externo ? 'checked' : ''} ${souDono ? '' : 'disabled'}><i></i>Oferecer envio para clientes fora da área de entrega</label>
+      <p class="small muted" style="margin:0 0 10px">Quando ligado, quem está fora do seu raio vê as opções de frete (Correios, Jadlog…) no checkout. Pedidos com envio são pagos por <b>Pix</b>${loja.aceita_pix ? '' : ' (ligue o Pix nas formas de pagamento)'}. Cadastre o peso e as medidas nos produtos para o frete sair certo.</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <a class="btn btn-soft btn-sm" href="https://melhorenvio.com.br" target="_blank" rel="noopener">${ic('cash')}Adicionar saldo</a>
+        ${souDono ? `<button type="button" class="btn btn-ghost btn-sm" id="me-desc">Desconectar</button>` : ''}
+      </div>`;
+    const saldo = async () => {
+      $('me-saldo').textContent = '…';
+      try { const r = await chamarME({ acao: 'saldo', loja: loja.id }); $('me-saldo').textContent = brl(r.saldo); }
+      catch (er) { $('me-saldo').textContent = '—'; GP.toast(er.message, 'err'); if (er.codigo === 'me_desconectado') { loja.me_conectado = false; renderEnvio(); } }
+    };
+    saldo(); $('me-atu').onclick = saldo;
+    $('l-envio').onchange = async (e) => {
+      const v = e.target.checked;
+      const { data, error } = await sb.from('ff_lojas').update({ envio_externo: v }).eq('id', loja.id).select().single();
+      if (error) { e.target.checked = !v; return GP.toast(GP.err(error), 'err'); }
+      loja = data; lojas = lojas.map(l => l.id === loja.id ? loja : l);
+      GP.toast(v ? 'Envio para outras cidades ligado' : 'Envio para outras cidades desligado', 'ok');
+    };
+    if ($('me-desc')) $('me-desc').onclick = async () => {
+      if (!(await GP.confirmar('Desconectar o Melhor Envio?', { texto: 'O envio para outras cidades é desligado. As etiquetas já geradas continuam na sua conta do Melhor Envio.', ok: 'Desconectar', perigo: true }))) return;
+      try { await chamarME({ acao: 'desconectar', loja: loja.id }); loja.me_conectado = false; loja.envio_externo = false; loja.me_conta = ''; renderEnvio(); GP.toast('Melhor Envio desconectado', 'ok'); }
+      catch (er) { GP.toast(er.message, 'err'); }
+    };
+  }
+  // Volta da tela de autorização do Melhor Envio (?code=...&state=me:<loja>)
+  async function voltaMelhorEnvio() {
+    const q = new URLSearchParams(location.search);
+    const st = q.get('state') || '', code = q.get('code');
+    if (!st.startsWith('me:') && !(q.get('error') && GP.ls.get('gp_me_loja'))) return false;
+    history.replaceState(null, '', location.pathname);
+    const id = st.slice(3) || GP.ls.get('gp_me_loja'); GP.ls.set('gp_me_loja', null);
+    const l = lojas.find(x => x.id === id);
+    if (!l) return false;
+    if (loja !== l) await abrirLoja(l);
+    go('loja'); setTimeout(() => $('sec-envio').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    if (!code) { GP.toast('A conexão com o Melhor Envio foi cancelada.', 'err'); return true; }
+    GP.toast('Conectando ao Melhor Envio…');
+    try {
+      const r = await chamarME({ acao: 'conectar', loja: l.id, code });
+      loja.me_conectado = true; loja.me_conta = r.conta || '';
+      renderEnvio(); GP.toast('Melhor Envio conectado! Agora ligue o envio para outras cidades.', 'ok');
+    } catch (er) { GP.toast(er.message, 'err'); }
+    return true;
+  }
+
   function semAcesso() {
     setTabsLocked(true); go('loja');
     $('f-loja').classList.add('hide'); $('tipo-pick').classList.add('hide');
@@ -979,7 +1091,7 @@
   };
   // ---- Equipe (só o dono) ----
   let equipe = [], eqEdit = null, eqModo = 'todas';
-  $('fi-eq').innerHTML = ic('user'); $('b-eq-add').innerHTML = ic('plus') + 'Adicionar'; $('eq-x').innerHTML = ic('x');
+  $('fi-env').innerHTML = ic('box'); $('fi-eq').innerHTML = ic('user'); $('b-eq-add').innerHTML = ic('plus') + 'Adicionar'; $('eq-x').innerHTML = ic('x');
   // O dono nunca é da equipe de outra pessoa: todas as lojas do painel dele são dele
   const lojasDoDono = () => lojas.slice();
   async function loadEquipe() {
@@ -1072,7 +1184,7 @@
   }
   $('tipos-g').onclick = (e) => {
     const b = e.target.closest('[data-tipo]'); if (!b) return;
-    $('l-tipo').value = b.dataset.tipo; mostrarTipo(); escolherTipo(false);
+    $('l-tipo').value = b.dataset.tipo; mostrarTipo(); escolherTipo(false); renderEnvio();
     setTimeout(() => { if (!$('l-nome').value) $('l-nome').focus(); }, 200);
   };
   $('b-trocar-tipo').onclick = () => escolherTipo(true);
@@ -1297,22 +1409,23 @@
     }
     const PROX = { novo: ['preparando', 'Aceitar e preparar'], preparando: ['saiu', 'Saiu para entrega'], saiu: ['entregue', 'Marcar como entregue'] };
     const PROX_RET = { novo: ['preparando', 'Aceitar e preparar'], preparando: ['saiu', 'Pronto para retirada'], saiu: ['entregue', 'Cliente retirou'] };
+    const PROX_ENV = { novo: ['preparando', 'Aceitar e separar'], preparando: ['saiu', 'Postado (enviado)'], saiu: ['entregue', 'Marcar como entregue'] };
     $('orders').innerHTML = lst.map(p => {
-      const ret = p.tipo_entrega === 'retirada';
-      const st = GP.statusTxt(p), nx = (ret ? PROX_RET : PROX)[p.status];
+      const ret = p.tipo_entrega === 'retirada', env = p.tipo_entrega === 'envio';
+      const st = GP.statusTxt(p), nx = (ret ? PROX_RET : env ? PROX_ENV : PROX)[p.status];
       const maps = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
       return `<article class="card order st-${p.status}">
         <div class="oh"><b style="font-size:1.08rem">#${p.numero}</b><span class="small muted">${GP.hora(p.criado_em)} · ${GP.ago(p.criado_em)}</span><div class="grow"></div><span class="badge ${st.c}"><i class="dot"></i>${st.t}</span></div>
         <div class="ob">
           <div class="line">${ic('phone')}<div><b>${esc(p.cliente_nome)}</b> · <a href="${GP.wa(p.cliente_telefone, `Olá ${p.cliente_nome}! Aqui é da ${loja.nome}, sobre seu pedido #${p.numero}.`)}" target="_blank" rel="noopener" style="color:var(--ok);font-weight:700">${esc(p.cliente_telefone)}</a></div></div>
           ${ret ? `<div class="line">${ic('store')}<div><span class="badge b-brand">Retirada no local</span> <span class="small muted">o cliente vem buscar</span></div></div>`
-            : `<div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}<br><a href="${maps}" target="_blank" rel="noopener" class="small" style="color:var(--brand-2);font-weight:700">Abrir rota no mapa (${km(p.distancia_km)})</a></div></div>`}
+            : env ? envioBloco(p) : `<div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}<br><a href="${maps}" target="_blank" rel="noopener" class="small" style="color:var(--brand-2);font-weight:700">Abrir rota no mapa (${km(p.distancia_km)})</a></div></div>`}
           <div class="its">${p.ff_pedido_itens.map(i => `<div><span><b>${i.qtd}×</b> ${esc(i.nome)}${(i.opcoes || []).length ? `<br><span class="small muted">+ ${esc(GP.txtOpcoes(i.opcoes))}</span>` : ''}${i.obs ? `<br><span class="small muted">↳ ${esc(i.obs)}</span>` : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div>
           ${GP.troco(p) > 0 ? `<div class="fee" style="background:var(--warn-soft);color:#7a4f0e;display:flex;gap:10px;padding:10px 12px;border-radius:12px;margin-bottom:10px;font-weight:700">${ic('cash')}<span class="grow">Separar troco para o motoboy</span><span>${brl(GP.troco(p))}</span></div>` : ''}
           ${p.entregador_nome ? `<div class="line">${ic('bike')}<div class="small">Entregador: <b>${esc(p.entregador_nome)}</b></div></div>` : ''}
           ${p.observacao ? `<div class="line">${ic('edit')}<div class="small"><b>Obs.:</b> ${esc(p.observacao)}</div></div>` : ''}
           <div class="sum-row small"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
-          <div class="sum-row small"><span>Entrega</span><span>${brl(p.taxa_entrega)}</span></div>
+          <div class="sum-row small"><span>${env ? 'Frete' : 'Entrega'}</span><span>${brl(p.taxa_entrega)}</span></div>
           ${Number(p.desconto) ? `<div class="sum-row small" style="color:var(--ok)"><span>Desconto ${p.cupom ? '(' + esc(p.cupom) + ')' : ''}</span><span>-${brl(p.desconto)}</span></div>` : ''}
           <div class="sum-row total" style="font-size:1rem"><span>Total</span><span>${brl(p.total)}</span></div>
           <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
@@ -1327,6 +1440,42 @@
       </article>`;
     }).join('');
   }
+  // Pedido com envio: transportadora, endereço completo e etiqueta
+  function envioBloco(p) {
+    const e = p.endereco_partes || {};
+    const doc = GP.digits(p.cliente_doc || '');
+    const docF = doc.length === 11 ? doc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : doc.length === 14 ? GP.fmtCnpj(doc) : doc;
+    const gerada = p.etiqueta_status === 'gerada', cancel = p.status === 'cancelado';
+    const rast = p.rastreio ? `<a href="https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(p.rastreio)}" target="_blank" rel="noopener" style="color:var(--brand-2);font-weight:800">${esc(p.rastreio)}</a>` : '';
+    return `<div class="line">${ic('box')}<div><span class="badge b-brand">Envio</span> <b>${esc(p.frete_nome || 'Transportadora')}</b>${p.frete_prazo ? ` <span class="small muted">· até ${p.frete_prazo} dia${p.frete_prazo > 1 ? 's' : ''} úteis</span>` : ''}</div></div>
+      <div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}${docF ? `<br><span class="small muted">CPF/CNPJ: ${esc(docF)}</span>` : ''}</div></div>
+      ${cancel ? '' : `<div class="envbox">
+        <div class="small">${gerada ? `${ic('check')}<b>Etiqueta gerada</b>${rast ? ' · Rastreio ' + rast : ''}` : p.etiqueta_status === 'paga' || p.etiqueta_status === 'carrinho' ? '<b>Etiqueta em andamento</b> · toque para concluir' : 'A etiqueta é paga com o saldo do seu Melhor Envio.'}</div>
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">
+          ${gerada ? `<button class="btn btn-primary btn-sm" data-me="imprimir" data-id="${p.id}">${ic('receipt')}Imprimir etiqueta</button>
+                      <button class="btn btn-ghost btn-sm" data-me="rastrear" data-id="${p.id}">${ic('refresh')}Rastreio</button>`
+                   : `<button class="btn btn-primary btn-sm" data-me="etiqueta" data-id="${p.id}">${ic('receipt')}Gerar etiqueta</button>`}
+        </div></div>`}`;
+  }
+  async function acaoEnvio(b) {
+    const p = pedidos.find(x => x.id === b.dataset.id); if (!p) return;
+    const acao = b.dataset.me;
+    if (acao === 'etiqueta' && !(await GP.confirmar('Gerar a etiqueta?', { texto: `O valor do frete (${brl(p.taxa_entrega)}, pode variar um pouco) será descontado do saldo da sua conta do Melhor Envio.`, ok: 'Gerar etiqueta', icone: 'receipt' }))) return;
+    const janela = acao === 'imprimir' ? window.open('', '_blank') : null;
+    const t = b.innerHTML; b.disabled = true; b.innerHTML = '<span class="spin"></span>' + (acao === 'etiqueta' ? 'Gerando…' : 'Aguarde…');
+    try {
+      const r = await chamarME({ acao, pedido: p.id });
+      if (acao === 'etiqueta') { p.etiqueta_status = 'gerada'; p.rastreio = r.rastreio || p.rastreio; GP.toast('Etiqueta gerada! Agora é só imprimir.', 'ok'); }
+      if (acao === 'imprimir') { if (janela) janela.location = r.url; else location.href = r.url; }
+      if (acao === 'rastrear') { p.rastreio = r.rastreio || p.rastreio; GP.toast(r.rastreio ? 'Rastreio: ' + r.rastreio : 'O código de rastreio aparece depois que a transportadora recebe o pacote.', r.rastreio ? 'ok' : ''); }
+    } catch (er) {
+      if (janela) janela.close();
+      GP.toast(er.message, 'err');
+      if (acao === 'etiqueta') checarPedidos();
+    }
+    b.disabled = false; b.innerHTML = t;
+    renderPedidos();
+  }
   $('ofilter').onclick = (e) => {
     const b = e.target.closest('[data-f]'); if (!b) return;
     ofiltro = b.dataset.f;
@@ -1334,6 +1483,8 @@
     renderPedidos();
   };
   $('orders').onclick = async (e) => {
+    const me = e.target.closest('[data-me]');
+    if (me) return acaoEnvio(me);
     const pr = e.target.closest('[data-print]');
     if (pr) { const p = pedidos.find(x => x.id === pr.dataset.print); if (p) imprimir(p); return; }
     const c = e.target.closest('[data-comp]');
@@ -1488,6 +1639,10 @@
     $('p-est-on').checked = !!(p && (temEst(p.estoque) || pVars.some(v => temEst(v.estoque))));
     $('p-est').value = p && temEst(p.estoque) ? p.estoque : '';
     renderVars();
+    const dec = (v) => v != null && v !== '' ? String(v).replace('.', ',') : '';
+    $('p-envio').classList.toggle('hide', !(loja && loja.tipo === 'variedades'));
+    $('p-peso').value = dec(p && p.peso_kg); $('p-alt').value = dec(p && p.altura_cm);
+    $('p-larg').value = dec(p && p.largura_cm); $('p-comp').value = dec(p && p.comprimento_cm);
     gruposEd = JSON.parse(JSON.stringify(p ? GP.grupos(p) : []));
     renderGrupos();
     prodEtapas = p ? [...(p.etapas_ids || [])] : [];
@@ -1782,10 +1937,18 @@
     if (variacoes.some(v => !v.nome)) { $('p-vars').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Dê um nome para cada variação (ex.: P, M, G).', 'err'); }
     if (new Set(variacoes.map(v => v.nome.toLowerCase())).size !== variacoes.length) return GP.toast('Há variações com o mesmo nome.', 'err');
     const estoque = $('p-est-on').checked && !variacoes.length ? Math.max(0, parseInt($('p-est').value) || 0) : null;
-    const row = { nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)), estoque, variacoes };
+    const medida = (id, max) => { const v = parseFloat(String($(id).value).replace(',', '.')); return v > 0 ? Math.min(v, max) : null; };
+    const medidas = loja && loja.tipo === 'variedades' ? { peso_kg: medida('p-peso', 30), altura_cm: medida('p-alt', 100), largura_cm: medida('p-larg', 100), comprimento_cm: medida('p-comp', 100) } : {};
+    const row = { ...medidas, nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)), estoque, variacoes };
     const b = $('p-save'); b.disabled = true;
     const salvar = (r) => editing ? sb.from('ff_produtos').update(r).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...r, loja_id: loja.id, ordem: prods.length });
     let { error } = await salvar(row);
+    // Sem o SQL v20 ainda: salva sem peso e medidas
+    if (error && /peso_kg|altura_cm|largura_cm|comprimento_cm/.test(error.message || '')) {
+      const { peso_kg: _a, altura_cm: _b, largura_cm: _c, comprimento_cm: _d, ...semMed } = row;
+      ({ error } = await salvar(semMed));
+      if (!error) GP.toast('Produto salvo. Peso e medidas só funcionam depois de rodar o SQL v20 no Supabase.', 'err');
+    }
     // Sem o SQL v19 ainda: salva sem variações/estoque e avisa
     if (error && /estoque|variacoes/.test(error.message || '') && /column|schema/i.test(error.message || '')) {
       const { estoque: _e, variacoes: _v, ...semNovos } = row;
@@ -1946,6 +2109,7 @@
     $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
     togglePix(); sim(); coord(); pixPrev();
     renderHoras(l.horarios); $('l-auto').checked = !!l.horario_auto;
+    renderEnvio();
   }
   const NOMES_PIX = { cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória' };
   const PH_PIX = { cpf: '000.000.000-00', cnpj: '00.000.000/0000-00', telefone: '(19) 99999-9999', email: 'nome@email.com', aleatoria: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' };
