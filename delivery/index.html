@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=73668">
+<link rel="stylesheet" href="app.css?v=73886">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -118,6 +118,14 @@
   .role:hover{box-shadow:var(--sh-lg)}
   .role .ic{width:42px;height:42px;border-radius:12px;background:var(--bg);display:grid;place-items:center;flex:none}
   .role p{color:var(--muted);font-size:.82rem}
+  @media(min-width:900px) and (min-height:640px){
+    .hero{background:radial-gradient(900px 520px at 88% 30%,rgba(242,69,28,.20),transparent 62%),radial-gradient(700px 420px at 0% 100%,rgba(242,69,28,.08),transparent 60%),linear-gradient(180deg,#fff,var(--bg));border-bottom:0}
+    .hero .wrap{min-height:calc(100vh - 64px);padding-top:30px;padding-bottom:40px}
+    .hero h1{font-size:clamp(2.8rem,4.2vw,4.2rem)}
+    .hero-phones{height:min(600px,72vh)}
+    .hero-phones .ph{width:min(240px,25vh)}
+    .hero-phones .ph-c{margin-left:calc(min(240px,25vh) / -2)}
+  }
 </style>
 </head>
 <body>
@@ -196,8 +204,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=73668"></script>
-<script src="app.js?v=73668"></script>
+<script src="config.js?v=73886"></script>
+<script src="app.js?v=73886"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;

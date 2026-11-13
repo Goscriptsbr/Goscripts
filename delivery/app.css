@@ -17,6 +17,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 input,select,textarea{font:inherit;color:inherit}
 .i{width:1.2em;height:1.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.22em}
 .wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+@media(min-width:1440px){.wrap{max-width:1260px}}
 .narrow{max-width:640px}
 .hide{display:none!important}
 .muted{color:var(--muted)}

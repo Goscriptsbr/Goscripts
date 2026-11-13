@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=73668">
+<link rel="stylesheet" href="app.css?v=73886">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -29,7 +29,11 @@
   .auth .side .plan-line{position:relative;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:#b9b9c4;margin-top:22px}
   .auth .side .plan-line span:first-child{color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:6px}
   .auth .side .plan-line i{display:inline-grid;color:#FF8A65}.auth .side .plan-line i svg{width:16px;height:16px}
-  .auth .form{display:grid;place-items:center;padding:30px 20px}
+  .auth .form{display:flex;flex-direction:column;align-items:center;padding:30px 20px 0}
+  .auth .form .box{margin:auto 0}
+  .auth .form .rodape-auth{width:100%;margin-top:24px}
+  .auth .form .rodape-auth .gs-foot{padding-top:10px}
+  body:has(#v-auth:not(.hide)) > .gs-foot{display:none}
   .auth .box{width:min(400px,100%)}
   .auth h1{font-size:1.6rem;letter-spacing:-.03em;margin-bottom:4px}
   .seg{display:flex;background:#ECEAE6;border-radius:12px;padding:4px;margin:20px 0}
@@ -46,7 +50,8 @@
     .auth .side ul::-webkit-scrollbar{display:none}
     .auth .side li{flex:none;width:200px;flex-direction:column;gap:8px;scroll-snap-align:start}
     .auth .side .plan-line{margin-top:14px;font-size:.78rem}
-    .auth .form{padding:22px 18px 30px;place-items:start center}
+    .auth .form{padding:22px 18px 0}
+    .auth .form .box{margin:0}
     .auth .box>.logo{display:none}
     .auth.entrar .side .lead,.auth.entrar .side ul,.auth.entrar .side .kick{display:none}
     .auth.entrar .side h2{font-size:1.25rem;margin-top:14px}
@@ -370,6 +375,7 @@
         </form>
       </div>
     </div>
+    <div class="rodape-auth" data-rodape-aqui></div>
   </div>
 </div>
 
@@ -679,8 +685,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=73668"></script>
-<script src="app.js?v=73668"></script>
+<script src="config.js?v=73886"></script>
+<script src="app.js?v=73886"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;

@@ -852,6 +852,8 @@
     f.innerHTML = `<a class="gs-zap" href="${zap}" target="_blank" rel="noopener">${GP.ic('chat')}<span>Fale conosco no WhatsApp</span></a>
       <a class="gs-by" href="https://goscripts.com.br" target="_blank" rel="noopener"><span>Desenvolvido por</span><img src="../logo-192.png" alt="" width="22" height="22"><b>GoScripts</b></a>`;
     document.body.appendChild(f);
+    // Páginas com tela cheia (login do painel) marcam onde o rodapé deve aparecer
+    document.querySelectorAll('[data-rodape-aqui]').forEach(el => el.appendChild(f.cloneNode(true)));
   };
   const iniciar = () => { GP.olhoSenha(); GP.rodape(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
