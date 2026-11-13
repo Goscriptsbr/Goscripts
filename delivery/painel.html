@@ -10,23 +10,45 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=70073">
+<link rel="stylesheet" href="app.css?v=73313">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
   .auth .side{background:var(--ink);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
   .auth .side::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:var(--brand);opacity:.3;right:-140px;bottom:-140px}
-  .auth .side h2{font-size:2.2rem;line-height:1.1;letter-spacing:-.03em;margin:22px 0 14px;position:relative}
-  .auth .side ul{list-style:none;display:grid;gap:12px;position:relative}
-  .auth .side li{display:flex;gap:10px;color:#d6d6dd}
-  .auth .side li .i{color:#FF8A65}
+  .auth .side h2{font-size:2.2rem;line-height:1.1;letter-spacing:-.03em;margin:10px 0 12px;position:relative}
+  .auth .side .kick{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#FF8A65;margin-top:26px;position:relative}
+  .auth .side .lead{color:#c9c9d2;margin-bottom:22px;position:relative;line-height:1.5}
+  .auth .side .lead b{color:#fff}
+  .auth .side ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative}
+  .auth .side li{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px}
+  .auth .side li .e{font-size:1.25rem;line-height:1;flex:none;margin-top:1px}
+  .auth .side li b{display:block;font-size:.88rem;color:#fff;line-height:1.25}
+  .auth .side li span{display:block;font-size:.76rem;color:#a9a9b5;line-height:1.4;margin-top:3px}
+  .auth .side .plan-line{position:relative;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:#b9b9c4;margin-top:22px}
+  .auth .side .plan-line span:first-child{color:#fff;font-weight:700}
   .auth .form{display:grid;place-items:center;padding:30px 20px}
   .auth .box{width:min(400px,100%)}
   .auth h1{font-size:1.6rem;letter-spacing:-.03em;margin-bottom:4px}
   .seg{display:flex;background:#ECEAE6;border-radius:12px;padding:4px;margin:20px 0}
   .seg button{flex:1;height:38px;border-radius:9px;font-weight:700;color:var(--muted)}
   .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--sh)}
-  @media(max-width:860px){.auth{grid-template-columns:1fr}.auth .side{display:none}}
+  @media(max-width:860px){
+    .auth{grid-template-columns:1fr;min-height:0}
+    .auth .side{padding:20px 18px 22px;justify-content:flex-start}
+    .auth .side::before{width:260px;height:260px;right:-110px;top:-110px;bottom:auto}
+    .auth .side .kick{margin-top:18px;font-size:.68rem}
+    .auth .side h2{font-size:1.55rem;margin:6px 0 8px}
+    .auth .side .lead{font-size:.9rem;margin-bottom:14px}
+    .auth .side ul{display:flex;overflow-x:auto;gap:8px;margin:0 -18px;padding:0 18px 4px;scroll-snap-type:x mandatory;scroll-padding-left:18px;scrollbar-width:none}
+    .auth .side ul::-webkit-scrollbar{display:none}
+    .auth .side li{flex:none;width:200px;flex-direction:column;gap:8px;scroll-snap-align:start}
+    .auth .side .plan-line{margin-top:14px;font-size:.78rem}
+    .auth .form{padding:22px 18px 30px;place-items:start center}
+    .auth .box>.logo{display:none}
+    .auth.entrar .side .lead,.auth.entrar .side ul,.auth.entrar .side .kick{display:none}
+    .auth.entrar .side h2{font-size:1.25rem;margin-top:14px}
+  }
   .logo.light span{color:#fff}
 
   /* app */
@@ -298,14 +320,16 @@
 <body>
 
 <!-- ===================== LOGIN ===================== -->
-<div id="v-auth" class="auth hide">
+<div id="v-auth" class="auth hide entrar">
   <div class="side">
     <a class="logo light" href="./"><b id="lg1"></b><span>Go<em>Pedido</em></span></a>
     <div>
+      <span class="kick">Para lanchonetes, hamburguerias, açaí e pizzarias</span>
       <h2>Sua lanchonete recebendo pedidos online hoje.</h2>
+      <p class="lead">Seu próprio delivery, com link para divulgar no WhatsApp e no Instagram. <b>Sem comissão por pedido.</b></p>
       <ul id="perks"></ul>
     </div>
-    <p class="small" style="color:#8d8d99;position:relative">Grátis: 1 loja e 50 produtos · Planos a partir de R$ 50/mês · sem comissão por pedido</p>
+    <div class="plan-line"><span>🎁 Grátis: 1 loja e 50 produtos</span><span>Planos a partir de R$ 50/mês</span></div>
   </div>
   <div class="form">
     <div class="box">
@@ -645,8 +669,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=70073"></script>
-<script src="app.js?v=70073"></script>
+<script src="config.js?v=73313"></script>
+<script src="app.js?v=73313"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -654,13 +678,15 @@
   const cfg = GP.cfg;
   ['lg1', 'lg2', 'lg3'].forEach(id => $(id).innerHTML = ic('bag'));
   $('perks').innerHTML = [
-    'Cardápio com fotos, preços e categorias',
-    'Taxa de entrega automática por km, calculada pela localização',
-    'Pix com QR Code e comprovante obrigatório',
-    'Cartão de débito e crédito na entrega',
-    'Código de acesso para seus motoboys (troca a cada 8h)',
-    'Pedidos chegando na hora, com aviso sonoro'
-  ].map(t => `<li>${ic('check')}${t}</li>`).join('');
+    ['🔔', 'Pedidos ao vivo', 'Chegam na hora, com aviso sonoro e impressão na térmica.'],
+    ['📱', 'Cardápio completo', 'Fotos, categorias, adicionais e montagem (açaí, combos).'],
+    ['⚡', 'Pix na hora', 'QR Code com comprovante. Cartão e dinheiro com troco na entrega.'],
+    ['🛵', 'Taxa automática', 'Calculada pela rota até o cliente, por km ou por faixa.'],
+    ['🏍️', 'Área do motoboy', 'Código de acesso que troca sozinho a cada 8 horas.'],
+    ['🎟️', 'Cupons e promoções', 'Desconto, entrega grátis e preço "de/por".'],
+    ['⭐', 'Avaliações', 'Seus clientes avaliam e você responde.'],
+    ['🕒', 'Horário automático', 'Abre e fecha sozinha. Também aceita retirada no local.']
+  ].map(([e, t, d]) => `<li><span class="e">${e}</span><div><b>${t}</b><span>${d}</span></div></li>`).join('');
   $('ti1').innerHTML = ic('receipt'); $('ti2').innerHTML = ic('menu'); $('ti3').innerHTML = ic('store');
   $('fi1').innerHTML = ic('store'); $('fi2').innerHTML = ic('pin'); $('fi3').innerHTML = ic('card');
   $('b-ver').innerHTML = ic('ext'); $('b-admin').innerHTML = ic('shield'); $('b-sair').innerHTML = ic('logout'); $('w-ic').innerHTML = ic('store');
@@ -684,6 +710,7 @@
     const b = e.target.closest('[data-m]'); if (!b) return;
     modo = b.dataset.m;
     document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b));
+    $('v-auth').classList.toggle('entrar', modo === 'in');
     $('a-title').textContent = modo === 'in' ? 'Entrar no painel' : 'Criar conta de lojista';
     $('a-sub').textContent = modo === 'in' ? 'Gerencie sua loja, cardápio e pedidos.' : 'Leva menos de 2 minutos. É grátis.';
     $('a-btn').textContent = modo === 'in' ? 'Entrar' : 'Criar conta';
@@ -692,6 +719,7 @@
     document.querySelectorAll('.up-only').forEach(x => x.classList.toggle('hide', modo !== 'up'));
     $('a-email2').required = $('a-pass2').required = modo === 'up';
   };
+  if (new URLSearchParams(location.search).get('criar') === '1') { const bu = document.querySelector('.seg [data-m="up"]'); if (bu) bu.click(); }
   $('f-auth').onsubmit = async (e) => {
     e.preventDefault();
     const b = $('a-btn'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
