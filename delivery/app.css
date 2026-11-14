@@ -315,3 +315,19 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
 .pular{position:absolute;left:12px;top:-60px;z-index:100;background:var(--ink);color:#fff;padding:10px 14px;border-radius:10px;font-weight:700}
 .pular:focus{top:12px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+/* pagamento online (Mercado Pago) */
+.mp-wrap{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.mp-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip-opc{font-size:.7rem;font-weight:800;letter-spacing:.03em;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.me-ic.mp{background:#E6F4FF;color:#0A6ED1}
+.mp-badge{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:800;border-radius:999px;padding:3px 10px}
+.mp-badge .i{width:13px;height:13px}
+.mp-badge.pend{background:var(--warn-soft);color:#8a5a0c}
+.mp-badge.ok{background:var(--ok-soft);color:var(--ok)}
+.mp-badge.bad{background:var(--bad-soft);color:var(--bad)}
+.mp-badge.est{background:var(--bg);color:var(--muted)}
+.nfbox{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-radius:12px;background:var(--bg);font-size:.86rem;margin-top:10px}
+.nfbox b{font-weight:700}
+.nfbox .grow{flex:1 1 100%;min-width:0;overflow-wrap:anywhere}
+.nfbox>.i{flex:none}
+.nfbox:has(> .i) .grow{flex-basis:calc(100% - 34px)}

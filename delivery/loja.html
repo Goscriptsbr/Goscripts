@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=82723">
+<link rel="stylesheet" href="app.css?v=95774">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -333,8 +333,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=82723"></script>
-<script src="app.js?v=82723"></script>
+<script src="config.js?v=95774"></script>
+<script src="app.js?v=95774"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -375,7 +375,7 @@
   }
   $('s-desc').textContent = loja.descricao || '';
   if (loja.cnpj) $('s-end').insertAdjacentHTML('afterend', `<p class="small muted" style="margin-top:10px">CNPJ ${esc(GP.fmtCnpj(loja.cnpj))}</p>`);
-  const pags = [loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito', loja.aceita_dinheiro !== false && loja.aceita_dinheiro != null && 'Dinheiro'].filter(Boolean);
+  const pags = [loja.aceita_mp && loja.mp_conectado && 'Online', loja.aceita_pix && 'Pix', loja.aceita_debito && 'Débito', loja.aceita_credito && 'Crédito', loja.aceita_dinheiro !== false && loja.aceita_dinheiro != null && 'Dinheiro'].filter(Boolean);
   if ($('cup-ic')) $('cup-ic').innerHTML = ic('tag');
   const nota = loja.nota_qtd ? String(loja.nota_media).replace('.', ',') : null;
   $('s-meta').innerHTML = [
@@ -386,7 +386,7 @@
   $('s-infos').innerHTML = [
     ['Entrega', GP.regraEntrega(loja)],
     ['Pedido mínimo', Number(loja.pedido_minimo) ? brl(loja.pedido_minimo) : 'Sem mínimo'],
-    ['Pagamento', [loja.aceita_pix && 'Pix', (loja.aceita_debito || loja.aceita_credito) && 'Cartão', loja.aceita_dinheiro && 'Dinheiro'].filter(Boolean).join(' · ') || '—'],
+    ['Pagamento', [loja.aceita_mp && loja.mp_conectado && 'Online (cartão ou Pix)', loja.aceita_pix && 'Pix', (loja.aceita_debito || loja.aceita_credito) && 'Cartão', loja.aceita_dinheiro && 'Dinheiro'].filter(Boolean).join(' · ') || '—'],
     ['Retirada', loja.aceita_retirada ? 'Grátis na loja' : 'Só entrega']
   ].map(([l, v]) => `<div class="inf"><span>${l}</span><b>${esc(v)}</b></div>`).join('');
   const hojeDow = GP.agoraSP().dow, linH = GP.resumoHorarios(loja.horarios || {});
@@ -818,16 +818,17 @@
 
   function renderPag() {
     const ops = [
+      loja.aceita_mp && loja.mp_conectado && ['mp', 'card', 'Pagar online', 'Cartão de crédito ou Pix pelo Mercado Pago · confirmação na hora'],
       loja.aceita_pix && ['pix', 'pix', 'Pix', 'Pague agora e anexe o comprovante'],
       loja.aceita_debito && ['debito', 'card', 'Cartão de débito', 'Pague na entrega, na maquininha'],
       loja.aceita_credito && ['credito', 'card', 'Cartão de crédito', 'Pague na entrega, na maquininha'],
       loja.aceita_dinheiro && ['dinheiro', 'cash', 'Dinheiro', 'Pague na entrega · informe se precisa de troco']
-    ].filter(Boolean).filter(o => !(entrega() && entrega().envio) || o[0] === 'pix');
+    ].filter(Boolean).filter(o => !(entrega() && entrega().envio) || o[0] === 'pix' || o[0] === 'mp');
     if (pag && !ops.find(o => o[0] === pag)) pag = null;
     if (!pag && ops.length === 1) pag = ops[0][0];
     $('pay-opts').innerHTML = ops.length ? ops.map(o => `<label class="opt ${pag === o[0] ? 'on' : ''}">
       <input type="radio" name="pag" value="${o[0]}" ${pag === o[0] ? 'checked' : ''}>
-      <span class="ic" style="color:${o[0] === 'pix' ? '#32BCAD' : 'var(--ink-2)'}">${ic(o[1])}</span>
+      <span class="ic" style="color:${o[0] === 'pix' ? '#32BCAD' : o[0] === 'mp' ? '#0A6ED1' : 'var(--ink-2)'}">${ic(o[1])}</span>
       <span class="grow"><b>${o[2]}</b><div class="small muted">${o[3]}</div></span></label>`).join('')
       : '<p class="muted">Esta loja ainda não configurou formas de pagamento.</p>';
     if (comprovante && comprovanteTotal !== total()) { comprovante = null; GP.toast('O valor mudou: anexe um novo comprovante.'); }
@@ -951,7 +952,7 @@
       if (e && e.calc) { ok = false; txt = 'Calculando a rota…'; }
       if (modoEnt === 'entrega' && addr && !addr.valid() && $('c-nome').value.trim()) txt = 'Preencha rua, número e cidade';
     } else {
-      txt = `Enviar pedido · ${brl(total())}`;
+      txt = pag === 'mp' ? `Ir para o pagamento · ${brl(total())}` : `Enviar pedido · ${brl(total())}`;
       ok = !!pag && (pag !== 'pix' || !!comprovante) && (pag !== 'dinheiro' || trocoOk());
     }
     if (!ST().aberta) { ok = false; txt = 'Loja fechada no momento'; }
@@ -1047,6 +1048,14 @@
     const hist = GP.ls.get('gp_pedidos', []); hist.unshift({ t: data.token, n: data.numero, loja: loja.nome, em: Date.now() });
     GP.ls.set('gp_pedidos', hist.slice(0, 20));
     try { sessionStorage.setItem('gp_email_pedido', emailOk() ? emailTxt() : ''); } catch (_) {}
+    // Pagamento online: cria o link no Mercado Pago e leva o cliente para pagar. Se der erro, ele paga pela página do pedido.
+    if (pag === 'mp' && data.mp_status === 'pendente') {
+      $('co-next').textContent = 'Abrindo o Mercado Pago…';
+      try {
+        const r = await sb.functions.invoke('ff-mercadopago', { body: { acao: 'pagar', token: data.token } });
+        if (r.data && r.data.url) { location.href = r.data.url; return; }
+      } catch (_) {}
+    }
     location.href = 'pedido.html?t=' + encodeURIComponent(data.token) + '&novo=1';
   };
 

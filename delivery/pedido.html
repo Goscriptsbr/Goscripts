@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=82723">
+<link rel="stylesheet" href="app.css?v=95774">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -39,6 +39,13 @@
   .aviso-email .i{width:20px;height:20px;flex:none;margin-top:2px;color:#B7791F}
   .aviso-email > div > b{display:block;margin-bottom:2px;color:#3d2c07}
   .aviso-email span{display:block}
+  .mpbox{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}
+  .mpbox.pend{border-color:#F1D9A8;background:#FFFBF2}
+  .mpbox.ok{border-color:#BFE8D2;background:#F3FBF6}
+  .mpbox b{display:block;font-size:1rem}
+  .mpbox span{display:block;color:var(--ink-2);font-size:.88rem;line-height:1.5;margin-top:2px}
+  .mpi{width:40px;height:40px;border-radius:12px;background:#E6F4FF;color:#0A6ED1;display:grid;place-items:center;flex:none}
+  .mpi.ok{background:var(--ok-soft);color:var(--ok)}.mpi.bad{background:var(--bad-soft);color:var(--bad)}
 </style>
 </head>
 <body>
@@ -56,8 +63,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=82723"></script>
-<script src="app.js?v=82723"></script>
+<script src="config.js?v=95774"></script>
+<script src="app.js?v=95774"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -68,7 +75,10 @@
   const novo = qs.get('novo') === '1';
   let emailPedido = '';
   try { if (novo) { emailPedido = sessionStorage.getItem('gp_email_pedido') || ''; sessionStorage.removeItem('gp_email_pedido'); } } catch (_) {}
-  if (novo) history.replaceState(null, '', 'pedido.html?t=' + encodeURIComponent(token));
+  // Voltou do Mercado Pago: o endereço traz o número do pagamento para conferir na hora
+  const voltouMP = qs.get('mp') === '1', pagMP = qs.get('payment_id') || qs.get('collection_id') || '';
+  if (novo || voltouMP) history.replaceState(null, '', 'pedido.html?t=' + encodeURIComponent(token));
+  let conferindo = voltouMP;
 
   const ORDEM = ['novo', 'preparando', 'saiu', 'entregue'];
   const ICS = { novo: 'receipt', preparando: 'bolt', saiu: 'bike', entregue: 'check' };
@@ -80,7 +90,7 @@
     const { data, error } = await sb.rpc('ff_acompanhar', { p_token: token });
     if (error) { if (!last) $('main').innerHTML = `<div class="empty" style="padding-top:80px"><h4>Não foi possível carregar</h4><p>${esc(GP.err(error))}</p></div>`; return; }
     if (!data) return notFound();
-    const sig = data.status + data.atualizado_em;
+    const sig = data.status + data.atualizado_em + (data.mp_status || '') + (conferindo ? '1' : '');
     if (sig === last) return;
     if (last && navigator.vibrate) navigator.vibrate(200);
     last = sig; render(data);
@@ -99,9 +109,41 @@
       if (data && (data.rastreio && data.rastreio !== p.rastreio || data.status && data.status !== p.status)) { last = null; load(); }
     }).catch(() => {});
   }
+  // Bloco do pagamento online: falta pagar, recusado ou aprovado
+  function blocoMP(p) {
+    if (p.pagamento !== 'mp') return '';
+    if (p.status === 'cancelado') return p.mp_status === 'estornado'
+      ? `<div class="mpbox"><div class="mpi ok">${ic('refresh')}</div><div class="grow"><b>Valor devolvido</b><span>O Mercado Pago devolveu ${brl(p.total)} no mesmo meio de pagamento. No cartão, pode aparecer só na próxima fatura.</span></div></div>` : '';
+    if (p.mp_status === 'aprovado') return `<div class="mpbox ok"><div class="mpi ok">${ic('check')}</div><div class="grow"><b>Pagamento aprovado</b><span>${brl(p.total)} pagos online pelo Mercado Pago${p.pago_em ? ' às ' + GP.hora(p.pago_em) : ''}.</span></div></div>`;
+    if (conferindo) return `<div class="mpbox"><div class="mpi"><span class="spin"></span></div><div class="grow"><b>Conferindo o pagamento…</b><span>Só um instante.</span></div></div>`;
+    const rec = p.mp_status === 'recusado';
+    return `<div class="mpbox pend">
+      <div class="mpi ${rec ? 'bad' : ''}">${ic(rec ? 'x' : 'card')}</div>
+      <div class="grow"><b>${rec ? 'O pagamento não foi aprovado' : 'Falta pagar o pedido'}</b><span>${rec ? 'Tente de novo com outro cartão ou pague com Pix.' : 'A loja só começa a preparar depois que o pagamento for aprovado. Se não for pago em 2 horas, o pedido é cancelado.'}</span>
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
+          <button class="btn btn-primary" id="b-pagar">${ic('card')}Pagar ${brl(p.total)} agora</button>
+          <button class="btn btn-ghost btn-sm" id="b-conferir">${ic('refresh')}Já paguei</button>
+        </div></div></div>`;
+  }
+  async function conferirMP(pagamento) {
+    try { await sb.functions.invoke('ff-mercadopago', { body: { acao: 'conferir', token, pagamento } }); } catch (_) {}
+    conferindo = false; last = null; await load();
+  }
+  // Nota fiscal anexada pela loja
+  function blocoNota(p) {
+    if (!p.nf && !p.nf_chave) return '';
+    const ch = String(p.nf_chave || '').replace(/(\d{4})(?=\d)/g, '$1 ');
+    return `<div class="card pad" style="margin-top:14px"><div class="row" style="align-items:flex-start;gap:12px">${ic('receipt')}
+      <div class="grow" style="min-width:0"><b class="small">Nota fiscal</b>${ch ? `<div class="small muted" style="overflow-wrap:anywhere">Chave de acesso: ${esc(ch)}</div>` : '<div class="small muted">A loja anexou a nota fiscal do seu pedido.</div>'}
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
+          ${p.nf ? `<button class="btn btn-soft btn-sm" id="b-nf">${ic('ext')}Baixar PDF</button>` : ''}
+          ${ch ? `<button class="btn btn-ghost btn-sm" id="b-nf-copy">${ic('copy')}Copiar chave</button>` : ''}</div></div></div></div>`;
+  }
+
   function render(p) {
     buscarRastreio(p);
     if (window.__emailPedido) {
+      if (p.pagamento === 'mp' && p.mp_status === 'aprovado') window.__emailPedido('novo');
       if (p.tipo_entrega === 'envio' && p.rastreio && p.status !== 'cancelado') window.__emailPedido('postado');
       if (p.status === 'cancelado') window.__emailPedido('cancelado');
     }
@@ -118,7 +160,8 @@
     const l = p.loja;
     const msg = `Olá! Sou ${p.cliente_nome}, fiz o pedido #${p.numero} pelo GoPedido.`;
     $('main').innerHTML = `
-      ${novo ? `<div class="ok-hero"><div class="big">${ic('check')}</div><h1>${env ? 'Pedido feito!' : 'Pedido enviado!'}</h1><p class="muted">${env ? 'A loja já recebeu e vai separar e postar seu pedido. Guarde este link: o código de rastreio aparece aqui.' : 'A loja já recebeu. Guarde este link para acompanhar.'}</p></div>` : '<div style="height:24px"></div>'}
+      ${blocoMP(p)}
+      ${novo && !(p.pagamento === 'mp' && p.mp_status !== 'aprovado') ? `<div class="ok-hero"><div class="big">${ic('check')}</div><h1>${env ? 'Pedido feito!' : 'Pedido enviado!'}</h1><p class="muted">${env ? 'A loja já recebeu e vai separar e postar seu pedido. Guarde este link: o código de rastreio aparece aqui.' : 'A loja já recebeu. Guarde este link para acompanhar.'}</p></div>` : '<div style="height:24px"></div>'}
       ${novo && emailPedido ? `<div class="aviso-email">${ic('bell')}<div><b>Enviamos um e-mail para ${esc(emailPedido)}</b><span>Com o resumo e o link do pedido${env ? ' (e, quando a loja postar, o código de rastreio)' : ''}. <b>Não chegou em alguns minutos?</b> Olhe a pasta <b>Spam</b> ou <b>Promoções</b> e marque como "Não é spam" para receber os próximos.</span></div></div>` : ''}
       <div class="card pad" style="margin-top:14px">
         <div class="row between" style="margin-bottom:18px">
@@ -132,6 +175,7 @@
         ${!fim && !env && l.tempo_entrega ? `<div class="fee" style="margin-top:18px;background:var(--bg);display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:.9rem">${ic('clock')}<span>Previsão da loja: <b>${esc(l.tempo_entrega)}</b></span></div>` : ''}
       </div>
 
+      ${blocoNota(p)}
       <div class="card pad" style="margin-top:14px">
         <div class="store-mini">
           <div class="lg" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : esc(l.nome.trim()[0])}</div>
@@ -151,7 +195,7 @@
       <div class="card pad" style="margin-top:14px">
         ${ret ? `<div class="row" style="align-items:flex-start;margin-bottom:12px">${ic('store')}<div class="grow"><b class="small">Retirar na loja</b><div class="small muted">${esc(l.endereco || '')}</div></div>${l.lat != null ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="${GP.mapsLink(l.lat, l.lng)}">${ic('pin')}Ver no mapa</a>` : ''}</div>`
           : `<div class="row" style="align-items:flex-start;margin-bottom:12px">${ic(env ? 'box' : 'pin')}<div><b class="small">${env ? 'Enviar para' : 'Entregar em'}</b><div class="small muted">${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}</div></div></div>`}
-        <div class="row" style="align-items:flex-start">${ic(p.pagamento === 'pix' ? 'pix' : p.pagamento === 'dinheiro' ? 'cash' : 'card')}<div><b class="small">Pagamento</b><div class="small muted">${p.pagamento === 'dinheiro' ? GP.pagTexto(p) : GP.PAG[p.pagamento]}${p.pagamento === 'pix' ? ' · comprovante enviado' : ''}</div></div></div>
+        <div class="row" style="align-items:flex-start">${ic(p.pagamento === 'pix' ? 'pix' : p.pagamento === 'dinheiro' ? 'cash' : 'card')}<div><b class="small">Pagamento</b><div class="small muted">${p.pagamento === 'dinheiro' || p.pagamento === 'mp' ? GP.pagTexto(p) : GP.PAG[p.pagamento]}${p.pagamento === 'pix' ? ' · comprovante enviado' : ''}</div></div></div>
         ${p.observacao ? `<div class="row" style="align-items:flex-start;margin-top:12px">${ic('edit')}<div><b class="small">Observação</b><div class="small muted">${esc(p.observacao)}</div></div></div>` : ''}
       </div>
 
@@ -169,6 +213,23 @@
         <a class="btn btn-dark grow" href="loja.html?l=${encodeURIComponent(l.slug)}">${ic('store')}Pedir de novo</a>
       </div>`;
     if ($('b-rast-copy')) $('b-rast-copy').onclick = () => GP.copy(p.rastreio, 'Código de rastreio copiado!');
+    if ($('b-pagar')) $('b-pagar').onclick = async () => {
+      const b = $('b-pagar'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Abrindo o Mercado Pago…';
+      const { data, error } = await sb.functions.invoke('ff-mercadopago', { body: { acao: 'pagar', token } });
+      if (data && data.url) { location.href = data.url; return; }
+      if (data && data.pago) { last = null; return load(); }
+      b.disabled = false; b.innerHTML = ic('card') + 'Pagar ' + brl(p.total) + ' agora';
+      let j = null; try { j = error && error.context && await error.context.json(); } catch (_) {}
+      GP.toast(j && j.error === 'mp_desconectado' ? 'A loja desligou o pagamento online. Fale com ela pelo WhatsApp.' : 'Não foi possível abrir o pagamento. Tente de novo em instantes.', 'err');
+    };
+    if ($('b-conferir')) $('b-conferir').onclick = () => { conferindo = true; last = null; render(p); conferirMP(''); };
+    if ($('b-nf')) $('b-nf').onclick = async () => {
+      const janela = window.open('', '_blank');
+      const { data } = await sb.functions.invoke('ff-email', { body: { acao: 'nf_link', token } });
+      if (data && data.url) { if (janela) janela.location = data.url; else location.href = data.url; }
+      else { if (janela) janela.close(); GP.toast('Não foi possível abrir a nota. Tente de novo.', 'err'); }
+    };
+    if ($('b-nf-copy')) $('b-nf-copy').onclick = () => GP.copy(p.nf_chave, 'Chave de acesso copiada!');
     $('b-link').onclick = () => GP.copy(location.origin + location.pathname + '?t=' + encodeURIComponent(token), 'Link do pedido copiado!');
     if ($('sp')) {
       let nota = 0;
@@ -190,10 +251,11 @@
 
   let ultLoad = 0;
   await load();
+  if (voltouMP) conferirMP(/^\d{1,20}$/.test(pagMP) ? pagMP : '');
   // E-mail para o cliente: o servidor confere a situação do pedido e manda cada e-mail uma vez só
   const avisados = new Set();
   window.__emailPedido = (tipo) => { if (avisados.has(tipo)) return; avisados.add(tipo); sb.functions.invoke('ff-email', { body: { token, tipo } }).catch(() => {}); };
-  if (novo && last) window.__emailPedido('novo');
+  if (novo && last && !(last && /pendente|recusado/.test(last))) window.__emailPedido('novo');
   // Tempo real: o banco avisa este pedido na hora em que a loja ou o motoboy mudam a situação.
   const rt = token ? GP.ouvir(sb, 'pedido-' + token, () => load()) : null;
   // Reserva: com o tempo real ligado, confere a cada 1 min; sem ele, a cada 12 s.

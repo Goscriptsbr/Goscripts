@@ -4,10 +4,12 @@
 // Cada e-mail sai UMA vez só por pedido, e só quando a situação do pedido confere com o tipo pedido.
 // Precisa do SQL v22 rodado antes.
 //
-// Ação (POST, corpo JSON): { token, tipo }   tipo = 'novo' | 'postado' | 'cancelado'
-//   novo      → logo depois que o cliente faz o pedido (resumo + botão Acompanhar pedido)
+// Ação (POST, corpo JSON): { token, tipo }   tipo = 'novo' | 'postado' | 'cancelado' | 'nota'
+//   novo      → logo depois que o cliente faz o pedido (no pagamento online, só depois de aprovado)
 //   postado   → quando a loja gera a etiqueta do envio (código de rastreio + botão Rastrear)
 //   cancelado → quando a loja cancela o pedido
+//   nota      → quando a loja anexa a nota fiscal (PDF e/ou chave de acesso) — precisa do SQL v23
+// Ação { acao: 'nf_link', token } → link temporário (10 min) para o cliente baixar o PDF da nota
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
 //   nome: ff-email → cole este arquivo inteiro → Deploy → em Details desligue "Verify JWT".
@@ -119,10 +121,26 @@ export function montarEmail(tipo, p, l, itens) {
     html: moldura({
       previa: `A ${l.nome} cancelou o pedido #${p.numero}.`,
       titulo: `Pedido #${p.numero} cancelado`,
-      texto: `A loja <b>${h(l.nome)}</b> cancelou o seu pedido.${p.pagamento === 'pix' ? ` Como você pagou <b>${brl(p.total)}</b> por Pix, a devolução do valor é feita pela loja: fale com ela se ainda não recebeu.` : ''}`,
+      texto: `A loja <b>${h(l.nome)}</b> cancelou o seu pedido.${p.pagamento === 'pix' ? ` Como você pagou <b>${brl(p.total)}</b> por Pix, a devolução do valor é feita pela loja: fale com ela se ainda não recebeu.` : ''}${p.pagamento === 'mp' && p.mp_status === 'estornado' ? ` O valor de <b>${brl(p.total)}</b> foi devolvido pelo Mercado Pago, no mesmo meio de pagamento que você usou. No cartão, pode levar até a próxima fatura para aparecer.` : ''}${p.pagamento === 'mp' && p.mp_status === 'aprovado' ? ` Como você pagou <b>${brl(p.total)}</b> online, fale com a loja sobre a devolução se ela ainda não tiver feito.` : ''}`,
       corpo: '', botao: { texto: 'Ver meu pedido', url: link }, rodapeLoja: contato
     })
   };
+  if (tipo === 'nota') {
+    const chaveFmt = (p.nf_chave || '').replace(/(\d{4})(?=\d)/g, '$1 ');
+    return {
+      assunto: `Nota fiscal do pedido #${p.numero} · ${l.nome}`,
+      html: moldura({
+        previa: `A ${l.nome} enviou a nota fiscal do seu pedido #${p.numero}.`,
+        titulo: 'Sua nota fiscal chegou',
+        texto: `A loja <b>${h(l.nome)}</b> anexou a nota fiscal do seu pedido #${p.numero}.${p.nf_path ? ' Abra a página do pedido para baixar o PDF.' : ''}`,
+        corpo: p.nf_chave ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:#F7F6F3;border-radius:14px;padding:16px">
+            <div style="font-size:12px;color:#71717F;margin-bottom:4px">Chave de acesso da NF-e</div>
+            <div style="font-size:14px;font-weight:700;letter-spacing:.5px;line-height:1.6">${h(chaveFmt)}</div></td></tr></table>
+          <p style="margin:12px 0 0;font-size:13px;line-height:1.6;color:#71717F">Você pode consultar a nota no portal da nota fiscal eletrônica com essa chave.</p>` : '',
+        botao: { texto: p.nf_path ? 'Baixar a nota fiscal' : 'Ver meu pedido', url: link }, rodapeLoja: contato
+      })
+    };
+  }
   throw new Falha('tipo_invalido');
 }
 
@@ -130,18 +148,31 @@ export async function tratar(req, admin, enviar) {
   if (req.method === 'OPTIONS') return { status: 200, corpo: 'ok' };
   if (req.method !== 'POST') throw new Falha('metodo_invalido', 405);
   const b = await req.json().catch(() => ({}));
-  const tipo = String(b.tipo || '');
-  if (!['novo', 'postado', 'cancelado'].includes(tipo)) throw new Falha('tipo_invalido');
   if (!/^[a-z0-9]{8,40}$/i.test(String(b.token || ''))) throw new Falha('pedido_invalido');
+
+  // Link do PDF da nota: quem tem o token do pedido é o cliente (mesma regra da página de acompanhamento)
+  if (b.acao === 'nf_link') {
+    const { data: p } = ok(await admin.from('ff_pedidos').select('nf_path').eq('token', b.token).maybeSingle(), 'pedido');
+    if (!p || !p.nf_path) throw new Falha('sem_nota', 404);
+    const r = await admin.storage.from('ff-notas').createSignedUrl(p.nf_path, 600, { download: 'nota-fiscal.pdf' });
+    if (r.error || !r.data) throw new Falha('sem_nota', 404, r.error && r.error.message || '');
+    return { status: 200, corpo: { url: r.data.signedUrl } };
+  }
+
+  const tipo = String(b.tipo || '');
+  if (!['novo', 'postado', 'cancelado', 'nota'].includes(tipo)) throw new Falha('tipo_invalido');
 
   const { data: p } = ok(await admin.from('ff_pedidos').select('*').eq('token', b.token).maybeSingle(), 'pedido');
   if (!p) throw new Falha('pedido_invalido', 404);
   const ja = p.emails || {};
   const pula = (motivo) => ({ status: 200, corpo: { enviado: false, motivo } });
   if (!p.cliente_email) return pula('sem_email');
-  if (ja[tipo]) return pula('ja_enviado');
+  // A nota pode ser trocada pela loja: manda de novo se mudou desde o último envio
+  if (ja[tipo] && !(tipo === 'nota' && p.nf_em && new Date(p.nf_em) > new Date(ja[tipo]))) return pula('ja_enviado');
   // Só manda se a situação do pedido bate com o tipo do e-mail
   if (tipo === 'novo' && p.status === 'cancelado') return pula('situacao');
+  if (tipo === 'novo' && p.pagamento === 'mp' && p.mp_status !== 'aprovado') return pula('aguardando_pagamento');
+  if (tipo === 'nota' && !(p.nf_path || p.nf_chave)) return pula('situacao');
   if (tipo === 'postado' && !(p.tipo_entrega === 'envio' && p.etiqueta_status === 'gerada' && p.rastreio && p.status !== 'cancelado')) return pula('situacao');
   if (tipo === 'cancelado' && p.status !== 'cancelado') return pula('situacao');
 

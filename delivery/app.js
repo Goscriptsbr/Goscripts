@@ -211,6 +211,7 @@
     loja_fechada: 'A loja está fechada no momento.',
     loja_sem_localizacao: 'A loja ainda não configurou a localização.',
     pagamento_invalido: 'Forma de pagamento não aceita por esta loja.',
+    pagamento_pendente: 'Este pedido ainda não foi pago online. Aguarde a aprovação do pagamento para aceitar.',
     opcoes_invalidas: 'Revise as opções escolhidas no produto (algum item obrigatório ficou sem escolher).',
     cupom_invalido: 'Cupom não encontrado para esta loja.',
     cupom_vencido: 'Este cupom já venceu.',
@@ -774,7 +775,7 @@
   };
   GP.estrelas = (n, tam) => { const v = Math.round(Number(n) || 0); return `<span class="stars" style="${tam ? 'font-size:' + tam : ''}">${'★'.repeat(v)}<span class="off">${'★'.repeat(5 - v)}</span></span>`; };
   GP.mapsLink = (lat, lng) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-  GP.PAG = { pix: 'Pix', debito: 'Cartão de débito (na entrega)', credito: 'Cartão de crédito (na entrega)', dinheiro: 'Dinheiro (na entrega)' };
+  GP.PAG = { mp: 'Online (Mercado Pago)', pix: 'Pix', debito: 'Cartão de débito (na entrega)', credito: 'Cartão de crédito (na entrega)', dinheiro: 'Dinheiro (na entrega)' };
 
   // ---------- Comprovante para impressora térmica ----------
   GP.cupom = (p, L, pcfg = {}) => {
@@ -786,7 +787,9 @@
     const rota = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
     const qr = GP.qr(rota);
     const troco = p.pagamento === 'dinheiro' && Number(p.troco_para) > 0 ? Number(p.troco_para) - Number(p.total) : 0;
-    const pag = p.pagamento === 'pix'
+    const pag = p.pagamento === 'mp'
+      ? `<div class="box">PAGO ONLINE — MERCADO PAGO<br><small>NÃO COBRAR</small></div>`
+      : p.pagamento === 'pix'
       ? `<div class="box">PIX — JÁ PAGO<br><small>comprovante anexado · NÃO COBRAR</small></div>`
       : p.pagamento === 'dinheiro'
         ? `<div class="box">COBRAR EM DINHEIRO<br><span class="big">${brl(p.total)}</span><br>${troco > 0 ? `Cliente paga com ${brl(p.troco_para)}<br><span class="big">LEVAR TROCO: ${brl(troco)}</span>` : 'Sem troco (valor certo)'}</div>`
@@ -813,7 +816,7 @@
       <div class="c"><div class="tag">COZINHA${p.tipo_entrega === 'retirada' ? ' · RETIRADA' : ''}</div><div class="big">PEDIDO #${p.numero}</div><div>${data}</div><div>${e(p.cliente_nome)}</div></div>${linha}
       ${itensArr.map(i => `<div class="kit"><b>${i.qtd}x</b> ${e(i.nome)}</div>${(i.opcoes || []).map(o => `<div class="kobs">+ ${e(o.nome)}</div>`).join('')}${i.obs ? `<div class="kobs">&gt; ${e(i.obs)}</div>` : ''}`).join('')}
       ${p.observacao ? `${linha}<div class="kobs">OBS: ${e(p.observacao)}</div>` : ''}${linha}
-      <div class="box">${p.pagamento === 'pix' ? 'PIX — JÁ PAGO' : p.pagamento === 'dinheiro' ? `DINHEIRO · ${brl(p.total)}${troco > 0 ? ` · TROCO ${brl(troco)}` : ''}` : `COBRAR NA ENTREGA · ${p.pagamento === 'debito' ? 'DÉBITO' : 'CRÉDITO'} · ${brl(p.total)}`}</div>
+      <div class="box">${p.pagamento === 'mp' ? 'PAGO ONLINE' : p.pagamento === 'pix' ? 'PIX — JÁ PAGO' : p.pagamento === 'dinheiro' ? `DINHEIRO · ${brl(p.total)}${troco > 0 ? ` · TROCO ${brl(troco)}` : ''}` : `COBRAR NA ENTREGA · ${p.pagamento === 'debito' ? 'DÉBITO' : 'CRÉDITO'} · ${brl(p.total)}`}</div>
     </section>`;
     const vias = pcfg.vias === 'entrega' ? viaEntrega : pcfg.vias === 'cozinha' ? viaCozinha : viaEntrega + viaCozinha;
     const W = pcfg.largura === '58' ? 48 : 72, F = pcfg.largura === '58' ? 11 : 12.5;
@@ -847,6 +850,7 @@
   GP.troco = (p) => p.pagamento === 'dinheiro' && Number(p.troco_para) > 0 ? Number(p.troco_para) - Number(p.total) : 0;
   GP.pagTexto = (p) => {
     if (p.pagamento === 'pix') return 'Pix · já pago';
+    if (p.pagamento === 'mp') return { aprovado: 'Pago online (Mercado Pago)', estornado: 'Online · valor devolvido', recusado: 'Online · pagamento recusado' }[p.mp_status] || 'Online · aguardando pagamento';
     if (p.pagamento === 'dinheiro') { const t = GP.troco(p); return `Dinheiro · ${t > 0 ? `troco para ${GP.brl(p.troco_para)} (levar ${GP.brl(t)})` : 'sem troco'}`; }
     return p.pagamento === 'debito' ? 'Débito na entrega' : 'Crédito na entrega';
   };

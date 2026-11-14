@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=82723">
+<link rel="stylesheet" href="app.css?v=95774">
 <style>
   body{background:#F2F1EE}
   .entry{min-height:100vh;display:grid;place-items:center;padding:24px 18px;background:radial-gradient(800px 400px at 50% -10%,rgba(242,69,28,.25),transparent 60%),var(--ink);color:#fff}
@@ -85,8 +85,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=82723"></script>
-<script src="app.js?v=82723"></script>
+<script src="config.js?v=95774"></script>
+<script src="app.js?v=95774"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -174,7 +174,7 @@
       if (p.status === 'saiu' && !meu(p)) return `<article class="card del" style="opacity:.65"><div class="top"><b style="font-size:1.1rem">#${p.numero}</b><span class="small muted">${esc(p.endereco)}</span><div class="grow"></div><span class="badge b-off"><i class="dot"></i>Com ${esc(p.entregador_nome)}</span></div></article>`;
       const rota = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving`;
       const waze = `https://waze.com/ul?ll=${p.lat},${p.lng}&navigate=yes`;
-      const pago = p.pagamento === 'pix';
+      const pago = p.pagamento === 'pix' || p.pagamento === 'mp';
       return `<article class="card del">
         <div class="top"><b style="font-size:1.1rem">#${p.numero}</b><span class="small muted">${GP.hora(p.criado_em)} · ${km(p.distancia_km)}</span><div class="grow"></div>
           <span class="badge ${GP.STATUS[p.status].c}"><i class="dot"></i>${p.status === 'preparando' ? 'Na loja' : GP.STATUS[p.status].t}</span></div>
@@ -182,7 +182,7 @@
           <div class="addr">${esc(p.endereco)}</div>
           ${p.complemento ? `<div class="small" style="margin-top:4px">${ic('home')} ${esc(p.complemento)}</div>` : ''}
           <div class="small muted" style="margin-top:6px">${ic('user')} ${esc(p.cliente_nome)}${p.entregador_nome && p.status !== 'preparando' ? ` · entregador: ${esc(p.entregador_nome)}` : ''}</div>
-          ${pago ? `<div class="money paid">${ic('check')}<span class="grow">Já pago no Pix — não cobrar</span><span>${brl(p.total)}</span></div>`
+          ${pago ? `<div class="money paid">${ic('check')}<span class="grow">Já pago ${p.pagamento === 'mp' ? 'online' : 'no Pix'} — não cobrar</span><span>${brl(p.total)}</span></div>`
             : p.pagamento === 'dinheiro' ? `<div class="money card">${ic('cash')}<span class="grow">Cobrar em dinheiro${GP.troco(p) > 0 ? `<br><small>Cliente paga com ${brl(p.troco_para)} · <b>levar ${brl(GP.troco(p))} de troco</b></small>` : '<br><small>Sem troco (valor certo)</small>'}</span><span>${brl(p.total)}</span></div>`
             : `<div class="money card">${ic('card')}<span class="grow">Cobrar no ${p.pagamento === 'debito' ? 'débito' : 'crédito'} · levar maquininha</span><span>${brl(p.total)}</span></div>`}
           <div class="its">${p.itens.map(i => `${i.qtd}× ${esc(i.nome)}${(i.opcoes || []).length ? ` <span class="muted">(${esc(i.opcoes.map(o => o.nome).join(', '))})</span>` : ''}`).join(' · ')}</div>
@@ -214,7 +214,7 @@
     }
     const b = e.target.closest('[data-st]'); if (!b) return;
     const st = b.dataset.st;
-    if (st === 'entregue' && !(await GP.confirmar('Pedido entregue?', { texto: 'Confirme só depois de entregar ao cliente' + (lista.find(x => x.id === b.dataset.id) && lista.find(x => x.id === b.dataset.id).pagamento !== 'pix' ? ' e receber o pagamento.' : '.'), ok: 'Sim, entreguei', perigo: false, icone: 'check' }))) return;
+    if (st === 'entregue' && !(await GP.confirmar('Pedido entregue?', { texto: 'Confirme só depois de entregar ao cliente' + (lista.find(x => x.id === b.dataset.id) && lista.find(x => x.id === b.dataset.id).pagamento !== 'pix' && lista.find(x => x.id === b.dataset.id).pagamento !== 'mp' ? ' e receber o pagamento.' : '.'), ok: 'Sim, entreguei', perigo: false, icone: 'check' }))) return;
     b.disabled = true; b.innerHTML = '<span class="spin"></span>';
     const { error } = await sb.rpc('ff_entregador_status', { p_codigo: cod, p_pedido: b.dataset.id, p_status: st, p_nome: nome });
     if (error) { GP.toast(GP.err(error), 'err'); if (/codigo_invalido/.test(error.message)) return sair(); return carregar(); }

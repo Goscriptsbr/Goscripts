@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=82723">
+<link rel="stylesheet" href="app.css?v=95774">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -629,6 +629,11 @@
               <label class="field"><span>Nome do recebedor</span><input class="input" id="l-pixnome" maxlength="60" placeholder="Como aparece no banco"><small>Usado para gerar o QR Code com o valor certo.</small></label>
               <label class="field"><span>Cidade do recebedor</span><input class="input" id="l-pixcidade" maxlength="40" placeholder="Mogi Guaçu"></label>
             </div>
+            <div class="mp-wrap">
+              <div class="mp-h"><b>Pagamento online pelo Mercado Pago</b><span class="chip-opc">Opcional</span></div>
+              <p class="small muted" style="margin:2px 0 12px">O cliente paga com cartão de crédito ou Pix sem sair do pedido, e o pedido é liberado sozinho quando o pagamento é aprovado. O dinheiro cai na <b>sua</b> conta do Mercado Pago, com as taxas do Mercado Pago. O GoPedido não cobra nada a mais.</p>
+              <div id="mp-box"></div>
+            </div>
           </div>
 
           <div class="card pad fs ml-anchor hide" id="sec-envio" data-mod="envio" style="grid-column:1/-1">
@@ -805,8 +810,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=82723"></script>
-<script src="app.js?v=82723"></script>
+<script src="config.js?v=95774"></script>
+<script src="app.js?v=95774"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1002,7 +1007,7 @@
     if (!lojas.length) return novaLoja(true);
     const salva = GP.ls.get('gp_loja_sel');
     await abrirLoja(lojas.find(l => l.id === salva) || lojas[0]);
-    await voltaMelhorEnvio();
+    if (!(await voltaMercadoPago())) await voltaMelhorEnvio();
   }
 
   // ================= PLANO =================
@@ -1023,6 +1028,87 @@
     if (souDono) loadEquipe();
   }
   // ================= ENVIO (MELHOR ENVIO) =================
+  async function chamarMP(body) {
+    const { data, error } = await sb.functions.invoke('ff-mercadopago', { body });
+    if (error) {
+      let j = null; try { j = error.context && await error.context.json(); } catch (_) {}
+      const cod = j && j.error || '';
+      const MSG = {
+        mp_nao_configurado: 'O pagamento online ainda não foi configurado na plataforma (faltam as chaves do Mercado Pago no Supabase).',
+        mp_desconectado: 'A conta do Mercado Pago desconectou. Conecte de novo em Minha loja → Pagamento.',
+        mp_autorizacao: 'O Mercado Pago não autorizou a conexão. Tente conectar de novo.',
+        so_dono: 'Só o dono da conta pode fazer isso.', sem_acesso: 'Você não tem acesso a esta loja.',
+        nada_a_estornar: 'Este pedido não tem pagamento aprovado para devolver.'
+      };
+      const msg = MSG[cod] || (cod === 'mp_erro' && j.detalhe ? 'Mercado Pago: ' + j.detalhe : '') ||
+        (/Failed to send|not found|404/i.test(error.message || '') && !cod ? 'A função ff-mercadopago ainda não foi publicada no Supabase.' : (j && (j.detalhe || j.error)) || GP.err(error));
+      const e = new Error(msg); e.codigo = cod; throw e;
+    }
+    return data;
+  }
+
+  function renderMP() {
+    const box = $('mp-box'); if (!box) return;
+    if (!loja) { box.innerHTML = '<p class="small muted" style="margin:0">Crie a loja primeiro. Depois você conecta o Mercado Pago aqui.</p>'; return; }
+    if (!('mp_conectado' in loja)) { box.innerHTML = '<div class="warnline">Falta rodar o SQL v23 no Supabase para ligar o pagamento online.</div>'; return; }
+    if (!loja.mp_conectado) {
+      box.innerHTML = `<div class="me-card">
+        <div class="me-ic mp">${ic('card')}</div>
+        <div class="grow" style="min-width:0"><b>Conecte sua conta do Mercado Pago</b>
+          <div class="small muted">Use a conta onde você quer receber. Pode ser pessoa física ou empresa.</div></div>
+        ${souDono ? `<button type="button" class="btn btn-primary btn-sm" id="mp-conectar">${ic('ext')}Conectar</button>` : ''}
+      </div>${souDono ? '' : '<div class="warnline" style="margin-top:10px">Só o dono da conta pode conectar o Mercado Pago.</div>'}`;
+      if ($('mp-conectar')) $('mp-conectar').onclick = async (e) => {
+        const b = e.currentTarget;
+        if (!(await GP.confirmar('Conectar o Mercado Pago da sua loja', { texto: 'Os pagamentos online vão cair na SUA conta do Mercado Pago, com as taxas do Mercado Pago. Devoluções de pedidos pagos online saem dessa conta. O GoPedido não recebe nem segura o dinheiro.', ok: 'Conectar' }))) return;
+        b.disabled = true; b.innerHTML = '<span class="spin"></span>Abrindo…';
+        try { const r = await chamarMP({ acao: 'url', loja: loja.id }); GP.ls.set('gp_mp_loja', loja.id); location.href = r.url; }
+        catch (er) { b.disabled = false; b.innerHTML = ic('ext') + 'Conectar'; GP.toast(er.message, 'err'); }
+      };
+      return;
+    }
+    box.innerHTML = `<div class="me-card">
+        <div class="me-ic ok">${ic('check')}</div>
+        <div class="grow" style="min-width:0"><b>Mercado Pago conectado</b><div class="small muted">${esc(loja.mp_conta || 'Conta conectada')}</div></div>
+        ${souDono ? `<button type="button" class="btn btn-ghost btn-sm" id="mp-desc">Desconectar</button>` : ''}
+      </div>
+      <label class="switch" style="margin:14px 0 6px"><input type="checkbox" id="l-mp" ${loja.aceita_mp ? 'checked' : ''} ${souDono ? '' : 'disabled'}><i></i>Oferecer pagamento online no pedido</label>
+      <p class="small muted" style="margin:0">Pedidos online aparecem como <b>Aguardando pagamento</b> e só podem ser aceitos depois de aprovados. Se ninguém pagar em 2 horas, o pedido é cancelado sozinho e o estoque volta.</p>`;
+    $('l-mp').onchange = async (e) => {
+      const v = e.target.checked;
+      const { data, error } = await sb.from('ff_lojas').update({ aceita_mp: v }).eq('id', loja.id).select().single();
+      if (error) { e.target.checked = !v; return GP.toast(GP.err(error), 'err'); }
+      loja = data; lojas = lojas.map(l => l.id === loja.id ? loja : l);
+      GP.toast(v ? 'Pagamento online ligado' : 'Pagamento online desligado', 'ok');
+    };
+    if ($('mp-desc')) $('mp-desc').onclick = async () => {
+      if (!(await GP.confirmar('Desconectar o Mercado Pago?', { texto: 'O pagamento online sai do pedido. Os pagamentos que já foram feitos continuam na sua conta do Mercado Pago.', ok: 'Desconectar', perigo: true }))) return;
+      try { await chamarMP({ acao: 'desconectar', loja: loja.id }); loja.mp_conectado = false; loja.aceita_mp = false; loja.mp_conta = ''; renderMP(); GP.toast('Mercado Pago desconectado', 'ok'); }
+      catch (er) { GP.toast(er.message, 'err'); }
+    };
+  }
+
+  // Voltou da tela de autorização do Mercado Pago
+  async function voltaMercadoPago() {
+    const q = new URLSearchParams(location.search);
+    const st = q.get('state') || '', code = q.get('code');
+    if (!st.startsWith('mp:') && !(q.get('error') && GP.ls.get('gp_mp_loja'))) return false;
+    history.replaceState(null, '', location.pathname);
+    const id = st.slice(3) || GP.ls.get('gp_mp_loja'); GP.ls.set('gp_mp_loja', null);
+    const l = lojas.find(x => x.id === id);
+    if (!l) return false;
+    if (loja !== l) await abrirLoja(l);
+    go('loja'); if (window.__mlSetMod) window.__mlSetMod('pag'); setTimeout(() => $('sec-pag').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    if (!code) { GP.toast('A conexão com o Mercado Pago foi cancelada.', 'err'); return true; }
+    GP.toast('Conectando ao Mercado Pago…');
+    try {
+      const r = await chamarMP({ acao: 'conectar', loja: l.id, code });
+      loja.mp_conectado = true; loja.mp_conta = r.conta || '';
+      renderMP(); GP.toast('Mercado Pago conectado! Agora ligue o pagamento online.', 'ok');
+    } catch (er) { GP.toast(er.message, 'err'); }
+    return true;
+  }
+
   async function chamarME(body) {
     const { data, error } = await sb.functions.invoke('ff-melhorenvio', { body });
     if (error) {
@@ -1557,6 +1643,10 @@
     const { data, error } = await sb.from('ff_pedidos').select('*, ff_pedido_itens(*)')
       .eq('loja_id', loja.id).gte('criado_em', desde).order('criado_em', { ascending: false }).limit(200);
     if (error) { $('upd').textContent = 'Erro ao atualizar'; return; }
+    // pedidos online que ninguém pagou em 2 horas são cancelados (o estoque volta); só roda se tiver algum
+    if (data.some(p => p.pagamento === 'mp' && p.mp_status !== 'aprovado' && p.status === 'novo' && Date.now() - new Date(p.criado_em) > 2 * 3600e3)) {
+      sb.rpc('ff_limpar_mp', { p_loja: loja.id }).then(r => { if (r.data) loadPedidos(); }).catch(() => {});
+    }
     if (!codigo || new Date(codigo.expira) <= new Date()) loadCodigo(); else renderCodigo();
     applyHeader();
     const ids = new Set(data.map(p => p.id));
@@ -1564,6 +1654,11 @@
       const novos = data.filter(p => !conhecidos.has(p.id));
       if (novos.length) { beep(); GP.toast(`Novo pedido #${novos[0].numero}!`, 'ok'); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
     }
+    // pagamento online aprovado desde a última atualização: avisa a loja e manda o e-mail de pedido recebido
+    const antes = new Map(pedidos.map(p => [p.id, p.mp_status]));
+    data.filter(p => p.pagamento === 'mp' && p.mp_status === 'aprovado' && antes.has(p.id) && antes.get(p.id) !== 'aprovado').forEach(p => {
+      beep(); GP.toast(`Pagamento do pedido #${p.numero} aprovado! Já pode aceitar.`, 'ok'); emailCliente(p, 'novo');
+    });
     conhecidos = ids; pedidos = data;
     updLabel();
     renderPedidos();
@@ -1608,18 +1703,96 @@
           <div class="sum-row small"><span>${env ? 'Frete' : 'Entrega'}</span><span>${brl(p.taxa_entrega)}</span></div>
           ${Number(p.desconto) ? `<div class="sum-row small" style="color:var(--ok)"><span>Desconto ${p.cupom ? '(' + esc(p.cupom) + ')' : ''}</span><span>-${brl(p.desconto)}</span></div>` : ''}
           <div class="sum-row total" style="font-size:1rem"><span>Total</span><span>${brl(p.total)}</span></div>
+          ${nfBloco(p)}
           <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
-            <span class="badge ${p.pagamento === 'pix' ? 'b-ok' : 'b-warn'}">${GP.pagTexto(p)}</span>
+            ${p.pagamento === 'mp' ? mpBadge(p) : `<span class="badge ${p.pagamento === 'pix' ? 'b-ok' : 'b-warn'}">${GP.pagTexto(p)}</span>`}
             ${p.comprovante_path ? `<button class="btn btn-soft btn-sm" data-comp="${esc(p.comprovante_path)}">${ic('receipt')}Ver comprovante</button>` : ''}
-            <button class="btn btn-ghost btn-sm" data-print="${p.id}" style="margin-left:auto">${ic('receipt')}Imprimir</button>
+            ${p.status !== 'cancelado' && !p.nf_path && !p.nf_chave && 'nf_chave' in p ? `<button class="btn btn-ghost btn-sm" data-nf="${p.id}" style="margin-left:auto">${ic('receipt')}Nota fiscal</button>` : ''}
+            <button class="btn btn-ghost btn-sm" data-print="${p.id}" ${p.status !== 'cancelado' && !p.nf_path && !p.nf_chave && 'nf_chave' in p ? '' : 'style="margin-left:auto"'}>${ic('receipt')}Imprimir</button>
           </div>
         </div>
         ${nx || p.status !== 'cancelado' && p.status !== 'entregue' ? `<div class="of">
-          ${nx ? `<button class="btn ${p.status === 'novo' ? 'btn-primary' : 'btn-dark'} btn-sm grow" data-st="${nx[0]}" data-id="${p.id}">${nx[1]}</button>` : ''}
+          ${mpPendente(p) ? `<button class="btn btn-soft btn-sm grow" data-mpconf="${p.id}">${ic('refresh')}Aguardando pagamento · conferir</button>`
+            : nx ? `<button class="btn ${p.status === 'novo' ? 'btn-primary' : 'btn-dark'} btn-sm grow" data-st="${nx[0]}" data-id="${p.id}">${nx[1]}</button>` : ''}
           <button class="btn btn-bad btn-sm" data-st="cancelado" data-id="${p.id}">Cancelar</button></div>` : ''}
       </article>`;
     }).join('');
   }
+  // ---------- Pagamento online (Mercado Pago) ----------
+  const mpPendente = (p) => p.pagamento === 'mp' && p.mp_status !== 'aprovado' && p.status === 'novo';
+  function mpBadge(p) {
+    const [c, i] = { aprovado: ['ok', 'check'], estornado: ['est', 'refresh'], recusado: ['bad', 'x'] }[p.mp_status] || ['pend', 'clock'];
+    return `<span class="mp-badge ${c}">${ic(i)}${GP.pagTexto(p)}</span>`;
+  }
+  async function conferirMP(id, b) {
+    const p = pedidos.find(x => x.id === id); if (!p) return;
+    const t = b ? b.innerHTML : ''; if (b) { b.disabled = true; b.innerHTML = '<span class="spin"></span>Conferindo…'; }
+    try {
+      const r = await chamarMP({ acao: 'conferir', pedido: p.id });
+      Object.assign(p, { mp_status: r.mp_status, pago_em: r.pago_em });
+      GP.toast(r.mp_status === 'aprovado' ? `Pagamento do pedido #${p.numero} aprovado! Já pode aceitar.` : r.mp_status === 'recusado' ? 'O pagamento foi recusado. O cliente pode tentar de novo pela página do pedido.' : 'O pagamento ainda não foi feito.', r.mp_status === 'aprovado' ? 'ok' : '');
+      if (r.mp_status === 'aprovado') { beep(); emailCliente(p, 'novo'); }
+    } catch (er) { GP.toast(er.message, 'err'); }
+    if (b) { b.disabled = false; b.innerHTML = t; }
+    renderPedidos();
+  }
+
+  // ---------- Nota fiscal anexada ao pedido ----------
+  const fmtChave = (c) => String(c || '').replace(/(\d{4})(?=\d)/g, '$1 ');
+  function nfBloco(p) {
+    if (!p.nf_path && !p.nf_chave) return '';
+    return `<div class="nfbox">${ic('receipt')}<div class="grow"><b>Nota fiscal anexada</b>${p.nf_chave ? `<br><span class="small muted">${esc(fmtChave(p.nf_chave))}</span>` : ''}</div>
+      ${p.nf_path ? `<button class="btn btn-ghost btn-sm" data-nfver="${p.id}">Ver PDF</button>` : ''}
+      <button class="btn btn-ghost btn-sm" data-nf="${p.id}">Trocar</button></div>`;
+  }
+  function abrirNota(p) {
+    const wrap = document.createElement('div');
+    wrap.className = 'cfm-wrap';
+    wrap.innerHTML = `<div class="cfm" role="dialog" aria-modal="true" aria-labelledby="nf-t" style="text-align:left;max-width:440px">
+      <h3 id="nf-t" style="margin-bottom:4px">Nota fiscal do pedido #${p.numero}</h3>
+      <p style="margin-bottom:14px">Anexe a nota que você emitiu no seu emissor ou sistema. O cliente recebe por e-mail e baixa na página do pedido.</p>
+      <label class="field"><span>Chave de acesso (44 números)</span><input class="input" id="nf-chave" inputmode="numeric" maxlength="54" placeholder="0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000" value="${esc(fmtChave(p.nf_chave))}"></label>
+      <label class="field" style="margin-top:10px"><span>Arquivo da nota (PDF, até 5 MB)</span><input class="input" id="nf-arq" type="file" accept="application/pdf"><small>${p.nf_path ? 'Já tem um PDF anexado. Escolha outro só se quiser trocar.' : 'Opcional se você informar a chave.'}</small></label>
+      <p class="small muted" id="nf-msg" style="margin:10px 0 0;min-height:1.2em"></p>
+      <div class="cfm-acts"><button type="button" class="btn btn-ghost" data-r="0">Voltar</button><button type="button" class="btn btn-primary" data-r="1">Salvar e enviar ao cliente</button></div></div>`;
+    document.body.appendChild(wrap);
+    requestAnimationFrame(() => wrap.classList.add('on'));
+    const fechar = () => { wrap.classList.remove('on'); setTimeout(() => wrap.remove(), 180); };
+    const ch = wrap.querySelector('#nf-chave'), msg = wrap.querySelector('#nf-msg');
+    ch.addEventListener('input', () => { ch.value = fmtChave(GP.digits(ch.value).slice(0, 44)); msg.textContent = ''; });
+    wrap.addEventListener('click', async (e) => {
+      if (e.target === wrap) return fechar();
+      const b = e.target.closest('[data-r]'); if (!b) return;
+      if (b.dataset.r === '0') return fechar();
+      const chave = GP.digits(ch.value), arq = wrap.querySelector('#nf-arq').files[0];
+      if (chave && chave.length !== 44) { msg.style.color = 'var(--bad)'; msg.textContent = 'A chave de acesso tem 44 números.'; return; }
+      if (!chave && !arq && !p.nf_path) { msg.style.color = 'var(--bad)'; msg.textContent = 'Informe a chave de acesso ou anexe o PDF.'; return; }
+      if (arq && (arq.type !== 'application/pdf' || arq.size > 5 * 1024 * 1024)) { msg.style.color = 'var(--bad)'; msg.textContent = 'Envie um arquivo PDF de até 5 MB.'; return; }
+      b.disabled = true; b.innerHTML = '<span class="spin"></span>Salvando…'; msg.textContent = '';
+      try {
+        let path = p.nf_path || '';
+        if (arq) {
+          path = `${loja.id}/${p.id}.pdf`;
+          const up = await sb.storage.from('ff-notas').upload(path, arq, { upsert: true, contentType: 'application/pdf' });
+          if (up.error) throw up.error;
+        }
+        const { data, error } = await sb.from('ff_pedidos').update({ nf_chave: chave, nf_path: path, nf_em: new Date().toISOString() }).eq('id', p.id).select('nf_chave, nf_path, nf_em').single();
+        if (error) throw error;
+        Object.assign(p, data);
+        emailCliente(p, 'nota');
+        fechar(); renderPedidos();
+        GP.toast(p.cliente_email ? 'Nota anexada! O cliente recebe por e-mail.' : 'Nota anexada! O cliente vê na página do pedido.', 'ok');
+      } catch (er) { b.disabled = false; b.innerHTML = 'Salvar e enviar ao cliente'; msg.style.color = 'var(--bad)'; msg.textContent = GP.err(er); }
+    });
+    setTimeout(() => ch.focus(), 60);
+  }
+  async function verNota(p) {
+    const janela = window.open('', '_blank');
+    const { data, error } = await sb.storage.from('ff-notas').createSignedUrl(p.nf_path, 300);
+    if (error || !data) { if (janela) janela.close(); return GP.toast(GP.err(error), 'err'); }
+    if (janela) janela.location = data.signedUrl; else location.href = data.signedUrl;
+  }
+
   // Pedido com envio: transportadora, endereço completo e etiqueta
   // Avisa o cliente por e-mail (o servidor confere a situação e manda cada e-mail uma vez só)
   function emailCliente(p, tipo) {
@@ -1699,15 +1872,28 @@
       if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
       return;
     }
+    const bm = e.target.closest('[data-mpconf]'); if (bm) return conferirMP(bm.dataset.mpconf, bm);
+    const bn = e.target.closest('[data-nf]'); if (bn) { const pn = pedidos.find(x => x.id === bn.dataset.nf); if (pn) abrirNota(pn); return; }
+    const bv = e.target.closest('[data-nfver]'); if (bv) { const pv = pedidos.find(x => x.id === bv.dataset.nfver); if (pv) verNota(pv); return; }
     const b = e.target.closest('[data-st]'); if (!b) return;
     const pc = pedidos.find(x => x.id === b.dataset.id);
     const comEtiqueta = pc && pc.tipo_entrega === 'envio' && ['carrinho', 'paga', 'gerada'].includes(pc.etiqueta_status);
     if (b.dataset.st === 'cancelado') {
       const pix = pc && pc.pagamento === 'pix';
+      const mpPago = pc && pc.pagamento === 'mp' && pc.mp_status === 'aprovado';
       const txt = 'O cliente vai ver o pedido como cancelado. Se ele usou cupom, o uso volta para o cupom.'
         + (comEtiqueta ? ' A etiqueta também é cancelada no Melhor Envio e o valor volta para o seu saldo de lá em até 12 horas.' : '')
-        + (pix ? ` O cliente pagou ${brl(pc.total)} por Pix: devolva o valor para ele pelo app do seu banco.` : '');
+        + (pix ? ` O cliente pagou ${brl(pc.total)} por Pix: devolva o valor para ele pelo app do seu banco.` : '')
+        + (mpPago ? ` O cliente pagou ${brl(pc.total)} online: o valor é devolvido automaticamente pelo Mercado Pago, saindo da sua conta.` : '');
       if (!(await GP.confirmar('Cancelar este pedido?', { texto: txt, ok: 'Cancelar pedido', cancelar: 'Voltar', icone: 'x' }))) return;
+      if (mpPago) {
+        b.disabled = true;
+        try { await chamarMP({ acao: 'estornar', pedido: pc.id }); pc.mp_status = 'estornado'; }
+        catch (er) {
+          b.disabled = false;
+          if (!(await GP.confirmar('Não deu para devolver o pagamento', { texto: er.message + ' Se cancelar assim mesmo, faça a devolução pelo app do Mercado Pago.', ok: 'Cancelar só o pedido', cancelar: 'Voltar', perigo: true }))) return;
+        }
+      }
       if (comEtiqueta) {
         b.disabled = true;
         try { await chamarME({ acao: 'cancelar', pedido: pc.id }); pc.etiqueta_status = 'cancelada'; }
@@ -2355,7 +2541,7 @@
     $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
     togglePix(); sim(); coord(); pixPrev();
     renderHoras(l.horarios); $('l-auto').checked = !!l.horario_auto;
-    renderEnvio();
+    renderEnvio(); renderMP();
     setMod(modAtual);
   }
   const NOMES_PIX = { cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória' };
