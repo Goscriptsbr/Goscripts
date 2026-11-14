@@ -137,9 +137,9 @@
   // ---------- Planos ----------
   GP.WHATS = '5519988283178';
   GP.PLANOS = [
-    { id: 'gratis', nome: 'Grátis', preco: 0, lojas: 1, produtos: 50, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 administrador além de você', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções'] },
-    { id: 'profissional', nome: 'Profissional', preco: 50, lojas: 2, produtos: 200, destaque: true, ex: 'Ex.: 120 produtos numa loja e 80 na outra', itens: ['Tudo do plano Grátis', '4 administradores além de você', 'Suporte pelo WhatsApp'] },
-    { id: 'premium', nome: 'Premium', preco: 100, lojas: 5, produtos: 500, ex: 'Ex.: 5 lojas com 100 produtos cada', itens: ['Tudo do Profissional', '8 administradores além de você', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
+    { id: 'gratis', nome: 'Grátis', desc: 'Para começar a vender', preco: 0, lojas: 1, produtos: 50, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 administrador além de você', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções'] },
+    { id: 'profissional', nome: 'Profissional', desc: 'Para quem tem mais produtos ou uma segunda loja', preco: 50, lojas: 2, produtos: 200, destaque: true, ex: 'Ex.: 120 produtos numa loja e 80 na outra', itens: ['Tudo do plano Grátis', '4 administradores além de você', 'Suporte pelo WhatsApp'] },
+    { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 500, ex: 'Ex.: 5 lojas com 100 produtos cada', itens: ['Tudo do Profissional', '8 administradores além de você', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
   ];
   GP.planoNome = (id) => (GP.PLANOS.find(p => p.id === id) || GP.PLANOS[0]).nome;
   GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano.';
@@ -148,9 +148,10 @@
     return `<div class="plano ${p.destaque ? 'dest' : ''} ${p.id === atual ? 'atual' : ''}">
       ${p.destaque ? '<span class="pl-tag">Mais escolhido</span>' : ''}
       <b class="pl-nome">${p.nome}</b>
+      <p class="pl-desc">${p.desc || ''}</p>
       <div class="pl-preco">R$ ${p.preco}<small>/mês</small></div>
       <div class="pl-qtd"><div><b>${p.lojas}</b><span>loja${p.lojas > 1 ? 's' : ''}</span></div><div><b>${p.produtos}</b><span>produtos no total</span></div></div>
-      ${p.ex ? `<div class="pl-ex">${p.ex}</div>` : ''}
+      <div class="pl-ex">${p.ex || ''}</div>
       <ul>${p.itens.map(i => `<li>${GP.ic('check')}${i}</li>`).join('')}</ul>
       ${publico && !p.preco ? '<a class="btn btn-ghost btn-sm btn-block" href="painel.html">Começar grátis</a>'
         : p.id === atual ? '<span class="btn btn-ghost btn-sm btn-block" style="pointer-events:none">Seu plano atual</span>'
