@@ -11,39 +11,81 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=81398">
+<link rel="stylesheet" href="app.css?v=82723">
 <style>
   .hdr{background:var(--ink);color:#fff;position:sticky;top:0;z-index:30}
   .hdr .wrap{display:flex;align-items:center;gap:12px;height:62px}
   .hdr .logo span{color:#fff}
   .hdr .tag{background:var(--brand);font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:999px;letter-spacing:.05em}
   .hdr .icon-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff}
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
-  .kpi{padding:14px;cursor:pointer}
-  .kpi .l{font-size:.76rem;color:var(--muted);font-weight:700}
-  .kpi .v{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}
+  .kpi{padding:16px;cursor:pointer;display:flex;gap:12px;align-items:center;text-align:left;transition:box-shadow .15s,border-color .15s}
+  .kpi:hover{box-shadow:var(--sh-lg)}
+  .kpi .ki{width:42px;height:42px;border-radius:12px;background:var(--bg);color:var(--ink-2);display:grid;place-items:center;flex:none}
+  .kpi .l{font-size:.78rem;color:var(--muted);font-weight:700}
+  .kpi .v{font-size:1.55rem;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+  .kpi.alert{border-color:#F4C7C2}
+  .kpi.alert .ki{background:var(--bad-soft);color:var(--bad)}
   .kpi.alert .v{color:var(--bad)}
-  @media(max-width:640px){.kpis{grid-template-columns:1fr 1fr}}
-  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto}
-  .tabs button{height:44px;padding:0 14px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;display:flex;gap:6px;align-items:center}
+  @media(max-width:760px){.kpis{grid-template-columns:1fr 1fr;gap:10px}.kpi{padding:12px;gap:10px}.kpi .ki{width:36px;height:36px}.kpi .v{font-size:1.3rem}}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{height:46px;padding:0 16px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;display:flex;gap:7px;align-items:center}
   .tabs button.on{color:var(--ink);border-color:var(--brand)}
   .tabs .n{background:var(--bad);color:#fff;border-radius:99px;font-size:.7rem;padding:1px 7px}
-  .fil{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
-  .fil .chip{flex:none}
-  .lj{padding:16px;margin-bottom:12px}
-  .lj .top{display:flex;gap:12px;align-items:flex-start}
-  .lj .lg{width:52px;height:52px;border-radius:14px;background:var(--brand-soft) center/cover;flex:none;display:grid;place-items:center;font-weight:800;color:var(--brand)}
-  .lj dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.86rem;margin:12px 0}
-  .lj dt{color:var(--muted);font-weight:600}
-  .lj dd{word-break:break-word}
-  .lj .acts{display:flex;gap:8px;flex-wrap:wrap}
-  .warnline{background:var(--warn-soft);color:#7a4f0e;border-radius:10px;padding:8px 10px;font-size:.82rem;margin-bottom:10px}
-  .dn{padding:14px;margin-bottom:10px}
-  .dn.ok{opacity:.55}
-  .pl{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 14px;margin-bottom:10px}
+  .tools{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+  .fil{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+  .fil::-webkit-scrollbar{display:none}
+  .fil .chip{flex:none;cursor:pointer}
+  .fil .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .asearch{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;height:42px;padding:0 12px;width:320px;max-width:100%;color:var(--muted)}
+  .asearch:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .asearch input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--ink)}
+  @media(max-width:760px){.tools{gap:10px}.fil{flex:1 1 100%;margin:0 -18px;padding:0 18px}.asearch{width:100%}}
+
+  .ljs{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  @media(max-width:980px){.ljs{grid-template-columns:1fr}}
+  .lj{padding:0;overflow:hidden;display:flex;flex-direction:column}
+  .lj.pend{border-color:#F1D9A8}
+  .lj .top{display:flex;gap:14px;align-items:center;padding:16px 18px}
+  .lj .lg{width:52px;height:52px;border-radius:14px;background:var(--brand-soft) center/cover;flex:none;display:grid;place-items:center;font-weight:800;font-size:1.2rem;color:var(--brand)}
+  .lj .nm{display:flex;gap:6px 8px;align-items:center;flex-wrap:wrap}
+  .lj .nm b{font-size:1.05rem;letter-spacing:-.01em}
+  .lj .meta{font-size:.82rem;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+  .lj .ver{flex:none}
+  .chk{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 14px}
+  .chk span{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;font-weight:700;border-radius:999px;padding:4px 10px 4px 7px}
+  .chk .ok{background:var(--ok-soft);color:var(--ok)}
+  .chk .no{background:var(--warn-soft);color:#8a5a0c}
+  .chk svg{width:13px;height:13px}
+  .lj .dados{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;padding:16px 18px;border-top:1px solid var(--line);background:#FCFBF9}
+  .lj .dados div{min-width:0}
+  .lj .dados .full{grid-column:1/-1}
+  .lj .dados small{display:block;font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .lj .dados span{display:block;font-size:.9rem;font-weight:600;overflow-wrap:anywhere;line-height:1.4}
+  .lj .dados a{color:var(--ok);font-weight:700}
+  .lj .dados .vazio{color:#B8B4AC;font-weight:500}
+  .avisos{margin:0 18px 16px;background:var(--warn-soft);color:#7a4f0e;border-radius:12px;padding:10px 12px;font-size:.84rem}
+  .avisos b{display:flex;gap:6px;align-items:center;margin-bottom:4px}
+  .avisos ul{margin:0;padding-left:18px}.avisos li{margin:2px 0;line-height:1.4}
+  .lj .dados + .avisos{margin-top:16px}
+  .lj .motivo{margin:0 18px 16px;background:var(--bad-soft);color:#8a1c14;border-radius:12px;padding:10px 12px;font-size:.84rem}
+  .lj .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 18px;border-top:1px solid var(--line);margin-top:auto}
+  .lj .acts .btn{height:40px}
+  .lj .acts .sp{flex:1}
+  @media(max-width:520px){.lj .top{padding:14px;gap:12px;align-items:flex-start}.chk{padding:0 14px 12px}.lj .dados{padding:14px;gap:12px 14px}.avisos,.lj .motivo{margin-left:14px;margin-right:14px}
+    .lj .acts{padding:12px 14px}.lj .acts .btn-ok,.lj .acts .btn-bad{flex:1}.lj .acts .sp{display:none}.lj .ver span{display:none}}
+
+  .dn{padding:16px 18px;margin-bottom:12px}
+  .dn.ok{opacity:.6}
+  .dn .dh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .dn .dh b{font-size:1rem}
+  .dn .txt{background:var(--bg);border-radius:10px;padding:10px 12px;font-size:.88rem;color:var(--ink-2);margin:10px 0 0;line-height:1.5}
+  .pl{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px 16px;margin-bottom:10px}
   .pl .ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-  .pl select,.pl input{height:38px;padding:0 8px;border-radius:10px;border:1px solid var(--line);background:#fff}
-  @media(max-width:640px){.pl{grid-template-columns:1fr}}
+  .pl select,.pl input{height:40px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:#fff}
+  @media(max-width:640px){.pl{grid-template-columns:1fr}.pl .ctl>*{flex:1}}
+  .sec-h{font-size:.74rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:20px 0 10px}
 </style>
 </head>
 <body>
@@ -81,15 +123,17 @@
   </nav>
 
   <section id="t-lojas">
-    <div class="fil" id="fil-lojas">
-      <button class="chip on" data-f="pendente">Em análise</button>
-      <button class="chip" data-f="verificada">Verificadas</button>
-      <button class="chip" data-f="recusada">Recusadas</button>
-      <button class="chip" data-f="bloq">Bloqueadas</button>
-      <button class="chip" data-f="todas">Todas</button>
+    <div class="tools">
+      <div class="fil" id="fil-lojas">
+        <button class="chip on" data-f="pendente">Em análise</button>
+        <button class="chip" data-f="verificada">Verificadas</button>
+        <button class="chip" data-f="recusada">Recusadas</button>
+        <button class="chip" data-f="bloq">Bloqueadas</button>
+        <button class="chip" data-f="todas">Todas</button>
+      </div>
+      <label class="asearch"><span id="s-ic"></span><input id="busca" type="search" aria-label="Buscar loja" placeholder="Buscar por loja, e-mail, CNPJ…"></label>
     </div>
-    <label class="psearch" style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;height:44px;padding:0 12px;margin-bottom:12px"><span id="s-ic"></span><input id="busca" placeholder="Buscar por loja, e-mail, CNPJ…" style="flex:1;border:0;outline:0;background:none"></label>
-    <div id="lojas"></div>
+    <div id="lojas" class="ljs"></div>
   </section>
 
   <section id="t-denuncias" class="hide"><div id="denuncias"></div></section>
@@ -109,13 +153,14 @@
         <button type="button" class="btn btn-ghost btn-sm" data-mes="12">+1 ano</button>
       </div>
     </form>
+    <div class="sec-h">Lojistas cadastrados</div>
     <div id="lojistas"></div>
   </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=81398"></script>
-<script src="app.js?v=81398"></script>
+<script src="config.js?v=82723"></script>
+<script src="app.js?v=82723"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -150,9 +195,9 @@
     lojas = a.data || []; dens = b.data || []; lojistas = c.data || [];
     const pend = lojas.filter(l => l.verificacao === 'pendente').length, denA = dens.filter(d => !d.resolvida).length;
     $('kpis').innerHTML = [
-      ['Em análise', pend, pend ? 'alert' : '', 'lojas', 'pendente'], ['Lojas verificadas', lojas.filter(l => l.verificacao === 'verificada').length, '', 'lojas', 'verificada'],
-      ['Denúncias abertas', denA, denA ? 'alert' : '', 'denuncias'], ['Lojistas', lojistas.length, '', 'planos']
-    ].map(([l, v, c, t, f]) => `<div class="card kpi ${c}" data-go="${t}" data-f="${f || ''}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
+      ['Em análise', pend, pend ? 'alert' : '', 'lojas', 'pendente', 'clock'], ['Lojas verificadas', lojas.filter(l => l.verificacao === 'verificada').length, '', 'lojas', 'verificada', 'shield'],
+      ['Denúncias abertas', denA, denA ? 'alert' : '', 'denuncias', '', 'chat'], ['Lojistas', lojistas.length, '', 'planos', '', 'user']
+    ].map(([l, v, c, t, f, i]) => `<button type="button" class="card kpi ${c}" data-go="${t}" data-f="${f || ''}"><span class="ki">${ic(i)}</span><span><span class="l">${l}</span><span class="v" style="display:block">${v}</span></span></button>`).join('');
     $('n-pend').textContent = pend; $('n-pend').classList.toggle('hide', !pend);
     $('n-den').textContent = denA; $('n-den').classList.toggle('hide', !denA);
     renderLojas(); renderDen(); renderPlanos();
@@ -168,33 +213,46 @@
     const q = busca.toLowerCase();
     const lst = lojas.filter(l => (filtro === 'todas' || (filtro === 'bloq' ? !l.ativa : l.verificacao === filtro && (filtro !== 'verificada' || l.ativa)))
       && (!q || [l.nome, l.dono_email, l.cnpj, l.responsavel_nome, l.telefone].join(' ').toLowerCase().includes(q)));
-    if (!lst.length) { $('lojas').innerHTML = `<div class="empty"><div class="big">${ic('store')}</div><h4>Nada aqui</h4><p>${filtro === 'pendente' ? 'Nenhuma loja esperando aprovação. 🎉' : 'Nenhuma loja neste filtro.'}</p></div>`; return; }
+    if (!lst.length) { $('lojas').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('store')}</div><h4>Nada aqui</h4><p>${filtro === 'pendente' ? 'Nenhuma loja esperando aprovação.' : 'Nenhuma loja neste filtro.'}</p></div>`; return; }
+    const fmtTel = (t) => { const d = GP.digits(t).replace(/^55(?=\d{10,11}$)/, ''); return d.length === 11 ? d.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : d.length === 10 ? d.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3') : t; };
+    const campo = (r, v, cls) => `<div class="${cls || ''}"><small>${r}</small><span${v ? '' : ' class="vazio"'}>${v || 'Não informado'}</span></div>`;
     $('lojas').innerHTML = lst.map(l => {
       const [stT, stC] = ST[l.verificacao] || ['', ''];
+      const cpf = GP.digits(l.responsavel_cpf), temCpf = cpf.length > 0, cpfOk = temCpf && GP.cpfValido(cpf), cnpjOk = !!l.cnpj && GP.cnpjValido(l.cnpj);
+      const pixDif = !!(l.pix_nome && l.responsavel_nome && !l.pix_nome.toLowerCase().split(' ')[0].includes(l.responsavel_nome.toLowerCase().split(' ')[0].slice(0, 4)));
       const alertas = [];
-      if (!l.cnpj && !GP.digits(l.responsavel_cpf).length) alertas.push('Não informou CNPJ nem CPF do responsável.');
-      if (l.pix_nome && l.responsavel_nome && !l.pix_nome.toLowerCase().split(' ')[0].includes(l.responsavel_nome.toLowerCase().split(' ')[0].slice(0, 4))) alertas.push(`Nome do recebedor do Pix (${l.pix_nome}) é diferente do responsável.`);
+      if (!l.cnpj && !temCpf) alertas.push('Não informou CNPJ nem CPF do responsável.');
+      if (temCpf && !cpfOk) alertas.push('O CPF informado não é válido.');
+      if (l.cnpj && !cnpjOk) alertas.push('O CNPJ informado não é válido.');
+      if (pixDif) alertas.push(`Nome do recebedor do Pix (${l.pix_nome}) é diferente do responsável.`);
       if (Number(l.denuncias)) alertas.push(`${l.denuncias} denúncia(s) aberta(s).`);
-      return `<article class="card lj">
-        <div class="top"><div class="lg" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : esc((l.nome || '?')[0])}</div>
-          <div class="grow" style="min-width:0"><b>${esc(l.nome)}</b> <span class="badge ${stC}">${stT}</span>${l.ativa ? '' : ' <span class="badge b-bad">Bloqueada</span>'}
-            <div class="small muted">${esc(l.dono_email || '')} · criada em ${new Date(l.criado_em).toLocaleDateString('pt-BR')}</div>
-            <div class="small muted">${l.pedidos} pedidos · ${l.produtos} produtos${l.nota_qtd ? ` · ★ ${l.nota_media} (${l.nota_qtd})` : ''}</div></div></div>
-        <dl>
-          <dt>Responsável</dt><dd>${esc(l.responsavel_nome || '—')}</dd>
-          <dt>CPF</dt><dd>${l.responsavel_cpf ? esc(fmtCpf(l.responsavel_cpf)) : '—'}</dd>
-          <dt>CNPJ</dt><dd>${l.cnpj ? esc(GP.fmtCnpj(l.cnpj)) + (GP.cnpjValido(l.cnpj) ? ' ✓' : ' ⚠ inválido') : '—'}</dd>
-          <dt>WhatsApp</dt><dd>${l.telefone ? `<a href="${GP.wa(l.telefone)}" target="_blank" rel="noopener" style="color:var(--ok);font-weight:700">${esc(l.telefone)}</a>` : '—'}</dd>
-          <dt>Endereço</dt><dd>${esc(l.endereco || '—')}</dd>
-          <dt>Pix</dt><dd>${esc(l.pix_tipo || '')} ${esc(l.pix_chave || '—')}${l.pix_nome ? ' · ' + esc(l.pix_nome) : ''}</dd>
-          ${l.verificacao_motivo ? `<dt>Motivo</dt><dd>${esc(l.verificacao_motivo)}</dd>` : ''}
-        </dl>
-        ${alertas.map(a => `<div class="warnline">⚠ ${esc(a)}</div>`).join('')}
+      // conferência rápida: o que está certo e o que falta olhar
+      const item = (ok, t, f) => `<span class="${ok ? 'ok' : 'no'}">${ic(ok ? 'check' : 'x')}${ok ? t : f}</span>`;
+      const chk = [item(!!l.responsavel_nome, 'Responsável', 'Sem responsável'), item(cpfOk || cnpjOk, cnpjOk && !cpfOk ? 'CNPJ válido' : 'CPF válido', 'Sem CPF ou CNPJ válido'), item(!!l.telefone, 'WhatsApp', 'Sem WhatsApp'),
+        item(!!l.pix_chave && !pixDif, 'Pix no nome', l.pix_chave ? 'Pix em outro nome' : 'Sem Pix'), item(!Number(l.denuncias), 'Sem denúncias', 'Tem denúncia')].join('');
+      const tipo = GP.TIPOS.find(t => t.id === l.tipo);
+      return `<article class="card lj ${l.verificacao === 'pendente' ? 'pend' : ''}">
+        <div class="top"><div class="lg" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : esc((l.nome || '?')[0].toUpperCase())}</div>
+          <div class="grow" style="min-width:0"><div class="nm"><b>${esc(l.nome)}</b><span class="badge ${stC}">${stT}</span>${l.ativa ? '' : '<span class="badge b-bad">Bloqueada</span>'}</div>
+            <div class="meta">${tipo ? esc(tipo.nome) + ' · ' : ''}criada em ${new Date(l.criado_em).toLocaleDateString('pt-BR')} · ${l.pedidos} pedidos · ${l.produtos} produtos${l.nota_qtd ? ` · ★ ${l.nota_media} (${l.nota_qtd})` : ''}</div></div>
+          <a class="btn btn-ghost btn-sm ver" href="loja.html?l=${encodeURIComponent(l.slug)}" target="_blank" rel="noopener" title="Abrir a página da loja">${ic('ext')}<span>Ver loja</span></a></div>
+        <div class="chk">${chk}</div>
+        <div class="dados">
+          ${campo('Responsável', esc(l.responsavel_nome || ''))}
+          ${campo('E-mail da conta', esc(l.dono_email || ''))}
+          ${campo('CPF', temCpf ? esc(fmtCpf(l.responsavel_cpf)) + (cpfOk ? '' : ' (inválido)') : '')}
+          ${campo('CNPJ', l.cnpj ? esc(GP.fmtCnpj(l.cnpj)) + (cnpjOk ? '' : ' (inválido)') : '')}
+          ${campo('WhatsApp', l.telefone ? `<a href="${GP.wa(l.telefone)}" target="_blank" rel="noopener">${esc(fmtTel(l.telefone))}</a>` : '')}
+          ${campo('Pix', l.pix_chave ? esc(((l.pix_tipo || '') + ' ' + l.pix_chave).trim()) + (l.pix_nome ? '<br><span style="font-weight:500;color:var(--muted)">em nome de ' + esc(l.pix_nome) + '</span>' : '') : '')}
+          ${campo('Endereço', esc(l.endereco || ''), 'full')}
+        </div>
+        ${l.verificacao_motivo ? `<div class="motivo" style="margin-top:16px"><b>Motivo da recusa:</b> ${esc(l.verificacao_motivo)}</div>` : ''}
+        ${alertas.length ? `<div class="avisos" style="margin-top:16px"><b>${ic('shield')}Confira antes de aprovar</b><ul>${alertas.map(a => `<li>${esc(a)}</li>`).join('')}</ul></div>` : ''}
         <div class="acts">
           ${l.verificacao !== 'verificada' ? `<button class="btn btn-ok btn-sm" data-ap="${l.id}">${ic('check')}Aprovar</button>` : ''}
           ${l.verificacao !== 'recusada' ? `<button class="btn btn-bad btn-sm" data-rc="${l.id}">${ic('x')}Recusar</button>` : ''}
-          <a class="btn btn-ghost btn-sm" href="loja.html?l=${encodeURIComponent(l.slug)}" target="_blank" rel="noopener">${ic('ext')}Ver loja</a>
-          <button class="btn btn-ghost btn-sm" data-bl="${l.id}" data-ativa="${l.ativa ? 1 : 0}">${l.ativa ? 'Bloquear' : 'Desbloquear'}</button>
+          <span class="sp"></span>
+          <button class="btn btn-ghost btn-sm" data-bl="${l.id}" data-ativa="${l.ativa ? 1 : 0}">${ic('lock')}${l.ativa ? 'Bloquear' : 'Desbloquear'}</button>
         </div></article>`;
     }).join('');
   }
@@ -235,9 +293,10 @@
   // ---------- Denúncias ----------
   function renderDen() {
     $('denuncias').innerHTML = dens.length ? dens.map(d => `<div class="card dn ${d.resolvida ? 'ok' : ''}">
-      <div class="row between"><b>${esc(d.motivo)}</b><span class="small muted">${new Date(d.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span></div>
-      <div class="small" style="margin:4px 0">Loja: <a href="loja.html?l=${encodeURIComponent(d.slug)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--brand-2)">${esc(d.loja_nome)}</a></div>
-      ${d.detalhe ? `<p class="small muted">${esc(d.detalhe)}</p>` : ''}
+      <div class="dh"><div><b>${esc(d.motivo)}</b><div class="small muted" style="margin-top:2px">Loja: <a href="loja.html?l=${encodeURIComponent(d.slug)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--brand-2)">${esc(d.loja_nome)}</a></div></div>
+        <span class="badge ${d.resolvida ? 'b-ok' : 'b-bad'}">${d.resolvida ? 'Resolvida' : 'Aberta'}</span></div>
+      <div class="small muted" style="margin-top:6px">${new Date(d.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+      ${d.detalhe ? `<p class="txt">${esc(d.detalhe)}</p>` : ''}
       <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
         ${d.contato ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="${GP.wa(d.contato)}">${ic('chat')}Falar com quem denunciou</a>` : ''}
         ${d.comprovante ? `<button class="btn btn-soft btn-sm" data-comp="${esc(d.comprovante)}">${ic('upload')}Ver comprovante</button>` : '<span class="small muted" style="align-self:center">Sem comprovante</span>'}

@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=81398">
+<link rel="stylesheet" href="app.css?v=82723">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -115,10 +115,16 @@
   .catnav .in::-webkit-scrollbar{display:none}
   .catnav .chip{cursor:pointer;flex:none}
   .catnav .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .catnav .search{flex:none;display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--muted)}
-  .catnav .search input{border:0;outline:0;background:none;width:130px;font-size:.84rem;color:var(--ink)}
+  .msearch{display:flex;align-items:center;gap:8px;height:44px;padding:0 6px 0 14px;border-radius:14px;background:#fff;border:1px solid var(--line);color:var(--muted);margin-bottom:10px;max-width:560px}
+  .msearch:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .msearch input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:.95rem;color:var(--ink);height:100%}
+  .msearch input::-webkit-search-cancel-button{display:none}
+  .msearch button{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--muted);flex:none}
+  .msearch button:hover{background:var(--bg);color:var(--ink)}
+  .m-res{font-size:.84rem;color:var(--muted);margin:18px 0 -8px}
+  .m-res b{color:var(--ink)}
 
-  .cat h2{font-size:1.15rem;font-weight:800;margin:26px 0 12px;letter-spacing:-.01em;scroll-margin-top:130px}
+  .cat h2{font-size:1.15rem;font-weight:800;margin:26px 0 12px;letter-spacing:-.01em;scroll-margin-top:186px}
   .prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
   @media(max-width:400px){.prods{grid-template-columns:1fr}}
   .prod{display:flex;gap:14px;padding:14px;cursor:pointer;transition:box-shadow .15s,transform .15s;text-align:left;width:100%}
@@ -203,7 +209,7 @@
     </div>
   </div>
   <div class="wrap revs" id="revs"></div>
-  <nav class="catnav"><div class="wrap in" id="catnav"></div></nav>
+  <nav class="catnav" aria-label="Busca e categorias"><div class="wrap"><label class="msearch"><span id="m-ic"></span><input id="m-q" type="search" autocomplete="off" aria-label="Buscar produtos nesta loja" placeholder="Buscar produtos"><button type="button" class="hide" id="m-x" aria-label="Limpar busca"></button></label></div><div class="wrap in" id="catnav"></div></nav>
   <main class="wrap" id="menu"></main>
   <section class="wrap" id="reviews" style="margin-top:30px"></section>
   <div class="wrap center" style="padding:26px 18px 10px"><button class="small muted" id="b-denuncia" style="text-decoration:underline">⚠ Denunciar esta loja</button></div>
@@ -327,8 +333,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=81398"></script>
-<script src="app.js?v=81398"></script>
+<script src="config.js?v=82723"></script>
+<script src="app.js?v=82723"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -423,6 +429,8 @@
   const cats = [];
   (prods || []).forEach(p => { if (!cats.includes(p.categoria)) cats.push(p.categoria); });
   let busca = '';
+  const semAcento = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const ehComida = loja.tipo === 'restaurante' || !loja.tipo;
   function cardProd(p) {
         const n = qtdNo(p.id);
         const esg = p.disponivel && GP.esgotado(p), vs = GP.variacoes(p);
@@ -438,30 +446,42 @@
   const minExtra = (p) => GP.grupos(p).filter(g => Number(g.min) > 0).reduce((t, g) => t + Math.min(...(g.opcoes || []).map(o => Number(o.preco) || 0)), 0);
   const temMin = (p) => GP.grupos(p).some(g => Number(g.min) > 0 && (g.opcoes || []).some(o => Number(o.preco) > Math.min(...g.opcoes.map(x => Number(x.preco) || 0))));
   function renderMenu() {
-    const q = busca.toLowerCase();
-    const lst = (prods || []).filter(p => !q || (p.nome + ' ' + p.descricao).toLowerCase().includes(q));
+    const q = semAcento(busca);
+    const lst = (prods || []).filter(p => !q || semAcento([p.nome, p.descricao, p.categoria].join(' ')).includes(q));
     if (!lst.length) {
-      $('menu').innerHTML = `<div class="empty"><div class="big">${ic('menu')}</div><h4>${prods && prods.length ? 'Nada encontrado' : 'Cardápio em preparação'}</h4><p>${prods && prods.length ? 'Tente outro termo.' : 'Esta loja ainda não cadastrou produtos.'}</p></div>`;
+      $('menu').innerHTML = prods && prods.length
+        ? `<div class="empty"><div class="big">${ic('search')}</div><h4>Nada encontrado para “${esc(busca)}”</h4><p>Confira a escrita ou tente outra palavra.</p><button class="btn btn-ghost btn-sm" id="m-limpar" style="margin-top:12px">Limpar busca</button></div>`
+        : `<div class="empty"><div class="big">${ic('menu')}</div><h4>${ehComida ? 'Cardápio em preparação' : 'Produtos em preparação'}</h4><p>Esta loja ainda não cadastrou produtos.</p></div>`;
       return;
     }
     const promos = lst.filter(p => p.disponivel && GP.emPromo(p));
     const cards = (ps) => ps.map(p => cardProd(p)).join('');
-    $('menu').innerHTML = (promos.length && !q ? `<section class="cat"><h2 id="cat-promo" class="h-promo">${ic('fire')}Promoções</h2><div class="prods">${cards(promos)}</div></section>` : '') + cats.map((c, i) => {
+    $('menu').innerHTML = (q ? `<p class="m-res"><b>${lst.length}</b> ${lst.length === 1 ? 'resultado' : 'resultados'} para “${esc(busca)}”</p>` : '') + (promos.length && !q ? `<section class="cat"><h2 id="cat-promo" class="h-promo">${ic('fire')}Promoções</h2><div class="prods">${cards(promos)}</div></section>` : '') + cats.map((c, i) => {
       const ps = lst.filter(p => p.categoria === c);
       if (!ps.length) return '';
       return `<section class="cat"><h2 id="cat-${i}">${esc(c)}</h2><div class="prods">${cards(ps)}</div></section>`;
     }).join('');
   }
-  $('catnav').innerHTML = `<label class="search">${ic('search')}<input id="m-q" placeholder="Buscar no cardápio"></label>` +
-    ((prods || []).some(p => p.disponivel && GP.emPromo(p)) ? `<button class="chip" data-c="promo">${ic('fire')}Promoções</button>` : '') +
+  $('m-ic').innerHTML = ic('search'); $('m-x').innerHTML = ic('x');
+  $('m-q').placeholder = ehComida ? 'Buscar no cardápio' : 'Buscar produtos nesta loja';
+  $('catnav').innerHTML = ((prods || []).some(p => p.disponivel && GP.emPromo(p)) ? `<button class="chip" data-c="promo">${ic('fire')}Promoções</button>` : '') +
     cats.map((c, i) => `<button class="chip" data-c="${i}">${esc(c)}</button>`).join('');
   $('catnav').onclick = (e) => {
     const b = e.target.closest('[data-c]'); if (!b) return;
     const h = $('cat-' + b.dataset.c); if (h) h.scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.querySelectorAll('#catnav .chip').forEach(x => x.classList.toggle('on', x === b));
   };
-  $('m-q').addEventListener('input', (e) => { busca = e.target.value.trim(); renderMenu(); });
+  const buscar = (v) => {
+    busca = v.trim(); $('m-x').classList.toggle('hide', !busca); renderMenu();
+    document.querySelectorAll('#catnav .chip').forEach(x => x.classList.remove('on'));
+    // leva a lista para o topo para o resultado não ficar escondido atrás da barra
+    const m = $('menu').getBoundingClientRect().top + window.scrollY - 200; if (window.scrollY > m) window.scrollTo({ top: m });
+  };
+  $('m-q').addEventListener('input', (e) => buscar(e.target.value));
+  const limpar = () => { $('m-q').value = ''; buscar(''); };
+  $('m-x').onclick = () => { limpar(); $('m-q').focus(); };
   $('menu').onclick = (e) => {
+    if (e.target.closest('#m-limpar')) return limpar();
     const b = e.target.closest('[data-p]'); if (!b) return;
     const p = P[b.dataset.p];
     if (p.disponivel && GP.esgotado(p)) return GP.toast(`${p.nome} está esgotado no momento.`);

@@ -35,7 +35,8 @@ input,select,textarea{font:inherit;color:inherit}
 .topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.6) blur(12px);-webkit-backdrop-filter:saturate(1.6) blur(12px);border-bottom:1px solid var(--line)}
 .topbar .wrap{display:flex;align-items:center;gap:14px;height:64px}
 .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.18rem;letter-spacing:-.02em}
-.logo b{width:34px;height:34px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;box-shadow:0 4px 12px rgba(242,69,28,.35)}
+.logo b{width:34px;height:34px;border-radius:10px;background:var(--brand) url(img/logo-gopedido.svg) center/cover no-repeat;color:#fff;display:grid;place-items:center;box-shadow:0 4px 12px rgba(242,69,28,.35)}
+.logo b svg{display:none}
 .logo span em{font-style:normal;color:var(--brand)}
 
 /* botões */

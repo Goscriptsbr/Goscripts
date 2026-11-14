@@ -22,8 +22,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=81398">
-<link rel="stylesheet" href="site.css?v=81398">
+<link rel="stylesheet" href="app.css?v=82723">
+<link rel="stylesheet" href="site.css?v=82723">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -127,6 +127,17 @@
     .filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-18px;margin-right:-18px;padding:0 18px}
     .filters::-webkit-scrollbar{display:none}.filters .chip{flex:none}
   }
+  /* entrada do topo e dos cartões das lojas */
+  .hero .wrap>div:first-child>*{animation:sobe .6s cubic-bezier(.2,.7,.2,1) both}
+  .hero .wrap>div:first-child>*:nth-child(2){animation-delay:.07s}
+  .hero .wrap>div:first-child>*:nth-child(3){animation-delay:.14s}
+  .hero .wrap>div:first-child>*:nth-child(4){animation-delay:.21s}
+  .hero .wrap>div:first-child>*:nth-child(5){animation-delay:.28s}
+  .hero-phones{animation:sobe .8s .15s cubic-bezier(.2,.7,.2,1) both;transform:translate3d(var(--px,0),var(--py,0),0);transition:transform .25s ease-out}
+  #lista .store{animation:sobe .45s cubic-bezier(.2,.7,.2,1) both}
+  #lista .store:nth-child(2){animation-delay:.06s}#lista .store:nth-child(3){animation-delay:.12s}
+  #lista .store:nth-child(4){animation-delay:.18s}#lista .store:nth-child(5){animation-delay:.24s}
+  #lista .store:nth-child(n+6){animation-delay:.3s}
 </style>
 </head>
 <body data-sem-rodape>
@@ -301,8 +312,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=81398"></script>
-<script src="app.js?v=81398"></script>
+<script src="config.js?v=82723"></script>
+<script src="app.js?v=82723"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -335,6 +346,19 @@
     ['card', 'Pague do seu jeito', 'Pix na hora com comprovante, ou débito e crédito na maquininha do entregador.'],
     ['bike', 'Acompanhe até chegar', 'Na sua cidade, veja o motoboy a caminho. De longe, receba o código de rastreio por e-mail.']
   ].map(([i, t, d], k) => `<div class="step"><span class="n">0${k + 1}</span><div class="ic">${ic(i)}</div><h3>${t}</h3><p>${d}</p></div>`).join('');
+  // efeitos: blocos entram ao rolar e os celulares do topo acompanham de leve o mouse
+  GP.revelar('.sh, .how .step, .lj-teaser > *, .faq details, .roles .role');
+  if (matchMedia('(hover:hover) and (pointer:fine)').matches && !matchMedia('(prefers-reduced-motion:reduce)').matches) {
+    const hp = document.querySelector('.hero-phones'), hero = document.querySelector('.hero');
+    if (hp && hero) {
+      let af = 0;
+      hero.addEventListener('pointermove', (e) => {
+        cancelAnimationFrame(af);
+        af = requestAnimationFrame(() => { const r = hero.getBoundingClientRect(); hp.style.setProperty('--px', ((e.clientX - r.left) / r.width - .5) * -14 + 'px'); hp.style.setProperty('--py', ((e.clientY - r.top) / r.height - .5) * -10 + 'px'); });
+      });
+      hero.addEventListener('pointerleave', () => { hp.style.setProperty('--px', '0px'); hp.style.setProperty('--py', '0px'); });
+    }
+  }
   document.querySelectorAll('.role').forEach(r => r.insertAdjacentHTML('beforeend', '<span class="go">' + ic('right') + '</span>'));
 
   let lojas = [], filtro = 'todas', busca = '';

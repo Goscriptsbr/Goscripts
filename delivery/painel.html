@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=81398">
+<link rel="stylesheet" href="app.css?v=82723">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -444,7 +444,7 @@
   <main class="wrap" style="padding-bottom:30px">
     <nav class="tabs" id="tabs">
       <button data-t="pedidos" class="on"><span id="ti1"></span>Pedidos <span class="count hide" id="cnt"></span></button>
-      <button data-t="cardapio"><span id="ti2"></span>Cardápio</button>
+      <button data-t="cardapio"><span id="ti2"></span><span id="tx-card">Cardápio</span></button>
       <button data-t="promo"><span id="ti4"></span>Promoções</button>
       <button data-t="loja"><span id="ti3"></span>Minha loja</button>
     </nav>
@@ -483,7 +483,7 @@
     <!-- Cardápio -->
     <section id="tab-cardapio" class="hide">
       <div class="cm-head">
-        <div class="grow" style="min-width:0"><h2>Cardápio</h2><p class="small muted" id="p-count"></p></div>
+        <div class="grow" style="min-width:0"><h2 id="h-card">Cardápio</h2><p class="small muted" id="p-count"></p></div>
         <button class="btn btn-primary" id="b-novo"></button>
       </div>
       <div class="card cm-plan hide" id="uso-prod"></div>
@@ -805,8 +805,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=81398"></script>
-<script src="app.js?v=81398"></script>
+<script src="config.js?v=82723"></script>
+<script src="app.js?v=82723"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1762,10 +1762,13 @@
         <button type="button" class="pit-link side" data-link="${p.id}" title="Copiar o link deste produto">${ic('copy')}<span>Link</span></button></div>
     </div>`;
   }
+  // "Cardápio" só faz sentido para comida; os outros tipos de loja veem "Produtos"
+  const ehComida = () => !loja || !loja.tipo || loja.tipo === 'restaurante';
   function renderProds() {
+    $('tx-card').textContent = $('h-card').textContent = ehComida() ? 'Cardápio' : 'Produtos';
     const cats = [...new Set(prods.map(p => p.categoria))];
     const nDisp = prods.filter(p => p.disponivel).length;
-    $('p-count').textContent = prods.length ? `${prods.length} produto${prods.length > 1 ? 's' : ''} · ${nDisp} ativo${nDisp === 1 ? '' : 's'}` : 'Monte o cardápio da sua loja';
+    $('p-count').textContent = prods.length ? `${prods.length} produto${prods.length > 1 ? 's' : ''} · ${nDisp} ativo${nDisp === 1 ? '' : 's'}` : (ehComida() ? 'Monte o cardápio da sua loja' : 'Cadastre os produtos da sua loja');
     $('b-novo-fab').classList.toggle('show', prods.length > 0);
     const nOff = prods.length - nDisp;
     document.querySelectorAll('#p-fil [data-pf]').forEach(b => { const n = { todos: prods.length, disp: nDisp, indisp: nOff }[b.dataset.pf]; b.innerHTML = { todos: 'Todos', disp: 'Ativos', indisp: 'Pausados' }[b.dataset.pf] + ` <span>${n}</span>`; });
@@ -1774,7 +1777,7 @@
     const nPromo = prods.filter(p => GP.emPromo(p)).length;
     $('p-cats').innerHTML = (cats.length > 1 || nPromo) ? `<button class="chip ${!pCat ? 'on' : ''}" data-pc="">Todas</button>` + (nPromo ? `<button class="chip ${pCat === '__promo' ? 'on' : ''}" data-pc="__promo">${ic('fire')}Em promoção <span class="muted">${nPromo}</span></button>` : '') + cats.map(c => `<button class="chip ${pCat === c ? 'on' : ''}" data-pc="${esc(c)}">${esc(c)} <span class="muted">${prods.filter(p => p.categoria === c).length}</span></button>`).join('') : '';
     renderPromoProds();
-    if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>Seu cardápio está vazio</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
+    if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>${ehComida() ? 'Seu cardápio está vazio' : 'Você ainda não tem produtos'}</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
     const q = norm(pBusca);
     const lst = prods.filter(p => (!q || norm(p.nome + ' ' + p.descricao + ' ' + p.categoria).includes(q))
       && (!pCat || (pCat === '__promo' ? GP.emPromo(p) : p.categoria === pCat))

@@ -894,6 +894,17 @@
     });
   };
   // ---------- rodapé "feito pela GoScripts" em todas as páginas ----------
+  // Entrada suave dos blocos ao rolar a página. Sem JavaScript ou com "reduzir movimento", tudo aparece normal.
+  GP.revelar = (seletor) => {
+    if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: .08 });
+    document.querySelectorAll(seletor).forEach(el => {
+      if (el.classList.contains('rv')) return;
+      const i = [...el.parentElement.children].indexOf(el);
+      el.style.transitionDelay = Math.min(i, 5) * 70 + 'ms'; el.classList.add('rv'); io.observe(el);
+    });
+  };
+
   // Rodapé completo das páginas de apresentação e dos documentos (mesmo desenho do início)
   GP.rodapeSite = () => {
     if (document.querySelector('.site-foot')) return;

@@ -304,3 +304,8 @@ main.wrap{padding-bottom:56px}
 .lh-demo a:hover{text-decoration:underline;text-underline-offset:3px}
 .lh-demo i{display:inline-grid}
 @media(max-width:860px){.vitrine{grid-template-columns:1fr;gap:22px;padding:20px;margin-top:30px}.vt-txt .btn{width:100%}}
+
+/* efeitos de entrada */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+@keyframes sobe{from{opacity:0;transform:translateY(16px)}}
