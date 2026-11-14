@@ -233,7 +233,7 @@ main.wrap{padding-bottom:56px}
 /* tour com telas reais */
 .tour{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;text-align:left}
 .tv{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
-.tv img{width:100%;height:auto;aspect-ratio:720/560;object-fit:cover;object-position:top;display:block;border-bottom:1px solid var(--line);background:#fff}
+.tv img{width:100%;height:auto;aspect-ratio:720/690;object-fit:cover;object-position:top;display:block;border-bottom:1px solid var(--line);background:#fff}
 .tv figcaption{padding:16px 18px 18px}
 .tv h3{font-size:1rem;margin-bottom:4px}
 .tv p{color:var(--muted);font-size:.88rem;line-height:1.5}
