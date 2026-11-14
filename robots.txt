@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /delivery/admin.html
+
+Sitemap: https://goscripts.com.br/sitemap.xml

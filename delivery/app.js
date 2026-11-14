@@ -153,7 +153,7 @@
       <div class="pl-qtd"><div><b>${p.lojas}</b><span>loja${p.lojas > 1 ? 's' : ''}</span></div><div><b>${p.produtos}</b><span>produtos no total</span></div></div>
       <div class="pl-ex">${p.ex || ''}</div>
       <ul>${p.itens.map(i => `<li>${GP.ic('check')}${i}</li>`).join('')}</ul>
-      ${publico && !p.preco ? '<a class="btn btn-ghost btn-sm btn-block" href="painel.html">Começar grátis</a>'
+      ${publico && !p.preco ? '<a class="btn btn-ghost btn-sm btn-block" href="painel.html?criar=1">Começar grátis</a>'
         : p.id === atual ? '<span class="btn btn-ghost btn-sm btn-block" style="pointer-events:none">Seu plano atual</span>'
         : p.preco ? `<a class="btn ${p.destaque ? 'btn-primary' : 'btn-dark'} btn-sm btn-block" target="_blank" rel="noopener" href="https://wa.me/${GP.WHATS}?text=${encodeURIComponent(msg)}">${GP.ic('chat')}Assinar pelo WhatsApp</a>` : ''}
     </div>`;
@@ -894,6 +894,25 @@
     });
   };
   // ---------- rodapé "feito pela GoScripts" em todas as páginas ----------
+  // Rodapé completo das páginas de apresentação e dos documentos (mesmo desenho do início)
+  GP.rodapeSite = () => {
+    if (document.querySelector('.site-foot')) return;
+    const f = document.createElement('footer'); f.className = 'site-foot';
+    f.innerHTML = `<div class="wrap"><div class="sf-top">
+      <div class="sf-brand"><a class="logo" href="./"><b>${GP.ic('bag')}</b><span>Go<em>Pedido</em></span></a>
+        <p>Delivery na sua região e envio para todo o Brasil, com lojas que vendem sem pagar comissão por pedido.</p></div>
+      <nav class="sf-col" aria-label="Para quem compra"><h2>Para quem compra</h2>
+        <a href="./">Ver as lojas</a><a href="./#como">Como funciona</a><a href="./#duvidas">Perguntas frequentes</a><a href="conta.html">Minha conta</a></nav>
+      <nav class="sf-col" aria-label="Para lojistas"><h2>Para lojistas</h2>
+        <a href="lojistas.html">Vender no GoPedido</a><a href="lojistas.html#planos">Planos e preços</a><a href="painel.html?criar=1">Criar minha loja</a><a href="painel.html">Entrar no painel</a></nav>
+      <nav class="sf-col" aria-label="Ajuda e documentos"><h2>Ajuda e documentos</h2>
+        <a href="${GP.wa(GP.WHATS, 'Olá! Vim pelo GoPedido e gostaria de falar com vocês.')}" target="_blank" rel="noopener">WhatsApp <span class="nw">(19) 98828-3178</span></a>
+        <a href="termos.html">Termos de Uso</a><a href="privacidade.html">Política de Privacidade</a><a href="entregas.html">Entregas, Trocas e Reembolsos</a></nav>
+    </div><div class="sf-bot"><span>© 2026 GoPedido. As vendas e entregas são de responsabilidade de cada loja.</span>
+      <a class="sf-by" href="https://goscripts.com.br" target="_blank" rel="noopener">Desenvolvido por <img src="../logo-192.png" alt="" width="20" height="20"><b>GoScripts</b></a></div></div>`;
+    document.body.appendChild(f);
+  };
+
   GP.rodape = () => {
     if (document.querySelector('.gs-foot') || document.body.dataset.semRodape != null) return;
     const f = document.createElement('footer'); f.className = 'gs-foot';

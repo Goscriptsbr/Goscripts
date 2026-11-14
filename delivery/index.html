@@ -11,11 +11,19 @@
 <meta property="og:image" content="https://goscripts.com.br/delivery/img/portfolio-gopedido.jpg">
 <script>if(/^#(planos-sec|planos)$/.test(location.hash))location.replace("lojistas.html#planos");</script>
 <meta name="theme-color" content="#F2451C">
+<link rel="canonical" href="https://goscripts.com.br/delivery/">
+<meta property="og:url" content="https://goscripts.com.br/delivery/">
+<meta property="og:site_name" content="GoPedido">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="img/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/icone-180.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "GoPedido", "url": "https://goscripts.com.br/delivery/", "inLanguage": "pt-BR", "publisher": {"@type": "Organization", "name": "GoScripts", "url": "https://goscripts.com.br"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=64948">
-<link rel="stylesheet" href="site.css?v=64948">
+<link rel="stylesheet" href="app.css?v=81025">
+<link rel="stylesheet" href="site.css?v=81025">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -122,6 +130,7 @@
 </style>
 </head>
 <body data-sem-rodape>
+<a class="pular" href="#titulo">Pular para as lojas</a>
 
 <header class="topbar">
   <div class="wrap">
@@ -133,7 +142,7 @@
     <button class="chip btnchip" id="loc-chip"></button>
     <a class="icon-btn" href="conta.html" id="btn-conta" aria-label="Minha conta"></a>
     <a class="btn btn-ghost btn-sm" href="painel.html" id="btn-loja"></a>
-    <a class="btn btn-primary btn-sm top-cta" href="painel.html?criar=1">Cadastrar loja</a>
+    <a class="btn btn-primary btn-sm top-cta" href="lojistas.html">Criar minha loja</a>
     <button class="icon-btn menu-btn" id="menu-btn" aria-label="Abrir menu" aria-expanded="false"></button>
   </div>
 </header>
@@ -166,7 +175,7 @@
       <h1>As lojas da sua cidade, <em>a um toque de você.</em></h1>
       <p>Lanches, mercado, farmácia, pet shop e variedades. Perto de você chega por motoboy, com a taxa calculada pela distância. Longe, as lojas enviam pelos Correios e transportadoras, com rastreio no seu e-mail.</p>
       <div class="searchbar">
-        <label class="in"><span id="ic-search"></span><input id="q" placeholder="Buscar loja ou produto…" autocomplete="off"></label>
+        <label class="in"><span id="ic-search"></span><input id="q" type="search" aria-label="Buscar loja ou produto" placeholder="Buscar loja ou produto…" autocomplete="off"></label>
         <button class="btn btn-primary" id="btn-buscar">Buscar</button>
       </div>
       <div class="trust">
@@ -175,9 +184,9 @@
     </div>
     <div class="hero-phones" aria-hidden="true">
       <div class="glow"></div>
-      <div class="ph ph-l"><img src="img/tela-2.jpg?v=2" alt="" loading="eager"></div>
-      <div class="ph ph-c"><img src="img/tela-1.jpg?v=2" alt="" loading="eager"></div>
-      <div class="ph ph-r"><img src="img/tela-3.jpg?v=2" alt="" loading="eager"></div>
+      <div class="ph ph-l"><img src="img/tela-2.jpg?v=2" width="520" height="1125" alt="Escolha do frete no checkout, com Jadlog, PAC e SEDEX" decoding="async"></div>
+      <div class="ph ph-c"><img src="img/tela-1.jpg?v=2" width="520" height="1125" alt="Página de uma loja no GoPedido" fetchpriority="high"></div>
+      <div class="ph ph-r"><img src="img/tela-3.jpg?v=2" width="520" height="1125" alt="Acompanhamento do pedido com código de rastreio" decoding="async"></div>
       <div class="f f1"><i class="fi ok" data-ic="check"></i>Pix confirmado</div>
       <div class="f f2"><i class="fi br" data-ic="bike"></i>Saiu para entrega</div>
       <div class="f f3"><i class="fi pp" data-ic="box"></i>Rastreio no seu e-mail</div>
@@ -270,15 +279,15 @@
         <p>Delivery na sua região e envio para todo o Brasil, com lojas que vendem sem pagar comissão por pedido.</p>
       </div>
       <nav class="sf-col" aria-label="Plataforma">
-        <h5>Plataforma</h5>
+        <h2>Plataforma</h2>
         <a href="#titulo">Lojas</a><a href="#como">Como funciona</a><a href="#duvidas">Perguntas frequentes</a><a href="conta.html">Minha conta</a><a href="entregador.html">Sou entregador</a>
       </nav>
       <nav class="sf-col" aria-label="Para lojistas">
-        <h5>Para lojistas</h5>
-        <a href="lojistas.html">Vender no GoPedido</a><a href="lojistas.html#planos">Planos e preços</a><a href="painel.html?criar=1">Cadastrar minha loja</a><a href="painel.html">Entrar no painel</a>
+        <h2>Para lojistas</h2>
+        <a href="lojistas.html">Vender no GoPedido</a><a href="lojistas.html#planos">Planos e preços</a><a href="painel.html?criar=1">Criar minha loja</a><a href="painel.html">Entrar no painel</a>
       </nav>
       <nav class="sf-col" aria-label="Ajuda e documentos">
-        <h5>Ajuda e documentos</h5>
+        <h2>Ajuda e documentos</h2>
         <a href="https://wa.me/5519988283178" target="_blank" rel="noopener">WhatsApp <span class="nw">(19) 98828-3178</span></a><a href="termos.html">Termos de Uso</a><a href="privacidade.html">Política de Privacidade</a><a href="entregas.html">Entregas, Trocas e Reembolsos</a>
       </nav>
     </div>
@@ -292,8 +301,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=64948"></script>
-<script src="app.js?v=64948"></script>
+<script src="config.js?v=81025"></script>
+<script src="app.js?v=81025"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -325,7 +334,7 @@
     ['pin', 'Informe o endereço', 'Digite o CEP ou use sua localização — rua, bairro e número se preenchem sozinhos.'],
     ['card', 'Pague do seu jeito', 'Pix na hora com comprovante, ou débito e crédito na maquininha do entregador.'],
     ['bike', 'Acompanhe até chegar', 'Na sua cidade, veja o motoboy a caminho. De longe, receba o código de rastreio por e-mail.']
-  ].map(([i, t, d], k) => `<div class="step"><span class="n">0${k + 1}</span><div class="ic">${ic(i)}</div><h4>${t}</h4><p>${d}</p></div>`).join('');
+  ].map(([i, t, d], k) => `<div class="step"><span class="n">0${k + 1}</span><div class="ic">${ic(i)}</div><h3>${t}</h3><p>${d}</p></div>`).join('');
   document.querySelectorAll('.role').forEach(r => r.insertAdjacentHTML('beforeend', '<span class="go">' + ic('right') + '</span>'));
 
   let lojas = [], filtro = 'todas', busca = '';
