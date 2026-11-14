@@ -280,3 +280,27 @@ main.wrap{padding-bottom:56px}
 @media(max-width:560px){.step h3{padding-right:44px}}
 .kicker{color:#B82C0A}
 @media(max-width:420px){.doc-lj{display:none}}
+
+/* loja de exemplo */
+.vitrine{display:grid;grid-template-columns:1fr 380px;gap:36px;align-items:center;text-align:left;margin-top:40px;padding:28px;border:1px solid var(--line);border-radius:22px;background:var(--bg)}
+.vitrine:has(.vt-card.hide){grid-template-columns:1fr}
+.vt-txt h3{font-size:clamp(1.2rem,2.2vw,1.5rem);font-weight:800;letter-spacing:-.025em;margin-bottom:8px}
+.vt-txt p{color:var(--muted);line-height:1.55;max-width:520px;margin-bottom:18px}
+.vt-card{display:block;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--sh);transition:box-shadow .15s,transform .15s;min-width:0}
+.vt-card:hover{box-shadow:var(--sh-lg);transform:translateY(-2px)}
+.vt-capa{height:120px;background:linear-gradient(135deg,#FFE9E2,#FFD3C4)}
+.vt-cv{width:100%;height:100%;object-fit:cover;display:block}
+.vt-info{display:flex;align-items:center;gap:12px;padding:0 16px;margin-top:-22px;position:relative}
+.vt-lg{width:56px;height:56px;border-radius:16px;border:3px solid #fff;background:#fff;object-fit:cover;flex:none;box-shadow:var(--sh)}
+.vt-ini{display:grid;place-items:center;font-weight:800;font-size:1.3rem;color:var(--brand)}
+.vt-info>div{flex:1;min-width:0;padding-top:24px}
+.vt-info b{display:block;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vt-info span{font-size:.82rem;color:var(--muted)}
+.vt-info>.i{color:var(--muted);margin-top:24px;flex:none}
+.vt-card p{padding:10px 16px 16px;color:var(--muted);font-size:.88rem;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vt-card:not(:has(p)){padding-bottom:16px}
+.lh-demo{margin-top:14px;font-size:.92rem;font-weight:700}
+.lh-demo a{display:inline-flex;align-items:center;gap:4px;color:var(--brand-2)}
+.lh-demo a:hover{text-decoration:underline;text-underline-offset:3px}
+.lh-demo i{display:inline-grid}
+@media(max-width:860px){.vitrine{grid-template-columns:1fr;gap:22px;padding:20px;margin-top:30px}.vt-txt .btn{width:100%}}

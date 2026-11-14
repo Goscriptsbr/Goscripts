@@ -21,8 +21,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=81112">
-<link rel="stylesheet" href="site.css?v=81112">
+<link rel="stylesheet" href="app.css?v=81398">
+<link rel="stylesheet" href="site.css?v=81398">
 </head>
 <body data-sem-rodape>
 <a class="pular" href="#recursos">Pular para o conteúdo</a>
@@ -70,6 +70,7 @@
           <a class="btn btn-primary" href="painel.html?criar=1">Criar minha loja grátis</a>
           <a class="btn btn-ghost" href="#planos">Conhecer os planos</a>
         </div>
+        <p class="lh-demo"><a href="loja.html?l=teste-loja" target="_blank" rel="noopener">Ver uma loja de exemplo<i data-ic="right"></i></a></p>
         <div class="lj-micro">
           <span><i data-ic="check"></i>Plano grátis para começar</span>
           <span><i data-ic="check"></i>Pix direto na sua conta</span>
@@ -114,6 +115,15 @@
       <figure class="tv"><img src="img/tour-etiqueta.jpg" width="720" height="794" loading="lazy" alt="Pedido com etiqueta de envio gerada, código de rastreio e agência de postagem"><figcaption><h3>Etiqueta e rastreio</h3><p>Gere e imprima a etiqueta no próprio pedido. O código de rastreio vai por e-mail para o cliente.</p></figcaption></figure>
     </div>
     <p class="tour-nota">Telas do sistema com dados de exemplo.</p>
+
+    <div class="vitrine" id="vitrine">
+      <div class="vt-txt">
+        <h3>Veja uma loja funcionando</h3>
+        <p>Abra uma loja de exemplo e navegue como se fosse o seu cliente: produtos, sacola, cálculo da entrega e formas de pagamento.</p>
+        <a class="btn btn-dark" id="vt-btn" href="loja.html?l=teste-loja" target="_blank" rel="noopener">Abrir a loja de exemplo</a>
+      </div>
+      <a class="vt-card hide" id="vt-card" href="loja.html?l=teste-loja" target="_blank" rel="noopener" aria-label="Abrir a loja de exemplo"></a>
+    </div>
 
     <h3 class="sub-h">Tudo o que o painel faz</h3>
     <div class="feats" id="feats"></div>
@@ -280,7 +290,8 @@
   </div>
 </footer>
 
-<script src="app.js?v=81112"></script>
+<script src="config.js?v=81398"></script>
+<script src="app.js?v=81398"></script>
 <script>
 (() => {
   const { $, ic } = GP;
@@ -324,6 +335,27 @@
     $('cmp').innerHTML = '<caption class="sr">Comparação dos planos do GoPedido</caption><thead><tr><th scope="col"><span class="sr">Recurso</span></th>' +
       P.map(p => `<th scope="col" class="${p.destaque ? 'cd' : ''}">${p.nome}</th>`).join('') + '</tr></thead><tbody>' +
       L.map(([t, f]) => `<tr><th scope="row">${t}</th>${P.map(p => `<td class="${p.destaque ? 'cd' : ''}">${f(p)}</td>`).join('')}</tr>`).join('') + '</tbody>';
+  })();
+
+  // Loja de exemplo: mostra capa, logo e nome reais. Se a consulta falhar, fica só o botão; se a loja não existir mais, o bloco some.
+  (async () => {
+    const DEMO = 'teste-loja', cfg = window.GP_CONFIG || {};
+    if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+    try {
+      const r = await fetch(`${cfg.supabaseUrl}/rest/v1/ff_lojas?slug=eq.${DEMO}&ativa=eq.true&select=nome,descricao,tipo,imagem_url,capa_url`,
+        { headers: { apikey: cfg.supabaseKey, Authorization: 'Bearer ' + cfg.supabaseKey } });
+      if (!r.ok) return;
+      const [l] = await r.json();
+      if (!l) { $('vitrine').remove(); document.querySelector('.lh-demo')?.remove(); return; }
+      const tipo = (GP.TIPOS || []).find(t => t.id === l.tipo);
+      const img = (u, c) => /^https:\/\//.test(u || '') ? `<img class="${c}" src="${GP.esc(u)}" alt="" loading="lazy">` : '';
+      const c = $('vt-card');
+      c.innerHTML = `<div class="vt-capa">${img(l.capa_url, 'vt-cv')}</div>
+        <div class="vt-info">${img(l.imagem_url, 'vt-lg') || `<span class="vt-lg vt-ini">${GP.esc((l.nome || '?').trim().charAt(0).toUpperCase())}</span>`}
+          <div><b>${GP.esc(l.nome)}</b><span>${GP.esc(tipo ? tipo.nome : 'Loja')}</span></div>${ic('ext')}</div>
+        ${l.descricao ? `<p>${GP.esc(l.descricao)}</p>` : ''}`;
+      c.classList.remove('hide');
+    } catch (_) { /* sem rede: o botão continua funcionando */ }
   })();
 
   $('feats').innerHTML = [
