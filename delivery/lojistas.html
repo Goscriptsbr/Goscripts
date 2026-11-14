@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GoPedido para lojistas · Loja online sem comissão por pedido</title>
+<meta name="description" content="Cadastre sua loja no GoPedido: pedidos pelo link da loja, entrega com seus motoboys, envio para todo o Brasil pelo Melhor Envio e Pix direto na sua conta. Plano grátis para começar, sem comissão por pedido.">
+<meta property="og:title" content="GoPedido para lojistas · Loja online sem comissão por pedido">
+<meta property="og:description" content="Pedidos online, entrega por motoboy e envio para todo o Brasil em um só painel. Plano grátis para começar.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://goscripts.com.br/delivery/img/portfolio-gopedido.jpg">
+<meta name="theme-color" content="#F2451C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=64750">
+<link rel="stylesheet" href="site.css?v=64750">
+</head>
+<body data-sem-rodape>
+
+<header class="topbar lj-top">
+  <div class="wrap">
+    <a class="logo" href="./"><b id="lg"></b><span>Go<em>Pedido</em></span></a>
+    <nav class="topnav" aria-label="Seções">
+      <a href="#recursos">Recursos</a><a href="#envio">Envio</a><a href="#comecar">Como começar</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a>
+    </nav>
+    <div class="grow"></div>
+    <a class="btn btn-ghost btn-sm tb-entrar" href="painel.html">Entrar no painel</a>
+    <a class="btn btn-primary btn-sm top-cta" href="painel.html?criar=1"><span>Cadastrar<span class="xs-hide"> loja</span></span></a>
+    <button class="icon-btn menu-btn" id="menu-btn" aria-label="Abrir menu" aria-expanded="false"></button>
+  </div>
+</header>
+
+<div class="dw-ov" id="dw-ov"></div>
+<aside class="drawer" id="drawer" aria-label="Menu" aria-hidden="true">
+  <div class="dw-head"><a class="logo" href="./"><b id="lg3"></b><span>Go<em>Pedido</em></span></a><button class="icon-btn" id="dw-x" aria-label="Fechar menu"></button></div>
+  <a class="btn btn-primary btn-block" href="painel.html?criar=1" id="dw-criar"></a>
+  <div class="dw-sec">Para lojistas</div>
+  <a class="dw-it" href="#recursos" data-dic="grid">Recursos do painel</a>
+  <a class="dw-it" href="#envio" data-dic="box">Envio para todo o Brasil</a>
+  <a class="dw-it" href="#comecar" data-dic="list">Como começar</a>
+  <a class="dw-it" href="#planos" data-dic="star">Planos e preços</a>
+  <a class="dw-it" href="#duvidas" data-dic="chat">Perguntas frequentes</a>
+  <div class="dw-sec">Acessar</div>
+  <a class="dw-it" href="painel.html" data-dic="store">Entrar no painel</a>
+  <a class="dw-it" href="./" data-dic="bag">Ver as lojas</a>
+  <div class="dw-sec">Ajuda</div>
+  <a class="dw-it" href="https://wa.me/5519988283178" target="_blank" rel="noopener" data-dic="phone">Fale conosco no WhatsApp</a>
+  <a class="dw-it" href="termos.html" data-dic="shield">Termos de Uso</a>
+  <a class="dw-it" href="privacidade.html" data-dic="lock">Privacidade</a>
+</aside>
+
+<section class="lh">
+  <div class="wrap">
+    <div class="lh-grid">
+      <div>
+        <span class="kicker">Para lojistas</span>
+        <h1>Sua loja online, <em>sem comissão por pedido.</em></h1>
+        <p class="lead">Receba pedidos pelo link da sua loja, organize a entrega com seus motoboys e envie para todo o Brasil. Tudo em um painel que funciona no celular.</p>
+        <div class="lj-acts">
+          <a class="btn btn-primary" href="painel.html?criar=1">Cadastrar minha loja grátis</a>
+          <a class="btn btn-ghost" href="#planos">Ver planos e preços</a>
+        </div>
+        <div class="lj-micro">
+          <span><i data-ic="check"></i>Plano grátis para começar</span>
+          <span><i data-ic="check"></i>Pix direto na sua conta</span>
+          <span><i data-ic="check"></i>Não precisa de CNPJ</span>
+        </div>
+      </div>
+      <figure>
+        <div class="browser">
+          <div class="bar"><i></i><i></i><i></i><span>goscripts.com.br/delivery/painel</span></div>
+          <picture>
+            <source media="(max-width:860px)" srcset="img/painel-demo-m.jpg" width="780" height="906">
+            <img src="img/painel-demo.jpg" width="1600" height="1000" alt="Painel do lojista no GoPedido: resumo do dia, código do motoboy e pedidos em andamento">
+          </picture>
+        </div>
+        <figcaption>Tela do painel do lojista, com dados de exemplo.</figcaption>
+      </figure>
+    </div>
+
+    <div class="stats">
+      <div><b>0%</b><span>de comissão por pedido</span></div>
+      <div><b>R$ 0</b><span>para começar, no plano Grátis</span></div>
+      <div><b>7</b><span>tipos de loja atendidos</span></div>
+      <div><b>Brasil</b><span>inteiro, com envio por transportadora</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-alt" id="recursos">
+  <div class="wrap">
+    <div class="sh">
+      <span class="kicker">Recursos</span>
+      <h2>Um painel para cuidar da loja inteira</h2>
+      <p>Tudo o que acontece na loja aparece em uma tela só, no celular ou no computador.</p>
+    </div>
+
+    <div class="demo inv">
+      <div class="demo-txt">
+        <ul class="pts" style="margin-top:0">
+          <li><span class="icb" data-ic="receipt"></span><div><b>Controle dos pedidos</b><span>Cada pedido chega na hora, com aviso sonoro. Você atualiza o status e o cliente acompanha pelo link dele.</span></div></li>
+          <li><span class="icb" data-ic="store"></span><div><b>Gestão da loja</b><span>Produtos, fotos, estoque, horários, cupons e formas de pagamento no mesmo lugar.</span></div></li>
+          <li><span class="icb" data-ic="bike"></span><div><b>Entrega do seu jeito</b><span>Seus motoboys com taxa pela distância, retirada no local e envio por transportadora.</span></div></li>
+          <li><span class="icb" data-ic="phone"></span><div><b>Fácil de usar</b><span>Funciona direto no navegador. Não precisa instalar aplicativo nem ter computador.</span></div></li>
+        </ul>
+      </div>
+      <figure>
+        <div class="phone-card">
+          <img src="img/pedido-demo.jpg" width="780" height="862" loading="lazy" alt="Pedido no painel com cliente, endereço, etiqueta de envio gerada e código de rastreio">
+        </div>
+        <figcaption>Um pedido no painel, com a etiqueta de envio já gerada.</figcaption>
+      </figure>
+    </div>
+
+    <h3 class="sub-h">Tudo o que o painel faz</h3>
+    <div class="feats" id="feats"></div>
+  </div>
+</section>
+
+<section class="sec" id="envio">
+  <div class="wrap">
+    <div class="me-band">
+      <div class="me-txt">
+        <span class="me-tag"><i data-ic="box"></i>Integrado ao Melhor Envio</span>
+        <h3>Venda para fora da sua cidade sem complicação</h3>
+        <p>Lojas de variedades conectam a própria conta do Melhor Envio e passam a atender clientes de qualquer lugar do Brasil, com Correios, Jadlog e outras transportadoras.</p>
+        <ol class="me-passos">
+          <li><span>1</span><div><b>O cliente vê o frete no checkout</b><small>Preço e prazo de cada transportadora, calculados na hora pelo CEP.</small></div></li>
+          <li><span>2</span><div><b>Você gera a etiqueta em um toque</b><small>Paga com o saldo da sua conta no Melhor Envio, pelo mesmo valor que o cliente pagou de frete.</small></div></li>
+          <li><span>3</span><div><b>O cliente recebe o rastreio por <span class="nw">e-mail</span></b><small>E acompanha o pedido até chegar, sem precisar perguntar para a loja.</small></div></li>
+        </ol>
+      </div>
+      <div class="me-vis" aria-hidden="true">
+        <div class="frete-card">
+          <div class="me-row"><b>Frete para 29172-145</b><small>Serra/ES</small></div>
+          <div class="me-op on"><i data-ic="box"></i><div><b>Jadlog .Package</b><small>até 9 dias úteis</small></div><b>R$ 23,13</b></div>
+          <div class="me-op"><i data-ic="box"></i><div><b>Correios PAC</b><small>até 7 dias úteis</small></div><b>R$ 25,40</b></div>
+          <div class="me-op"><i data-ic="box"></i><div><b>Correios SEDEX</b><small>até 3 dias úteis</small></div><b>R$ 41,00</b></div>
+        </div>
+        <div class="me-chip"><i data-ic="check"></i><span>Etiqueta gerada · ME26006NEL4BR</span></div>
+      </div>
+    </div>
+    <p class="me-nota center">Valores de exemplo. O frete e a etiqueta são cobrados pelo Melhor Envio, na conta da própria loja.</p>
+  </div>
+</section>
+
+<section class="sec sec-alt" id="comecar">
+  <div class="wrap">
+    <div class="sh">
+      <span class="kicker">Como começar</span>
+      <h2>Sua loja no ar em três passos</h2>
+      <p>Você faz tudo sozinho pelo painel, sem depender de instalação ou de contrato.</p>
+    </div>
+    <ol class="start">
+      <li><b>Crie sua conta</b><span>O cadastro é grátis. Você lê e aceita os termos e já entra no painel.</span></li>
+      <li><b>Monte a loja</b><span>Informe endereço, horários e formas de pagamento, e cadastre seus produtos.</span></li>
+      <li><b>Peça a verificação e divulgue</b><span>Envie o nome e o CPF do responsável para ganhar o selo de loja verificada, e compartilhe o link.</span></li>
+    </ol>
+    <div class="lj-acts" style="margin-top:28px">
+      <a class="btn btn-primary" href="painel.html?criar=1">Cadastrar minha loja grátis</a>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="planos">
+  <div class="wrap">
+    <div class="sh">
+      <span class="kicker">Planos e preços</span>
+      <h2>Comece grátis e mude de plano quando precisar</h2>
+      <p>Nenhum plano cobra comissão por pedido e todos têm pedidos ilimitados. O que muda é a quantidade de lojas, produtos e pessoas na equipe.</p>
+    </div>
+    <div class="planos" id="planos-lista"></div>
+    <p class="pl-nota" id="nota-planos"></p>
+    <p class="pl-como">A assinatura dos planos pagos é feita pelo WhatsApp <a href="https://wa.me/5519988283178" target="_blank" rel="noopener">(19) 98828-3178</a>.</p>
+  </div>
+</section>
+
+<section class="sec sec-alt" id="transparencia">
+  <div class="wrap">
+    <div class="sh">
+      <span class="kicker">Transparência</span>
+      <h2>Regras claras para quem vende e para quem compra</h2>
+      <p>O GoPedido é a plataforma que liga o cliente à loja. A venda, a entrega e o atendimento são da própria loja.</p>
+    </div>
+    <div class="trust-g">
+      <div class="tc"><span class="icb" data-ic="pix"></span><h4>O dinheiro é da loja</h4><p>O Pix vai direto para a chave da loja e o pagamento na entrega é feito a ela. O GoPedido não fica com o valor das vendas.</p></div>
+      <div class="tc"><span class="icb" data-ic="shield"></span><h4>Lojas verificadas</h4><p>O nome e o CPF ou CNPJ do responsável são conferidos antes de a loja receber o selo de verificada.</p></div>
+      <div class="tc"><span class="icb" data-ic="chat"></span><h4>Atendimento pelo WhatsApp</h4><p>Dúvidas sobre cadastro, planos ou uso do painel? Fale com a gente no <a class="nw" href="https://wa.me/5519988283178" target="_blank" rel="noopener">(19) 98828-3178</a>.</p></div>
+      <div class="tc"><span class="icb" data-ic="lock"></span><h4>Regras publicadas</h4><p>Leia os <a href="termos.html">Termos de Uso</a>, a <a href="privacidade.html">Política de Privacidade</a> e a política de <a href="entregas.html">Entregas, Trocas e Reembolsos</a>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="duvidas">
+  <div class="wrap">
+    <div class="sh">
+      <span class="kicker">Dúvidas</span>
+      <h2>Perguntas de quem vende</h2>
+    </div>
+    <div class="faq">
+      <details><summary>Quanto custa usar o GoPedido?</summary><p>Começar é grátis e não cobramos comissão sobre os pedidos. Planos pagos liberam mais produtos, lojas e pessoas na equipe.</p></details>
+      <details><summary>O dinheiro das vendas passa pelo GoPedido?</summary><p>Não. O Pix vai direto para a chave da loja, e os pagamentos na entrega são feitos à própria loja.</p></details>
+      <details><summary>Como cadastro minha loja?</summary><p>Crie sua conta em <a href="painel.html?criar=1">Cadastrar minha loja</a>, preencha os dados da loja e cadastre os produtos. Depois, peça a verificação informando o nome e o CPF do responsável.</p></details>
+      <details><summary>Preciso ter CNPJ para cadastrar minha loja?</summary><p>Não. Para a verificação da loja basta o nome e o CPF do responsável. Se tiver CNPJ, ele também pode ser informado.</p></details>
+      <details><summary>Como funciona o envio para outras cidades?</summary><p>Lojas de variedades conectam a própria conta do Melhor Envio. O cliente escolhe a transportadora e paga o frete no pedido; a loja gera a etiqueta com o saldo dela, posta na agência e o cliente recebe o rastreio por e-mail.</p></details>
+      <details><summary>Preciso instalar algum aplicativo?</summary><p>Não. O painel do lojista e a página da loja funcionam direto no navegador, no celular ou no computador.</p></details>
+      <details><summary>Como assino ou troco de plano?</summary><p>Pelo WhatsApp <a class="nw" href="https://wa.me/5519988283178" target="_blank" rel="noopener">(19) 98828-3178</a>. A liberação do plano é feita pelo nosso atendimento.</p></details>
+      <details><summary>Quem resolve trocas, atrasos e reembolsos?</summary><p>A loja que vendeu. O cliente fala com ela pelo WhatsApp que aparece no pedido. Veja a <a href="entregas.html">política de entregas e reembolsos</a>.</p></details>
+      <p class="faq-mais">Não achou sua dúvida? <a href="https://wa.me/5519988283178" target="_blank" rel="noopener">Fale com a gente no WhatsApp</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-cta">
+  <div class="wrap">
+    <div class="cta">
+      <div>
+        <h3>Pronto para receber pedidos?</h3>
+        <p>Restaurante, mercado, farmácia, pet shop, adega ou variedades: cadastre sua loja grátis. Entrega pelos seus motoboys na cidade e envio para todo o Brasil pelo Melhor Envio.</p>
+        <ul class="cta-list" id="cta-list"></ul>
+      </div>
+      <div class="cta-acts">
+        <a class="btn btn-primary" href="painel.html?criar=1">Cadastrar minha loja</a>
+        <a class="btn btn-line" href="https://wa.me/5519988283178?text=Ol%C3%A1!%20Quero%20saber%20mais%20sobre%20o%20GoPedido%20para%20a%20minha%20loja." target="_blank" rel="noopener"><i data-ic="chat" style="display:inline-grid"></i>Tirar dúvidas no WhatsApp</a>
+        <small>Grátis para começar · sem comissão</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="sf-top">
+      <div class="sf-brand">
+        <a class="logo" href="./"><b id="lg4"></b><span>Go<em>Pedido</em></span></a>
+        <p>Delivery na sua região e envio para todo o Brasil, com lojas que vendem sem pagar comissão por pedido.</p>
+      </div>
+      <nav class="sf-col" aria-label="Para quem compra">
+        <h5>Para quem compra</h5>
+        <a href="./">Ver as lojas</a><a href="./#como">Como funciona</a><a href="./#duvidas">Perguntas frequentes</a><a href="conta.html">Minha conta</a><a href="entregador.html">Sou entregador</a>
+      </nav>
+      <nav class="sf-col" aria-label="Para lojistas">
+        <h5>Para lojistas</h5>
+        <a href="#recursos">Recursos do painel</a><a href="#planos">Planos e preços</a><a href="painel.html?criar=1">Cadastrar minha loja</a><a href="painel.html">Entrar no painel</a>
+      </nav>
+      <nav class="sf-col" aria-label="Ajuda e documentos">
+        <h5>Ajuda e documentos</h5>
+        <a href="https://wa.me/5519988283178" target="_blank" rel="noopener">WhatsApp <span class="nw">(19) 98828-3178</span></a><a href="termos.html">Termos de Uso</a><a href="privacidade.html">Política de Privacidade</a><a href="entregas.html">Entregas, Trocas e Reembolsos</a>
+      </nav>
+    </div>
+    <div class="sf-bot">
+      <span>© 2026 GoPedido. As vendas e entregas são de responsabilidade de cada loja.</span>
+      <a class="sf-by" href="https://goscripts.com.br" target="_blank" rel="noopener">Desenvolvido por <img src="../logo-192.png" alt="" width="20" height="20"><b>GoScripts</b></a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js?v=64750"></script>
+<script>
+(() => {
+  const { $, ic } = GP;
+  ['lg', 'lg3', 'lg4'].forEach(id => { $(id).innerHTML = ic('bag'); });
+  $('menu-btn').innerHTML = ic('menu'); $('dw-x').innerHTML = ic('x');
+  $('dw-criar').innerHTML = ic('plus') + 'Cadastrar minha loja grátis';
+  document.querySelectorAll('.dw-it[data-dic]').forEach(a => { a.innerHTML = ic(a.dataset.dic) + '<span>' + a.textContent + '</span>'; });
+  document.querySelectorAll('[data-ic]').forEach(el => { el.innerHTML = ic(el.dataset.ic); });
+
+  // Menu lateral (celular)
+  const menu = (abrir) => {
+    $('drawer').classList.toggle('on', abrir); $('dw-ov').classList.toggle('on', abrir);
+    $('drawer').setAttribute('aria-hidden', String(!abrir)); $('menu-btn').setAttribute('aria-expanded', String(abrir));
+    document.body.style.overflow = abrir ? 'hidden' : '';
+  };
+  $('menu-btn').onclick = () => menu(true); $('dw-x').onclick = () => menu(false); $('dw-ov').onclick = () => menu(false);
+  $('drawer').addEventListener('click', (e) => { if (e.target.closest('a')) menu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') menu(false); });
+
+  // Planos: mesma lista usada dentro do painel
+  $('planos-lista').innerHTML = GP.planosHtml(null, null, true);
+  $('nota-planos').textContent = GP.NOTA_PLANOS;
+
+  $('feats').innerHTML = [
+    ['bell', 'Pedidos em tempo real', 'Chegam na hora, com aviso sonoro e impressão automática na impressora térmica.'],
+    ['grid', 'Cardápio ou catálogo completo', 'Fotos, categorias, adicionais, variações como tamanho e cor, e controle de estoque.'],
+    ['bike', 'Entrega com seus motoboys', 'Taxa calculada pela distância e uma área própria para os entregadores.'],
+    ['pix', 'Pix direto na sua conta', 'QR Code com o valor certo e comprovante anexado. O dinheiro não passa por ninguém.'],
+    ['ext', 'Link de cada produto', 'Compartilhe no Instagram, TikTok ou WhatsApp e o cliente cai direto no produto.'],
+    ['user', 'Equipe com acesso controlado', 'Adicione administradores e escolha quais lojas cada um pode ver.'],
+    ['tag', 'Cupons e promoções', 'Desconto em porcentagem, valor fixo ou frete grátis, com limite de uso.'],
+    ['star', 'Avaliações dos clientes', 'Notas e comentários na página da loja, com resposta do lojista.']
+  ].map(([i, t, d]) => `<div class="feat"><div class="ic">${ic(i)}</div><h4>${t}</h4><p>${d}</p></div>`).join('');
+  $('cta-list').innerHTML = [
+    'Pedidos ao vivo com aviso sonoro', 'Variações e controle de estoque', 'Pix com QR Code e comprovante',
+    'Taxa automática pela distância', 'Envio com etiqueta do Melhor Envio', 'Equipe com acesso por loja'
+  ].map(t => `<li>${ic('check')}${t}</li>`).join('');
+})();
+</script>
+</body>
+</html>
