@@ -137,7 +137,7 @@
   // ---------- Planos ----------
   GP.WHATS = '5519988283178';
   GP.PLANOS = [
-    { id: 'gratis', nome: 'Grátis', desc: 'Para começar a vender', preco: 0, lojas: 1, produtos: 50, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 administrador além de você', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções'] },
+    { id: 'gratis', nome: 'Grátis', desc: 'Para começar a vender', preco: 0, lojas: 1, produtos: 30, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 administrador além de você', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções'] },
     { id: 'profissional', nome: 'Profissional', desc: 'Para quem tem mais produtos ou uma segunda loja', preco: 50, lojas: 2, produtos: 200, destaque: true, ex: 'Ex.: 120 produtos numa loja e 80 na outra', itens: ['Tudo do plano Grátis', '4 administradores além de você', 'Suporte pelo WhatsApp'] },
     { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 500, ex: 'Ex.: 5 lojas com 100 produtos cada', itens: ['Tudo do Profissional', '8 administradores além de você', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
   ];
