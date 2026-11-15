@@ -12,6 +12,7 @@
 // Ação { acao: 'nf_link', token } → link temporário (10 min) para o cliente baixar o PDF da nota
 // Agendamentos (SQL v25): { agendamento: token, tipo: 'ag_novo' | 'ag_remarcado' | 'ag_cancelado' }
 //   e { acao: 'lembretes' } → chamado de 5 em 5 minutos pelo agendador; manda o lembrete 3 h antes
+//   (o mesmo agendador manda o "Como foi seu pedido?" 40 min depois da entrega, para o cliente avaliar a loja)
 // Avisos no celular do lojista (SQL v29): { acao: 'push_chave' | 'push_pedido' | 'push_agenda' | 'push_teste' }
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
@@ -116,6 +117,19 @@ export function montarEmail(tipo, p, l, itens) {
             <div style="font-size:20px;font-weight:800;letter-spacing:1px">${h(p.rastreio)}</div></td></tr></table>
           <p style="margin:12px 0 0;font-size:13px;line-height:1.6;color:#71717F">O rastreio pode levar algumas horas para mostrar movimentação depois que a loja entregar o pacote na transportadora.</p>`,
         botao: { texto: 'Rastrear meu pedido', url: rastrear }, botao2: { texto: 'Ver meu pedido', url: link }, rodapeLoja: contato
+      })
+    };
+  }
+  if (tipo === 'avaliar') {
+    const est = [1, 2, 3, 4, 5].map(n => `<td align="center" style="padding:0 3px"><a href="${h(link + '&nota=' + n + '#aval')}" style="display:block;text-decoration:none;font-size:34px;line-height:40px;color:#F5B301">★</a><div style="font-size:11px;color:#9a9aa5">${n}</div></td>`).join('');
+    return {
+      assunto: `Como foi seu pedido na ${l.nome}?`,
+      html: moldura({
+        previa: `Seu pedido #${p.numero} foi entregue. Conta pra gente como foi: leva 10 segundos.`,
+        titulo: `Como foi seu pedido?`,
+        texto: `Seu pedido <b>#${p.numero}</b> da <b>${h(l.nome)}</b> foi ${ret ? 'retirado' : 'entregue'}. Que tal avaliar? Leva 10 segundos e ajuda muito a loja e outros clientes. Toque numa estrela:`,
+        corpo: `<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 6px"><tr>${est}</tr></table>`,
+        botao: { texto: 'Avaliar a loja', url: link + '&avaliar=1#aval' }, rodapeLoja: contato
       })
     };
   }
@@ -244,6 +258,31 @@ export async function lembretes(admin, enviar, agora = new Date()) {
     }
     try { await enviarAgenda(admin, enviar, a, 'ag_lembrete'); enviados++; } catch (_) { falhas++; }
   }
+  // Pedido entregue há mais de 40 min (e menos de 2 dias), sem avaliação: pede para avaliar a loja (uma vez só)
+  let avaliar = 0;
+  try {
+    const { data: ps } = await admin.from('ff_pedidos').select('*')
+      .eq('status', 'entregue').neq('cliente_email', '').is('emails->>avaliar', null)
+      .lt('atualizado_em', new Date(agora.getTime() - 40 * 60e3).toISOString())
+      .gt('atualizado_em', new Date(agora.getTime() - 48 * 3600e3).toISOString())
+      .order('atualizado_em').limit(30);
+    for (const p of ps || []) {
+      const ja = p.emails || {};
+      const marca = { ...ja, avaliar: agora.toISOString() };
+      const { data: av } = await admin.from('ff_avaliacoes').select('id').eq('pedido_id', p.id).maybeSingle();
+      ok(await admin.from('ff_pedidos').update({ emails: marca }).eq('id', p.id), 'marcar avaliar');
+      if (av) continue; // já avaliou
+      try {
+        const { data: l } = ok(await admin.from('ff_lojas').select('nome, telefone, endereco, dono').eq('id', p.loja_id).maybeSingle(), 'loja');
+        const { assunto, html } = montarEmail('avaliar', p, l || { nome: 'Loja' }, []);
+        let responder = '';
+        try { const { data: u } = await admin.auth.admin.getUserById(l && l.dono); responder = (u && u.user && u.user.email) || ''; } catch (_) {}
+        await enviar({ para: p.cliente_email, assunto, html, texto: textoSimples(html), loja: (l && l.nome) || '', responder });
+        avaliar++;
+      } catch (_) { await admin.from('ff_pedidos').update({ emails: ja }).eq('id', p.id); }
+    }
+  } catch (_) { /* segue */ }
+
   // Planos que vencem em até 5 dias (um aviso por vencimento)
   let planos = 0;
   try {
@@ -265,7 +304,7 @@ export async function lembretes(admin, enviar, agora = new Date()) {
       catch (_) { await admin.from('ff_assinaturas').update({ aviso_em: null }).eq('email', v.email); }
     }
   } catch (_) { /* sem o SQL v27 ainda */ }
-  return { enviados, pulados, falhas, planos };
+  return { enviados, pulados, falhas, planos, avaliar };
 }
 
 // ---------------------------------------------------------------------------
