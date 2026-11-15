@@ -1231,6 +1231,31 @@
              temPush, estadoPush, ativarPush, desativarPush, testarPush, renovarPush };
   })();
 
-  const iniciar = () => { GP.olhoSenha(); GP.rodape(); };
+  // Convite para instalar o app (cliente, lojista e motoboy). Some por 14 dias se a pessoa fechar.
+  GP.convidarInstalar = () => {
+    if (!document.querySelector('link[rel="manifest"]') || GP.app.instalado()) return;
+    const pag = location.pathname.split('/').pop() || 'index.html';
+    const T = pag.startsWith('painel') ? ['Instale o painel da sua loja', 'Abre direto nos pedidos e avisa cada pedido novo.']
+      : pag.startsWith('entregador') ? ['Instale o app do entregador', 'Abre mais rápido e avisa cada entrega nova.']
+      : ['Instale o GoPedido', 'Peça mais rápido, direto da tela do seu celular ou computador.'];
+    const mostrar = () => {
+      if (document.getElementById('gp-inst') || GP.app.instalado()) return;
+      if (Number(GP.ls.get('gp_inst_off') || 0) > Date.now() - 14 * 864e5) return;
+      const modo = GP.app.comoInstalar();
+      if (!['pronto', 'ios', 'mac'].includes(modo)) return;
+      const el = document.createElement('div'); el.id = 'gp-inst'; el.className = 'gp-inst';
+      el.innerHTML = `<img src="img/app-192.png" alt=""><div class="tx"><b>${T[0]}</b><span>${T[1]}</span></div>
+        <button type="button" class="btn btn-primary btn-sm" data-i>${GP.ic('download')}Instalar</button><button type="button" class="x" data-x aria-label="Fechar">×</button>`;
+      document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+      const fechar = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 250); };
+      el.querySelector('[data-x]').onclick = () => { GP.ls.set('gp_inst_off', String(Date.now())); fechar(); };
+      el.querySelector('[data-i]').onclick = async () => { fechar(); await GP.app.instalar(); };
+    };
+    // espera o navegador dizer se dá para instalar
+    setTimeout(mostrar, 4000);
+    GP.app.aoMudar(() => { if (GP.app.instalado()) { const el = document.getElementById('gp-inst'); if (el) el.remove(); } else setTimeout(mostrar, 300); });
+  };
+
+  const iniciar = () => { GP.olhoSenha(); GP.rodape(); try { GP.convidarInstalar(); } catch (_) {} };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
