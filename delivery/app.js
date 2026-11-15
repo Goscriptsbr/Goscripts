@@ -1121,6 +1121,12 @@
 
   // ---------- Entrar com Google (precisa ligar o Google em Supabase → Authentication → Providers) ----------
   GP.loginGoogle = async (sb, voltarPara) => {
+    // confere antes se o Google já foi ligado no Supabase (senão o navegador cai numa página de erro)
+    try {
+      const r = await fetch(cfg.supabaseUrl + '/auth/v1/settings', { headers: { apikey: cfg.supabaseKey } });
+      const j = await r.json();
+      if (j && j.external && j.external.google === false) return GP.toast('O login com Google ainda não foi ligado. Use e-mail e senha por enquanto.', 'err');
+    } catch (_) {}
     const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: voltarPara || location.href.split('#')[0], queryParams: { prompt: 'select_account' } } });
     if (error) GP.toast(/provider is not enabled|Unsupported provider/i.test(error.message || '') ? 'O login com Google ainda não foi ligado no Supabase.' : GP.err(error), 'err');
   };
