@@ -161,8 +161,14 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
     const texto = await r.text();
     let j; try { j = texto ? JSON.parse(texto) : {}; } catch (_) { j = { message: texto.slice(0, 200) }; }
     if (r.status === 401) { await desligar(lojaId); throw new Falha('mp_desconectado'); }
-    if (!r.ok && j && j.id && j.status && j.transactions) return j;   // order recusada vem com o corpo da order
-    if (!r.ok) throw new Falha('mp_erro', 400, [j.message || j.error, (j.cause && j.cause[0] && j.cause[0].description) || ''].filter(Boolean).join(' · ') || ('HTTP ' + r.status));
+    // API de Orders: pagamento recusado volta 402 com { errors: [{ code, message, details }], data: order }
+    const e0 = (j && Array.isArray(j.errors) && j.errors[0]) || {};
+    const det = [].concat(e0.details || []).map(String).join(', ');
+    if (!r.ok) {
+      const ord = (j && j.data && j.data.id) ? j.data : (j && j.id && j.transactions ? j : null);
+      if (ord) { ord._detalhe = det || e0.code || ''; return ord; }
+    }
+    if (!r.ok) throw new Falha('mp_erro', 400, [j.message || j.error || e0.message || e0.code, det, (j.cause && j.cause[0] && j.cause[0].description) || ''].filter(Boolean).join(' · ') || ('HTTP ' + r.status));
     return j;
   }
 
@@ -330,7 +336,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
       }, { 'X-Idempotency-Key': 'cartao-' + p.id + '-' + d.token.slice(-16) });
       const novo = (await gravarOrdem(l.id, o)) || p;
       const pg = (o.transactions && o.transactions.payments || [])[0] || {};
-      return { status: 200, corpo: { ...resumo(novo), detalhe: pg.status_detail || o.status_detail || '' } };
+      return { status: 200, corpo: { ...resumo(novo), detalhe: pg.status_detail || o.status_detail || o._detalhe || '' } };
     }
 
     if (acao === 'pagar') {
