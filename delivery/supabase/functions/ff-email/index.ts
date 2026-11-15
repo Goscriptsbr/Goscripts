@@ -12,6 +12,7 @@
 // Ação { acao: 'nf_link', token } → link temporário (10 min) para o cliente baixar o PDF da nota
 // Agendamentos (SQL v25): { agendamento: token, tipo: 'ag_novo' | 'ag_remarcado' | 'ag_cancelado' }
 //   e { acao: 'lembretes' } → chamado de 5 em 5 minutos pelo agendador; manda o lembrete 3 h antes
+// Avisos no celular do lojista (SQL v29): { acao: 'push_chave' | 'push_pedido' | 'push_agenda' | 'push_teste' }
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
 //   nome: ff-email → cole este arquivo inteiro → Deploy → em Details desligue "Verify JWT".
@@ -267,12 +268,163 @@ export async function lembretes(admin, enviar, agora = new Date()) {
   return { enviados, pulados, falhas, planos };
 }
 
-export async function tratar(req, admin, enviar) {
+// ---------------------------------------------------------------------------
+// Avisos no celular (Web Push) — SQL v29
+// As chaves VAPID são criadas pela própria função na primeira vez e guardadas no banco (ff_config),
+// então não precisa configurar segredo nenhum.
+// Ações: { acao: 'push_chave' }                    → chave pública para o navegador assinar os avisos
+//        { acao: 'push_pedido', id }               → chamado pelo banco quando entra pedido (uma vez só)
+//        { acao: 'push_agenda', id }               → chamado pelo banco quando o cliente marca horário
+//        { acao: 'push_teste' } + login do lojista → manda um aviso de teste para os aparelhos dele
+// ---------------------------------------------------------------------------
+const te = new TextEncoder();
+export const b64u = (buf) => {
+  const b = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let s = ''; for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+export const deB64u = (s) => {
+  const t = String(s).replace(/-/g, '+').replace(/_/g, '/'); const p = t + '==='.slice((t.length + 3) % 4);
+  const bin = atob(p); const o = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) o[i] = bin.charCodeAt(i); return o;
+};
+const junta = (...ps) => { const n = ps.reduce((a, p) => a + p.length, 0); const o = new Uint8Array(n); let i = 0; for (const p of ps) { o.set(p, i); i += p.length; } return o; };
+async function hmac(chave, dados) {
+  const k = await crypto.subtle.importKey('raw', chave, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC', k, dados));
+}
+
+export async function novasChavesVapid() {
+  const par = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  const pub = new Uint8Array(await crypto.subtle.exportKey('raw', par.publicKey));
+  const jwk = await crypto.subtle.exportKey('jwk', par.privateKey);
+  return { publica: b64u(pub), privada: jwk };
+}
+
+async function vapidCabecalho(endpoint, vapid, contato) {
+  const aud = new URL(endpoint).origin;
+  const cab = b64u(te.encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
+  const corpo = b64u(te.encode(JSON.stringify({ aud, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: contato })));
+  const k = await crypto.subtle.importKey('jwk', vapid.privada, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  const ass = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, k, te.encode(cab + '.' + corpo)));
+  return 'vapid t=' + cab + '.' + corpo + '.' + b64u(ass) + ', k=' + vapid.publica;
+}
+
+// Criptografia do aviso (RFC 8291, aes128gcm): só o aparelho do lojista consegue ler
+export async function cifrar(texto, p256dh, auth, _teste = null) {
+  const uaPub = deB64u(p256dh), segredo = deB64u(auth);
+  const par = _teste ? _teste.par : await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+  const asPub = new Uint8Array(await crypto.subtle.exportKey('raw', par.publicKey));
+  const uaKey = await crypto.subtle.importKey('raw', uaPub, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+  const ecdh = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: uaKey }, par.privateKey, 256));
+  const prkKey = await hmac(segredo, ecdh);
+  const ikm = await hmac(prkKey, junta(te.encode('WebPush: info\0'), uaPub, asPub, new Uint8Array([1])));
+  const sal = _teste ? _teste.sal : crypto.getRandomValues(new Uint8Array(16));
+  const prk = await hmac(sal, ikm);
+  const cek = (await hmac(prk, junta(te.encode('Content-Encoding: aes128gcm\0'), new Uint8Array([1])))).slice(0, 16);
+  const nonce = (await hmac(prk, junta(te.encode('Content-Encoding: nonce\0'), new Uint8Array([1])))).slice(0, 12);
+  const k = await crypto.subtle.importKey('raw', cek, { name: 'AES-GCM' }, false, ['encrypt']);
+  const cifra = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, k, junta(te.encode(texto), new Uint8Array([2]))));
+  const rs = new Uint8Array([0, 0, 0x10, 0]); // 4096
+  return junta(sal, rs, new Uint8Array([asPub.length]), asPub, cifra);
+}
+
+export async function chavesVapid(admin) {
+  const { data } = ok(await admin.from('ff_config').select('valor').eq('chave', 'vapid').maybeSingle(), 'vapid');
+  if (data && data.valor && data.valor.publica) return data.valor;
+  const nova = await novasChavesVapid();
+  // se duas chamadas criarem ao mesmo tempo, fica a primeira que gravou
+  await admin.from('ff_config').insert({ chave: 'vapid', valor: nova });
+  const { data: d2 } = ok(await admin.from('ff_config').select('valor').eq('chave', 'vapid').maybeSingle(), 'vapid');
+  return d2.valor;
+}
+
+// Manda o aviso para todos os aparelhos das pessoas; apaga os que não existem mais
+export async function mandarPush(admin, usuarios, aviso, rede = fetch) {
+  const ids = [...new Set((usuarios || []).filter(Boolean))];
+  if (!ids.length) return { aparelhos: 0, enviados: 0 };
+  const { data: subs } = ok(await admin.from('ff_push').select('id, endpoint, p256dh, auth').in('user_id', ids), 'aparelhos');
+  if (!subs || !subs.length) return { aparelhos: 0, enviados: 0 };
+  const vapid = await chavesVapid(admin);
+  const corpo = JSON.stringify(aviso);
+  let enviados = 0; const mortos = [];
+  await Promise.all(subs.map(async (s) => {
+    try {
+      const r = await rede(s.endpoint, {
+        method: 'POST',
+        headers: { Authorization: await vapidCabecalho(s.endpoint, vapid, 'https://goscripts.com.br/delivery/'),
+                   'Content-Encoding': 'aes128gcm', 'Content-Type': 'application/octet-stream', TTL: '86400', Urgency: 'high' },
+        body: await cifrar(corpo, s.p256dh, s.auth)
+      });
+      if (r.status === 404 || r.status === 410) mortos.push(s.id);
+      else if (r.status < 300) enviados++;
+    } catch (_) { /* aparelho fora do ar: tenta na próxima */ }
+  }));
+  if (mortos.length) await admin.from('ff_push').delete().in('id', mortos);
+  return { aparelhos: subs.length, enviados };
+}
+
+// Dono da loja + equipe com acesso a ela
+async function pessoasDaLoja(admin, l) {
+  const { data: eq } = await admin.from('ff_equipe').select('user_id, todas, lojas').eq('dono', l.dono);
+  return [l.dono, ...((eq || []).filter(e => e.todas || (e.lojas || []).includes(l.id)).map(e => e.user_id))];
+}
+
+const PAG = { pix: 'Pix', mp: 'Pago online', dinheiro: 'Dinheiro', debito: 'Débito', credito: 'Crédito' };
+export async function pushPedido(admin, id, rede = fetch) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(id || ''))) throw new Falha('pedido_invalido');
+  // marca primeiro (de uma vez só), para não mandar dois avisos do mesmo pedido
+  const { data: p } = ok(await admin.from('ff_pedidos').update({ push_em: new Date().toISOString() })
+    .eq('id', id).is('push_em', null).neq('status', 'cancelado')
+    .or('pagamento.neq.mp,mp_status.eq.aprovado').select('*').maybeSingle(), 'pedido');
+  if (!p) return { enviado: false, motivo: 'ja_enviado_ou_situacao' };
+  const { data: l } = ok(await admin.from('ff_lojas').select('id, nome, dono').eq('id', p.loja_id).maybeSingle(), 'loja');
+  if (!l) return { enviado: false, motivo: 'loja' };
+  const tipo = p.tipo_entrega === 'retirada' ? 'Retirada' : p.tipo_entrega === 'envio' ? 'Envio' : 'Entrega';
+  const r = await mandarPush(admin, await pessoasDaLoja(admin, l), {
+    titulo: `Novo pedido #${p.numero} · ${brl(p.total)}`,
+    corpo: `${p.cliente_nome} · ${tipo} · ${PAG[p.pagamento] || p.pagamento}${l.nome ? ' — ' + l.nome : ''}`,
+    url: SITE + 'painel.html?loja=' + l.id, tag: 'pedido-' + p.id
+  }, rede);
+  return { enviado: r.enviados > 0, ...r };
+}
+
+export async function pushAgenda(admin, id, rede = fetch) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(id || ''))) throw new Falha('agendamento_invalido');
+  const { data: a } = ok(await admin.from('ff_agendamentos').update({ push_em: new Date().toISOString() })
+    .eq('id', id).is('push_em', null).eq('status', 'agendado').eq('origem', 'site').select('*').maybeSingle(), 'agendamento');
+  if (!a) return { enviado: false, motivo: 'ja_enviado_ou_situacao' };
+  const { data: l } = ok(await admin.from('ff_lojas').select('id, nome, dono').eq('id', a.loja_id).maybeSingle(), 'loja');
+  if (!l) return { enviado: false, motivo: 'loja' };
+  const q = quando(a.inicio);
+  const r = await mandarPush(admin, await pessoasDaLoja(admin, l), {
+    titulo: `Novo horário: ${q.dia.toLowerCase()} às ${q.hora}`,
+    corpo: `${a.cliente_nome} · ${a.servico_nome} com ${a.profissional_nome}${l.nome ? ' — ' + l.nome : ''}`,
+    url: SITE + 'painel.html?loja=' + l.id, tag: 'agenda-' + a.id
+  }, rede);
+  return { enviado: r.enviados > 0, ...r };
+}
+
+export async function tratar(req, admin, enviar, rede = fetch) {
   if (req.method === 'OPTIONS') return { status: 200, corpo: 'ok' };
   if (req.method !== 'POST') throw new Falha('metodo_invalido', 405);
   const b = (await req.json().catch(() => ({}))) || {};
 
   if (b.acao === 'lembretes') return { status: 200, corpo: await lembretes(admin, enviar) };
+
+  // Avisos no celular do lojista
+  if (b.acao === 'push_chave') return { status: 200, corpo: { chave: (await chavesVapid(admin)).publica } };
+  if (b.acao === 'push_pedido') return { status: 200, corpo: await pushPedido(admin, b.id, rede) };
+  if (b.acao === 'push_agenda') return { status: 200, corpo: await pushAgenda(admin, b.id, rede) };
+  if (b.acao === 'push_teste') {
+    const jwt = String(req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    const { data: u } = jwt ? await admin.auth.getUser(jwt) : { data: null };
+    if (!u || !u.user) throw new Falha('sem_login', 401);
+    const r = await mandarPush(admin, [u.user.id], {
+      titulo: 'Avisos ligados ✅', corpo: 'É assim que vai chegar cada pedido novo, mesmo com o celular bloqueado.',
+      url: SITE + 'painel.html', tag: 'teste'
+    }, rede);
+    return { status: 200, corpo: r };
+  }
 
   // E-mails de agendamento: { agendamento: token, tipo: 'ag_novo' | 'ag_remarcado' | 'ag_cancelado' }
   if (b.agendamento !== undefined) {

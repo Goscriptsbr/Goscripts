@@ -18,12 +18,13 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="img/icone.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/icone-180.png">
+<link rel="manifest" href="manifest.json">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "GoPedido", "url": "https://goscripts.com.br/delivery/", "inLanguage": "pt-BR", "publisher": {"@type": "Organization", "name": "GoScripts", "url": "https://goscripts.com.br"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=46888">
-<link rel="stylesheet" href="site.css?v=46888">
+<link rel="stylesheet" href="app.css?v=49442">
+<link rel="stylesheet" href="site.css?v=49442">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -151,6 +152,7 @@
     </nav>
     <div class="grow"></div>
     <button class="chip btnchip" id="loc-chip"></button>
+    <button class="icon-btn hide" id="btn-app" type="button" aria-label="Instalar o app" title="Instalar o GoPedido como aplicativo"></button>
     <a class="icon-btn" href="conta.html" id="btn-conta" aria-label="Minha conta"></a>
     <a class="btn btn-ghost btn-sm" href="painel.html" id="btn-loja"></a>
     <a class="btn btn-primary btn-sm top-cta" href="lojistas.html">Criar minha loja</a>
@@ -312,8 +314,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=46888"></script>
-<script src="app.js?v=46888"></script>
+<script src="config.js?v=49442"></script>
+<script src="app.js?v=49442"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -471,6 +473,15 @@
     render();
   };
 })();
+
+  // Instalar como app (só aparece quando o navegador oferece)
+  (() => {
+    const b = document.getElementById('btn-app'); if (!b || !window.GP || !GP.app) return;
+    b.innerHTML = GP.ic('download');
+    const upd = () => b.classList.toggle('hide', GP.app.comoInstalar() !== 'pronto');
+    GP.app.aoMudar(upd); upd();
+    b.onclick = async () => { await GP.app.instalar(); upd(); };
+  })();
 </script>
 </body>
 </html>

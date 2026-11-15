@@ -425,3 +425,21 @@ body:not(.modo-agenda) .ag-only{display:none!important}
 
 .plp-q{display:grid;grid-template-columns:52px 1fr 52px;gap:8px}.plp-q .input{text-align:center;font-weight:800;font-size:1.1rem}.plp-q .btn{font-size:1.3rem;padding:0}
 .plp-qs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}.plp-qs .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.app-passos{text-align:left;margin:4px 0 16px;padding-left:22px;font-size:.92rem;line-height:1.5;color:var(--ink-2)}
+.app-passos li{margin:6px 0}
+/* Cartão fidelidade (loja) */
+.fidcard{display:flex;gap:10px;align-items:flex-start;margin-top:12px;background:#FFF7F3;border:1.5px dashed #F7A58C;border-radius:14px;padding:11px 12px;text-align:left}
+.fidcard.co{margin:0 0 12px}
+.fidcard.win{background:#ECF8F0;border:1.5px solid #9BD8B0}
+.fidcard .fi{width:34px;height:34px;border-radius:11px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.fidcard.win .fi{background:var(--ok)}
+.fidcard .fi svg{width:18px;height:18px}
+.fidcard .ft{flex:1;min-width:0;font-size:.82rem;line-height:1.4;color:var(--ink-2)}
+.fidcard .ft>b{display:block;font-size:.9rem;color:var(--ink);margin-bottom:1px}
+.fidcard .ft>span{display:block}
+.fidcard .ft>.fid-dots{display:flex}
+.fid-dots{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.fid-dots i{width:22px;height:22px;border-radius:50%;border:2px dashed #E3B8A8;display:grid;place-items:center;font-style:normal;background:#fff}
+.fid-dots i.on{background:var(--brand);border:0;color:#fff}
+.fid-dots i.gift{border:2px solid var(--brand);color:var(--brand)}
+.fid-dots i svg{width:12px;height:12px}

@@ -7,12 +7,13 @@
 <meta name="theme-color" content="#16161B">
 <link rel="icon" href="img/icone.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/icone-180.png">
+<link rel="manifest" href="manifest-painel.json">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=46888">
+<link rel="stylesheet" href="app.css?v=49442">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -190,6 +191,52 @@
     .ml-nav button.on svg{color:var(--brand-2)}
   }
   .ml-anchor{scroll-margin-top:120px}
+  .sw-alerta{position:relative;border-radius:999px;box-shadow:0 0 0 0 rgba(242,69,28,.55);animation:swpulse 1.6s infinite}
+  .sw-alerta #sw-txt{color:var(--brand-2)}
+  @keyframes swpulse{0%{box-shadow:0 0 0 0 rgba(242,69,28,.55)}70%{box-shadow:0 0 0 12px rgba(242,69,28,0)}100%{box-shadow:0 0 0 0 rgba(242,69,28,0)}}
+  .pausa{display:flex;gap:12px;align-items:flex-start;background:#FFF4EF;border:1.5px solid #F8C9B6;border-radius:16px;padding:14px;margin-bottom:12px}
+  .pausa.bloq{background:#FDECEC;border-color:#F3B4B4}
+  .pausa.bloq .pic{background:#C62828}
+  .pausa .pic{width:38px;height:38px;border-radius:12px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+  .pausa .pic svg{width:20px;height:20px}
+  .pausa .grow>b{display:block;font-size:.95rem;margin-bottom:2px}
+  .pausa p{margin:0 0 10px;font-size:.84rem;color:var(--ink-2);line-height:1.45}
+  .pausa .row{gap:8px;flex-wrap:wrap}
+  .appban{display:flex;gap:12px;align-items:center;background:#16161B;color:#fff;border-radius:16px;padding:12px 14px;margin-bottom:12px}
+  .appban .pic{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.12);display:grid;place-items:center;flex:none}
+  .appban .pic svg{width:20px;height:20px}
+  .appban .tx{flex:1;min-width:0}
+  .appban b{display:block;font-size:.92rem}
+  .appban span{display:block;font-size:.78rem;opacity:.75;line-height:1.35}
+  .appban .x{color:#fff;opacity:.6;font-size:1.3rem;width:30px;height:30px;flex:none}
+  @media(max-width:520px){.appban{flex-wrap:wrap}.appban .tx{flex-basis:calc(100% - 92px)}.appban .btn{order:5;width:100%}}
+  .appit{display:flex;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+  .appit:first-child{border-top:0;padding-top:4px}
+  .appit .pic{width:42px;height:42px;border-radius:13px;background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;flex:none}
+  .appit .pic svg{width:21px;height:21px}
+  .appit .tx{flex:1;min-width:0}
+  .appit b{display:block;font-size:.95rem}
+  .appit .st{font-size:.8rem;color:var(--muted);line-height:1.4}
+  .appit .st.ok{color:var(--ok);font-weight:600}
+  .appit .st.bad{color:var(--bad, #C62828);font-weight:600}
+  .appit .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  @media(max-width:560px){.appit{flex-wrap:wrap}.appit .acts{width:100%;justify-content:flex-start;padding-left:54px}}
+  .fid{padding:16px}
+  .fid-top{display:flex;gap:12px;align-items:center}
+  .fid-top .pic{width:42px;height:42px;border-radius:13px;background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;flex:none}
+  .fid-top .pic svg{width:21px;height:21px}
+  .fid-top .tx{flex:1;min-width:0}
+  .fid-top b{display:block}
+  .fid-top span{font-size:.8rem;color:var(--muted)}
+  .fid-cfg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px}
+  @media(max-width:560px){.fid-cfg{grid-template-columns:1fr 1fr}.fid-cfg .fv{grid-column:1/-1}}
+  .fid-cfg .field{margin:0}
+  .fid-prev{margin-top:12px;background:var(--bg);border-radius:14px;padding:12px;font-size:.85rem;color:var(--ink-2);line-height:1.5}
+  .fid-dots{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+  .fid-dots i{width:22px;height:22px;border-radius:50%;border:2px dashed #D6D4CF;display:grid;place-items:center;font-style:normal;font-size:.7rem}
+  .fid-dots i.on{background:var(--brand);border:0;color:#fff}
+  .fid-dots i.gift{border-style:solid;border-color:var(--brand);color:var(--brand)}
+  .fid-dots i svg{width:12px;height:12px}
   .brandbox{position:relative;margin-bottom:66px}
   .brandbox .pv{width:100%!important;height:150px!important;border-radius:16px!important;border:0!important;background:#F1EFEA center/cover;display:grid;place-items:center;color:#c9c5bc}
   .brandbox .lg{position:absolute;left:14px;bottom:-42px}
@@ -496,6 +543,9 @@
         <div class="grow" style="min-width:0"><h2>Pedidos</h2><div class="stline" id="stline"></div></div>
       </div>
       <div id="verif-banner"></div>
+      <div id="bloq-banner"></div>
+      <div id="pausa-banner"></div>
+      <div id="app-banner"></div>
       <div class="card stats" id="stats"></div>
       <div class="card moto" id="moto"></div>
       <div class="tools2">
@@ -556,6 +606,8 @@
       <div class="pr-stats" id="pr-stats"></div>
       <div class="pr-sec"><b>Cupons de desconto</b></div>
       <div id="cupons"></div>
+      <div class="pr-sec"><b>Cartão fidelidade</b></div>
+      <div class="card fid" id="fid-box"></div>
       <div class="pr-sec"><b>Produtos em promoção</b></div>
       <div id="promoprods"></div>
       <button class="fab" id="b-novocupom-fab" type="button"></button>
@@ -568,6 +620,8 @@
         <button class="btn btn-primary" id="ag-novo" type="button"></button>
       </div>
       <div id="verif-banner3"></div>
+      <div id="bloq-banner3"></div>
+      <div id="app-banner2"></div>
       <div class="card agnav">
         <button class="icon-btn" id="ag-prev" type="button" aria-label="Dia anterior"></button>
         <div class="agdia" id="ag-dia"></div>
@@ -598,6 +652,7 @@
         <a class="btn btn-ghost btn-sm" id="b-ver2" target="_blank" rel="noopener"></a>
       </div>
       <div id="verif-banner2"></div>
+      <div id="bloq-banner2"></div>
       <div class="ml-layout"><nav class="ml-nav" id="ml-nav" aria-label="Módulos da loja">
         <button type="button" data-m="dados" class="on"><i data-mi="store"></i><span>Dados da loja</span></button>
         <button type="button" data-m="entrega"><i data-mi="pin"></i><span>Entrega</span></button>
@@ -605,6 +660,7 @@
         <button type="button" data-m="pag"><i data-mi="card"></i><span>Pagamentos</span></button>
         <button type="button" data-m="envio" id="nav-envio" class="hide"><i data-mi="box"></i><span>Envio</span></button>
         <button type="button" data-m="equipe" id="nav-equipe" class="hide"><i data-mi="user"></i><span>Equipe</span></button>
+        <button type="button" data-m="app"><i data-mi="bell"></i><span>App e avisos</span></button>
         <button type="button" data-m="conta"><i data-mi="star"></i><span>Plano e conta</span></button>
       </nav><div class="ml-body">
       <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted" id="w-sub">Leva uns 3 minutos, um passo de cada vez. Dá para mudar tudo depois.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
@@ -740,6 +796,12 @@
         <div class="eq-top"><span id="eq-uso"></span><button type="button" class="btn btn-primary btn-sm" id="b-eq-add"></button></div>
         <div id="eq-lista"></div>
         <p class="small muted" style="margin-top:12px">Quem é da equipe cuida de pedidos, cardápio, promoções, horários e entrega. Só você mexe na chave Pix, na equipe, no plano e cria lojas.</p>
+      </section>
+      <section class="card pad fs ml-anchor" id="sec-app" data-mod="app">
+        <h3><span id="fi-app"></span>App e avisos</h3>
+        <p class="fsub">Receba cada pedido novo com aviso e som, mesmo com o painel fechado ou o celular bloqueado. Funciona no celular e no computador.</p>
+        <div id="app-box"></div>
+        <p class="small muted" style="margin-top:12px">Ligue os avisos em cada aparelho que você usa (celular e computador). Quem é da equipe liga no aparelho dele, com o login dele.</p>
       </section>
       <div class="card cm-plan" id="plano-box" data-mod="conta" style="margin-bottom:12px"></div>
       <div class="card pad row between ml-anchor" id="sec-conta" data-mod="conta" style="gap:10px;flex-wrap:wrap"><div><b>Senha de acesso</b><div class="small muted">Troque a senha que você usa para entrar no painel.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-senha">Trocar senha</button></div>
@@ -900,10 +962,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=46888"></script>
-<script src="app.js?v=46888"></script>
-<script src="plano-pagar.js?v=46888"></script>
-<script src="agenda-painel.js?v=46888"></script>
+<script src="config.js?v=49442"></script>
+<script src="app.js?v=49442"></script>
+<script src="plano-pagar.js?v=49442"></script>
+<script src="agenda-painel.js?v=49442"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1021,7 +1083,7 @@
     if (/type=recovery/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
     GP.toast('Senha alterada!', 'ok'); boot();
   };
-  $('b-sair').onclick = async () => { saindo = true; await sb.auth.signOut(); location.reload(); };
+  $('b-sair').onclick = async () => { saindo = true; try { await GP.app.desativarPush(sb); } catch (_) {} await sb.auth.signOut(); location.reload(); };
 
   sb.auth.onAuthStateChange((ev, session) => {
     if (ev === 'PASSWORD_RECOVERY') { recovering = true; showAuth(true); return; }
@@ -1090,6 +1152,7 @@
     $('v-auth').classList.add('hide'); $('v-app').classList.remove('hide');
     await conferirTermos();
     sb.rpc('ff_is_admin').then(({ data }) => { $('b-admin').classList.toggle('hide', data !== true); });
+    GP.app.renovarPush(sb);
     // Lojas que posso gerir (minhas ou da equipe). Sem o SQL v18, usa o jeito antigo.
     let { data, error } = await sb.rpc('ff_minhas_lojas');
     if ((error && /ff_minhas_lojas|function|schema cache/i.test(error.message || '')) || (!error && !Array.isArray(data))) ({ data, error } = await sb.from('ff_lojas').select('*').eq('dono', user.id).order('criado_em'));
@@ -1099,9 +1162,11 @@
     if (new URLSearchParams(location.search).get('planos') === '1' && plano) { history.replaceState(null, '', location.pathname); setTimeout(() => verPlanos(), 400); }
     if (!lojas.length && !souDono) return semAcesso();
     if (!lojas.length) return novaLoja(true);
-    const salva = GP.ls.get('gp_loja_sel');
+    const qLoja = new URLSearchParams(location.search).get('loja');
+    const salva = (qLoja && lojas.some(l => l.id === qLoja)) ? qLoja : GP.ls.get('gp_loja_sel');
     await abrirLoja(lojas.find(l => l.id === salva) || lojas[0]);
     if (!(await voltaMercadoPago())) await voltaMelhorEnvio();
+    setTimeout(avisoPlano, 700);
   }
 
   // ================= PLANO =================
@@ -1110,7 +1175,58 @@
   async function loadPlano() {
     const { data, error } = await sb.rpc('ff_meu_plano');
     if (error) { plano = null; $('uso-prod').innerHTML = ''; $('uso-prod').classList.add('hide'); return; }
-    plano = data; souDono = plano.sou_dono !== false; renderUso(); aplicarPapel();
+    plano = data; souDono = plano.sou_dono !== false; renderUso(); aplicarPapel(); renderBloqueio();
+  }
+  // ---- Plano vencendo / vencido com excesso ----
+  const NOME_PLANO = { gratis: 'Grátis', profissional: 'Profissional', premium: 'Premium' };
+  const dataBR = (d) => String(d || '').split('-').reverse().join('/');
+  function bloqueioDe(l) {
+    if (!plano || !l || plano.produtos_ativos == null) return '';
+    if ((plano.lojas_bloqueadas || []).includes(l.id)) return 'lojas';
+    if (plano.produtos_ativos > plano.produtos_max) return 'produtos';
+    return '';
+  }
+  function textoBloqueio(b) {
+    const venceu = plano.plano_pago && plano.plano_pago !== plano.plano && plano.valido_ate && plano.valido_ate < plano.hoje
+      ? `O plano ${NOME_PLANO[plano.plano_pago] || plano.plano_pago} venceu em ${dataBR(plano.valido_ate)} e a conta voltou para o ${NOME_PLANO[plano.plano] || plano.plano}. ` : '';
+    if (b === 'lojas') return venceu + `O plano ${NOME_PLANO[plano.plano]} permite ${plano.lojas_max} loja${plano.lojas_max > 1 ? 's' : ''} funcionando e esta passou do limite (ficam funcionando as mais antigas). Renove o plano para ela voltar a receber ${GP.ehAgenda(loja) ? 'agendamentos' : 'pedidos'}.`;
+    const exc = plano.produtos_ativos - plano.produtos_max;
+    return venceu + `Você tem ${plano.produtos_ativos} produtos ativos e o plano ${NOME_PLANO[plano.plano]} permite ${plano.produtos_max}. Pause ou exclua ${exc} produto${exc > 1 ? 's' : ''} (ou renove o plano) para a loja voltar a receber pedidos.`;
+  }
+  function renderBloqueio() {
+    const b = bloqueioDe(loja);
+    const html = b ? `<div class="pausa bloq"><div class="pic">${ic('lock')}</div><div class="grow">
+      <b>Loja bloqueada: ninguém consegue ${GP.ehAgenda(loja) ? 'marcar horário' : 'fazer pedido'}</b>
+      <p>${esc(textoBloqueio(b))}</p>
+      <div class="row">${souDono ? `<button type="button" class="btn btn-primary btn-sm" data-bq="renovar">${ic('star')}Renovar o plano</button>` : ''}${b === 'produtos' ? `<button type="button" class="btn btn-ghost btn-sm" data-bq="prods">Pausar produtos</button>` : ''}</div>
+      ${souDono ? '' : '<p class="small" style="margin:8px 0 0">Avise o dono da conta para renovar o plano.</p>'}</div></div>` : '';
+    ['bloq-banner', 'bloq-banner2', 'bloq-banner3'].forEach(id => { const el = $(id); if (el) el.innerHTML = html; });
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-bq]'); if (!b) return;
+    if (b.dataset.bq === 'renovar') verPlanos(); else go('cardapio');
+  });
+  let avisoPlanoFeito = false;
+  // Toda vez que entra no painel: avisa se o plano vence em até 5 dias ou se a loja está bloqueada
+  async function avisoPlano() {
+    if (avisoPlanoFeito || !plano || !loja) return; avisoPlanoFeito = true;
+    const b = bloqueioDe(loja);
+    if (b) {
+      const ok = await GP.confirmar('Sua loja está bloqueada', { texto: textoBloqueio(b), ok: souDono ? 'Renovar o plano' : (b === 'produtos' ? 'Pausar produtos' : 'Entendi'), cancelar: 'Fechar', icone: 'lock', perigo: false });
+      if (ok) { if (souDono) verPlanos(); else if (b === 'produtos') go('cardapio'); }
+      return;
+    }
+    if (plano.plano === 'gratis' || !plano.valido_ate) return;
+    const dias = Math.round((new Date(plano.valido_ate + 'T12:00:00Z') - new Date(plano.hoje + 'T12:00:00Z')) / 86400e3);
+    if (dias < 0 || dias > 5) return;
+    const quando = dias === 0 ? 'hoje' : dias === 1 ? 'amanhã' : `em ${dias} dias`;
+    const g = { lojas: 1, produtos: 30 };
+    const excP = Math.max(0, (plano.produtos_ativos || 0) - g.produtos), excL = Math.max(0, (plano.lojas || 0) - g.lojas);
+    const risco = excP || excL ? ` Hoje você tem ${plano.produtos_ativos} produtos ativos e ${plano.lojas} loja${plano.lojas > 1 ? 's' : ''}: se não renovar, ${excL ? 'as lojas acima do limite e ' : ''}a loja fica bloqueada até você pausar ${excP ? excP + ' produto' + (excP > 1 ? 's' : '') : 'o excesso'}.` : '';
+    const ok = await GP.confirmar(`Seu plano vence ${quando}`, {
+      texto: `O plano ${NOME_PLANO[plano.plano]} vale até ${dataBR(plano.valido_ate)}. Depois a conta volta para o Grátis (1 loja e 30 produtos ativos).${risco}` + (souDono ? ' Renove agora com Pix ou cartão: libera na hora.' : ' Avise o dono da conta para renovar.'),
+      ok: souDono ? 'Renovar agora' : 'Entendi', cancelar: 'Fechar', icone: 'clock', perigo: false });
+    if (ok && souDono) verPlanos();
   }
   // Quem é da equipe não mexe em plano, Pix, equipe nem cria lojas
   function aplicarPapel() {
@@ -1436,7 +1552,7 @@
     $('orders').innerHTML = ''; $('plist').innerHTML = '';
     $('welcome').classList.add('hide');
     fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel(); renderVerif();
-    modoAgenda(); wzRender(false);
+    modoAgenda(); wzRender(false); renderAppBanner(); renderApp(); renderBloqueio();
     if (GP.ehAgenda(l)) {
       clearInterval(timer); desligarRealtime();
       go('agenda'); await window.AgendaPainel.abrir(sb, l);
@@ -1722,6 +1838,21 @@
     $('stline').innerHTML = `<span class="badge ${st.cls}"><i class="dot"></i>${st.texto}</span><span class="small muted">${loja.horario_auto ? '· automático' : '· manual'}</span>`;
     $('b-ver').href = $('b-ver2').href = 'loja.html?l=' + encodeURIComponent(loja.slug);
     $('l-link').textContent = cfg.siteUrl + 'loja.html?l=' + loja.slug;
+    renderPausa();
+  }
+  // Horário automático ligado + chave lá em cima desligada = loja fechada para o cliente o tempo todo. Avisa e marca a chave.
+  function renderPausa() {
+    const pausada = !!(loja && loja.horario_auto && !loja.aberta && loja.verificacao === 'verificada' && !GP.ehAgenda(loja));
+    $('sw-wrap').classList.toggle('sw-alerta', pausada);
+    $('pausa-banner').innerHTML = pausada ? `<div class="pausa"><div class="pic">${ic('bell')}</div><div class="grow">
+      <b>Sua loja está pausada: os clientes veem ela fechada</b>
+      <p>O horário automático está ligado, mas a chave <b>lá em cima</b>, ao lado do nome da loja, está desligada. Assim a loja não abre sozinha e ninguém consegue pedir. Ligue a chave para ela abrir e fechar sozinha nos seus horários.</p>
+      <div class="row"><button type="button" class="btn btn-primary btn-sm" id="pausa-ligar">${ic('check')}Ligar a chave agora</button><button type="button" class="btn btn-ghost btn-sm" id="pausa-ver">Mostrar onde fica</button></div>
+      </div></div>` : '';
+    if (pausada) {
+      $('pausa-ligar').onclick = () => { $('sw-aberta').checked = true; $('sw-aberta').dispatchEvent(new Event('change')); };
+      $('pausa-ver').onclick = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); const w = $('sw-wrap'); w.classList.remove('sw-alerta'); void w.offsetWidth; w.classList.add('sw-alerta'); GP.toast('É a chave "Pausada" aqui em cima, ao lado do nome da loja.', ''); };
+    }
   }
   $('sw-aberta').onchange = async (e) => {
     const v = e.target.checked;
@@ -1741,6 +1872,119 @@
     GP.toast(loja.horario_auto ? (v ? (st.aberta ? 'Pedidos liberados. ' + st.texto : 'Liberado. ' + st.texto) : 'Pedidos pausados.') : (v ? 'Loja aberta! Já pode receber pedidos.' : 'Loja fechada.'), 'ok');
   };
   $('b-copylink').onclick = () => loja && GP.copy(cfg.siteUrl + 'loja.html?l=' + loja.slug, 'Link da loja copiado!');
+
+  // ================= APP E AVISOS (instalar + push) =================
+  $('fi-app').innerHTML = ic('bell');
+  let appOcupado = false;
+  const PUSH_TXT = {
+    ligado: ['ok', 'Ligados neste aparelho. Os pedidos novos chegam mesmo com o painel fechado.'],
+    desligado: ['', 'Desligados neste aparelho.'],
+    bloqueado: ['bad', 'Bloqueados no navegador. Toque no cadeado ao lado do endereço do site → Notificações → Permitir, e depois em "Ativar".'],
+    ios_instalar: ['', 'No iPhone, primeiro instale o GoPedido na tela de início (botão acima) e abra pelo ícone. Depois ative aqui.'],
+    sem_suporte: ['bad', 'Este navegador não recebe avisos. Use o Google Chrome, o Edge ou o Safari atualizado.']
+  };
+  async function renderApp() {
+    const box = $('app-box'); if (!box) return;
+    const inst = GP.app.comoInstalar(), est = await GP.app.estadoPush();
+    const [cls, txt] = PUSH_TXT[est] || PUSH_TXT.desligado;
+    box.innerHTML = `<div class="appit"><div class="pic">${ic(GP.app.celular ? 'phone' : 'monitor')}</div><div class="tx"><b>Instalar o GoPedido</b>
+        <div class="st ${inst === 'instalado' ? 'ok' : ''}">${inst === 'instalado' ? 'Instalado. Você está usando o app.' : GP.app.celular ? 'Ícone na tela do celular, abre direto no painel, sem loja de apps.' : 'Ícone na área de trabalho, abre em janela própria, sem o navegador em volta.'}</div></div>
+        <div class="acts">${inst === 'instalado' ? '' : `<button type="button" class="btn btn-primary btn-sm" id="app-inst">${ic('download')}Instalar</button>`}</div></div>
+      <div class="appit"><div class="pic">${ic('bell')}</div><div class="tx"><b>Avisos de pedido novo</b><div class="st ${cls}">${txt}</div></div>
+        <div class="acts">${est === 'ligado' ? `<button type="button" class="btn btn-soft btn-sm" id="app-teste">Testar</button><button type="button" class="btn btn-ghost btn-sm" id="app-off">Desligar</button>`
+          : est === 'desligado' || est === 'bloqueado' ? `<button type="button" class="btn btn-primary btn-sm" id="app-on">${ic('bell')}Ativar avisos</button>` : ''}</div></div>`;
+    const b = (id, f) => { const el = $(id); if (el) el.onclick = f; };
+    b('app-inst', async () => { await GP.app.instalar(); renderApp(); });
+    b('app-on', ativarAvisos);
+    b('app-off', async () => { await GP.app.desativarPush(sb); GP.toast('Avisos desligados neste aparelho.', ''); renderApp(); renderAppBanner(); });
+    b('app-teste', async () => {
+      try { const r = await GP.app.testarPush(sb); GP.toast(r.enviados ? 'Aviso de teste enviado! Deve chegar em segundos.' : 'Nenhum aparelho recebeu. Desligue e ative os avisos de novo.', r.enviados ? 'ok' : 'err'); }
+      catch (e) { GP.toast(GP.err(e), 'err'); }
+    });
+  }
+  async function ativarAvisos() {
+    if (appOcupado) return; appOcupado = true;
+    try {
+      if ((await GP.app.estadoPush()) === 'ios_instalar') { await GP.app.instalar(); return; }
+      await GP.app.ativarPush(sb);
+      GP.toast('Avisos ligados! Vamos mandar um de teste.', 'ok');
+      GP.app.testarPush(sb).catch(() => {});
+    } catch (e) { GP.toast(GP.err(e), 'err'); }
+    finally { appOcupado = false; renderApp(); renderAppBanner(); }
+  }
+  // Faixa nos Pedidos/Agenda enquanto os avisos não estão ligados (some por 7 dias se fechar)
+  async function renderAppBanner() {
+    const alvos = [$('app-banner'), $('app-banner2')];
+    const est = await GP.app.estadoPush();
+    const off = Number(GP.ls.get('gp_app_ban') || 0) > Date.now() - 7 * 86400e3;
+    if (!loja || off || !['desligado', 'ios_instalar'].includes(est)) { alvos.forEach(a => a.innerHTML = ''); return; }
+    const ag = GP.ehAgenda(loja);
+    const html = `<div class="appban"><div class="pic">${ic('bell')}</div><div class="tx"><b>${ag ? 'Saiba na hora quando marcarem horário' : 'Não perca nenhum pedido'}</b>
+      <span>${est === 'ios_instalar' ? 'Instale o GoPedido no iPhone para receber avisos com a tela bloqueada.' : `Ative os avisos e receba cada ${ag ? 'horário marcado' : 'pedido novo'} mesmo com o painel fechado, no celular ou no computador.`}</span></div>
+      <button type="button" class="btn btn-primary btn-sm" data-appon>${est === 'ios_instalar' ? 'Instalar' : 'Ativar avisos'}</button><button type="button" class="x" data-appx aria-label="Fechar">×</button></div>`;
+    alvos.forEach(a => { a.innerHTML = html; a.querySelector('[data-appon]').onclick = ativarAvisos; a.querySelector('[data-appx]').onclick = () => { GP.ls.set('gp_app_ban', String(Date.now())); renderAppBanner(); }; });
+  }
+  GP.app.aoMudar(() => { renderApp(); });
+  // Clicou no aviso com o painel já aberto: vai para os pedidos/agenda da loja do aviso
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => {
+    if (!e.data || e.data.tipo !== 'push-click') return;
+    const id = new URL(e.data.url).searchParams.get('loja');
+    const l = id && lojas.find(x => x.id === id);
+    if (l && (!loja || loja.id !== l.id)) abrirLoja(l);
+    else if (loja) { if (GP.ehAgenda(loja)) go('agenda'); else { go('pedidos'); checarPedidos(); } }
+  });
+
+  // ================= CARTÃO FIDELIDADE =================
+  let fidUsados = null;
+  const fidCfg = () => Object.assign({ ativo: false, meta: 10, tipo: 'pct', valor: 10 }, loja.fidelidade || {});
+  const fidPremioTxt = (f) => f.tipo === 'pct' ? `${Number(f.valor)}% de desconto` : `${brl(f.valor)} de desconto`;
+  const fidResumo = (f) => f.ativo ? `Ligado · a cada ${f.meta} pedidos, ${fidPremioTxt(f)}${fidUsados != null ? ` · ${fidUsados} prêmio${fidUsados === 1 ? '' : 's'} usado${fidUsados === 1 ? '' : 's'}` : ''}` : 'Faça o cliente voltar: a cada X pedidos entregues, ele ganha um desconto.';
+  function renderFid(forcar) {
+    const box = $('fid-box'); if (!box || !loja) return;
+    const f = fidCfg();
+    if (!forcar && box.dataset.loja === loja.id) { const sm = $('fid-sum'); if (sm) sm.textContent = fidResumo(f); return; }
+    box.dataset.loja = loja.id;
+    const premio = fidPremioTxt(f);
+    const dots = Array.from({ length: Math.min(f.meta, 20) }, (_, i) => `<i class="${i < Math.min(3, f.meta - 1) ? 'on' : ''}">${i < Math.min(3, f.meta - 1) ? ic('check') : ''}</i>`).join('') + `<i class="gift">${ic('gift')}</i>`;
+    box.innerHTML = `<div class="fid-top"><div class="pic">${ic('gift')}</div><div class="tx"><b>Cartão fidelidade</b><span id="fid-sum">${esc(fidResumo(f))}</span></div>
+        <label class="switch" title="Ligar/desligar"><input type="checkbox" id="fid-on" ${f.ativo ? 'checked' : ''}><i></i></label></div>
+      <div class="fid-cfg">
+        <label class="field"><span>Pedidos para ganhar</span><input class="input" id="fid-meta" type="number" inputmode="numeric" min="2" max="50" value="${f.meta}"></label>
+        <label class="field"><span>Tipo do prêmio</span><select class="input" id="fid-tipo"><option value="pct" ${f.tipo === 'pct' ? 'selected' : ''}>% de desconto</option><option value="valor" ${f.tipo === 'valor' ? 'selected' : ''}>R$ de desconto</option></select></label>
+        <label class="field fv"><span id="fid-vlb">${f.tipo === 'pct' ? 'Desconto (%)' : 'Desconto (R$)'}</span><input class="input" id="fid-valor" inputmode="decimal" value="${f.tipo === 'pct' ? Number(f.valor) : GP.fmtMoeda(f.valor)}"></label>
+      </div>
+      <div class="fid-prev" id="fid-prev"><b>Como o cliente vê:</b> a cada <b>${f.meta}</b> pedidos entregues, o próximo pedido sai com <b>${premio}</b>. Ele acompanha os carimbos na página da loja.<div class="fid-dots">${dots}</div></div>
+      <p class="small muted" style="margin:10px 0 0">O cliente é reconhecido pelo número de celular. Só contam pedidos <b>entregues</b> (os já entregues antes de ligar também valem). O desconto entra sozinho e não soma com cupom: se ele usar um cupom, o prêmio fica guardado para o próximo pedido.</p>
+      <button type="button" class="btn btn-primary btn-sm" id="fid-salvar" style="margin-top:12px">Salvar cartão fidelidade</button>`;
+    $('fid-tipo').onchange = () => { const t = $('fid-tipo').value; $('fid-vlb').textContent = t === 'pct' ? 'Desconto (%)' : 'Desconto (R$)'; $('fid-valor').value = t === 'pct' ? '10' : '10,00'; };
+    $('fid-valor').oninput = (e) => {
+      if ($('fid-tipo').value === 'valor') { const d = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 7); e.target.value = d ? GP.fmtMoeda(Number(d) / 100) : ''; }
+      else e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
+    };
+    $('fid-on').onchange = () => salvarFid(true);
+    $('fid-salvar').onclick = () => salvarFid(false);
+  }
+  async function salvarFid(soChave) {
+    const tipo = $('fid-tipo').value, meta = parseInt($('fid-meta').value, 10);
+    const valor = tipo === 'pct' ? parseInt($('fid-valor').value, 10) : num($('fid-valor').value);
+    const ativo = $('fid-on').checked;
+    if (!(meta >= 2 && meta <= 50)) { $('fid-on').checked = !!(loja.fidelidade && loja.fidelidade.ativo); return GP.toast('Escolha de 2 a 50 pedidos para ganhar o prêmio.', 'err'); }
+    if (!(valor > 0) || (tipo === 'pct' && valor > 100)) { $('fid-on').checked = !!(loja.fidelidade && loja.fidelidade.ativo); return GP.toast(tipo === 'pct' ? 'O desconto precisa ser de 1% a 100%.' : 'Informe o valor do desconto.', 'err'); }
+    const fidelidade = { ativo, meta, tipo, valor };
+    const { data, error } = await sb.from('ff_lojas').update({ fidelidade }).eq('id', loja.id).select().single();
+    if (error) {
+      $('fid-on').checked = !ativo;
+      return GP.toast(/fidelidade/i.test(error.message || '') ? 'Falta rodar o SQL v29 no Supabase para usar o cartão fidelidade.' : GP.err(error), 'err');
+    }
+    loja = data; lojas = lojas.map(l => l.id === loja.id ? loja : l);
+    GP.toast(ativo ? (soChave ? 'Cartão fidelidade ligado!' : 'Cartão fidelidade salvo.') : 'Cartão fidelidade desligado.', 'ok');
+    renderFid(true);
+  }
+  async function contarFid() {
+    if (!loja) return;
+    const { count, error } = await sb.from('ff_pedidos').select('id', { count: 'exact', head: true }).eq('loja_id', loja.id).gt('fidelidade_desc', 0).neq('status', 'cancelado');
+    fidUsados = error ? null : (count || 0); renderFid();
+  }
 
   // ================= CÓDIGO DO MOTOBOY =================
   let codigo = null;
@@ -2188,6 +2432,7 @@
     const { error } = await sb.from('ff_produtos').update({ disponivel: v }).eq('id', id);
     if (error) { e.target.checked = !v; return GP.toast(GP.err(error), 'err'); }
     prods.find(p => p.id === id).disponivel = v; renderProds();
+    if (plano && plano.produtos_ativos != null) { const antes = bloqueioDe(loja); await loadPlano(); if (antes && !bloqueioDe(loja)) GP.toast('Pronto! A loja voltou a receber pedidos.', 'ok'); }
   };
   $('plist').onclick = (e) => {
     const lk = e.target.closest('[data-link]');
@@ -2641,6 +2886,7 @@
     const hoje = GP.hojeSP();
     const stOf = (c) => { const venc = c.validade && c.validade < hoje, esg = c.limite != null && c.usos >= c.limite; return !c.ativo ? ['Pausado', 'off'] : venc ? ['Vencido', 'bad'] : esg ? ['Esgotado', 'bad'] : ['Ativo', 'ok']; };
     const nAtivos = cupons.filter(c => stOf(c)[0] === 'Ativo').length, usos = cupons.reduce((a, c) => a + Number(c.usos || 0), 0), nPromo = prods.filter(p => GP.emPromo(p)).length;
+    renderFid(); contarFid();
     $('pr-stats').innerHTML = `<div class="card"><b>${nAtivos}</b><span>cupons ativos</span></div><div class="card"><b>${usos}</b><span>usos de cupom</span></div><div class="card"><b>${nPromo}</b><span>produtos em promoção</span></div>`;
     $('cupons').innerHTML = cupons.length ? cupons.map(c => {
       const [st, sc] = stOf(c);
@@ -2953,6 +3199,13 @@
       loja = res.data; lojas = lojas.map(l => l.id === loja.id ? loja : l);
       fillLoja(); applyHeader();
       GP.toast('Alterações salvas', 'ok');
+      if (loja.horario_auto && !loja.aberta && loja.verificacao === 'verificada' && !GP.ehAgenda(loja)) {
+        setTimeout(async () => {
+          if (await GP.confirmar('Ligar a loja agora?', { texto: 'O horário automático só funciona com a chave lá em cima ligada. Ligando agora, a loja abre e fecha sozinha nos horários que você cadastrou.', ok: 'Ligar a chave', cancelar: 'Depois', icone: 'clock' })) {
+            $('sw-aberta').checked = true; $('sw-aberta').dispatchEvent(new Event('change'));
+          }
+        }, 500);
+      }
     }
   };
 

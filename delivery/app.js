@@ -28,6 +28,8 @@
     copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
     upload: '<path d="M12 15V4m0 0-4 4m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
     check: '<path d="m5 12 5 5 9-10"/>',
+    download: '<path d="M12 4v11m0 0-4-4m4 4 4-4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+    monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
     store: '<path d="M4 9 5.5 4h13L20 9M4 9v11h16V9M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/><path d="M10 20v-5h4v5"/>',
     phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',
     chat: '<path d="M21 12a8 8 0 0 1-11.7 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',
@@ -227,6 +229,12 @@
     cupom_esgotado: 'Este cupom já foi usado o máximo de vezes.',
     limite_lojas: 'Você chegou no limite de lojas do seu plano.',
     limite_produtos: 'Você chegou no limite de produtos do seu plano.',
+    loja_bloqueada_plano: 'Esta loja está temporariamente indisponível. Tente mais tarde.',
+    push_negado: 'Os avisos foram bloqueados. Libere as notificações deste site nas configurações do navegador e tente de novo.',
+    push_ios: 'No iPhone, os avisos só funcionam com o GoPedido instalado na tela de início. Instale e abra pelo ícone.',
+    push_sem_suporte: 'Este navegador não recebe avisos. Use o Google Chrome, o Edge ou o Safari atualizado.',
+    push_servidor: 'Não deu para ligar os avisos agora. Confira se a função ff-email está publicada e tente de novo.',
+    aparelho_invalido: 'Não deu para cadastrar este aparelho. Tente de novo.',
     loja_em_analise: 'Esta loja ainda está em análise e não recebe pedidos.',
     retirada_indisponivel: 'Esta loja não aceita retirada no local.',
     envio_indisponivel: 'Esta loja não está enviando para outras cidades no momento.',
@@ -1110,6 +1118,104 @@
     // Páginas com tela cheia (login do painel) marcam onde o rodapé deve aparecer
     document.querySelectorAll('[data-rodape-aqui]').forEach(el => el.appendChild(f.cloneNode(true)));
   };
+
+  // ---------- Aplicativo (instalar) e avisos no celular/computador (push) ----------
+  GP.app = (() => {
+    const ua = navigator.userAgent || '';
+    const ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const android = /android/i.test(ua);
+    const macSafari = !ios && /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium|Edg|Firefox|OPR/.test(ua);
+    const firefox = /Firefox|FxiOS/.test(ua);
+    const celular = ios || android;
+    let pedido = null; const ouvintes = new Set();
+    const avisa = () => ouvintes.forEach(f => { try { f(); } catch (_) {} });
+    const instalado = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (_) { return false; } };
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); pedido = e; avisa(); });
+    window.addEventListener('appinstalled', () => { pedido = null; avisa(); });
+    let reg = null;
+    const sw = () => {
+      if (!('serviceWorker' in navigator)) return Promise.resolve(null);
+      if (!reg) reg = navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).catch(() => null);
+      return reg;
+    };
+    if (document.querySelector('link[rel="manifest"]')) sw();
+
+    // 'pronto' (botão do navegador), 'instalado', 'ios', 'mac', 'menu' (pelo menu do navegador) ou 'nao'
+    const comoInstalar = () => instalado() ? 'instalado' : pedido ? 'pronto' : ios ? 'ios' : macSafari ? 'mac' : firefox && !android ? 'nao' : 'menu';
+    function passos(tipo) {
+      const box = document.createElement('div'); box.className = 'cfm-wrap';
+      const L = {
+        ios: ['Toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima), embaixo ou em cima da tela.', 'Role e toque em <b>Adicionar à Tela de Início</b>.', 'Toque em <b>Adicionar</b>. Depois abra o GoPedido pelo ícone novo.'],
+        mac: ['No Safari, clique em <b>Arquivo</b> na barra de cima.', 'Clique em <b>Adicionar ao Dock</b>.', 'Abra o GoPedido pelo ícone no Dock.'],
+        menu: celular
+          ? ['Toque nos <b>três pontinhos</b> do navegador (em cima, à direita).', 'Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.', 'Confirme. O ícone do GoPedido aparece junto dos seus apps.']
+          : ['Na barra de endereço, clique no ícone de <b>instalar</b> (um monitor com uma seta), à direita.', 'Ou abra o menu do navegador (<b>três pontinhos</b>) e clique em <b>Instalar GoPedido</b> / <b>Aplicativos → Instalar este site</b>.', 'Pronto: o GoPedido abre em janela própria e ganha um ícone na área de trabalho e no menu Iniciar.'],
+        nao: ['Este navegador não instala sites como aplicativo.', 'Abra esta página no <b>Google Chrome</b> ou no <b>Microsoft Edge</b> e clique em instalar.', 'Os avisos de pedido novo funcionam aqui mesmo assim.']
+      }[tipo] || [];
+      box.innerHTML = `<div class="cfm" role="dialog" aria-modal="true"><div class="cfm-ic">${GP.ic(celular ? 'phone' : 'monitor')}</div>
+        <h3>Instalar o GoPedido</h3><ol class="app-passos">${L.map(x => `<li>${x}</li>`).join('')}</ol>
+        <div class="cfm-acts"><button type="button" class="btn btn-primary" data-r="1">Entendi</button></div></div>`;
+      document.body.appendChild(box); requestAnimationFrame(() => box.classList.add('on'));
+      box.addEventListener('click', (e) => { if (e.target === box || e.target.closest('[data-r]')) { box.classList.remove('on'); setTimeout(() => box.remove(), 180); } });
+    }
+    async function instalar() {
+      if (pedido) {
+        const ev = pedido; pedido = null;
+        try { ev.prompt(); const r = await ev.userChoice; avisa(); return r && r.outcome === 'accepted'; } catch (_) { avisa(); }
+        return false;
+      }
+      if (!instalado()) passos(comoInstalar());
+      return false;
+    }
+
+    const temPush = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    const deB64 = (s) => { const t = s.replace(/-/g, '+').replace(/_/g, '/'); const b = atob(t + '==='.slice((t.length + 3) % 4)); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+    // 'ligado', 'desligado', 'bloqueado', 'ios_instalar' (iPhone só recebe com o app instalado) ou 'sem_suporte'
+    async function estadoPush() {
+      if (!temPush()) return ios && !instalado() ? 'ios_instalar' : 'sem_suporte';
+      if (Notification.permission === 'denied') return 'bloqueado';
+      const r = await sw(); if (!r) return 'sem_suporte';
+      const s = await r.pushManager.getSubscription().catch(() => null);
+      return s && Notification.permission === 'granted' ? 'ligado' : 'desligado';
+    }
+    const nomeAparelho = () => (ios ? 'iPhone' : android ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'Computador')
+      + ' · ' + (/Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox/.test(ua) ? 'Firefox' : /Chrome/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : 'Navegador');
+    async function ativarPush(sb) {
+      if (!temPush()) throw new Error(ios && !instalado() ? 'push_ios' : 'push_sem_suporte');
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') throw new Error('push_negado');
+      const r = await sw(); if (!r) throw new Error('push_sem_suporte');
+      const { data, error } = await sb.functions.invoke('ff-email', { body: { acao: 'push_chave' } });
+      if (error || !data || !data.chave) throw new Error('push_servidor');
+      const chave = deB64(data.chave);
+      let s = await r.pushManager.getSubscription();
+      if (s) {
+        const atual = s.options && s.options.applicationServerKey ? new Uint8Array(s.options.applicationServerKey) : null;
+        if (!atual || atual.length !== chave.length || atual.some((v, i) => v !== chave[i])) { await s.unsubscribe().catch(() => {}); s = null; }
+      }
+      if (!s) s = await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave });
+      const j = s.toJSON();
+      const { error: e2 } = await sb.rpc('ff_push_salvar', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_aparelho: nomeAparelho() });
+      if (e2) throw e2;
+      return true;
+    }
+    async function desativarPush(sb) {
+      const r = await sw(); const s = r && await r.pushManager.getSubscription();
+      if (s) { await sb.rpc('ff_push_remover', { p_endpoint: s.endpoint }).catch(() => {}); await s.unsubscribe().catch(() => {}); }
+    }
+    async function testarPush(sb) {
+      const { data, error } = await sb.functions.invoke('ff-email', { body: { acao: 'push_teste' } });
+      if (error) throw error;
+      return data || {};
+    }
+    // Já tinha ligado antes: mantém o aparelho cadastrado em nome de quem está logado agora
+    async function renovarPush(sb) {
+      try { if ((await estadoPush()) === 'ligado') await ativarPush(sb); } catch (_) {}
+    }
+    return { ios, android, celular, instalado, comoInstalar, instalar, aoMudar: (f) => ouvintes.add(f),
+             temPush, estadoPush, ativarPush, desativarPush, testarPush, renovarPush };
+  })();
+
   const iniciar = () => { GP.olhoSenha(); GP.rodape(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();

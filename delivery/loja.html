@@ -10,11 +10,12 @@
 <meta name="theme-color" content="#F2451C">
 <link rel="icon" href="img/icone.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/icone-180.png">
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=46888">
+<link rel="stylesheet" href="app.css?v=49442">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -205,6 +206,7 @@
         <div id="s-alert"></div>
         <div class="lojaend2 hide" id="s-end"></div>
         <div id="s-cupons" class="hide" style="margin-top:14px"><b class="small" style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span id="cup-ic" style="display:inline-grid;color:var(--brand-2)"></span>Cupons disponíveis</b><div class="tickets" id="tk-loja"></div></div>
+        <div id="s-fid" class="hide"></div>
       </div>
     </div>
   </div>
@@ -313,6 +315,7 @@
       </div>
       <div class="divider"></div>
       <div class="cupbox">
+        <div id="fid-co"></div>
         <div id="co-cupons" class="hide"><b class="small" style="display:block;margin-bottom:8px">Escolha um cupom</b><div class="tickets" id="tk-co" style="margin-bottom:10px"></div></div>
         <div class="row" style="gap:8px"><div class="grow"><input class="input" id="c-cupom"  placeholder="Tem outro código de cupom?" maxlength="20" style="text-transform:uppercase"></div><button class="btn btn-dark" id="b-cupom" type="button">Aplicar</button></div>
         <div class="small" id="cupom-msg" style="margin-top:6px"></div>
@@ -333,8 +336,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=46888"></script>
-<script src="app.js?v=46888"></script>
+<script src="config.js?v=49442"></script>
+<script src="app.js?v=49442"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -355,6 +358,8 @@
   if (error) return fail('Não foi possível abrir a loja', esc(GP.err(error)));
   if (!loja) return fail('Loja não encontrada', 'O link pode estar errado ou a loja saiu do ar.');
   if (loja.tipo === 'agenda') { location.replace('agenda.html?l=' + encodeURIComponent(slug)); return; }
+  // plano vencido com produtos/lojas acima do limite: a loja aparece fechada
+  try { const { data: bq } = await sb.rpc('ff_loja_bloqueada', { p_loja: loja.id }); if (bq === true) { loja.aberta = false; loja.horario_auto = false; } } catch (_) {}
   GP.aplicarCor(loja.cor);
   { const tp = GP.tipo(loja.tipo); $('pm-obs').placeholder = tp.obsItem || $('pm-obs').placeholder; $('c-obs').placeholder = tp.obsPedido || $('c-obs').placeholder; }
   const { data: prods } = await sb.from('ff_produtos').select('*').eq('loja_id', loja.id).order('ordem').order('nome');
@@ -419,6 +424,48 @@
     $('co-cupons').classList.toggle('hide', !cuponsPub.length);
     $('tk-co').innerHTML = cuponsPub.map(c => ticket(c, 'co')).join('');
   }
+  // ---------- Cartão fidelidade ----------
+  let fid = null, fidBusca = '';
+  const FID = loja.fidelidade && loja.fidelidade.ativo ? loja.fidelidade : null;
+  const fidPremioTxt = (f) => f.tipo === 'pct' ? `${Number(f.valor)}% de desconto` : `${brl(f.valor)} de desconto`;
+  const fidDots = (n, m) => `<span class="fid-dots">${Array.from({ length: Math.min(m, 20) }, (_, i) => `<i class="${i < n ? 'on' : ''}">${i < n ? ic('check') : ''}</i>`).join('')}<i class="gift">${ic('gift')}</i></span>`;
+  async function carregarFid(tel) {
+    const t = GP.digits(tel || '').slice(-11);
+    if (!FID || t.length < 10) { fid = null; return; }
+    if (fidBusca === t && fid) return;
+    fidBusca = t;
+    try { const { data } = await sb.rpc('ff_fidelidade_info', { p_loja: loja.id, p_tel: t }); fid = data && data.ativo ? { ...data, tel: t } : null; } catch (_) { fid = null; }
+  }
+  function renderFidLoja() {
+    const el = $('s-fid'); if (!el) return;
+    if (!FID) { el.classList.add('hide'); return; }
+    const p = fid && fid.tel ? fid : null;
+    el.className = 'fidcard';
+    el.innerHTML = `<span class="fi">${ic('gift')}</span><span class="ft"><b>Cartão fidelidade</b>
+      <span>${p && p.premio ? `Você ganhou <b>${fidPremioTxt(FID)}</b>! Já entra no seu próximo pedido.` : p ? `Você tem <b>${p.carimbos} de ${FID.meta}</b> pedidos. Faltam ${FID.meta - p.carimbos} para ganhar ${fidPremioTxt(FID)}.` : `A cada <b>${FID.meta} pedidos</b> entregues, você ganha <b>${fidPremioTxt(FID)}</b> no próximo.`}</span>
+      ${p ? fidDots(p.premio ? FID.meta : p.carimbos, FID.meta) : ''}</span>`;
+  }
+  function renderFidCo() {
+    const el = $('fid-co'); if (!el) return;
+    if (!FID || !fid) { el.innerHTML = ''; return; }
+    const prem = fidPremioTxt(FID);
+    el.innerHTML = `<div class="fidcard co ${fid.premio && !cupom ? 'win' : ''}"><span class="fi">${ic('gift')}</span><span class="ft">
+      ${fid.premio ? (cupom ? `<b>Prêmio guardado</b><span>Seu prêmio do cartão fidelidade (${prem}) não soma com cupom. Ele fica para o próximo pedido, ou remova o cupom para usar agora.</span>`
+                              : `<b>Cartão completo! 🎉</b><span>Você ganhou <b>${prem}</b> neste pedido. Já está no total.</span>`)
+                   : `<b>Cartão fidelidade: ${fid.carimbos} de ${FID.meta}</b><span>Este pedido conta quando for entregue. Faltam ${FID.meta - fid.carimbos} para ganhar ${prem}.</span>${fidDots(fid.carimbos, FID.meta)}`}
+    </span></div>`;
+  }
+  if (FID) {
+    const cli0 = GP.ls.get('gp_cliente', {}) || {};
+    carregarFid(cli0.telefone).then(renderFidLoja);
+    renderFidLoja();
+    let fidT = null;
+    $('c-tel').addEventListener('input', () => {
+      clearTimeout(fidT);
+      fidT = setTimeout(async () => { await carregarFid($('c-tel').value); renderFidLoja(); if (step === 3) renderPag(); }, 400);
+    });
+  }
+
   let cupomPendente = null;
   $('tk-loja').onclick = (e) => {
     const b = e.target.closest('[data-tk]'); if (!b) return;
@@ -731,8 +778,15 @@
     frete.sel = frete.opcoes[+b.dataset.f]; renderFretes(); updNext();
   };
   let cupom = null;   // {codigo, tipo, valor, minimo}
+  // Cartão fidelidade: prêmio entra sozinho quando não tem cupom (mesma conta do servidor)
+  const fidPremio = () => !cupom && fid && fid.premio && fid.tel === GP.digits($('c-tel').value).slice(-11);
+  const fidValor = (sub) => fid.tipo === 'pct' ? Math.round(sub * Math.min(Number(fid.valor), 100)) / 100 : Math.min(Number(fid.valor), sub);
   const descontoCalc = () => {
-    if (!cupom) return 0;
+    if (!cupom) {
+      if (!fidPremio()) return 0;
+      const e = entrega(), sub = subtotal(), taxa = e ? e.t : 0;
+      return Math.min(Math.round(fidValor(sub) * 100) / 100, sub + taxa);
+    }
     const e = entrega(), sub = subtotal(), taxa = e ? e.t : 0;
     const d = cupom.tipo === 'percentual' ? Math.round(sub * Math.min(Number(cupom.valor), 100)) / 100 : cupom.tipo === 'valor' ? Math.min(Number(cupom.valor), sub) : taxa;
     return Math.min(Math.round(d * 100) / 100, sub + taxa);
@@ -753,7 +807,7 @@
     $('co').querySelector('.sheet-body').scrollTop = 0;
     if (step === 1) renderBag();
     if (step === 2) renderEntrega();
-    if (step === 3) { renderPag(); if (cupomPendente && !cupom) { const c = cupomPendente; cupomPendente = null; aplicarCupom(c); } }
+    if (step === 3) { renderPag(); if (cupomPendente && !cupom) { const c = cupomPendente; cupomPendente = null; aplicarCupom(c); } if (FID) carregarFid($('c-tel').value).then(() => { if (step === 3) renderPag(); renderFidLoja(); }); }
     updNext();
   }
 
@@ -863,7 +917,8 @@
     const dsc = descontoCalc();
     $('s3-desc-row').classList.toggle('hide', !dsc);
     $('s3-desc').textContent = '-' + brl(dsc);
-    $('s3-desc-lb').textContent = cupom ? `Desconto (${cupom.codigo})` : 'Desconto';
+    $('s3-desc-lb').textContent = cupom ? `Desconto (${cupom.codigo})` : fidPremio() ? 'Prêmio do cartão fidelidade' : 'Desconto';
+    renderFidCo();
     $('s3-tot').textContent = brl(total());
     $('s3-vendido').innerHTML = `${ic('store')}<span>Vendido e entregue por <b>${esc(loja.nome)}</b>. Dúvidas, trocas e reembolsos são com a loja. Ao enviar o pedido, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</span>`;
     renderTickets();
@@ -1058,7 +1113,7 @@
       if (/cotacao_vencida/.test(error.message || '')) { frete.chave = ''; step = 2; renderStep(); GP.toast('O frete mudou. Escolha o frete de novo.', 'err'); return; }
       GP.toast(GP.err(error), 'err'); updNext(); return;
     }
-    bag = []; GP.ls.del(KEY);
+    bag = []; GP.ls.del(KEY); fid = null; fidBusca = '';
     if (user) {
       try {
         const nome = $('c-nome').value.trim(), telefone = $('c-tel').value.trim();
