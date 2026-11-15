@@ -15,6 +15,7 @@ create table if not exists public.ff_mp_contas (
   expira        timestamptz not null,
   atualizado_em timestamptz not null default now()
 );
+alter table public.ff_mp_contas add column if not exists public_key text not null default '';
 alter table public.ff_mp_contas enable row level security;
 revoke all on public.ff_mp_contas from anon, authenticated;
 grant all on public.ff_mp_contas to service_role;

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=95774">
+<link rel="stylesheet" href="app.css?v=08895">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -42,10 +42,23 @@
   .mpbox{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}
   .mpbox.pend{border-color:#F1D9A8;background:#FFFBF2}
   .mpbox.ok{border-color:#BFE8D2;background:#F3FBF6}
-  .mpbox b{display:block;font-size:1rem}
-  .mpbox span{display:block;color:var(--ink-2);font-size:.88rem;line-height:1.5;margin-top:2px}
+  .mpbox .grow>b{display:block;font-size:1rem}
+  .mpbox .grow>span{display:block;color:var(--ink-2);font-size:.88rem;line-height:1.5;margin-top:2px}
   .mpi{width:40px;height:40px;border-radius:12px;background:#E6F4FF;color:#0A6ED1;display:grid;place-items:center;flex:none}
   .mpi.ok{background:var(--ok-soft);color:var(--ok)}.mpi.bad{background:var(--bad-soft);color:var(--bad)}
+  .mpcol{flex-direction:column;align-items:stretch;gap:12px}
+  .mptabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:4px}
+  .mptabs button{display:flex;align-items:center;justify-content:center;gap:7px;height:42px;border-radius:10px;font-weight:700;color:var(--ink-2)}
+  .mptabs button.on{background:var(--ink);color:#fff}
+  .pixqr{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+  .pixqr img{display:block;margin:0 auto 12px;border-radius:10px;width:200px;height:200px;image-rendering:pixelated}
+  .pixqr ol{text-align:left;margin:0 0 12px;padding-left:20px;line-height:1.55}
+  .pixcode{background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:10px;max-height:64px;overflow:hidden;text-align:left}
+  .pixcode code{font-size:.74rem;word-break:break-all;color:var(--ink-2)}
+  .mpcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:6px;min-height:120px}
+  .linkbtn{background:none;border:0;color:var(--muted);font-size:.82rem;text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:6px 0}
+  .dot-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px;animation:pulsa 1.4s infinite}
+  @keyframes pulsa{50%{opacity:.3}}
 </style>
 </head>
 <body>
@@ -63,8 +76,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=95774"></script>
-<script src="app.js?v=95774"></script>
+<script src="config.js?v=08895"></script>
+<script src="app.js?v=08895"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -117,13 +130,101 @@
     if (p.mp_status === 'aprovado') return `<div class="mpbox ok"><div class="mpi ok">${ic('check')}</div><div class="grow"><b>Pagamento aprovado</b><span>${brl(p.total)} pagos online pelo Mercado Pago${p.pago_em ? ' às ' + GP.hora(p.pago_em) : ''}.</span></div></div>`;
     if (conferindo) return `<div class="mpbox"><div class="mpi"><span class="spin"></span></div><div class="grow"><b>Conferindo o pagamento…</b><span>Só um instante.</span></div></div>`;
     const rec = p.mp_status === 'recusado';
-    return `<div class="mpbox pend">
-      <div class="mpi ${rec ? 'bad' : ''}">${ic(rec ? 'x' : 'card')}</div>
-      <div class="grow"><b>${rec ? 'O pagamento não foi aprovado' : 'Falta pagar o pedido'}</b><span>${rec ? 'Tente de novo com outro cartão ou pague com Pix.' : 'A loja só começa a preparar depois que o pagamento for aprovado. Se não for pago em 2 horas, o pedido é cancelado.'}</span>
-        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
-          <button class="btn btn-primary" id="b-pagar">${ic('card')}Pagar ${brl(p.total)} agora</button>
-          <button class="btn btn-ghost btn-sm" id="b-conferir">${ic('refresh')}Já paguei</button>
-        </div></div></div>`;
+    return `<div class="mpbox pend mpcol">
+      <div class="row" style="gap:12px;align-items:flex-start">
+        <div class="mpi ${rec ? 'bad' : ''}">${ic(rec ? 'x' : 'card')}</div>
+        <div class="grow"><b>${rec ? 'O pagamento não foi aprovado' : `Falta pagar ${brl(p.total)}`}</b><span>${rec ? 'Tente de novo com outro cartão ou pague com Pix.' : 'A loja começa a preparar assim que o pagamento for aprovado. Se não for pago em 2 horas, o pedido é cancelado.'}</span></div>
+      </div>
+      <div class="mptabs" role="tablist">
+        <button type="button" role="tab" data-mpt="pix" class="${mpAba === 'pix' ? 'on' : ''}">${ic('pix')}Pix</button>
+        <button type="button" role="tab" data-mpt="cartao" class="${mpAba === 'cartao' ? 'on' : ''}">${ic('card')}Cartão de crédito</button>
+      </div>
+      <div id="mp-area"></div>
+      <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px">
+        <button type="button" class="btn btn-ghost btn-sm" id="b-conferir">${ic('refresh')}Já paguei</button>
+        <button type="button" class="linkbtn" id="b-pagar">Prefere pagar no site do Mercado Pago?</button>
+      </div></div>`;
+  }
+  // ---------- pagamento dentro da página ----------
+  let mpAba = 'pix', mpPix = null, mpIni = null, mpBrick = null, mpPoll = 0;
+  const erroMP = async (error) => { let j = null; try { j = error && error.context && await error.context.json(); } catch (_) {} return j || {}; };
+  async function mpIniciar() {
+    if (mpIni) return mpIni;
+    const { data, error } = await sb.functions.invoke('ff-mercadopago', { body: { acao: 'iniciar', token } });
+    if (error) { const j = await erroMP(error); throw new Error(j.error === 'mp_desconectado' ? 'A loja desligou o pagamento online. Fale com ela pelo WhatsApp.' : 'Não foi possível abrir o pagamento agora. Tente de novo em instantes.'); }
+    mpIni = data; return data;
+  }
+  function areaMP(p) {
+    const el = $('mp-area'); if (!el) return;
+    if (mpAba === 'pix') return areaPix(p, el);
+    return areaCartao(p, el);
+  }
+  async function areaPix(p, el) {
+    if (mpPix && mpPix.qr) {
+      el.innerHTML = `<div class="pixqr">
+        ${mpPix.qr_img ? `<img src="data:image/png;base64,${mpPix.qr_img}" width="200" height="200" alt="QR Code do Pix">` : ''}
+        <ol class="small muted"><li>Abra o app do seu banco e escolha <b>Pix → Ler QR Code</b> ou <b>Pix Copia e Cola</b>.</li><li>Confira o valor de <b>${brl(mpPix.valor || p.total)}</b> e pague.</li><li>Esta página confirma sozinha em alguns segundos.</li></ol>
+        <div class="pixcode"><code>${esc(mpPix.qr)}</code></div>
+        <button type="button" class="btn btn-primary btn-block" id="b-pixcopy">${ic('copy')}Copiar código Pix</button>
+        <p class="small muted" style="text-align:center;margin-top:8px"><span class="dot-live"></span>Aguardando o pagamento…</p></div>`;
+      $('b-pixcopy').onclick = () => GP.copy(mpPix.qr, 'Código Pix copiado! Cole no app do seu banco.');
+      clearInterval(mpPoll); mpPoll = setInterval(() => { if (!document.hidden) { last = null; load(); } }, 5000);
+      return;
+    }
+    const precisaEmail = !p.cliente_email;
+    el.innerHTML = `<div class="pixqr">${precisaEmail ? `<label class="field" style="text-align:left"><span>Seu e-mail <span class="muted">(o Mercado Pago pede para o Pix)</span></span><input class="input" id="mp-email" type="email" autocomplete="email" placeholder="voce@email.com"></label>` : ''}
+      <button type="button" class="btn btn-primary btn-block" id="b-gerapix">${ic('pix')}Gerar Pix de ${brl(p.total)}</button></div>`;
+    $('b-gerapix').onclick = async () => {
+      const b = $('b-gerapix'), email = precisaEmail ? $('mp-email').value.trim() : '';
+      if (precisaEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { GP.toast('Digite um e-mail válido.', 'err'); $('mp-email').focus(); return; }
+      b.disabled = true; b.innerHTML = '<span class="spin"></span>Gerando o Pix…';
+      const { data, error } = await sb.functions.invoke('ff-mercadopago', { body: { acao: 'pix', token, email } });
+      if (data && data.pago) { last = null; return load(); }
+      if (data && data.qr) { mpPix = data; return areaPix(p, el); }
+      const j = await erroMP(error);
+      b.disabled = false; b.innerHTML = ic('pix') + 'Gerar Pix de ' + brl(p.total);
+      GP.toast(j.error === 'email_obrigatorio' ? 'Digite um e-mail válido.' : j.error === 'mp_desconectado' ? 'A loja desligou o pagamento online. Fale com ela pelo WhatsApp.' : 'Não foi possível gerar o Pix. Tente de novo.', 'err');
+    };
+  }
+  function carregarSDK() {
+    if (window.MercadoPago) return Promise.resolve();
+    return new Promise((ok, falha) => { const s = document.createElement('script'); s.src = 'https://sdk.mercadopago.com/js/v2'; s.onload = ok; s.onerror = () => falha(new Error('sdk')); document.head.appendChild(s); });
+  }
+  async function areaCartao(p, el) {
+    clearInterval(mpPoll);
+    el.innerHTML = `<div id="mp-card" class="mpcard"><p class="small muted" style="text-align:center;padding:24px 0"><span class="spin"></span> Carregando o formulário seguro do Mercado Pago…</p></div>
+      <p class="small muted" style="display:flex;gap:6px;align-items:center;justify-content:center;margin-top:8px">${ic('lock')}Os dados do cartão vão direto para o Mercado Pago. A loja e o GoPedido não veem o número.</p>`;
+    try {
+      const ini = await mpIniciar();
+      if (ini.pago) { last = null; return load(); }
+      if (!ini.public_key) throw new Error('A loja precisa reconectar o Mercado Pago para aceitar cartão. Use o Pix por enquanto.');
+      await carregarSDK();
+      if (typeof window.MercadoPago !== 'function') throw new Error('sdk');
+      if (mpBrick) { try { await mpBrick.unmount(); } catch (_) {} mpBrick = null; }
+      if (!$('mp-card')) return;
+      $('mp-card').innerHTML = '';
+      const mpx = new window.MercadoPago(ini.public_key, { locale: 'pt-BR' });
+      mpBrick = await mpx.bricks().create('cardPayment', 'mp-card', {
+        initialization: { amount: Number(p.total), payer: { email: p.cliente_email || ini.email || '' } },
+        customization: { paymentMethods: { maxInstallments: 12, types: { excluded: ['debit_card', 'prepaid_card'] } }, visual: { style: { theme: 'default', customVariables: { baseColor: '#F2451C' } } } },
+        callbacks: {
+          onReady: () => {},
+          onError: () => {},
+          onSubmit: async (dados) => {
+            const { data, error } = await sb.functions.invoke('ff-mercadopago', { body: { acao: 'cartao', token, dados } });
+            if (data && (data.mp_status === 'aprovado' || data.pago)) { GP.toast('Pagamento aprovado!', 'ok'); last = null; await load(); return; }
+            if (data && data.mp_status === 'pendente') { GP.toast('Pagamento em análise pelo Mercado Pago. Esta página atualiza sozinha.'); last = null; await load(); return; }
+            const j = data || await erroMP(error);
+            const MSG = { cc_rejected_insufficient_amount: 'Saldo ou limite insuficiente.', cc_rejected_bad_filled_security_code: 'Código de segurança (CVV) incorreto.', cc_rejected_bad_filled_date: 'Data de validade incorreta.', cc_rejected_bad_filled_other: 'Confira os dados do cartão.', cc_rejected_call_for_authorize: 'O banco pediu para autorizar a compra. Ligue para o seu banco ou use outro cartão.', cc_rejected_high_risk: 'O pagamento foi recusado por segurança. Tente o Pix.' };
+            GP.toast((MSG[j.detalhe] || 'O cartão não foi aprovado.') + ' Tente outro cartão ou o Pix.', 'err');
+            last = null; await load();
+            throw new Error('recusado');   // avisa o formulário para liberar o botão de novo
+          }
+        }
+      });
+    } catch (er) {
+      if ($('mp-card')) $('mp-card').innerHTML = `<p class="small" style="color:var(--bad);text-align:center;padding:16px 0">${esc(er.message === 'sdk' ? 'Não foi possível carregar o formulário do cartão. Confira a internet ou use o Pix.' : er.message)}</p>`;
+    }
   }
   async function conferirMP(pagamento) {
     try { await sb.functions.invoke('ff-mercadopago', { body: { acao: 'conferir', token, pagamento } }); } catch (_) {}
@@ -213,12 +314,16 @@
         <a class="btn btn-dark grow" href="loja.html?l=${encodeURIComponent(l.slug)}">${ic('store')}Pedir de novo</a>
       </div>`;
     if ($('b-rast-copy')) $('b-rast-copy').onclick = () => GP.copy(p.rastreio, 'Código de rastreio copiado!');
+    if ($('mp-area')) {
+      document.querySelectorAll('[data-mpt]').forEach(t => t.onclick = () => { mpAba = t.dataset.mpt; document.querySelectorAll('[data-mpt]').forEach(x => x.classList.toggle('on', x === t)); areaMP(p); });
+      areaMP(p);
+    } else { clearInterval(mpPoll); if (mpBrick) { try { mpBrick.unmount(); } catch (_) {} mpBrick = null; } }
     if ($('b-pagar')) $('b-pagar').onclick = async () => {
-      const b = $('b-pagar'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Abrindo o Mercado Pago…';
+      const b = $('b-pagar'); b.disabled = true; b.textContent = 'Abrindo o Mercado Pago…';
       const { data, error } = await sb.functions.invoke('ff-mercadopago', { body: { acao: 'pagar', token } });
       if (data && data.url) { location.href = data.url; return; }
       if (data && data.pago) { last = null; return load(); }
-      b.disabled = false; b.innerHTML = ic('card') + 'Pagar ' + brl(p.total) + ' agora';
+      b.disabled = false; b.textContent = 'Prefere pagar no site do Mercado Pago?';
       let j = null; try { j = error && error.context && await error.context.json(); } catch (_) {}
       GP.toast(j && j.error === 'mp_desconectado' ? 'A loja desligou o pagamento online. Fale com ela pelo WhatsApp.' : 'Não foi possível abrir o pagamento. Tente de novo em instantes.', 'err');
     };
