@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=73006">
+<link rel="stylesheet" href="app.css?v=86910">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -830,6 +830,7 @@
       </section>
       <div class="card cm-plan" id="plano-box" data-mod="conta" style="margin-bottom:12px"></div>
       <div class="card pad row between ml-anchor" id="sec-conta" data-mod="conta" style="gap:10px;flex-wrap:wrap"><div><b>Senha de acesso</b><div class="small muted">Troque a senha que você usa para entrar no painel.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-trocar-senha">Trocar senha</button></div>
+      <div class="card pad row between hide" id="sec-excluir" data-mod="conta" style="gap:10px;flex-wrap:wrap;margin-top:12px;border-color:#f3c9c3"><div style="min-width:0;flex:1"><b style="color:var(--bad)">Excluir esta loja</b><div class="small muted">A loja sai do site e do painel. As vendas que ela fez ficam guardadas no histórico.</div></div><button type="button" class="btn btn-ghost btn-sm" id="b-excluir-loja" style="color:var(--bad)">Excluir loja</button></div>
       </div></div>
     </section>
   </main>
@@ -1000,7 +1001,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=70284"></script>
-<script src="app.js?v=71888"></script>
+<script src="app.js?v=86910"></script>
 <script src="plano-pagar.js?v=70284"></script>
 <script src="assin-painel.js?v=76120"></script>
 <script src="agenda-painel.js?v=70284"></script>
@@ -1130,6 +1131,47 @@
     if (ev === 'SIGNED_OUT' && user && !saindo) { user = null; trocando = false; GP.toast('Sua sessão expirou. Entre de novo.'); showAuth(false); return; }
     if (ev === 'SIGNED_IN' && !recovering && !trocando && (!user || user.id !== session.user.id)) setTimeout(boot, 0);
   });
+  // ---- Excluir loja (só o dono). As vendas ficam guardadas: a loja é marcada como excluída, nada é apagado. ----
+  $('b-excluir-loja').onclick = async () => {
+    if (!loja || !souDono) return;
+    const b0 = $('b-excluir-loja'); b0.disabled = true;
+    const { data: pend, error: e0 } = await sb.rpc('ff_loja_pendencias', { p_loja: loja.id });
+    b0.disabled = false;
+    if (e0) return GP.toast(/ff_loja_pendencias|function|schema cache/i.test(e0.message || '') ? 'Falta rodar o SQL v34 no Supabase.' : GP.err(e0), 'err');
+    const bloq = [];
+    if (pend.pedidos_abertos) bloq.push(`<b>${pend.pedidos_abertos} pedido${pend.pedidos_abertos > 1 ? 's' : ''} em andamento</b>: entregue ou cancele antes.`);
+    if (pend.agendamentos_futuros) bloq.push(`<b>${pend.agendamentos_futuros} horário${pend.agendamentos_futuros > 1 ? 's' : ''} marcado${pend.agendamentos_futuros > 1 ? 's' : ''}</b> para os próximos dias: cancele e avise os clientes antes.`);
+    if (pend.assinantes_ativos) bloq.push(`<b>${pend.assinantes_ativos} assinante${pend.assinantes_ativos > 1 ? 's' : ''} com assinatura paga</b>: combine com eles e cancele antes.`);
+    const w = document.createElement('div');
+    w.className = 'sheet modal on'; w.id = 'ex-mod'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-modal', 'true');
+    w.innerHTML = `<div class="sheet-head"><h3>Excluir “${esc(loja.nome)}”</h3><button class="icon-btn" type="button" data-x>${ic('x')}</button></div>
+      <div class="sheet-body">${bloq.length ? `<div class="warnline" style="margin-bottom:12px">Ainda não dá para excluir:<ul style="margin:6px 0 0;padding-left:18px">${bloq.map(x => `<li>${x}</li>`).join('')}</ul></div>` : `
+        <p class="small" style="margin:0 0 10px">O que acontece:</p>
+        <ul class="small" style="margin:0 0 14px;padding-left:18px;display:grid;gap:4px">
+          <li>A loja sai do site na hora e some do seu painel. <b>Não dá para desfazer.</b></li>
+          <li>Os produtos ficam desativados e a conexão com o Mercado Pago e o Melhor Envio desta loja é desligada.</li>
+          <li>${pend.pedidos ? `Os <b>${pend.pedidos} pedido${pend.pedidos > 1 ? 's' : ''}</b> e pagamentos desta loja ficam guardados no histórico do GoPedido` : 'O histórico da loja fica guardado no GoPedido'}, como manda a lei.</li>
+          <li>A vaga volta para o seu plano e o endereço do link fica livre.</li></ul>
+        <label class="field"><span>Por que está excluindo? <span class="muted">(opcional)</span></span><select class="input" id="ex-mot"><option value="">Escolha…</option><option>Criei sem querer / loja de teste</option><option>Fechei o negócio</option><option>Vou usar outra loja</option><option>Não gostei do sistema</option><option>Outro motivo</option></select></label>
+        <label class="field"><span>Para confirmar, digite o nome da loja: <b>${esc(loja.nome)}</b></span><input class="input" id="ex-nome" autocomplete="off" placeholder="${esc(loja.nome)}"></label>`}
+      </div><div class="sheet-foot">${bloq.length ? `<button type="button" class="btn btn-ghost btn-block" data-x>Entendi</button>` : `<button type="button" class="btn btn-block" id="ex-ok" style="background:var(--bad);color:#fff" disabled>${ic('trash')}Excluir loja para sempre</button>`}</div>`;
+    document.body.appendChild(w); $('ov').classList.add('on');
+    const fechar = () => { w.remove(); $('ov').classList.remove('on'); };
+    w.querySelectorAll('[data-x]').forEach(x => { x.onclick = fechar; });
+    if (bloq.length) return;
+    const norm = (t) => String(t || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    $('ex-nome').oninput = () => { $('ex-ok').disabled = norm($('ex-nome').value) !== norm(loja.nome); };
+    $('ex-ok').onclick = async (e) => {
+      const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Excluindo…';
+      const { error } = await sb.rpc('ff_excluir_loja', { p_loja: loja.id, p_confirma: $('ex-nome').value, p_motivo: $('ex-mot').value });
+      if (error) { b.disabled = false; b.innerHTML = ic('trash') + 'Excluir loja para sempre'; return GP.toast(GP.err(error), 'err'); }
+      const nome = loja.nome; fechar();
+      lojas = lojas.filter(x => x.id !== loja.id); GP.ls.set('gp_loja_sel', '');
+      await loadPlano();
+      GP.toast(`A loja “${nome}” foi excluída. As vendas dela ficam guardadas no histórico.`, 'ok');
+      if (lojas.length) await abrirLoja(lojas[0]); else novaLoja(true);
+    };
+  };
   $('b-trocar-senha').onclick = async () => {
     const { data: { session: ss } } = await sb.auth.getSession();
     if (!ss) { GP.toast('Sua sessão expirou. Entre de novo para trocar a senha.'); user = null; return showAuth(false); }
@@ -1277,6 +1319,7 @@
   // Quem é da equipe não mexe em plano, Pix, equipe nem cria lojas
   function aplicarPapel() {
     document.body.classList.toggle('e-equipe', !souDono);
+    $('sec-excluir').classList.toggle('hide', !souDono || !loja);
     ['l-pixtipo', 'l-pixchave', 'l-pixnome', 'l-pixcidade', 'l-pix', 'l-deb', 'l-cred', 'l-din'].forEach(id => { if ($(id)) $(id).disabled = !souDono; });
     $('pix-dono').classList.toggle('hide', souDono);
     $('sec-equipe').classList.toggle('hide', !souDono);
@@ -1611,6 +1654,7 @@
     $('orders').innerHTML = ''; $('plist').innerHTML = '';
     $('welcome').classList.add('hide');
     fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel(); renderVerif();
+    $('sec-excluir').classList.toggle('hide', !souDono);
     modoAgenda(); wzRender(false); renderAppBanner(); renderApp(); renderBloqueio();
     if (GP.ehAgenda(l)) {
       clearInterval(timer); desligarRealtime();
@@ -1639,6 +1683,7 @@
     loja = null; prods = []; pedidos = []; conhecidos = null; codigo = null;
     if (window.AgendaPainel) window.AgendaPainel.parar();
     fillLoja(); renderLojaSel(); setTabsLocked(true); modoAgenda(); go('loja');
+    $('sec-excluir').classList.add('hide');
     renderVerif(); wz = 0; wzRender();
     $('welcome').classList.remove('hide');
     $('w-tit').textContent = primeira ? 'Bem-vindo! Vamos configurar sua loja.' : 'Cadastrar uma nova loja';

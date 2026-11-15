@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=73006">
+<link rel="stylesheet" href="app.css?v=86910">
 <style>
   .hdr{background:var(--ink);color:#fff;position:sticky;top:0;z-index:30}
   .hdr .wrap{display:flex;align-items:center;gap:12px;height:62px}
@@ -130,6 +130,7 @@
         <button class="chip" data-f="verificada">Verificadas</button>
         <button class="chip" data-f="recusada">Recusadas</button>
         <button class="chip" data-f="bloq">Bloqueadas</button>
+        <button class="chip" data-f="excluida">Excluídas</button>
         <button class="chip" data-f="todas">Todas</button>
       </div>
       <label class="asearch"><span id="s-ic"></span><input id="busca" type="search" aria-label="Buscar loja" placeholder="Buscar por loja, e-mail, CNPJ…"></label>
@@ -163,7 +164,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=70284"></script>
-<script src="app.js?v=71888"></script>
+<script src="app.js?v=86910"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -198,9 +199,9 @@
     const [a, b, c] = await Promise.all([sb.rpc('ff_admin_lojas'), sb.rpc('ff_admin_denuncias'), sb.rpc('ff_admin_lojistas')]);
     if (a.error) return GP.toast(GP.err(a.error), 'err');
     lojas = a.data || []; dens = b.data || []; lojistas = c.data || [];
-    const pend = lojas.filter(l => l.verificacao === 'pendente').length, denA = dens.filter(d => !d.resolvida).length;
+    const pend = lojas.filter(l => !l.excluida_em && l.verificacao === 'pendente').length, denA = dens.filter(d => !d.resolvida).length;
     $('kpis').innerHTML = [
-      ['Em análise', pend, pend ? 'alert' : '', 'lojas', 'pendente', 'clock'], ['Lojas verificadas', lojas.filter(l => l.verificacao === 'verificada').length, '', 'lojas', 'verificada', 'shield'],
+      ['Em análise', pend, pend ? 'alert' : '', 'lojas', 'pendente', 'clock'], ['Lojas verificadas', lojas.filter(l => !l.excluida_em && l.verificacao === 'verificada').length, '', 'lojas', 'verificada', 'shield'],
       ['Denúncias abertas', denA, denA ? 'alert' : '', 'denuncias', '', 'chat'], ['Lojistas', lojistas.length, '', 'planos', '', 'user']
     ].map(([l, v, c, t, f, i]) => `<button type="button" class="card kpi ${c}" data-go="${t}" data-f="${f || ''}"><span class="ki">${ic(i)}</span><span><span class="l">${l}</span><span class="v" style="display:block">${v}</span></span></button>`).join('');
     $('n-pend').textContent = pend; $('n-pend').classList.toggle('hide', !pend);
@@ -216,7 +217,7 @@
   const fmtCpf = (c) => { const d = GP.digits(c); return d.length === 11 ? d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : c; };
   function renderLojas() {
     const q = busca.toLowerCase();
-    const lst = lojas.filter(l => (filtro === 'todas' || (filtro === 'bloq' ? !l.ativa : l.verificacao === filtro && (filtro !== 'verificada' || l.ativa)))
+    const lst = lojas.filter(l => (filtro === 'excluida' ? !!l.excluida_em : filtro === 'todas' || (!l.excluida_em && (filtro === 'bloq' ? !l.ativa : l.verificacao === filtro && (filtro !== 'verificada' || l.ativa))))
       && (!q || [l.nome, l.dono_email, l.cnpj, l.responsavel_nome, l.telefone].join(' ').toLowerCase().includes(q)));
     if (!lst.length) { $('lojas').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('store')}</div><h4>Nada aqui</h4><p>${filtro === 'pendente' ? 'Nenhuma loja esperando aprovação.' : 'Nenhuma loja neste filtro.'}</p></div>`; return; }
     const fmtTel = (t) => { const d = GP.digits(t).replace(/^55(?=\d{10,11}$)/, ''); return d.length === 11 ? d.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : d.length === 10 ? d.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3') : t; };
@@ -238,7 +239,7 @@
       const tipo = GP.TIPOS.find(t => t.id === l.tipo);
       return `<article class="card lj ${l.verificacao === 'pendente' ? 'pend' : ''}">
         <div class="top"><div class="lg" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : esc((l.nome || '?')[0].toUpperCase())}</div>
-          <div class="grow" style="min-width:0"><div class="nm"><b>${esc(l.nome)}</b><span class="badge ${stC}">${stT}</span>${l.ativa ? '' : '<span class="badge b-bad">Bloqueada</span>'}</div>
+          <div class="grow" style="min-width:0"><div class="nm"><b>${esc(l.nome)}</b><span class="badge ${stC}">${stT}</span>${l.excluida_em ? '<span class="badge b-off">Excluída</span>' : l.ativa ? '' : '<span class="badge b-bad">Bloqueada</span>'}</div>
             <div class="meta">${tipo ? esc(tipo.nome) + ' · ' : ''}criada em ${new Date(l.criado_em).toLocaleDateString('pt-BR')} · ${l.pedidos} pedidos · ${l.produtos} produtos${l.nota_qtd ? ` · ★ ${l.nota_media} (${l.nota_qtd})` : ''}</div></div>
           <a class="btn btn-ghost btn-sm ver" href="loja.html?l=${encodeURIComponent(l.slug)}" target="_blank" rel="noopener" title="Abrir a página da loja">${ic('ext')}<span>Ver loja</span></a></div>
         <div class="chk">${chk}</div>
@@ -251,9 +252,10 @@
           ${campo('Pix', l.pix_chave ? esc(((l.pix_tipo || '') + ' ' + l.pix_chave).trim()) + (l.pix_nome ? '<br><span style="font-weight:500;color:var(--muted)">em nome de ' + esc(l.pix_nome) + '</span>' : '') : '')}
           ${campo('Endereço', esc(l.endereco || ''), 'full')}
         </div>
+        ${l.excluida_em ? `<div class="motivo" style="margin-top:16px"><b>Excluída pelo lojista em ${new Date(l.excluida_em).toLocaleString('pt-BR')}</b>${l.excluida_motivo ? ' · motivo: ' + esc(l.excluida_motivo) : ''}<br>Endereço antigo: ${esc(l.slug_original || '')} · ${l.pedidos} pedidos guardados${l.registro ? ` · ${l.registro.pedidos_entregues} entregues (${GP.brl(l.registro.total_vendido)})${Number(l.registro.assinaturas_pagas) ? ` · ${l.registro.assinaturas_pagas} assinaturas pagas (${GP.brl(l.registro.total_assinaturas)})` : ''}` : ''}</div>` : ''}
         ${l.verificacao_motivo ? `<div class="motivo" style="margin-top:16px"><b>Motivo da recusa:</b> ${esc(l.verificacao_motivo)}</div>` : ''}
         ${alertas.length ? `<div class="avisos" style="margin-top:16px"><b>${ic('shield')}Confira antes de aprovar</b><ul>${alertas.map(a => `<li>${esc(a)}</li>`).join('')}</ul></div>` : ''}
-        <div class="acts">
+        <div class="acts ${l.excluida_em ? 'hide' : ''}">
           ${l.verificacao !== 'verificada' ? `<button class="btn btn-ok btn-sm" data-ap="${l.id}">${ic('check')}Aprovar</button>` : ''}
           ${l.verificacao !== 'recusada' ? `<button class="btn btn-bad btn-sm" data-rc="${l.id}">${ic('x')}Recusar</button>` : ''}
           <span class="sp"></span>
