@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=65648">
+<link rel="stylesheet" href="app.css?v=68970">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -873,7 +873,14 @@
         <input type="file" id="in-prod" accept="image/*" hidden></div>
       <label class="field"><span>Nome</span><input class="input" id="p-nome" maxlength="80" required placeholder="X-Bacon artesanal"></label>
       <label class="field"><span>Descrição</span><textarea class="input" id="p-desc" maxlength="300" placeholder="Pão brioche, blend 160g, bacon crocante, cheddar…"></textarea></label>
-      <label class="switch" style="margin-bottom:8px"><input type="checkbox" id="p-porops"><i></i>Preço vem da montagem</label>
+      <div class="field"><span>Como você vende este produto?</span>
+        <div class="seg" id="p-vende"><button type="button" class="on" data-v="un">Por unidade</button><button type="button" data-v="kg">Por quilo (kg)</button></div>
+        <small id="p-vende-info" class="hide">Para frutas, verduras, legumes, carnes, frios… O cliente escolhe quantos gramas quer e o sistema calcula o valor pelo preço do quilo, arredondando ao centavo mais próximo.</small></div>
+      <div class="grid2 hide" id="p-peso-cfg">
+        <label class="field"><span>Quantidade mínima</span><select class="input" id="p-pmin"><option value="50">50 g</option><option value="100">100 g</option><option value="200">200 g</option><option value="250">250 g</option><option value="500">500 g</option><option value="1000">1 kg</option></select></label>
+        <label class="field"><span>Aumenta de quanto em quanto</span><select class="input" id="p-ppasso"><option value="50">50 g</option><option value="100">100 g</option><option value="250">250 g</option><option value="500">500 g</option><option value="1000">1 kg</option></select></label>
+      </div>
+      <label class="switch" style="margin-bottom:8px" id="p-porops-wrap"><input type="checkbox" id="p-porops"><i></i>Preço vem da montagem</label>
       <p class="small muted hide" id="p-porops-info" style="margin:-2px 0 12px">O cliente paga o que escolher nas etapas (ex.: copo 300 ml R$ 14, 500 ml R$ 19). Coloque os valores nas opções da montagem abaixo.</p>
       <div class="grid2">
         <label class="field" id="p-preco-wrap"><span>Preço</span><div class="prefix"><i>R$</i><input class="input" id="p-preco" inputmode="numeric" placeholder="0,00"></div></label>
@@ -963,7 +970,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=51585"></script>
-<script src="app.js?v=65648"></script>
+<script src="app.js?v=68970"></script>
 <script src="plano-pagar.js?v=51585"></script>
 <script src="agenda-painel.js?v=51585"></script>
 <script>
@@ -2391,7 +2398,7 @@
     const nEt = GP.grupos(p).length + (p.etapas_ids || []).length;
     const promo = GP.emPromo(p);
     const preco = !Number(p.preco) && nEt ? '<span class="tg mt">Monte o seu</span>'
-      : promo ? `<b class="promo">${brl(p.preco_promo)}</b><s class="small muted">${brl(p.preco)}</s>` : `<b>${brl(p.preco)}</b>`;
+      : (promo ? `<b class="promo">${brl(p.preco_promo)}</b><s class="small muted">${brl(p.preco)}</s>` : `<b>${brl(p.preco)}</b>`) + (GP.porPeso(p) ? '<span class="small muted"> /kg</span>' : '');
     return `<div class="card pitem ${p.disponivel ? '' : 'off'}" data-edit="${p.id}">
       <div class="th" style="${p.imagem_url ? `background-image:url('${esc(p.imagem_url)}')` : ''}">${p.imagem_url ? '' : ic('image')}${promo ? `<span class="pct">-${GP.descPct(p)}%</span>` : ''}</div>
       <div class="grow" style="min-width:0">
@@ -2535,6 +2542,10 @@
     renderProdEtapas();
     $('p-porops').checked = !!(p && !Number(p.preco) && GP.grupos(p).length);
     poropsUI();
+    pVende = p && p.vende_por === 'kg' ? 'kg' : 'un';
+    $('p-pmin').value = String(p && p.peso_min || 100); $('p-ppasso').value = String(p && p.peso_passo || 100);
+    if (!$('p-pmin').value) $('p-pmin').value = '100'; if (!$('p-ppasso').value) $('p-ppasso').value = '100';
+    vendeUI();
     $('p-del').classList.toggle('hide', !p);
     setPv('pv-prod', prodImg);
     $('pmod').classList.add('on'); ov.classList.add('on');
@@ -2701,6 +2712,18 @@
   };
 
   // ---------- Preço vem da montagem ----------
+  let pVende = 'un';
+  function vendeUI() {
+    const kg = pVende === 'kg';
+    $('p-vende').querySelectorAll('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === pVende));
+    $('p-vende-info').classList.toggle('hide', !kg);
+    $('p-peso-cfg').classList.toggle('hide', !kg);
+    $('p-porops-wrap').classList.toggle('hide', kg);
+    if (kg && $('p-porops').checked) { $('p-porops').checked = false; poropsUI(); }
+    $('p-preco-wrap').querySelector('span').textContent = kg ? 'Preço do quilo' : 'Preço';
+    $('p-est-on').closest('.psec').classList.toggle('hide', kg);
+  }
+  $('p-vende').onclick = (e) => { const b = e.target.closest('[data-v]'); if (!b) return; pVende = b.dataset.v; vendeUI(); };
   function poropsUI() {
     const on = $('p-porops').checked;
     $('p-preco-wrap').classList.toggle('hide', on);
@@ -2822,15 +2845,20 @@
     const variacoes = lerVars();
     if (variacoes.some(v => !v.nome)) { $('p-vars').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Dê um nome para cada variação (ex.: P, M, G).', 'err'); }
     if (new Set(variacoes.map(v => v.nome.toLowerCase())).size !== variacoes.length) return GP.toast('Há variações com o mesmo nome.', 'err');
-    const estoque = $('p-est-on').checked && !variacoes.length ? Math.max(0, parseInt($('p-est').value) || 0) : null;
+    const estoque = pVende !== 'kg' && $('p-est-on').checked && !variacoes.length ? Math.max(0, parseInt($('p-est').value) || 0) : null;
     const medida = (id, max) => { const v = parseFloat(String($(id).value).replace(',', '.')); return v > 0 ? Math.min(v, max) : null; };
     const gramas = parseInt(GP.digits($('p-peso').value)) || 0;
     if (gramas > 30000) { $('p-peso').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('O peso máximo para envio é 30 kg (30000 g).', 'err'); }
     const medidas = loja && loja.tipo === 'variedades' ? { peso_kg: gramas > 0 ? gramas / 1000 : null, altura_cm: medida('p-alt', 100), largura_cm: medida('p-larg', 100), comprimento_cm: medida('p-comp', 100) } : {};
-    const row = { ...medidas, nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)), estoque, variacoes };
+    const kg = pVende === 'kg';
+    const pmin = parseInt($('p-pmin').value) || 100, ppasso = parseInt($('p-ppasso').value) || 100;
+    if (kg && pmin % ppasso !== 0) return GP.toast('A quantidade mínima precisa ser múltiplo do "aumenta de quanto em quanto" (ex.: mínimo 250 g, de 50 em 50 g).', 'err');
+    const pesoRow = kg ? { vende_por: 'kg', peso_min: pmin, peso_passo: ppasso } : (editing && editing.vende_por === 'kg' ? { vende_por: 'un' } : {});
+    const row = { ...medidas, ...pesoRow, nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)), estoque, variacoes };
     const b = $('p-save'); b.disabled = true;
     const salvar = (r) => editing ? sb.from('ff_produtos').update(r).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...r, loja_id: loja.id, ordem: prods.length });
-    let { error } = await salvar(row);
+    let { error } = await salvar(kg ? { ...row, variacoes: [] } : row);
+    if (error && /vende_por|peso_min|peso_passo/.test(error.message || '')) { b.disabled = false; return GP.toast('Para vender por quilo, falta rodar o SQL v32 no Supabase.', 'err'); }
     // Sem o SQL v20 ainda: salva sem peso e medidas
     if (error && /peso_kg|altura_cm|largura_cm|comprimento_cm/.test(error.message || '')) {
       const { peso_kg: _a, altura_cm: _b, largura_cm: _c, comprimento_cm: _d, ...semMed } = row;

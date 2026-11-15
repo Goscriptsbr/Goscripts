@@ -229,6 +229,7 @@
     cupom_esgotado: 'Este cupom já foi usado o máximo de vezes.',
     limite_lojas: 'Você chegou no limite de lojas do seu plano.',
     limite_produtos: 'Você chegou no limite de produtos do seu plano.',
+    peso_invalido: 'Um produto por peso está com uma quantidade inválida. Remova da sacola e escolha de novo.',
     loja_bloqueada_plano: 'Esta loja está temporariamente indisponível. Tente mais tarde.',
     push_negado: 'Os avisos foram bloqueados. Libere as notificações deste site nas configurações do navegador e tente de novo.',
     push_ios: 'No iPhone, os avisos só funcionam com o GoPedido instalado na tela de início. Instale e abra pelo ícone.',
@@ -850,6 +851,15 @@
   GP.precoBase = (p, vid) => { const v = GP.varDe(p, vid); return v && temNum(v.preco) ? Number(v.preco) : GP.precoAtual(p); };
   GP.precoMinVar = (p) => { const vs = GP.variacoes(p).filter(v => !(temNum(v.estoque) && Number(v.estoque) <= 0)); return vs.length ? Math.min(...vs.map(v => GP.precoBase(p, v.id))) : GP.precoAtual(p); };
   GP.precoItem = (p, sel, vid) => GP.precoBase(p, vid) + GP.opcoesEscolhidas(p, sel).reduce((t, o) => t + o.preco, 0);
+  // Vendido por peso (SQL v32): preço do quilo × gramas, arredondado ao centavo mais próximo (igual ao servidor)
+  GP.porPeso = (p) => !!p && p.vende_por === 'kg';
+  GP.pesoMin = (p) => Math.max(10, Number(p && p.peso_min) || 100);
+  GP.pesoPasso = (p) => Math.max(10, Number(p && p.peso_passo) || 100);
+  GP.fmtPeso = (g) => g >= 1000 ? (g / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' kg' : g + ' g';
+  GP.precoPeso = (p, g, sel) => {
+    const base = GP.precoBase(p), cents = Math.round(Math.round(base * 100) * g / 1000);
+    return cents / 100 + GP.opcoesEscolhidas(p, sel).reduce((t, o) => t + o.preco, 0);
+  };
   GP.txtOpcoes = (ops) => (ops || []).map(o => o.nome + (Number(o.preco) ? ` (+${GP.brl(o.preco)})` : '')).join(', ');
 
   GP.descCupom = (c) => c.tipo === 'frete' ? 'Entrega grátis' : c.tipo === 'percentual' ? `${Number(c.valor)}% OFF` : `${GP.brl(c.valor)} OFF`;
