@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=71241">
+<link rel="stylesheet" href="app.css?v=73006">
 <style>
   body{padding-bottom:60px}
   .cover{height:190px;background:linear-gradient(135deg,var(--brand-soft),var(--brand)) center/cover;position:relative}
@@ -129,7 +129,7 @@
     let aba = 'pix';
     const desenhar = () => {
       clearInterval(poll); try { brick && brick.unmount && brick.unmount(); } catch (_) {} brick = null;
-      el.innerHTML = `<div class="abas"><button type="button" data-ab="pix" class="${aba === 'pix' ? 'on' : ''}">${ic('pix')}Pix</button><button type="button" data-ab="cartao" class="${aba === 'cartao' ? 'on' : ''}">${ic('card')}Cartão</button></div><div id="pg-area"></div>`;
+      el.innerHTML = `<div class="abas"><button type="button" data-ab="pix" class="${aba === 'pix' ? 'on' : ''}">${ic('pix')}Pix</button><button type="button" data-ab="cartao" class="${aba === 'cartao' ? 'on' : ''}">${ic('card')}Cartão</button></div><div id="pg-area"></div><p class="small muted center" style="margin:10px 0 0">${ic('lock')} Pagamento direto no Mercado Pago da loja. O GoPedido não vê nem guarda os dados do seu cartão.</p>`;
       el.querySelector('.abas').onclick = (e) => { const b = e.target.closest('[data-ab]'); if (b) { aba = b.dataset.ab; desenhar(); } };
       (aba === 'pix' ? pix : cartao)($('pg-area'));
     };
@@ -152,7 +152,7 @@
     }
     async function cartao(box) {
       box.innerHTML = `<div id="pg-card"><p class="small muted center" style="padding:20px 0"><span class="spin"></span> Carregando o formulário seguro do Mercado Pago…</p></div>
-        <p class="small muted center" style="margin-top:6px">${ic('lock')} Os dados do cartão vão direto para o Mercado Pago.</p>`;
+        `;
       try {
         if (!ctx.public_key) throw new Error('chave');
         if (!window.MercadoPago) await new Promise((r, f) => { const s = document.createElement('script'); s.src = 'https://sdk.mercadopago.com/js/v2'; s.onload = r; s.onerror = f; document.head.appendChild(s); });

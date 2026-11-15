@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=71241">
+<link rel="stylesheet" href="app.css?v=73006">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -1318,6 +1318,12 @@
           <div class="small muted">Use a conta onde você quer receber. Pode ser pessoa física ou empresa.</div></div>
         ${souDono ? `<button type="button" class="btn btn-primary btn-sm" id="mp-conectar">${ic('ext')}Conectar</button>` : ''}
       </div>${souDono ? '' : '<div class="warnline" style="margin-top:10px">Só o dono da conta pode conectar o Mercado Pago.</div>'}
+      <div class="mp-priv"><b>${ic('lock')}Conexão direta com o Mercado Pago</b><ul>
+        <li>Você autoriza no site do próprio Mercado Pago. O GoPedido <b>nunca vê sua senha</b>.</li>
+        <li>O GoPedido <b>não consulta</b> seu saldo, extrato nem outras vendas da sua conta.</li>
+        <li>Os dados do cartão dos clientes vão <b>direto para o Mercado Pago</b>: o GoPedido não vê nem guarda.</li>
+        <li>O dinheiro das vendas e das assinaturas cai <b>direto na sua conta</b>. O GoPedido não recebe, não segura e não cobra nada por isso.</li>
+        <li>Você pode desconectar quando quiser.</li></ul></div>
       <div class="mp-taxas"><b>Quanto o Mercado Pago cobra por venda</b>
         <div><span>Pix</span><b>0,99%</b></div>
         <div><span>Cartão de crédito</span><b>3,98% a 4,98%</b></div>
@@ -1325,7 +1331,7 @@
       </div>`;
       if ($('mp-conectar')) $('mp-conectar').onclick = async (e) => {
         const b = e.currentTarget;
-        if (!(await GP.confirmar('Conectar o Mercado Pago da sua loja', { texto: 'Os pagamentos online vão cair na SUA conta do Mercado Pago, com as taxas do Mercado Pago. Devoluções de pedidos pagos online saem dessa conta. O GoPedido não recebe nem segura o dinheiro.', ok: 'Conectar' }))) return;
+        if (!(await GP.confirmar('Conectar o Mercado Pago da sua loja', { texto: 'Você vai para o site do Mercado Pago e autoriza lá, com a sua senha (o GoPedido nunca vê). Os pagamentos das vendas e das assinaturas caem direto na SUA conta, com as taxas do Mercado Pago, e as devoluções saem dela. O GoPedido não recebe nem segura o dinheiro, não vê dados de cartão e não consulta seu saldo ou extrato.', ok: 'Conectar' }))) return;
         b.disabled = true; b.innerHTML = '<span class="spin"></span>Abrindo…';
         try { const r = await chamarMP({ acao: 'url', loja: loja.id }); GP.ls.set('gp_mp_loja', loja.id); location.href = r.url; }
         catch (er) { b.disabled = false; b.innerHTML = ic('ext') + 'Conectar'; GP.toast(er.message, 'err'); }
@@ -1337,6 +1343,12 @@
         <div class="grow" style="min-width:0"><b>Mercado Pago conectado</b><div class="small muted">${esc(loja.mp_conta || 'Conta conectada')}</div></div>
         ${souDono ? `<button type="button" class="btn btn-ghost btn-sm" id="mp-desc">Desconectar</button>` : ''}
       </div>
+      <div class="mp-priv"><b>${ic('lock')}Conexão direta com o Mercado Pago</b><ul>
+        <li>Você autoriza no site do próprio Mercado Pago. O GoPedido <b>nunca vê sua senha</b>.</li>
+        <li>O GoPedido <b>não consulta</b> seu saldo, extrato nem outras vendas da sua conta.</li>
+        <li>Os dados do cartão dos clientes vão <b>direto para o Mercado Pago</b>: o GoPedido não vê nem guarda.</li>
+        <li>O dinheiro das vendas e das assinaturas cai <b>direto na sua conta</b>. O GoPedido não recebe, não segura e não cobra nada por isso.</li>
+        <li>Você pode desconectar quando quiser.</li></ul></div>
       <div class="as-hide mp-liga ${loja.aceita_mp ? 'ativo' : 'falta'}">
         <label class="switch"><input type="checkbox" id="l-mp" ${loja.aceita_mp ? 'checked' : ''} ${souDono ? '' : 'disabled'}><i></i><b>Oferecer pagamento online no pedido</b></label>
         <div class="small">${loja.aceita_mp
