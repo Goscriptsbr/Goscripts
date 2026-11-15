@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=16448">
+<link rel="stylesheet" href="app.css?v=16601">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -141,6 +141,25 @@
   .ml-nav button.on svg{color:#fff}
   #tab-loja:not(.ml-tudo) .formgrid>.fs{grid-column:1/-1}
   .ml-tudo .ml-nav{display:none}
+  .ml-wz .ml-nav,.ml-wz #ml-save,.ml-wz .cm-head,.ml-wz .tipo-pick>h3,.ml-wz .tipo-pick>h3+p{display:none!important}
+  .ml-wz .ml-layout{grid-template-columns:1fr!important;max-width:760px;margin:0 auto}
+  .wz{max-width:760px;margin:0 auto 14px}
+  .wz-st{list-style:none;margin:0 0 14px;padding:0;display:flex;gap:6px}
+  .wz-st li{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.74rem;font-weight:700;color:var(--muted);position:relative;text-align:center}
+  .wz-st li::before{content:'';position:absolute;top:14px;left:-50%;right:50%;height:3px;background:var(--line);z-index:0}
+  .wz-st li:first-child::before{display:none}
+  .wz-st li.ok::before,.wz-st li.on::before{background:var(--brand)}
+  .wz-st i{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:.84rem;background:#fff;border:2px solid var(--line);color:var(--muted)}
+  .wz-st i svg{width:15px;height:15px}
+  .wz-st li.on{color:var(--ink)}.wz-st li.on i{border-color:var(--brand);background:var(--brand);color:#fff}
+  .wz-st li.ok i{border-color:var(--brand);background:#fff;color:var(--brand)}
+  .wz-t small{display:block;font-size:.76rem;font-weight:800;color:var(--brand-2,var(--brand));text-transform:uppercase;letter-spacing:.05em}
+  .wz-t b{display:block;font-size:clamp(1.2rem,3vw,1.5rem);letter-spacing:-.02em;line-height:1.2}
+  .wzbar{position:sticky;bottom:0;z-index:20;max-width:760px;margin:14px auto 0;display:flex;align-items:center;gap:10px;padding:12px 0 calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(247,246,243,0),var(--bg,#F7F6F3) 30%)}
+  .wzbar .btn-primary{flex:1;max-width:320px;margin-left:auto}
+  .wzbar .wz-n{font-size:.82rem;color:var(--muted);font-weight:700}
+  .wzbar .inv{visibility:hidden}
+  @media(max-width:520px){.wz-st span{display:none}.wz-st li.on span{display:block}}
   @media(min-width:980px){
     .ml-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
     .ml-tudo .ml-layout{grid-template-columns:1fr}
@@ -568,7 +587,8 @@
         <button type="button" data-m="equipe" id="nav-equipe" class="hide"><i data-mi="user"></i><span>Equipe</span></button>
         <button type="button" data-m="conta"><i data-mi="star"></i><span>Plano e conta</span></button>
       </nav><div class="ml-body">
-      <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted">Preencha os dados abaixo e salve. Depois é só montar o cardápio e abrir a loja.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
+      <div class="welcome hide" id="welcome"><div class="big" id="w-ic"></div><div class="grow"><b id="w-tit">Bem-vindo! Vamos configurar sua loja.</b><div class="small muted" id="w-sub">Leva uns 3 minutos, um passo de cada vez. Dá para mudar tudo depois.</div></div><button type="button" class="btn btn-ghost btn-sm hide" id="w-cancel">Cancelar</button></div>
+      <div class="wz hide" id="wz"></div>
       <section class="card pad tipo-pick hide" id="tipo-pick">
         <h3 style="font-size:1.1rem;letter-spacing:-.02em">Que tipo de loja você vai cadastrar?</h3>
         <p class="small muted" style="margin:2px 0 14px">Cada loja tem o seu tipo. Se depois você criar outra loja, ela pode ser de um tipo diferente.</p>
@@ -593,7 +613,7 @@
             <label class="field"><span>Descrição</span><textarea class="input" id="l-desc" maxlength="240" placeholder="Hambúrgueres artesanais, porções e milkshakes."></textarea></label>
             <div class="grid2">
               <label class="field"><span>WhatsApp da loja</span><input class="input" id="l-tel" inputmode="tel" placeholder="(19) 99999-9999"></label>
-              <label class="field"><span>Tempo de entrega</span><input class="input" id="l-tempo" maxlength="30" placeholder="30–50 min"></label>
+              <label class="field dl-only"><span>Tempo de entrega</span><input class="input" id="l-tempo" maxlength="30" placeholder="30–50 min"></label>
             </div>
             <label class="field"><span>CNPJ <span class="muted">(opcional)</span></span><input class="input" id="l-cnpj" inputmode="numeric" placeholder="00.000.000/0000-00"><small id="cnpj-msg"></small></label>
             <div class="field"><span>Link da sua loja</span>
@@ -680,6 +700,7 @@
           </div>
         </div>
         <div class="savebar" id="ml-save"><button class="btn btn-primary" id="b-salvar" style="min-width:200px">Salvar loja</button></div>
+        <div class="wzbar hide" id="wzbar"><button type="button" class="btn btn-ghost" id="wz-voltar">Voltar</button><span class="wz-n" id="wz-n"></span><button type="button" class="btn btn-primary" id="wz-ir">Continuar</button></div>
       </form>
       <section class="card pad fs ml-anchor hide" id="sec-equipe" data-mod="equipe">
         <h3><span id="fi-eq"></span>Equipe</h3>
@@ -847,9 +868,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=16448"></script>
-<script src="app.js?v=16448"></script>
-<script src="agenda-painel.js?v=16448"></script>
+<script src="config.js?v=16601"></script>
+<script src="app.js?v=16601"></script>
+<script src="agenda-painel.js?v=16601"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -882,7 +903,8 @@
     const btn = document.querySelector(`#ml-nav [data-m="${m}"]`);
     if (!btn || btn.classList.contains('hide')) m = 'dados';
     modAtual = m; GP.ls.set('gp_ml_mod', m);
-    const tudo = !loja;   // loja nova: mostra o formulário inteiro
+    const tudo = false;   // loja nova agora é passo a passo (um módulo por vez)
+    if (!loja && typeof wzSync === 'function') wzSync(m);
     $('tab-loja').classList.toggle('ml-tudo', tudo);
     document.querySelectorAll('#ml-nav [data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
     document.querySelectorAll('#tab-loja [data-mod]').forEach(el => el.classList.toggle('ml-off', !tudo && el.dataset.mod !== m));
@@ -1370,7 +1392,7 @@
     $('orders').innerHTML = ''; $('plist').innerHTML = '';
     $('welcome').classList.add('hide');
     fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel(); renderVerif();
-    modoAgenda();
+    modoAgenda(); wzRender(false);
     if (GP.ehAgenda(l)) {
       clearInterval(timer); desligarRealtime();
       go('agenda'); await window.AgendaPainel.abrir(sb, l);
@@ -1391,7 +1413,7 @@
     loja = null; prods = []; pedidos = []; conhecidos = null; codigo = null;
     if (window.AgendaPainel) window.AgendaPainel.parar();
     fillLoja(); renderLojaSel(); setTabsLocked(true); modoAgenda(); go('loja');
-    renderVerif(); escolherTipo(true);
+    renderVerif(); wz = 0; wzRender();
     $('welcome').classList.remove('hide');
     $('w-tit').textContent = primeira ? 'Bem-vindo! Vamos configurar sua loja.' : 'Cadastrar uma nova loja';
     $('w-cancel').classList.toggle('hide', !lojas.length);
@@ -1501,15 +1523,76 @@
   $('tipos-g').onclick = (e) => {
     const b = e.target.closest('[data-tipo]'); if (!b) return;
     $('l-tipo').value = b.dataset.tipo; mostrarTipo(); escolherTipo(false); renderEnvio();
+    if (!loja) { wzIr(1); setTimeout(() => { if (!$('l-nome').value) $('l-nome').focus({ preventScroll: true }); }, 350); return; }
     setTimeout(() => { if (!$('l-nome').value) $('l-nome').focus(); }, 200);
   };
-  $('b-trocar-tipo').onclick = () => escolherTipo(true);
+  $('b-trocar-tipo').onclick = () => loja ? escolherTipo(true) : wzIr(0);
+
+  // ================= CADASTRO DE LOJA NOVA: PASSO A PASSO =================
+  let wz = 0;
+  const wzAgenda = () => $('l-tipo').value === 'agenda';
+  const wzPassos = () => [
+    { id: 'tipo', nome: 'Tipo', tit: 'Que tipo de negócio é o seu?' },
+    { id: 'dados', nome: 'Dados', tit: 'Como os clientes vão ver sua loja' },
+    { id: 'entrega', nome: wzAgenda() ? 'Endereço' : 'Entrega', tit: wzAgenda() ? 'Onde você atende' : 'De onde sai a entrega e quanto custa' },
+    ...(wzAgenda() ? [] : [{ id: 'horario', nome: 'Horários', tit: 'Quando a loja recebe pedidos' }]),
+    { id: 'pag', nome: 'Pagamento', tit: 'Como o cliente pode pagar' }
+  ];
+  function wzSync(m) { const i = wzPassos().findIndex(x => x.id === m); if (i > 0 && i !== wz) { wz = i; wzRender(false); } }
+  function wzRender(mover = true) {
+    const ativo = !loja;
+    $('wz').classList.toggle('hide', !ativo); $('wzbar').classList.toggle('hide', !ativo);
+    $('tab-loja').classList.toggle('ml-wz', ativo);
+    if (!ativo) return;
+    modoAgenda(wzAgenda());
+    const P = wzPassos(); wz = Math.max(0, Math.min(wz, P.length - 1)); const cur = P[wz];
+    $('wz').innerHTML = `<ol class="wz-st">${P.map((x, i) => `<li class="${i < wz ? 'ok' : i === wz ? 'on' : ''}"><i>${i < wz ? ic('check') : i + 1}</i><span>${x.nome}</span></li>`).join('')}</ol>
+      <div class="wz-t"><small>Passo ${wz + 1} de ${P.length}</small><b>${cur.tit}</b></div>`;
+    $('wz-voltar').classList.toggle('inv', wz === 0);
+    $('wz-n').textContent = `${wz + 1} de ${P.length}`;
+    $('wz-ir').textContent = wz === P.length - 1 ? 'Criar minha loja' : 'Continuar';
+    $('wzbar').classList.toggle('hide', cur.id === 'tipo');
+    if (!mover) return;
+    if (cur.id === 'tipo') { escolherTipo(true); }
+    else { $('tipo-pick').classList.add('hide'); $('f-loja').classList.remove('hide'); setMod(cur.id); if (cur.id === 'entrega' && typeof initMap === 'function') setTimeout(initMap, 60); }
+    window.scrollTo({ top: Math.max(0, $('wz').getBoundingClientRect().top + scrollY - 80), behavior: 'smooth' });
+  }
+  function wzIr(i) { wz = i; wzRender(); }
+  const wzErro = (el, msg) => { GP.toast(msg, 'err'); if (el) setTimeout(() => { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); if (el.focus) el.focus({ preventScroll: true }); }, 50); return false; };
+  function wzValida(id) {
+    if (id === 'dados') {
+      if (!$('l-nome').value.trim()) return wzErro($('l-nome'), 'Informe o nome da loja.');
+      if (GP.digits($('l-cnpj').value) && !cnpjMsg()) return wzErro($('l-cnpj'), 'CNPJ inválido. Corrija ou deixe em branco.');
+      if (GP.digits($('l-tel').value).length < 10) return wzErro($('l-tel'), 'Informe o WhatsApp da loja, com DDD. É por ele que os clientes falam com você.');
+    }
+    if (id === 'entrega') {
+      const e = lojaAddr ? lojaAddr.get() : {};
+      if (!e.rua || !e.numero || !e.cidade) return wzErro($('l-addr'), 'Preencha o endereço: rua, número e cidade.');
+      if (!lojaPos || (lojaAddr && lojaAddr.precisaPino())) return wzErro($('l-addr'), 'Toque no mapa exatamente na porta da loja (use "Satélite" para ver melhor).');
+      if (!wzAgenda() && modoAtual() === 'tabela' && !cfgTaxa().taxa_tabela.length) return wzErro($('faixas'), 'Coloque pelo menos uma faixa na tabela de entrega.');
+    }
+    if (id === 'horario' && $('l-auto').checked && !Object.values(lerHoras()).some(x => x.aberto)) return wzErro($('horas'), 'Marque pelo menos um dia aberto.');
+    if (id === 'pag') {
+      const pix = $('l-pix').checked;
+      if (pix && !$('l-pixchave').value.trim()) return wzErro($('l-pixchave'), 'Informe a chave Pix (ou desligue o Pix).');
+      if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); return wzErro($('l-pixchave'), 'Chave Pix: ' + v.msg); } }
+      if (!pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return wzErro(null, 'Ative pelo menos uma forma de pagamento.');
+    }
+    return true;
+  }
+  $('wz-voltar').onclick = () => { if (wz > 0) wzIr(wz - 1); };
+  $('wz-ir').onclick = () => {
+    const P = wzPassos();
+    if (!wzValida(P[wz].id)) return;
+    if (wz < P.length - 1) return wzIr(wz + 1);
+    if ($('f-loja').requestSubmit) $('f-loja').requestSubmit(); else $('b-salvar').click();
+  };
   $('w-cancel').onclick = () => { const l = lojas.find(x => x.id === GP.ls.get('gp_loja_sel')) || lojas[0]; if (l) abrirLoja(l); };
 
   // ================= ABAS =================
   // Lojas de agendamento escondem pedidos/cardápio/entrega e mostram agenda/serviços
-  function modoAgenda() {
-    const ag = GP.ehAgenda(loja);
+  function modoAgenda(forcar) {
+    const ag = forcar !== undefined ? forcar : GP.ehAgenda(loja);
     document.body.classList.toggle('modo-agenda', ag);
     const nb = document.querySelector('#ml-nav [data-m="entrega"] span'); if (nb) nb.textContent = ag ? 'Endereço' : 'Entrega';
     const h = document.querySelector('#sec-entrega h3'); if (h && h.lastChild) h.lastChild.textContent = ag ? 'Endereço do estabelecimento' : 'Localização e entrega';
