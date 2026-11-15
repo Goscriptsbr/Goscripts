@@ -317,6 +317,23 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 /* pagamento online (Mercado Pago) */
 .mp-wrap{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.mp-passos{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:6px}
+.mp-passos li{display:flex;align-items:center;gap:10px;font-size:.88rem;color:var(--muted)}
+.mp-passos li i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:.78rem;background:var(--soft,#f1f1f3);color:var(--muted)}
+.mp-passos li i .i{width:14px;height:14px}
+.mp-passos li.on{color:var(--ink,#111)}.mp-passos li.on i{background:var(--brand);color:#fff}
+.mp-passos li.ok i{background:var(--ok,#16a34a);color:#fff}
+.mp-liga{margin-top:14px;border-radius:14px;padding:12px 14px;border:2px solid transparent}
+.mp-liga .switch{margin:0 0 6px}
+.mp-liga.falta{background:#fff4ef;border-color:var(--brand)}
+.mp-liga.falta .small{color:#9a3412}
+.mp-liga.ativo{background:#effaf3;border-color:#bfe8cd}
+.mp-liga.ativo .small{color:#166534}
+.mp-liga.pisca{animation:mpPisca 1s ease-in-out 3}
+@keyframes mpPisca{50%{box-shadow:0 0 0 6px rgba(242,69,28,.25)}}
+@media (prefers-reduced-motion:reduce){.mp-liga.pisca{animation:none}}
+.leaflet-control-layers{font:600 13px/1.3 inherit;border-radius:10px!important}
+.leaflet-control-layers-base label{padding:2px 0}
 .mp-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .chip-opc{font-size:.7rem;font-weight:800;letter-spacing:.03em;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
 .me-ic.mp{background:#E6F4FF;color:#0A6ED1}

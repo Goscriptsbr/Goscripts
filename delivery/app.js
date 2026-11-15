@@ -311,20 +311,46 @@
   // mesma regra do servidor: rota válida entre a linha reta e 3x a linha reta + 1 km; senão linha reta + 30%
   GP.distEntrega = (reta, rota) => rota != null && rota >= reta && rota <= reta * 3 + 1 ? Math.round(rota * 100) / 100 : Math.round(reta * 1.3 * 100) / 100;
 
-  GP.geo = () => new Promise((ok, fail) => {
+  // Localização de alta precisão: escuta o GPS por alguns segundos e fica com a leitura mais precisa
+  GP.geo = (opts = {}) => new Promise((ok, fail) => {
     if (!navigator.geolocation) return fail(new Error('Seu navegador não permite localização.'));
-    navigator.geolocation.getCurrentPosition(
-      (p) => ok({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      (e) => fail(new Error(e.code === 1 ? 'Permita o acesso à localização para calcular a entrega.' : 'Não foi possível obter sua localização.')),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    const alvo = opts.alvo || 15, limite = opts.limite || 12000;
+    let best = null, fim = false, wid = null, tm = null;
+    const acabar = () => {
+      if (fim) return; fim = true;
+      if (wid != null) navigator.geolocation.clearWatch(wid);
+      clearTimeout(tm);
+      best ? ok(best) : fail(new Error('Não foi possível obter sua localização. Ligue o GPS do celular e tente de novo.'));
+    };
+    wid = navigator.geolocation.watchPosition(
+      (p) => {
+        const acc = Math.round(p.coords.accuracy || 9999);
+        if (!best || acc < best.acc) best = { lat: p.coords.latitude, lng: p.coords.longitude, acc };
+        if (opts.onProgress) opts.onProgress(best);
+        if (best.acc <= alvo) acabar();
+      },
+      (e) => {
+        if (best) return acabar();
+        fim = true; if (wid != null) navigator.geolocation.clearWatch(wid); clearTimeout(tm);
+        fail(new Error(e.code === 1 ? 'Permita o acesso à localização para calcular a entrega.' : 'Não foi possível obter sua localização. Ligue o GPS do celular e tente de novo.'));
+      },
+      { enableHighAccuracy: true, timeout: limite, maximumAge: 0 }
     );
+    tm = setTimeout(acabar, limite);
   });
 
   // Mapa com pino arrastável (Leaflet + OpenStreetMap)
   GP.mapPicker = (el, start, onChange) => {
     const c = start && start.lat != null ? [start.lat, start.lng] : cfg.centro;
     const map = L.map(el, { zoomControl: true, attributionControl: true }).setView(c, start && start.lat != null ? 16 : 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    const sat = L.layerGroup([
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagens © Esri' }),
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }),
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 })
+    ]);
+    L.control.layers({ 'Mapa': ruas, 'Satélite': sat }, null, { position: 'topright', collapsed: false }).addTo(map);
+    let circ = null;
     const icon = L.divIcon({
       className: '', iconSize: [36, 46], iconAnchor: [18, 44],
       html: '<svg width="36" height="46" viewBox="0 0 36 46"><path d="M18 45s15-14.2 15-27A15 15 0 0 0 3 18c0 12.8 15 27 15 27Z" fill="#F2451C" stroke="#fff" stroke-width="3"/><circle cx="18" cy="18" r="5.5" fill="#fff"/></svg>'
@@ -342,7 +368,11 @@
     setTimeout(() => map.invalidateSize(), 250);
     return {
       map,
-      set(lat, lng, silent) { put(lat, lng, !silent); map.setView([lat, lng], 17); },
+      set(lat, lng, silent, zoom) { put(lat, lng, !silent); map.setView([lat, lng], zoom || 18); },
+      precisao(lat, lng, acc) {
+        if (circ) { map.removeLayer(circ); circ = null; }
+        if (acc && acc > 8) circ = L.circle([lat, lng], { radius: acc, color: '#2563eb', weight: 1, fillOpacity: 0.08, interactive: false }).addTo(map);
+      },
       refresh() { setTimeout(() => map.invalidateSize(), 60); }
     };
   };
@@ -530,20 +560,32 @@
       uf: iso || UFS[a.state] || ''
     };
   };
+  // Procura o endereço no mapa. Diz se achou o número exato ou só a rua/região.
   GP.geocode = async (e) => {
+    const sem = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const num = String(e.numero || '').replace(/\D.*$/, '');
     const tries = [
-      `street=${encodeURIComponent(((e.numero || '') + ' ' + (e.rua || '')).trim())}&city=${encodeURIComponent(e.cidade || '')}&state=${encodeURIComponent(e.uf || '')}&country=Brasil`,
+      `street=${encodeURIComponent((num + ' ' + (e.rua || '')).trim())}&city=${encodeURIComponent(e.cidade || '')}&state=${encodeURIComponent(e.uf || '')}&country=Brasil`,
+      `q=${encodeURIComponent([(e.rua || '') + (num ? ', ' + num : ''), e.bairro, e.cidade, e.uf, 'Brasil'].filter(Boolean).join(', '))}`,
       `q=${encodeURIComponent([e.rua, e.bairro, e.cidade, e.uf, 'Brasil'].filter(Boolean).join(', '))}`,
       e.cep ? `postalcode=${GP.digits(e.cep)}&country=Brasil` : ''
     ].filter(Boolean);
+    let reserva = null;
     for (const q of tries) {
       try {
-        const r = await fetch(`${NOM}/search?format=jsonv2&limit=1&countrycodes=br&${q}`);
+        const r = await fetch(`${NOM}/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=br&${q}`);
         const j = await r.json();
-        if (j && j[0]) return { lat: +j[0].lat, lng: +j[0].lon };
+        if (!Array.isArray(j) || !j.length) continue;
+        const naCidade = j.filter(x => { const a = x.address || {}; const c = sem(a.city || a.town || a.village || a.municipality); return !e.cidade || !c || c === sem(e.cidade); });
+        const lista = naCidade.length ? naCidade : j;
+        const exato = num && lista.find(x => x.address && String(x.address.house_number || '').replace(/\D.*$/, '') === num);
+        if (exato) return { lat: +exato.lat, lng: +exato.lon, prec: 'numero' };
+        const rua = lista.find(x => x.address && x.address.road && sem(x.address.road) === sem(e.rua));
+        if (rua && (!reserva || reserva.prec !== 'rua')) reserva = { lat: +rua.lat, lng: +rua.lon, prec: 'rua' };
+        if (!reserva) reserva = { lat: +lista[0].lat, lng: +lista[0].lon, prec: 'aprox' };
       } catch {}
     }
-    return null;
+    return reserva;
   };
   GP.fmtEnd = (e) => {
     const l1 = [e.rua, e.numero].filter(Boolean).join(', ');
@@ -591,6 +633,8 @@
     const $f = (k) => document.getElementById(`${id}-${k}`);
     const KEYS = ['cep', 'rua', 'numero', 'bairro', 'cidade', 'uf', 'complemento'];
     let pos = opts.inicio && opts.inicio.lat != null ? { lat: opts.inicio.lat, lng: opts.inicio.lng } : null;
+    // pino confirmado = colocado à mão, GPS preciso ou número achado no mapa. Rua/região aproximada pede ajuste.
+    let pinoOk = !!pos, aviso = '';
     let seq = 0;
     const status = (t) => { $f('st').innerHTML = t; };
     const fire = () => opts.onChange && opts.onChange(api);
@@ -602,12 +646,12 @@
       if (ruaMudou && !e.numero) $f('numero').focus();
     };
     const map = GP.mapPicker($f('map'), pos, async (lat, lng) => {
-      pos = { lat, lng }; fire();
+      pos = { lat, lng }; pinoOk = true; map.precisao(); fire();
       const my = ++seq; status('<span class="spin" style="width:12px;height:12px;border-width:2px"></span> buscando endereço…');
       try {
         const e = await GP.reverse(lat, lng);
         if (my !== seq) return;
-        fill(e); status('✓ endereço preenchido'); fire();
+        fill(e); status(pinoOk ? '✓ pino marcado — confira se está na porta' : aviso); fire();
         corrigeCorreios(my, e.cep);
       } catch { if (my === seq) status('preencha os campos manualmente'); }
     });
@@ -625,7 +669,7 @@
         $f('cep').value = x.cep;
         if (x.bairro) $f('bairro').value = x.bairro;
         if (x.logradouro) $f('rua').value = x.logradouro;
-        status('✓ endereço conferido nos Correios'); fire();
+        status(pinoOk ? '✓ endereço conferido nos Correios' : aviso); fire();
       } catch {}
     }
     // centro pode vir como {lat, lng} ou [lat, lng]
@@ -637,8 +681,14 @@
       const my = ++seq; status('<span class="spin" style="width:12px;height:12px;border-width:2px"></span> localizando no mapa…');
       const p = await GP.geocode(e);
       if (my !== seq) return;
-      if (p) { pos = p; map.set(p.lat, p.lng, true); status('✓ confira o pino no mapa'); fire(); }
-      else status('não achei no mapa — toque nele para marcar');
+      if (p) {
+        pos = { lat: p.lat, lng: p.lng }; map.precisao();
+        map.set(p.lat, p.lng, true, p.prec === 'aprox' ? 16 : 18);
+        pinoOk = p.prec === 'numero';
+        status(p.prec === 'numero' ? '✓ número achado — confira o pino na porta'
+          : '<b style="color:var(--brand)">⚠ Achei só a rua. Toque no mapa na sua casa (use "Satélite").</b>');
+        fire();
+      } else { pinoOk = false; status('<b style="color:var(--brand)">⚠ Não achei no mapa. Toque nele na sua casa.</b>'); }
     }
     $f('cep').addEventListener('input', async (ev) => {
       let d = GP.digits(ev.target.value).slice(0, 8);
@@ -660,14 +710,21 @@
     KEYS.forEach(k => $f(k) && $f(k).addEventListener('input', fire));
     $f('geo').onclick = async () => {
       const b = $f('geo'), o = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…'; b.disabled = true;
-      try { const p = await GP.geo(); map.set(p.lat, p.lng); } catch (e) { GP.toast(e.message, 'err'); }
+      try {
+        const p = await GP.geo({ onProgress: (x) => { b.innerHTML = '<span class="spin"></span>Precisão ±' + x.acc + ' m…'; } });
+        map.set(p.lat, p.lng); map.precisao(p.lat, p.lng, p.acc);
+        if (p.acc > 30) { pinoOk = false; status(aviso = '<b style="color:var(--brand)">⚠ GPS com precisão de ±' + p.acc + ' m. Arraste o pino até a porta.</b>'); fire(); }
+        else status('✓ localização precisa (±' + p.acc + ' m) — confira o pino');
+      } catch (e) { GP.toast(e.message, 'err'); }
       b.innerHTML = o; b.disabled = false;
     };
     const api = {
       get() { const o = {}; KEYS.forEach(k => o[k] = $f(k) ? $f(k).value.trim() : ''); o.uf = o.uf.toUpperCase(); o.lat = pos && pos.lat; o.lng = pos && pos.lng; return o; },
-      set(e) { KEYS.forEach(k => { if ($f(k)) $f(k).value = e[k] || ''; }); if (e.lat != null) { pos = { lat: e.lat, lng: e.lng }; map.set(e.lat, e.lng, true); } fire(); },
+      set(e) { KEYS.forEach(k => { if ($f(k)) $f(k).value = e[k] || ''; }); if (e.lat != null) { pos = { lat: e.lat, lng: e.lng }; pinoOk = true; map.set(e.lat, e.lng, true); } fire(); },
       get pos() { return pos; },
-      valid() { const e = api.get(); return e.rua.length >= 3 && e.numero.length >= 1 && e.cidade.length >= 2 && !!pos; },
+      valid() { const e = api.get(); return e.rua.length >= 3 && e.numero.length >= 1 && e.cidade.length >= 2 && !!pos && pinoOk; },
+      precisaPino() { return !pos || !pinoOk; },
+      camposOk() { const e = api.get(); return e.rua.length >= 3 && e.numero.length >= 1 && e.cidade.length >= 2 && !!pos; },
       texto() { return GP.fmtEnd(api.get()); },
       refresh() { map.refresh(); },
       focus() { $f('cep').focus(); }

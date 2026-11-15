@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=12078">
+<link rel="stylesheet" href="app.css?v=13966">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -810,8 +810,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=12078"></script>
-<script src="app.js?v=12078"></script>
+<script src="config.js?v=13966"></script>
+<script src="app.js?v=13966"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1051,8 +1051,12 @@
     const box = $('mp-box'); if (!box) return;
     if (!loja) { box.innerHTML = '<p class="small muted" style="margin:0">Crie a loja primeiro. Depois você conecta o Mercado Pago aqui.</p>'; return; }
     if (!('mp_conectado' in loja)) { box.innerHTML = '<div class="warnline">Falta rodar o SQL v23 no Supabase para ligar o pagamento online.</div>'; return; }
+    const passos = (n) => `<ol class="mp-passos">
+        <li class="${n > 1 ? 'ok' : 'on'}"><i>${n > 1 ? ic('check') : '1'}</i><span><b>Conectar</b> sua conta do Mercado Pago</span></li>
+        <li class="${n > 2 ? 'ok' : n === 2 ? 'on' : ''}"><i>${n > 2 ? ic('check') : '2'}</i><span><b>Ligar</b> "Oferecer pagamento online no pedido"</span></li>
+      </ol>`;
     if (!loja.mp_conectado) {
-      box.innerHTML = `<div class="me-card">
+      box.innerHTML = passos(1) + `<div class="me-card">
         <div class="me-ic mp">${ic('card')}</div>
         <div class="grow" style="min-width:0"><b>Conecte sua conta do Mercado Pago</b>
           <div class="small muted">Use a conta onde você quer receber. Pode ser pessoa física ou empresa.</div></div>
@@ -1067,19 +1071,25 @@
       };
       return;
     }
-    box.innerHTML = `<div class="me-card">
+    box.innerHTML = passos(loja.aceita_mp ? 3 : 2) + `<div class="me-card">
         <div class="me-ic ok">${ic('check')}</div>
         <div class="grow" style="min-width:0"><b>Mercado Pago conectado</b><div class="small muted">${esc(loja.mp_conta || 'Conta conectada')}</div></div>
         ${souDono ? `<button type="button" class="btn btn-ghost btn-sm" id="mp-desc">Desconectar</button>` : ''}
       </div>
-      <label class="switch" style="margin:14px 0 6px"><input type="checkbox" id="l-mp" ${loja.aceita_mp ? 'checked' : ''} ${souDono ? '' : 'disabled'}><i></i>Oferecer pagamento online no pedido</label>
-      <p class="small muted" style="margin:0">Pedidos online aparecem como <b>Aguardando pagamento</b> e só podem ser aceitos depois de aprovados. Se ninguém pagar em 2 horas, o pedido é cancelado sozinho e o estoque volta.</p>`;
+      <div class="mp-liga ${loja.aceita_mp ? 'ativo' : 'falta'}">
+        <label class="switch"><input type="checkbox" id="l-mp" ${loja.aceita_mp ? 'checked' : ''} ${souDono ? '' : 'disabled'}><i></i><b>Oferecer pagamento online no pedido</b></label>
+        <div class="small">${loja.aceita_mp
+          ? '✓ Ativo: seus clientes já veem a opção <b>Pagar online agora</b> (Pix ou cartão) no pedido.'
+          : '⚠ <b>Falta este passo.</b> Ligue a chave acima. Sem ela, a opção de pagar online <b>não aparece</b> para os seus clientes.'}</div>
+      </div>
+      <p class="small muted" style="margin:10px 0 0">Pedidos online aparecem como <b>Aguardando pagamento</b> e só podem ser aceitos depois de aprovados. Se ninguém pagar em 2 horas, o pedido é cancelado sozinho e o estoque volta.</p>`;
     $('l-mp').onchange = async (e) => {
       const v = e.target.checked;
       const { data, error } = await sb.from('ff_lojas').update({ aceita_mp: v }).eq('id', loja.id).select().single();
       if (error) { e.target.checked = !v; return GP.toast(GP.err(error), 'err'); }
       loja = data; lojas = lojas.map(l => l.id === loja.id ? loja : l);
-      GP.toast(v ? 'Pagamento online ligado' : 'Pagamento online desligado', 'ok');
+      GP.toast(v ? 'Pronto! Seus clientes já podem pagar online.' : 'Pagamento online desligado', 'ok');
+      renderMP();
     };
     if ($('mp-desc')) $('mp-desc').onclick = async () => {
       if (!(await GP.confirmar('Desconectar o Mercado Pago?', { texto: 'O pagamento online sai do pedido. Os pagamentos que já foram feitos continuam na sua conta do Mercado Pago.', ok: 'Desconectar', perigo: true }))) return;
@@ -1104,7 +1114,8 @@
     try {
       const r = await chamarMP({ acao: 'conectar', loja: l.id, code });
       loja.mp_conectado = true; loja.mp_conta = r.conta || '';
-      renderMP(); GP.toast('Mercado Pago conectado! Agora ligue o pagamento online.', 'ok');
+      renderMP(); GP.toast('Mercado Pago conectado! Falta 1 passo: ligue "Oferecer pagamento online".', 'ok');
+      setTimeout(() => { const x = document.querySelector('.mp-liga'); if (x) { x.scrollIntoView({ behavior: 'smooth', block: 'center' }); x.classList.add('pisca'); } }, 500);
     } catch (er) { GP.toast(er.message, 'err'); }
     return true;
   }
@@ -1156,7 +1167,7 @@
       };
       return;
     }
-    box.innerHTML = `<div class="me-card">
+    box.innerHTML = passos(loja.aceita_mp ? 3 : 2) + `<div class="me-card">
         <div class="me-ic ok">${ic('check')}</div>
         <div class="grow" style="min-width:0"><b>Melhor Envio conectado</b><div class="small muted">${esc(loja.me_conta || 'Conta conectada')}</div></div>
         <div class="me-saldo"><small>Saldo</small><b id="me-saldo">…</b></div>
@@ -2674,7 +2685,7 @@
     if (GP.digits($('l-cnpj').value) && !cnpjMsg()) { $('l-cnpj').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('CNPJ inválido. Corrija ou deixe em branco.', 'err'); }
     const ende = lojaAddr ? lojaAddr.get() : GP.parseEnd(lojaEnd);
     if (!ende.rua || !ende.numero || !ende.cidade) { GP.toast('Preencha o endereço da loja: rua, número e cidade.', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    if (!lojaPos) { GP.toast('Confirme a localização da loja no mapa.', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (!lojaPos || (lojaAddr && lojaAddr.precisaPino())) { GP.toast('Toque no mapa exatamente na porta da loja (use "Satélite" para ver melhor).', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     const pix = $('l-pix').checked;
     if (pix && !$('l-pixchave').value.trim()) { $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err'); }
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }

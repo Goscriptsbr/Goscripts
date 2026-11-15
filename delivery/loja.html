@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=12078">
+<link rel="stylesheet" href="app.css?v=13966">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -333,8 +333,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=12078"></script>
-<script src="app.js?v=12078"></script>
+<script src="config.js?v=13966"></script>
+<script src="app.js?v=13966"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -946,11 +946,12 @@
     } else if (step === 2) {
       const e = entrega();
       txt = 'Ir para o pagamento';
-      ok = $('c-nome').value.trim().length >= 2 && GP.digits($('c-tel').value).length >= 10 && (modoEnt === 'retirada' || (addr && addr.valid() && e && !e.fora));
+      ok = $('c-nome').value.trim().length >= 2 && GP.digits($('c-tel').value).length >= 10 && (modoEnt === 'retirada' || (addr && (e && e.envio ? addr.camposOk() : addr.valid()) && e && !e.fora));
       if (e && e.envio) ok = ok && !!frete.sel && cpfOk() && emailOk();
       if (emailTxt() && !emailOk()) ok = false;
       if (e && e.calc) { ok = false; txt = 'Calculando a rota…'; }
-      if (modoEnt === 'entrega' && addr && !addr.valid() && $('c-nome').value.trim()) txt = 'Preencha rua, número e cidade';
+      if (modoEnt === 'entrega' && addr && !(e && e.envio ? addr.camposOk() : addr.valid()) && $('c-nome').value.trim())
+        txt = addr.camposOk() && addr.precisaPino() ? 'Marque sua casa no mapa' : 'Preencha rua, número e cidade';
     } else {
       txt = pag === 'mp' ? `Continuar para o pagamento · ${brl(total())}` : `Enviar pedido · ${brl(total())}`;
       ok = !!pag && (pag !== 'pix' || !!comprovante) && (pag !== 'dinheiro' || trocoOk());
