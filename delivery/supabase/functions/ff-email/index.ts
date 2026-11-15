@@ -14,6 +14,7 @@
 //   e { acao: 'lembretes' } → chamado de 5 em 5 minutos pelo agendador; manda o lembrete 3 h antes
 //   (o mesmo agendador manda o "Como foi seu pedido?" 40 min depois da entrega, para o cliente avaliar a loja)
 // Avisos no celular do lojista (SQL v29): { acao: 'push_chave' | 'push_pedido' | 'push_agenda' | 'push_teste' }
+// Avisos no celular do motoboy (SQL v31): { acao: 'push_moto', id, evento: 'pronto' | 'coletado' | 'entregue' }
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
 //   nome: ff-email → cole este arquivo inteiro → Deploy → em Details desligue "Verify JWT".
@@ -382,6 +383,9 @@ export async function mandarPush(admin, usuarios, aviso, rede = fetch) {
   const ids = [...new Set((usuarios || []).filter(Boolean))];
   if (!ids.length) return { aparelhos: 0, enviados: 0 };
   const { data: subs } = ok(await admin.from('ff_push').select('id, endpoint, p256dh, auth').in('user_id', ids), 'aparelhos');
+  return mandarParaAparelhos(admin, subs, aviso, rede, 'ff_push');
+}
+export async function mandarParaAparelhos(admin, subs, aviso, rede = fetch, tabela = 'ff_push') {
   if (!subs || !subs.length) return { aparelhos: 0, enviados: 0 };
   const vapid = await chavesVapid(admin);
   const corpo = JSON.stringify(aviso);
@@ -398,7 +402,7 @@ export async function mandarPush(admin, usuarios, aviso, rede = fetch) {
       else if (r.status < 300) enviados++;
     } catch (_) { /* aparelho fora do ar: tenta na próxima */ }
   }));
-  if (mortos.length) await admin.from('ff_push').delete().in('id', mortos);
+  if (mortos.length) await admin.from(tabela).delete().in('id', mortos);
   return { aparelhos: subs.length, enviados };
 }
 
@@ -425,6 +429,57 @@ export async function pushPedido(admin, id, rede = fetch) {
     url: SITE + 'painel.html?loja=' + l.id, tag: 'pedido-' + p.id
   }, rede);
   return { enviado: r.enviados > 0, ...r };
+}
+
+// Motoboys (SQL v31): 'pronto' = loja aceitou um pedido de entrega; 'coletado' = um motoboy saiu com ele; 'entregue'
+export async function pushMoto(admin, id, evento, rede = fetch) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(id || ''))) throw new Falha('pedido_invalido');
+  const st = { pronto: 'preparando', coletado: 'saiu', entregue: 'entregue' }[evento];
+  if (!st) throw new Falha('tipo_invalido');
+  // marca primeiro (uma vez por evento)
+  const { data: p0 } = ok(await admin.from('ff_pedidos').select('id, pushes, status').eq('id', id).maybeSingle(), 'pedido');
+  if (!p0 || p0.status !== st || (p0.pushes || {})[evento]) return { enviado: false, motivo: 'ja_enviado_ou_situacao' };
+  const { data: p } = ok(await admin.from('ff_pedidos').update({ pushes: { ...(p0.pushes || {}), [evento]: new Date().toISOString() } })
+    .eq('id', id).eq('status', st).is('pushes->>' + evento, null).select('*').maybeSingle(), 'pedido');
+  if (!p || p.tipo_entrega !== 'entrega') return { enviado: false, motivo: 'ja_enviado_ou_situacao' };
+  const { data: l } = ok(await admin.from('ff_lojas').select('id, nome, dono').eq('id', p.loja_id).maybeSingle(), 'loja');
+  if (!l) return { enviado: false, motivo: 'loja' };
+  // motoboys do turno atual (o código que está valendo agora)
+  const { data: ac } = await admin.from('ff_entregador_acesso').select('codigo, expira').eq('loja_id', l.id).maybeSingle();
+  let motos = [];
+  if (ac && new Date(ac.expira) > new Date()) {
+    const { data } = ok(await admin.from('ff_push_moto').select('id, endpoint, p256dh, auth, ent_id').eq('loja_id', l.id).eq('codigo', ac.codigo), 'motoboys');
+    motos = data || [];
+  }
+  const ent = p.entregador_nome || 'o entregador';
+  const urlMoto = SITE + 'entregador.html';
+  const cobrar = p.pagamento === 'pix' || p.pagamento === 'mp' ? 'já pago' : p.pagamento === 'dinheiro' ? 'cobrar em dinheiro' : 'levar maquininha';
+  let r1 = { aparelhos: 0, enviados: 0 }, r2 = { aparelhos: 0, enviados: 0 };
+  if (evento === 'pronto') {
+    r1 = await mandarParaAparelhos(admin, motos, {
+      titulo: `Nova entrega para retirar · #${p.numero}`,
+      corpo: `${p.endereco}${p.distancia_km ? ' · ' + String(Number(p.distancia_km).toFixed(1)).replace('.', ',') + ' km' : ''} · ${brl(p.total)} (${cobrar})`,
+      url: urlMoto, tag: 'moto-' + p.id
+    }, rede, 'ff_push_moto');
+  } else if (evento === 'coletado') {
+    r1 = await mandarParaAparelhos(admin, motos.filter(m => !p.entregador_id || m.ent_id !== p.entregador_id), {
+      titulo: `Pedido #${p.numero} coletado por ${ent}`,
+      corpo: `Não precisa ir buscar: ${ent} já saiu com ele. ${p.endereco}`,
+      url: urlMoto, tag: 'moto-' + p.id
+    }, rede, 'ff_push_moto');
+    r2 = await mandarPush(admin, await pessoasDaLoja(admin, l), {
+      titulo: `🛵 ${ent} saiu com o pedido #${p.numero}`,
+      corpo: `${p.cliente_nome} · ${p.endereco}${l.nome ? ' — ' + l.nome : ''}`,
+      url: SITE + 'painel.html?loja=' + l.id, tag: 'pedido-' + p.id
+    }, rede);
+  } else {
+    r2 = await mandarPush(admin, await pessoasDaLoja(admin, l), {
+      titulo: `✅ Pedido #${p.numero} entregue por ${ent}`,
+      corpo: `${p.cliente_nome} · ${brl(p.total)}${l.nome ? ' — ' + l.nome : ''}`,
+      url: SITE + 'painel.html?loja=' + l.id, tag: 'pedido-' + p.id
+    }, rede);
+  }
+  return { enviado: r1.enviados + r2.enviados > 0, motoboys: r1, loja: r2 };
 }
 
 export async function pushAgenda(admin, id, rede = fetch) {
@@ -454,6 +509,7 @@ export async function tratar(req, admin, enviar, rede = fetch) {
   if (b.acao === 'push_chave') return { status: 200, corpo: { chave: (await chavesVapid(admin)).publica } };
   if (b.acao === 'push_pedido') return { status: 200, corpo: await pushPedido(admin, b.id, rede) };
   if (b.acao === 'push_agenda') return { status: 200, corpo: await pushAgenda(admin, b.id, rede) };
+  if (b.acao === 'push_moto') return { status: 200, corpo: await pushMoto(admin, b.id, String(b.evento || ''), rede) };
   if (b.acao === 'push_teste') {
     const jwt = String(req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
     const { data: u } = jwt ? await admin.auth.getUser(jwt) : { data: null };

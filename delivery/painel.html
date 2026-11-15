@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=50670">
+<link rel="stylesheet" href="app.css?v=51585">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -485,6 +485,7 @@
         <h1 id="a-title">Entrar no painel</h1>
         <p class="muted" id="a-sub">Gerencie sua loja, cardápio e pedidos.</p>
         <div class="seg"><button class="on" data-m="in">Entrar</button><button data-m="up">Criar conta</button></div>
+        <div id="g-wrap"></div>
         <form id="f-auth">
           <label class="field"><span>E-mail</span><input class="input" type="email" id="a-email" autocomplete="email" required></label>
           <label class="field up-only hide"><span>Confirme o e-mail</span><input class="input" type="email" id="a-email2" autocomplete="off"></label>
@@ -961,10 +962,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=50670"></script>
-<script src="app.js?v=50670"></script>
-<script src="plano-pagar.js?v=50670"></script>
-<script src="agenda-painel.js?v=50670"></script>
+<script src="config.js?v=51585"></script>
+<script src="app.js?v=51585"></script>
+<script src="plano-pagar.js?v=51585"></script>
+<script src="agenda-painel.js?v=51585"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1082,6 +1083,8 @@
     if (/type=recovery/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
     GP.toast('Senha alterada!', 'ok'); boot();
   };
+  $('g-wrap').innerHTML = GP.botaoGoogle() + '<div class="ou-sep">ou com e-mail e senha</div>';
+  $('g-wrap').querySelector('[data-google]').onclick = () => GP.loginGoogle(sb, cfg.siteUrl + 'painel.html');
   $('b-sair').onclick = async () => { saindo = true; try { await GP.app.desativarPush(sb); } catch (_) {} await sb.auth.signOut(); location.reload(); };
 
   sb.auth.onAuthStateChange((ev, session) => {
@@ -2139,7 +2142,7 @@
             : env ? envioBloco(p) : `<div class="line">${ic('pin')}<div>${esc(p.endereco)}${p.complemento ? ' · ' + esc(p.complemento) : ''}<br><a href="${maps}" target="_blank" rel="noopener" class="small" style="color:var(--brand-2);font-weight:700">Abrir rota no mapa (${km(p.distancia_km)})</a></div></div>`}
           <div class="its">${p.ff_pedido_itens.map(i => `<div><span><b>${i.qtd}×</b> ${esc(i.nome)}${(i.opcoes || []).length ? `<br><span class="small muted">+ ${esc(GP.txtOpcoes(i.opcoes))}</span>` : ''}${i.obs ? `<br><span class="small muted">↳ ${esc(i.obs)}</span>` : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div>
           ${GP.troco(p) > 0 ? `<div class="fee" style="background:var(--warn-soft);color:#7a4f0e;display:flex;gap:10px;padding:10px 12px;border-radius:12px;margin-bottom:10px;font-weight:700">${ic('cash')}<span class="grow">Separar troco para o motoboy</span><span>${brl(GP.troco(p))}</span></div>` : ''}
-          ${p.entregador_nome ? `<div class="line">${ic('bike')}<div class="small">Entregador: <b>${esc(p.entregador_nome)}</b></div></div>` : ''}
+          ${p.entregador_nome ? `<div class="line">${ic('bike')}<div class="small">${p.coletado_em ? `Coletado por <b>${esc(p.entregador_nome)}</b> às ${GP.hora(p.coletado_em)}` : `Entregador: <b>${esc(p.entregador_nome)}</b>`}${p.entregue_em ? ` · entregue às ${GP.hora(p.entregue_em)}` : ''}</div></div>` : ''}
           ${p.observacao ? `<div class="line">${ic('edit')}<div class="small"><b>Obs.:</b> ${esc(p.observacao)}</div></div>` : ''}
           <div class="sum-row small"><span>Subtotal</span><span>${brl(p.subtotal)}</span></div>
           <div class="sum-row small"><span>${env ? 'Frete' : 'Entrega'}</span><span>${brl(p.taxa_entrega)}</span></div>

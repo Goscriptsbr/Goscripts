@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=50670">
+<link rel="stylesheet" href="app.css?v=51585">
 <style>
   .authbox{max-width:420px;margin:36px auto 60px}
   .authbox h1{font-size:1.6rem;letter-spacing:-.03em}
@@ -49,6 +49,7 @@
       <h1 id="a-title">Entrar na sua conta</h1>
       <p class="muted" id="a-sub">Salve seus endereços e acompanhe seus pedidos.</p>
       <div class="seg" id="seg"><button class="on" data-m="in">Entrar</button><button data-m="up">Criar conta</button></div>
+      <div id="g-wrap"></div>
       <form id="f-auth">
         <div id="up-fields" class="hide">
           <label class="field"><span>Seu nome</span><input class="input" id="a-nome" maxlength="80" autocomplete="name"></label>
@@ -118,8 +119,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="config.js?v=50670"></script>
-<script src="app.js?v=50670"></script>
+<script src="config.js?v=51585"></script>
+<script src="app.js?v=51585"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -150,6 +151,11 @@
 
     document.querySelectorAll('.up-only').forEach(x => x.classList.toggle('hide', modo !== 'up'));
     $('a-email2').required = $('a-pass2').required = modo === 'up';
+  };
+  $('g-wrap').innerHTML = GP.botaoGoogle() + '<div class="ou-sep">ou com e-mail e senha</div>';
+  $('g-wrap').querySelector('[data-google]').onclick = () => {
+    const voltar = new URLSearchParams(location.search).get('voltar');
+    GP.loginGoogle(sb, cfg.siteUrl + 'conta.html' + (voltar ? '?voltar=' + encodeURIComponent(voltar) : ''));
   };
   $('f-auth').onsubmit = async (e) => {
     e.preventDefault();
@@ -224,7 +230,7 @@
     perfil = data;
     if (!perfil) {
       const md = user.user_metadata || {}, pend = GP.ls.get('gp_cad_pendente', {});
-      const r = await sb.from('ff_clientes').upsert({ id: user.id, nome: md.nome || pend.nome || '', telefone: md.telefone || pend.telefone || '' }).select().single();
+      const r = await sb.from('ff_clientes').upsert({ id: user.id, nome: md.nome || md.full_name || md.name || pend.nome || '', telefone: md.telefone || pend.telefone || '' }).select().single();
       perfil = r.data || { nome: '', telefone: '' };
       GP.ls.del('gp_cad_pendente');
     }

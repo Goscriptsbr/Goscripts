@@ -6,7 +6,7 @@
   // ---------- Supabase ----------
   // modo: true/'loja' = painel do lojista · 'cliente' = conta do cliente · false = sem login
   GP.client = (modo) => {
-    const key = modo === 'cliente' ? 'gopedido-cliente' : modo ? 'gopedido-auth' : 'gopedido-pub';
+    const key = modo === 'cliente' ? 'gopedido-cliente' : modo === 'moto' ? 'gopedido-moto' : modo ? 'gopedido-auth' : 'gopedido-pub';
     return window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
       auth: modo ? { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: key } : { persistSession: false, storageKey: key }
     });
@@ -1119,6 +1119,13 @@
     document.querySelectorAll('[data-rodape-aqui]').forEach(el => el.appendChild(f.cloneNode(true)));
   };
 
+  // ---------- Entrar com Google (precisa ligar o Google em Supabase → Authentication → Providers) ----------
+  GP.loginGoogle = async (sb, voltarPara) => {
+    const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: voltarPara || location.href.split('#')[0], queryParams: { prompt: 'select_account' } } });
+    if (error) GP.toast(/provider is not enabled|Unsupported provider/i.test(error.message || '') ? 'O login com Google ainda não foi ligado no Supabase.' : GP.err(error), 'err');
+  };
+  GP.botaoGoogle = (texto = 'Continuar com Google') => `<button type="button" class="btn btn-google btn-block" data-google>${GP.ic('user')}<span>${GP.esc(texto)}</span></button>`;
+
   // ---------- Aplicativo (instalar) e avisos no celular/computador (push) ----------
   GP.app = (() => {
     const ua = navigator.userAgent || '';
@@ -1180,7 +1187,8 @@
     }
     const nomeAparelho = () => (ios ? 'iPhone' : android ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'Computador')
       + ' · ' + (/Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox/.test(ua) ? 'Firefox' : /Chrome/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : 'Navegador');
-    async function ativarPush(sb) {
+    // salvar(j, aparelho) opcional: onde guardar o aparelho (motoboy usa outra tabela)
+    async function ativarPush(sb, salvar) {
       if (!temPush()) throw new Error(ios && !instalado() ? 'push_ios' : 'push_sem_suporte');
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') throw new Error('push_negado');
@@ -1195,13 +1203,14 @@
       }
       if (!s) s = await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave });
       const j = s.toJSON();
+      if (salvar) { await salvar(j, nomeAparelho()); return true; }
       const { error: e2 } = await sb.rpc('ff_push_salvar', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_aparelho: nomeAparelho() });
       if (e2) throw e2;
       return true;
     }
-    async function desativarPush(sb) {
+    async function desativarPush(sb, remover) {
       const r = await sw(); const s = r && await r.pushManager.getSubscription();
-      if (s) { await sb.rpc('ff_push_remover', { p_endpoint: s.endpoint }).catch(() => {}); await s.unsubscribe().catch(() => {}); }
+      if (s) { await (remover ? remover(s.endpoint) : sb.rpc('ff_push_remover', { p_endpoint: s.endpoint })).catch(() => {}); await s.unsubscribe().catch(() => {}); }
     }
     async function testarPush(sb) {
       const { data, error } = await sb.functions.invoke('ff-email', { body: { acao: 'push_teste' } });
@@ -1209,8 +1218,8 @@
       return data || {};
     }
     // Já tinha ligado antes: mantém o aparelho cadastrado em nome de quem está logado agora
-    async function renovarPush(sb) {
-      try { if ((await estadoPush()) === 'ligado') await ativarPush(sb); } catch (_) {}
+    async function renovarPush(sb, salvar) {
+      try { if ((await estadoPush()) === 'ligado') await ativarPush(sb, salvar); } catch (_) {}
     }
     return { ios, android, celular, instalado, comoInstalar, instalar, aoMudar: (f) => ouvintes.add(f),
              temPush, estadoPush, ativarPush, desativarPush, testarPush, renovarPush };

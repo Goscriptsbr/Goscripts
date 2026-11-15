@@ -7,11 +7,12 @@
 <meta name="theme-color" content="#16161B">
 <link rel="icon" href="img/icone.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/icone-180.png">
+<link rel="manifest" href="manifest-moto.json">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=50670">
+<link rel="stylesheet" href="app.css?v=51585">
 <style>
   body{background:#F2F1EE}
   .entry{min-height:100vh;display:grid;place-items:center;padding:24px 18px;background:radial-gradient(800px 400px at 50% -10%,rgba(242,69,28,.25),transparent 60%),var(--ink);color:#fff}
@@ -43,6 +44,17 @@
   .del .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
   .del .main{padding:0 16px 16px}
   .del .main .btn{height:54px;font-size:1.02rem;width:100%}
+  .motoban{display:flex;gap:10px;align-items:center;background:#16161B;color:#fff;border-radius:16px;padding:12px 14px;margin:12px 0 0}
+  .motoban .pic{width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.12);display:grid;place-items:center;flex:none}
+  .motoban .pic svg{width:19px;height:19px}
+  .motoban .tx{flex:1;min-width:0}.motoban b{display:block;font-size:.9rem}.motoban span{display:block;font-size:.76rem;opacity:.75;line-height:1.35}
+  .motoban.ok{background:var(--ok-soft);color:#0d6b41}.motoban.ok .pic{background:#fff}
+  .gconta{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin-bottom:14px;font-size:.86rem;text-align:left}
+  .gconta .grow{min-width:0}.gconta b{display:block}
+  .gconta button{color:#fff;opacity:.7;text-decoration:underline;font-size:.8rem}
+  .entry .btn-google{background:#fff;color:var(--ink);border:0}
+  .entry .ou-sep{color:rgba(255,255,255,.55)}.entry .ou-sep::before,.entry .ou-sep::after{background:rgba(255,255,255,.18)}
+  .quem{font-size:.8rem;color:var(--muted);margin-top:6px}
   .its{font-size:.86rem;color:var(--ink-2);background:var(--bg);border-radius:10px;padding:8px 12px}
 </style>
 </head>
@@ -54,6 +66,7 @@
     <div class="big" id="e-ic"></div>
     <h1>Área do entregador</h1>
     <p>Digite o código que a loja te enviou.</p>
+    <div id="g-moto"></div>
     <form id="f-entry">
       <label class="field"><span>Código da loja</span><input class="input" id="e-cod" maxlength="9" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX" required></label>
       <label class="field"><span>Seu nome</span><input class="input" id="e-nome" maxlength="60" autocomplete="name" placeholder="Aparece para a loja e para o cliente" required></label>
@@ -78,6 +91,7 @@
       <button data-t="rota">Em rota <span class="n hide" id="n-rota"></span></button>
       <button data-t="feitas">Entregues</button>
     </div>
+    <div id="moto-av"></div>
     <div id="lista"></div>
     <p class="small muted center" id="upd" style="margin-top:10px"></p>
   </main>
@@ -85,17 +99,68 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=50670"></script>
-<script src="app.js?v=50670"></script>
+<script src="config.js?v=51585"></script>
+<script src="app.js?v=51585"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
-  const sb = GP.client(false);
+  const sb = GP.client('moto');
   $('e-ic').innerHTML = ic('bike'); $('b-sair').innerHTML = ic('logout');
 
   let cod = GP.ls.get('gp_moto_cod', ''), nome = GP.ls.get('gp_moto_nome', '');
   let info = null, lista = [], aba = 'retirar', conhecidos = null, timer = null, rt = null, ultCarga = 0;
-  const meu = (p) => !p.entregador_nome || p.entregador_nome.toLowerCase() === nome.toLowerCase();
+  // Quem é este motoboy: a conta Google (se entrou com Google) ou um código guardado neste aparelho
+  let gUser = null;
+  try { const { data } = await sb.auth.getSession(); gUser = data && data.session ? data.session.user : null; } catch (_) {}
+  let devId = GP.ls.get('gp_moto_id', '');
+  if (!devId) { devId = 'd-' + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)); GP.ls.set('gp_moto_id', devId); }
+  const entId = () => (gUser ? gUser.id : devId);
+  const meu = (p) => p.entregador_id ? p.entregador_id === entId() : (!p.entregador_nome || p.entregador_nome.toLowerCase() === nome.toLowerCase());
+  const gNome = () => { const md = (gUser && gUser.user_metadata) || {}; return (md.full_name || md.name || '').trim(); };
+  if (gUser && !nome && gNome()) nome = gNome();
+  function renderG() {
+    const el = $('g-moto'); if (!el) return;
+    if (gUser) {
+      el.innerHTML = `<div class="gconta">${ic('user')}<div class="grow"><b>${esc(gNome() || gUser.email)}</b><span style="opacity:.7">Conectado com Google</span></div><button type="button" id="g-sair">Trocar</button></div>`;
+      $('g-sair').onclick = async () => { await sb.auth.signOut(); gUser = null; renderG(); };
+    } else {
+      el.innerHTML = GP.botaoGoogle('Entrar com Google') + '<div class="ou-sep">ou só com o seu nome</div>';
+      el.querySelector('[data-google]').onclick = () => {
+        const c = $('e-cod').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (c.length === 8) GP.ls.set('gp_moto_cod', c);
+        if ($('e-nome').value.trim()) GP.ls.set('gp_moto_nome', $('e-nome').value.trim());
+        GP.loginGoogle(sb, GP.cfg.siteUrl + 'entregador.html');
+      };
+    }
+  }
+  renderG();
+
+  // ---- Avisos de nova entrega no celular do motoboy ----
+  const salvarMoto = async (j) => {
+    const { error } = await sb.rpc('ff_moto_push_salvar', { p_codigo: cod, p_ent: entId(), p_nome: nome, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth });
+    if (error) throw error;
+  };
+  const removerMoto = (endpoint) => sb.rpc('ff_moto_push_remover', { p_endpoint: endpoint });
+  async function renderAvisos() {
+    const el = $('moto-av'); if (!el) return;
+    const est = await GP.app.estadoPush(), inst = GP.app.comoInstalar();
+    if (est === 'ligado') {
+      el.innerHTML = inst === 'instalado' || inst === 'nao' ? '' : `<div class="motoban ok"><div class="pic">${ic('bell')}</div><div class="tx"><b>Avisos ligados</b><span>Instale o app para abrir mais rápido.</span></div><button type="button" class="btn btn-soft btn-sm" id="mv-inst">${ic('download')}Instalar</button></div>`;
+    } else if (est === 'sem_suporte') { el.innerHTML = ''; }
+    else {
+      el.innerHTML = `<div class="motoban"><div class="pic">${ic('bell')}</div><div class="tx"><b>Saiba na hora de cada entrega</b><span>${est === 'ios_instalar' ? 'No iPhone, instale o app na tela de início para receber avisos.' : est === 'bloqueado' ? 'Os avisos estão bloqueados no navegador. Libere em Configurações do site → Notificações.' : 'Receba aviso de entrega nova e de quem já coletou, mesmo com o celular bloqueado.'}</span></div>
+        ${est === 'bloqueado' ? '' : `<button type="button" class="btn btn-primary btn-sm" id="mv-on">${est === 'ios_instalar' ? 'Instalar' : 'Ativar'}</button>`}</div>`;
+    }
+    const on = $('mv-on'); if (on) on.onclick = async () => {
+      try {
+        if ((await GP.app.estadoPush()) === 'ios_instalar') { await GP.app.instalar(); return; }
+        await GP.app.ativarPush(sb, salvarMoto); GP.toast('Avisos ligados! Você vai receber cada entrega nova.', 'ok');
+      } catch (e) { GP.toast(GP.err(e), 'err'); }
+      renderAvisos();
+    };
+    const bi = $('mv-inst'); if (bi) bi.onclick = async () => { await GP.app.instalar(); renderAvisos(); };
+  }
+  GP.app.aoMudar(renderAvisos);
 
   const qc = new URLSearchParams(location.search).get('c');
   if (qc) { cod = qc.toUpperCase().replace(/[^A-Z0-9]/g, ''); history.replaceState(null, '', 'entregador.html'); }
@@ -106,6 +171,7 @@
   });
 
   function sair(msg) {
+    GP.app.desativarPush(sb, removerMoto).catch(() => {});
     clearInterval(timer); if (rt) rt.parar(); rt = null; GP.ls.del('gp_moto_cod'); cod = ''; info = null;
     $('v-app').classList.add('hide'); $('v-entry').classList.remove('hide');
     $('e-cod').value = ''; if (msg) GP.toast(msg, 'err');
@@ -121,6 +187,7 @@
     $('h-loja').textContent = l.nome;
     if (l.imagem_url) { $('h-lg').style.backgroundImage = `url('${l.imagem_url}')`; $('h-lg').textContent = ''; } else $('h-lg').textContent = l.nome.trim()[0];
     await carregar();
+    GP.app.renovarPush(sb, salvarMoto).then(renderAvisos);
     if (rt) rt.parar();
     rt = GP.ouvir(sb, 'entregas-' + c, () => { if (cod) carregar(); });
     // Reserva: com o tempo real ligado, confere a cada 1 min; sem ele, a cada 15 s.
@@ -132,6 +199,7 @@
     const c = $('e-cod').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     nome = $('e-nome').value.trim();
     if (c.length !== 8) return GP.toast('O código tem 8 letras/números.', 'err');
+    if (!nome && gUser) nome = gNome();
     if (nome.length < 2) return GP.toast('Digite seu nome.', 'err');
     GP.ls.set('gp_moto_nome', nome);
     const b = $('e-btn'); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
@@ -171,7 +239,7 @@
       return;
     }
     $('lista').innerHTML = arr.map(p => {
-      if (p.status === 'saiu' && !meu(p)) return `<article class="card del" style="opacity:.65"><div class="top"><b style="font-size:1.1rem">#${p.numero}</b><span class="small muted">${esc(p.endereco)}</span><div class="grow"></div><span class="badge b-off"><i class="dot"></i>Com ${esc(p.entregador_nome)}</span></div></article>`;
+      if (p.status === 'saiu' && !meu(p)) return `<article class="card del" style="opacity:.65"><div class="top"><b style="font-size:1.1rem">#${p.numero}</b><span class="small muted">${esc(p.endereco)}</span><div class="grow"></div><span class="badge b-off"><i class="dot"></i>Com ${esc(p.entregador_nome)}</span></div><div class="quem" style="padding:0 16px 12px">${ic('bike')} Coletado por <b>${esc(p.entregador_nome)}</b>${p.coletado_em ? ' às ' + GP.hora(p.coletado_em) : ''}. Não precisa ir buscar.</div></article>`;
       const rota = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving`;
       const waze = `https://waze.com/ul?ll=${p.lat},${p.lng}&navigate=yes`;
       const pago = p.pagamento === 'pix' || p.pagamento === 'mp';
@@ -181,7 +249,8 @@
         <div class="body">
           <div class="addr">${esc(p.endereco)}</div>
           ${p.complemento ? `<div class="small" style="margin-top:4px">${ic('home')} ${esc(p.complemento)}</div>` : ''}
-          <div class="small muted" style="margin-top:6px">${ic('user')} ${esc(p.cliente_nome)}${p.entregador_nome && p.status !== 'preparando' ? ` · entregador: ${esc(p.entregador_nome)}` : ''}</div>
+          <div class="small muted" style="margin-top:6px">${ic('user')} ${esc(p.cliente_nome)}</div>
+          ${p.entregador_nome && p.status !== 'preparando' ? `<div class="quem">${ic('bike')} ${p.status === 'entregue' ? 'Entregue' : 'Coletado'} por <b>${meu(p) ? 'você' : esc(p.entregador_nome)}</b>${p.coletado_em ? ' · saiu às ' + GP.hora(p.coletado_em) : ''}${p.entregue_em ? ' · entregue às ' + GP.hora(p.entregue_em) : ''}</div>` : ''}
           ${pago ? `<div class="money paid">${ic('check')}<span class="grow">Já pago ${p.pagamento === 'mp' ? 'online' : 'no Pix'} — não cobrar</span><span>${brl(p.total)}</span></div>`
             : p.pagamento === 'dinheiro' ? `<div class="money card">${ic('cash')}<span class="grow">Cobrar em dinheiro${GP.troco(p) > 0 ? `<br><small>Cliente paga com ${brl(p.troco_para)} · <b>levar ${brl(GP.troco(p))} de troco</b></small>` : '<br><small>Sem troco (valor certo)</small>'}</span><span>${brl(p.total)}</span></div>`
             : `<div class="money card">${ic('card')}<span class="grow">Cobrar no ${p.pagamento === 'debito' ? 'débito' : 'crédito'} · levar maquininha</span><span>${brl(p.total)}</span></div>`}
@@ -193,7 +262,7 @@
             <a class="btn btn-ghost btn-sm" href="${waze}" target="_blank" rel="noopener">${ic('bike')}Waze</a>
             <a class="btn btn-ghost btn-sm" href="tel:${GP.digits(p.cliente_telefone)}">${ic('phone')}Ligar</a>
             <a class="btn btn-ghost btn-sm" href="${GP.wa(p.cliente_telefone, `Olá ${p.cliente_nome}! Sou ${nome}, entregador da ${info.loja.nome}. Estou com seu pedido #${p.numero}.`)}" target="_blank" rel="noopener">${ic('chat')}WhatsApp</a>
-          </div>` : `<div class="small muted" style="margin-top:8px">Entregue às ${GP.hora(p.atualizado_em)}</div>`}
+          </div>` : `<div class="small muted" style="margin-top:8px">Entregue às ${GP.hora(p.entregue_em || p.atualizado_em)}</div>`}
         </div>
         ${p.status === 'preparando' ? `<div class="main"><button class="btn btn-primary" data-id="${p.id}" data-st="saiu">${ic('bike')}Peguei, saindo para entrega</button></div>` : ''}
         ${p.status === 'saiu' ? `<div class="main"><button class="btn btn-ok" data-id="${p.id}" data-st="entregue">${ic('check')}Confirmar entrega</button></div>` : ''}
@@ -216,7 +285,9 @@
     const st = b.dataset.st;
     if (st === 'entregue' && !(await GP.confirmar('Pedido entregue?', { texto: 'Confirme só depois de entregar ao cliente' + (lista.find(x => x.id === b.dataset.id) && lista.find(x => x.id === b.dataset.id).pagamento !== 'pix' && lista.find(x => x.id === b.dataset.id).pagamento !== 'mp' ? ' e receber o pagamento.' : '.'), ok: 'Sim, entreguei', perigo: false, icone: 'check' }))) return;
     b.disabled = true; b.innerHTML = '<span class="spin"></span>';
-    const { error } = await sb.rpc('ff_entregador_status', { p_codigo: cod, p_pedido: b.dataset.id, p_status: st, p_nome: nome });
+    let { error } = await sb.rpc('ff_entregador_status', { p_codigo: cod, p_pedido: b.dataset.id, p_status: st, p_nome: nome, p_ent: entId() });
+    // SQL v31 ainda não rodou: usa o jeito antigo (só pelo nome)
+    if (error && /p_ent|function|schema cache/i.test(error.message || '') && !/pedido_de_outro|ja_pegou|status_invalido|codigo_invalido/.test(error.message || '')) ({ error } = await sb.rpc('ff_entregador_status', { p_codigo: cod, p_pedido: b.dataset.id, p_status: st, p_nome: nome }));
     if (error) { GP.toast(GP.err(error), 'err'); if (/codigo_invalido/.test(error.message)) return sair(); return carregar(); }
     GP.toast(st === 'saiu' ? 'Boa entrega! O cliente já foi avisado.' : 'Entrega confirmada!', 'ok');
     if (st === 'saiu') { aba = 'rota'; document.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x.dataset.t === 'rota')); }

@@ -443,3 +443,7 @@ body:not(.modo-agenda) .ag-only{display:none!important}
 .fid-dots i.on{background:var(--brand);border:0;color:#fff}
 .fid-dots i.gift{border:2px solid var(--brand);color:var(--brand)}
 .fid-dots i svg{width:12px;height:12px}
+.btn-google{background:#fff;border:1.5px solid var(--line);color:var(--ink);font-weight:700;height:50px}
+.btn-google:hover{border-color:#B9B6B0}
+.ou-sep{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:.8rem}
+.ou-sep::before,.ou-sep::after{content:'';flex:1;height:1px;background:var(--line)}
