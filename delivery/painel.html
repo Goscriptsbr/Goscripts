@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=60936">
+<link rel="stylesheet" href="app.css?v=65648">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -963,7 +963,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=51585"></script>
-<script src="app.js?v=60936"></script>
+<script src="app.js?v=65648"></script>
 <script src="plano-pagar.js?v=51585"></script>
 <script src="agenda-painel.js?v=51585"></script>
 <script>
@@ -1111,7 +1111,7 @@
   window.addEventListener('unhandledrejection', (e) => mostrarErro((e.reason && (e.reason.message || e.reason)) || 'erro'));
   function boot() { if (!booting) booting = doBoot().finally(() => { booting = null; }); return booting; }
   // ================= TERMOS DE USO =================
-  const TERMOS_VERSAO = '1';
+  const TERMOS_VERSAO = '2';
   async function conferirTermos() {
     const { data, error } = await sb.from('ff_termos_aceite').select('versao').eq('user_id', user.id).maybeSingle();
     if (error) return;                                    // SQL v22 ainda não rodou: não trava o painel
@@ -1126,12 +1126,12 @@
       w.innerHTML = `<div class="termos-box" role="dialog" aria-modal="true">
         <div class="termos-ic">${ic('shield')}</div>
         <h3>Termos de Uso do GoPedido</h3>
-        <p>Para continuar usando o painel, leia e aceite os Termos de Uso. Em resumo:</p>
+        <p>${data && data.versao ? 'Os Termos de Uso foram atualizados. Para continuar, leia e aceite a nova versão. O que mudou:' : 'Para continuar usando o painel, leia e aceite os Termos de Uso. Em resumo:'}</p>
         <ul>
-          <li>O GoPedido é só a ferramenta. Quem vende é a sua loja.</li>
-          <li>A loja é responsável pelos produtos, preços, cobrança, entregas, envios, trocas e reembolsos.</li>
-          <li>Os pagamentos vão direto para a loja.</li>
-          <li>Os fretes do Melhor Envio são pagos com o saldo da conta da loja.</li>
+          <li>O GoPedido é só a ferramenta. Quem vende é a sua loja, responsável por produtos, serviços, horários, entregas, trocas e reembolsos.</li>
+          <li>Os pagamentos (Pix, Mercado Pago ou na entrega) vão direto para a loja. Pedido pago online e cancelado é devolvido pela conta Mercado Pago da loja.</li>
+          <li>Planos são pré-pagos, sem renovação automática. Vencido o plano, lojas acima do limite ficam bloqueadas até ajustar.</li>
+          <li>Entregadores, cupons e cartão fidelidade são de responsabilidade da loja.</li>
         </ul>
         <a href="termos.html" target="_blank" rel="noopener" class="btn btn-ghost btn-block btn-sm">Ler os Termos completos</a>
         <label class="check" style="margin:14px 0"><input type="checkbox" id="tm-ck"><span>Li e aceito os Termos de Uso</span></label>
