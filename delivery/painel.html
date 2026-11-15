@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=16601">
+<link rel="stylesheet" href="app.css?v=16741">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -141,6 +141,7 @@
   .ml-nav button.on svg{color:#fff}
   #tab-loja:not(.ml-tudo) .formgrid>.fs{grid-column:1/-1}
   .ml-tudo .ml-nav{display:none}
+  .hrow .madr:not(:empty){margin-top:8px;padding:8px 10px;border-radius:10px;background:#eef2ff;color:#3730a3;line-height:1.4}
   .ml-wz .ml-nav,.ml-wz #ml-save,.ml-wz .cm-head,.ml-wz .tipo-pick>h3,.ml-wz .tipo-pick>h3+p{display:none!important}
   .ml-wz .ml-layout{grid-template-columns:1fr!important;max-width:760px;margin:0 auto}
   .wz{max-width:760px;margin:0 auto 14px}
@@ -662,6 +663,7 @@
             <p class="fsub">Os dias e horários em que a loja recebe pedidos.</p>
             <label class="switch" style="margin-bottom:6px"><input type="checkbox" id="l-auto"><i></i>Abrir e fechar sozinha pelo horário</label>
             <p class="small muted" style="margin-bottom:14px">Ligado: a loja abre e fecha nos horários abaixo (horário de Brasília). O botão lá em cima serve para <b>pausar</b> os pedidos quando precisar. Desligado: você abre e fecha manualmente.</p>
+            <p class="small muted" style="margin:-6px 0 12px">Abre à noite e fecha depois da meia-noite? Marque o dia em que <b>abre</b>. Ex.: sábado das 18:00 à 01:00 fica aberto até 1h da madrugada de domingo.</p>
             <div id="horas"></div>
             <button type="button" class="btn btn-ghost btn-sm" id="b-copiahora" style="margin-top:6px"></button>
           </div>
@@ -868,9 +870,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=16601"></script>
-<script src="app.js?v=16601"></script>
-<script src="agenda-painel.js?v=16601"></script>
+<script src="config.js?v=16741"></script>
+<script src="app.js?v=16741"></script>
+<script src="agenda-painel.js?v=16741"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -2744,8 +2746,18 @@
       const x = h[d] || { aberto: false, ini: '18:00', fim: '23:00' };
       return `<div class="hrow ${x.aberto ? '' : 'off'}" data-d="${d}">
         <div class="hd"><b>${GP.DIAS[d]}</b><span class="st">${x.aberto ? 'Aberto' : 'Fechado'}</span><label class="switch"><input type="checkbox" data-k="aberto" ${x.aberto ? 'checked' : ''}><i></i></label></div>
-        <div class="tm"><input class="input" type="time" data-k="ini" value="${x.ini || '18:00'}"><span>às</span><input class="input" type="time" data-k="fim" value="${x.fim || '23:00'}"></div></div>`;
+        <div class="tm"><input class="input" type="time" data-k="ini" value="${x.ini || '18:00'}"><span>às</span><input class="input" type="time" data-k="fim" value="${x.fim || '23:00'}"></div>
+        <div class="madr small"></div></div>`;
     }).join('');
+    document.querySelectorAll('#horas .hrow').forEach(madrugada);
+  }
+  // Fecha depois da meia-noite: deixa claro que o turno é da noite deste dia e vai até a madrugada do dia seguinte
+  function madrugada(r) {
+    const ini = GP.minDe(r.querySelector('[data-k=ini]').value), fim = GP.minDe(r.querySelector('[data-k=fim]').value);
+    const d = Number(r.dataset.d), on = r.querySelector('[data-k=aberto]').checked;
+    const el = r.querySelector('.madr'); if (!el) return;
+    el.innerHTML = on && ini != null && fim != null && fim <= ini && fim > 0
+      ? `🌙 Vira a madrugada: abre ${GP.DIAS[d].toLowerCase()} às ${r.querySelector('[data-k=ini]').value} e fecha ${GP.DIAS[(d + 1) % 7].toLowerCase()} às ${r.querySelector('[data-k=fim]').value}.` : '';
   }
   function lerHoras() {
     const h = {};
@@ -2758,7 +2770,9 @@
     const r = e.target.closest('.hrow'); if (!r) return;
     const on = r.querySelector('[data-k=aberto]').checked;
     r.classList.toggle('off', !on); r.querySelector('.st').textContent = on ? 'Aberto' : 'Fechado';
+    madrugada(r);
   });
+  $('horas').addEventListener('input', (e) => { const r = e.target.closest('.hrow'); if (r) madrugada(r); });
   $('b-copiahora').onclick = () => { const h = lerHoras(), seg = h[1]; ORDEM_DIAS.forEach(d => h[d] = { ...seg }); renderHoras(h); GP.toast('Horário copiado para todos os dias', 'ok'); };
 
   const togglePix = () => $('pix-cfg').style.display = $('l-pix').checked ? '' : 'none';
