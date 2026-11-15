@@ -315,7 +315,7 @@
   GP.geo = (opts = {}) => new Promise((ok, fail) => {
     if (!navigator.geolocation) return fail(new Error('Seu navegador não permite localização.'));
     const alvo = opts.alvo || 15, limite = opts.limite || 12000;
-    let best = null, fim = false, wid = null, tm = null;
+    let best = null, fim = false, wid = null, tm = null; const t0 = Date.now();
     const acabar = () => {
       if (fim) return; fim = true;
       if (wid != null) navigator.geolocation.clearWatch(wid);
@@ -327,7 +327,8 @@
         const acc = Math.round(p.coords.accuracy || 9999);
         if (!best || acc < best.acc) best = { lat: p.coords.latitude, lng: p.coords.longitude, acc };
         if (opts.onProgress) opts.onProgress(best);
-        if (best.acc <= alvo) acabar();
+        // computador sem GPS: a posição vem pela internet (±km) e não melhora — não adianta esperar
+        if (best.acc <= alvo || (best.acc > 3000 && Date.now() - t0 > 2500)) acabar();
       },
       (e) => {
         if (best) return acabar();
@@ -712,9 +713,16 @@
       const b = $f('geo'), o = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…'; b.disabled = true;
       try {
         const p = await GP.geo({ onProgress: (x) => { b.innerHTML = '<span class="spin"></span>Precisão ±' + x.acc + ' m…'; } });
-        map.set(p.lat, p.lng); map.precisao(p.lat, p.lng, p.acc);
-        if (p.acc > 30) { pinoOk = false; status(aviso = '<b style="color:var(--brand)">⚠ GPS com precisão de ±' + p.acc + ' m. Arraste o pino até a porta.</b>'); fire(); }
-        else status('✓ localização precisa (±' + p.acc + ' m) — confira o pino');
+        if (p.acc > 1000) {
+          // sem GPS (computador): é só a região da internet — não mexe no pino nem nos campos
+          GP.toast('Este aparelho não tem GPS: a localização veio aproximada pela internet (±' + (p.acc >= 1000 ? Math.round(p.acc / 1000) + ' km' : p.acc + ' m') + '). Digite o CEP e o número ou toque no mapa.', 'err');
+          return;
+        }
+        if (p.acc > 30) {
+          // GPS fraco: coloca o pino sem preencher os campos e pede para ajustar
+          pos = { lat: p.lat, lng: p.lng }; map.set(p.lat, p.lng, true, 17); map.precisao(p.lat, p.lng, p.acc);
+          pinoOk = false; status(aviso = '<b style="color:var(--brand)">⚠ GPS com precisão de ±' + p.acc + ' m. Arraste o pino até a porta.</b>'); fire();
+        } else { map.set(p.lat, p.lng); map.precisao(p.lat, p.lng, p.acc); status('✓ localização precisa (±' + p.acc + ' m) — confira o pino'); }
       } catch (e) { GP.toast(e.message, 'err'); }
       b.innerHTML = o; b.disabled = false;
     };

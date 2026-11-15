@@ -22,8 +22,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=13966">
-<link rel="stylesheet" href="site.css?v=13966">
+<link rel="stylesheet" href="app.css?v=14265">
+<link rel="stylesheet" href="site.css?v=14265">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -312,8 +312,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=13966"></script>
-<script src="app.js?v=13966"></script>
+<script src="config.js?v=14265"></script>
+<script src="app.js?v=14265"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -371,7 +371,7 @@
   };
   locChip();
   $('loc-chip').onclick = async () => {
-    try { pos = await GP.geo(); GP.ls.set('gp_pos', pos); locChip(); render(); GP.toast('Localização atualizada', 'ok'); }
+    try { pos = await GP.geo(); GP.ls.set('gp_pos', pos); locChip(); render(); GP.toast(pos.acc > 1000 ? 'Localização aproximada (este aparelho não tem GPS). Pelo celular fica exata.' : 'Localização atualizada', pos.acc > 1000 ? '' : 'ok'); }
     catch (e) { GP.toast(e.message, 'err'); }
   };
 
