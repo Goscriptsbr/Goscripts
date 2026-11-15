@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=49442">
+<link rel="stylesheet" href="app.css?v=49968">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -336,8 +336,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=49442"></script>
-<script src="app.js?v=49442"></script>
+<script src="config.js?v=49968"></script>
+<script src="app.js?v=49968"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -428,6 +428,8 @@
   let fid = null, fidBusca = '';
   const FID = loja.fidelidade && loja.fidelidade.ativo ? loja.fidelidade : null;
   const fidPremioTxt = (f) => f.tipo === 'pct' ? `${Number(f.valor)}% de desconto` : `${brl(f.valor)} de desconto`;
+  const fidMin = Number((FID && FID.minimo) || 0);
+  const fidMinTxt = fidMin > 0 ? ` de pelo menos ${brl(fidMin)}` : '';
   const fidDots = (n, m) => `<span class="fid-dots">${Array.from({ length: Math.min(m, 20) }, (_, i) => `<i class="${i < n ? 'on' : ''}">${i < n ? ic('check') : ''}</i>`).join('')}<i class="gift">${ic('gift')}</i></span>`;
   async function carregarFid(tel) {
     const t = GP.digits(tel || '').slice(-11);
@@ -442,17 +444,18 @@
     const p = fid && fid.tel ? fid : null;
     el.className = 'fidcard';
     el.innerHTML = `<span class="fi">${ic('gift')}</span><span class="ft"><b>Cartão fidelidade</b>
-      <span>${p && p.premio ? `Você ganhou <b>${fidPremioTxt(FID)}</b>! Já entra no seu próximo pedido.` : p ? `Você tem <b>${p.carimbos} de ${FID.meta}</b> pedidos. Faltam ${FID.meta - p.carimbos} para ganhar ${fidPremioTxt(FID)}.` : `A cada <b>${FID.meta} pedidos</b> entregues, você ganha <b>${fidPremioTxt(FID)}</b> no próximo.`}</span>
+      <span>${p && p.premio ? `Você ganhou <b>${fidPremioTxt(FID)}</b>! Já entra no seu próximo pedido${fidMin > 0 ? ' a partir de ' + brl(fidMin) : ''}.` : p ? `Você tem <b>${p.carimbos} de ${FID.meta}</b> pedidos. Faltam ${FID.meta - p.carimbos} para ganhar ${fidPremioTxt(FID)}.` : `A cada <b>${FID.meta} pedidos</b>${fidMinTxt} entregues, você ganha <b>${fidPremioTxt(FID)}</b> no próximo.`}</span>
       ${p ? fidDots(p.premio ? FID.meta : p.carimbos, FID.meta) : ''}</span>`;
   }
   function renderFidCo() {
     const el = $('fid-co'); if (!el) return;
     if (!FID || !fid) { el.innerHTML = ''; return; }
     const prem = fidPremioTxt(FID);
-    el.innerHTML = `<div class="fidcard co ${fid.premio && !cupom ? 'win' : ''}"><span class="fi">${ic('gift')}</span><span class="ft">
+    el.innerHTML = `<div class="fidcard co ${fidPremio() ? 'win' : ''}"><span class="fi">${ic('gift')}</span><span class="ft">
       ${fid.premio ? (cupom ? `<b>Prêmio guardado</b><span>Seu prêmio do cartão fidelidade (${prem}) não soma com cupom. Ele fica para o próximo pedido, ou remova o cupom para usar agora.</span>`
+                              : subtotal() < fidMin ? `<b>Você tem um prêmio! 🎁</b><span>O seu ${prem} vale em pedidos a partir de ${brl(fidMin)}. Faltam ${brl(fidMin - subtotal())} na sacola para usar agora.</span>`
                               : `<b>Cartão completo! 🎉</b><span>Você ganhou <b>${prem}</b> neste pedido. Já está no total.</span>`)
-                   : `<b>Cartão fidelidade: ${fid.carimbos} de ${FID.meta}</b><span>Este pedido conta quando for entregue. Faltam ${FID.meta - fid.carimbos} para ganhar ${prem}.</span>${fidDots(fid.carimbos, FID.meta)}`}
+                   : `<b>Cartão fidelidade: ${fid.carimbos} de ${FID.meta}</b><span>${subtotal() < fidMin ? `Pedidos a partir de ${brl(fidMin)} ganham carimbo. Faltam ${brl(fidMin - subtotal())} para este contar.` : 'Este pedido conta quando for entregue.'} Faltam ${FID.meta - fid.carimbos} para ganhar ${prem}.</span>${fidDots(fid.carimbos, FID.meta)}`}
     </span></div>`;
   }
   if (FID) {
@@ -779,7 +782,7 @@
   };
   let cupom = null;   // {codigo, tipo, valor, minimo}
   // Cartão fidelidade: prêmio entra sozinho quando não tem cupom (mesma conta do servidor)
-  const fidPremio = () => !cupom && fid && fid.premio && fid.tel === GP.digits($('c-tel').value).slice(-11);
+  const fidPremio = () => !cupom && fid && fid.premio && fid.tel === GP.digits($('c-tel').value).slice(-11) && subtotal() >= Number(fid.minimo || 0);
   const fidValor = (sub) => fid.tipo === 'pct' ? Math.round(sub * Math.min(Number(fid.valor), 100)) / 100 : Math.min(Number(fid.valor), sub);
   const descontoCalc = () => {
     if (!cupom) {

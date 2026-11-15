@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=49442">
+<link rel="stylesheet" href="app.css?v=49968">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -228,8 +228,7 @@
   .fid-top .tx{flex:1;min-width:0}
   .fid-top b{display:block}
   .fid-top span{font-size:.8rem;color:var(--muted)}
-  .fid-cfg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px}
-  @media(max-width:560px){.fid-cfg{grid-template-columns:1fr 1fr}.fid-cfg .fv{grid-column:1/-1}}
+  .fid-cfg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
   .fid-cfg .field{margin:0}
   .fid-prev{margin-top:12px;background:var(--bg);border-radius:14px;padding:12px;font-size:.85rem;color:var(--ink-2);line-height:1.5}
   .fid-dots{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
@@ -962,10 +961,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=49442"></script>
-<script src="app.js?v=49442"></script>
-<script src="plano-pagar.js?v=49442"></script>
-<script src="agenda-painel.js?v=49442"></script>
+<script src="config.js?v=49968"></script>
+<script src="app.js?v=49968"></script>
+<script src="plano-pagar.js?v=49968"></script>
+<script src="agenda-painel.js?v=49968"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1938,7 +1937,7 @@
   let fidUsados = null;
   const fidCfg = () => Object.assign({ ativo: false, meta: 10, tipo: 'pct', valor: 10 }, loja.fidelidade || {});
   const fidPremioTxt = (f) => f.tipo === 'pct' ? `${Number(f.valor)}% de desconto` : `${brl(f.valor)} de desconto`;
-  const fidResumo = (f) => f.ativo ? `Ligado · a cada ${f.meta} pedidos, ${fidPremioTxt(f)}${fidUsados != null ? ` · ${fidUsados} prêmio${fidUsados === 1 ? '' : 's'} usado${fidUsados === 1 ? '' : 's'}` : ''}` : 'Faça o cliente voltar: a cada X pedidos entregues, ele ganha um desconto.';
+  const fidResumo = (f) => f.ativo ? `Ligado · a cada ${f.meta} pedidos${Number(f.minimo) > 0 ? ' de ' + brl(f.minimo) + '+' : ''}, ${fidPremioTxt(f)}${fidUsados != null ? ` · ${fidUsados} prêmio${fidUsados === 1 ? '' : 's'} usado${fidUsados === 1 ? '' : 's'}` : ''}` : 'Faça o cliente voltar: a cada X pedidos entregues, ele ganha um desconto.';
   function renderFid(forcar) {
     const box = $('fid-box'); if (!box || !loja) return;
     const f = fidCfg();
@@ -1952,8 +1951,9 @@
         <label class="field"><span>Pedidos para ganhar</span><input class="input" id="fid-meta" type="number" inputmode="numeric" min="2" max="50" value="${f.meta}"></label>
         <label class="field"><span>Tipo do prêmio</span><select class="input" id="fid-tipo"><option value="pct" ${f.tipo === 'pct' ? 'selected' : ''}>% de desconto</option><option value="valor" ${f.tipo === 'valor' ? 'selected' : ''}>R$ de desconto</option></select></label>
         <label class="field fv"><span id="fid-vlb">${f.tipo === 'pct' ? 'Desconto (%)' : 'Desconto (R$)'}</span><input class="input" id="fid-valor" inputmode="decimal" value="${f.tipo === 'pct' ? Number(f.valor) : GP.fmtMoeda(f.valor)}"></label>
+        <label class="field"><span>Pedido mínimo (opcional)</span><input class="input" id="fid-min" inputmode="decimal" placeholder="Sem mínimo" value="${Number(f.minimo) > 0 ? GP.fmtMoeda(f.minimo) : ''}"></label>
       </div>
-      <div class="fid-prev" id="fid-prev"><b>Como o cliente vê:</b> a cada <b>${f.meta}</b> pedidos entregues, o próximo pedido sai com <b>${premio}</b>. Ele acompanha os carimbos na página da loja.<div class="fid-dots">${dots}</div></div>
+      <div class="fid-prev" id="fid-prev"><b>Como o cliente vê:</b> a cada <b>${f.meta}</b> pedidos entregues${Number(f.minimo) > 0 ? ` de pelo menos <b>${brl(f.minimo)}</b>` : ''}, o próximo pedido${Number(f.minimo) > 0 ? ` (também a partir de ${brl(f.minimo)})` : ''} sai com <b>${premio}</b>. Ele acompanha os carimbos na página da loja.<div class="fid-dots">${dots}</div></div>
       <p class="small muted" style="margin:10px 0 0">O cliente é reconhecido pelo número de celular. Só contam pedidos <b>entregues</b> (os já entregues antes de ligar também valem). O desconto entra sozinho e não soma com cupom: se ele usar um cupom, o prêmio fica guardado para o próximo pedido.</p>
       <button type="button" class="btn btn-primary btn-sm" id="fid-salvar" style="margin-top:12px">Salvar cartão fidelidade</button>`;
     $('fid-tipo').onchange = () => { const t = $('fid-tipo').value; $('fid-vlb').textContent = t === 'pct' ? 'Desconto (%)' : 'Desconto (R$)'; $('fid-valor').value = t === 'pct' ? '10' : '10,00'; };
@@ -1961,6 +1961,7 @@
       if ($('fid-tipo').value === 'valor') { const d = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 7); e.target.value = d ? GP.fmtMoeda(Number(d) / 100) : ''; }
       else e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
     };
+    $('fid-min').oninput = (e) => { const d = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 7); e.target.value = d ? GP.fmtMoeda(Number(d) / 100) : ''; };
     $('fid-on').onchange = () => salvarFid(true);
     $('fid-salvar').onclick = () => salvarFid(false);
   }
@@ -1970,7 +1971,8 @@
     const ativo = $('fid-on').checked;
     if (!(meta >= 2 && meta <= 50)) { $('fid-on').checked = !!(loja.fidelidade && loja.fidelidade.ativo); return GP.toast('Escolha de 2 a 50 pedidos para ganhar o prêmio.', 'err'); }
     if (!(valor > 0) || (tipo === 'pct' && valor > 100)) { $('fid-on').checked = !!(loja.fidelidade && loja.fidelidade.ativo); return GP.toast(tipo === 'pct' ? 'O desconto precisa ser de 1% a 100%.' : 'Informe o valor do desconto.', 'err'); }
-    const fidelidade = { ativo, meta, tipo, valor };
+    const minimo = $('fid-min').value.trim() ? num($('fid-min').value) : 0;
+    const fidelidade = { ativo, meta, tipo, valor, ...(minimo > 0 ? { minimo } : {}) };
     const { data, error } = await sb.from('ff_lojas').update({ fidelidade }).eq('id', loja.id).select().single();
     if (error) {
       $('fid-on').checked = !ativo;
