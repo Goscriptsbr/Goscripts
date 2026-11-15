@@ -243,7 +243,28 @@ export async function lembretes(admin, enviar, agora = new Date()) {
     }
     try { await enviarAgenda(admin, enviar, a, 'ag_lembrete'); enviados++; } catch (_) { falhas++; }
   }
-  return { enviados, pulados, falhas };
+  // Planos que vencem em até 5 dias (um aviso por vencimento)
+  let planos = 0;
+  try {
+    const hoje = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(agora);
+    const lim = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date(agora.getTime() + 5 * 86400e3));
+    const { data: vs } = await admin.from('ff_assinaturas').select('email, plano, valido_ate, aviso_em')
+      .neq('plano', 'gratis').gte('valido_ate', hoje).lte('valido_ate', lim).is('aviso_em', null).limit(30);
+    for (const v of vs || []) {
+      ok(await admin.from('ff_assinaturas').update({ aviso_em: hoje }).eq('email', v.email), 'aviso plano');
+      const dias = Math.round((new Date(v.valido_ate + 'T12:00:00Z').getTime() - new Date(hoje + 'T12:00:00Z').getTime()) / 86400e3);
+      const nome = v.plano === 'premium' ? 'Premium' : 'Profissional';
+      const html = moldura({
+        previa: `Seu plano ${nome} do GoPedido vence ${dias === 0 ? 'hoje' : dias === 1 ? 'amanhã' : 'em ' + dias + ' dias'}.`,
+        titulo: `Seu plano vence ${dias === 0 ? 'hoje' : dias === 1 ? 'amanhã' : 'em ' + dias + ' dias'}`,
+        texto: `O plano <b>${nome}</b> da sua loja no GoPedido vale até <b>${v.valido_ate.split('-').reverse().join('/')}</b>. Renove pelo painel com Pix ou cartão para não perder os limites do plano. Pagando 2 ou 3 meses de uma vez sai mais barato.<br><br>Se não renovar, a conta volta para o plano Grátis sozinha. Nada é apagado.`,
+        botao: { texto: 'Renovar meu plano', url: SITE + 'painel.html?planos=1' }
+      }).replace('Você recebeu este e-mail porque fez um pedido pelo GoPedido.<br>O GoPedido é a plataforma; a venda e a entrega são feitas pela loja.', 'Você recebeu este e-mail porque tem uma loja no GoPedido.');
+      try { await enviar({ para: v.email, assunto: `Seu plano ${nome} do GoPedido vence ${dias === 0 ? 'hoje' : dias === 1 ? 'amanhã' : 'em ' + dias + ' dias'}`, html, texto: textoSimples(html), loja: '' }); planos++; }
+      catch (_) { await admin.from('ff_assinaturas').update({ aviso_em: null }).eq('email', v.email); }
+    }
+  } catch (_) { /* sem o SQL v27 ainda */ }
+  return { enviados, pulados, falhas, planos };
 }
 
 export async function tratar(req, admin, enviar) {

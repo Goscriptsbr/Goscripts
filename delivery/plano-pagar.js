@@ -1,0 +1,154 @@
+// GoPedido — compra de plano dentro do painel (Pix ou cartão pelo Mercado Pago, liberação automática)
+(function () {
+  const { esc, brl, ic } = GP;
+  const NOMES = { profissional: 'Profissional', premium: 'Premium' };
+  const MSG = {
+    nao_logado: 'Sua sessão expirou. Entre de novo.', so_dono: 'Só o dono da conta pode assinar um plano.',
+    plano_invalido: 'Plano inválido.', limite_meses: 'Você já tem o máximo de 3 meses pagos neste plano.',
+    plano_vitalicio: 'Sua conta tem um plano liberado sem vencimento. Fale com a gente pelo WhatsApp para mudar.',
+    planos_nao_configurados: 'O pagamento automático dos planos ainda não foi ligado. Assine pelo WhatsApp.',
+    cartao_invalido: 'Confira os dados do cartão.'
+  };
+  let sb = null, info = null, plano = 'profissional', meses = 1, aba = 'pix', poll = null, aoPagar = null, brick = null;
+  const dataBR = (d) => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '';
+
+  async function chamar(body) {
+    const { data, error } = await sb.functions.invoke('ff-mercadopago', { body });
+    if (error) {
+      let j = null; try { j = error.context && await error.context.json(); } catch (_) {}
+      const cod = (j && j.error) || '';
+      const e = new Error(MSG[cod] || (cod === 'mp_erro' && j.detalhe ? 'Mercado Pago: ' + j.detalhe : '') || (j && (j.detalhe || j.error)) || GP.err(error));
+      e.codigo = cod; throw e;
+    }
+    return data;
+  }
+
+  function fechar() {
+    clearInterval(poll); poll = null;
+    try { if (brick && brick.unmount) brick.unmount(); } catch (_) {}
+    brick = null;
+    const w = document.getElementById('pl-mod'); if (w) { w.classList.remove('on'); setTimeout(() => w.remove(), 180); }
+  }
+
+  function moldura() {
+    fechar();
+    const w = document.createElement('div');
+    w.className = 'cfm-wrap'; w.id = 'pl-mod';
+    w.innerHTML = `<div class="cfm plp" role="dialog" aria-modal="true"><button class="icon-btn pl-x" type="button">${ic('x')}</button><div id="plp-c"><p class="center" style="padding:30px 0"><span class="spin"></span></p></div></div>`;
+    document.body.appendChild(w);
+    requestAnimationFrame(() => w.classList.add('on'));
+    w.addEventListener('click', (e) => { if (e.target === w || e.target.closest('.pl-x')) fechar(); });
+    return w;
+  }
+  const $c = () => document.getElementById('plp-c');
+
+  function render() {
+    const t = info.tabela[plano] || {};
+    const p1 = Number((t[1] || {}).valor) || (plano === 'premium' ? 100 : 50);
+    const sel = t[meses] || {};
+    $c().innerHTML = `
+      <h3 style="margin:0 0 4px">Assinar plano</h3>
+      <p class="small muted" style="margin:0 0 14px">Pague pelo Pix ou cartão. O plano é liberado na hora para <b>${esc(info.email)}</b>.</p>
+      <div class="seg3 plp-pl" style="grid-template-columns:1fr 1fr"><button type="button" data-pl="profissional" class="${plano === 'profissional' ? 'on' : ''}">Profissional</button><button type="button" data-pl="premium" class="${plano === 'premium' ? 'on' : ''}">Premium</button></div>
+      <div class="plp-ms">${[1, 2, 3].map(m => {
+        const o = t[m] || {}; const bloq = !!o.erro;
+        const eco = !bloq && m > 1 ? Math.round(p1 * m - Number(o.valor)) : 0;
+        return `<button type="button" class="plp-m ${meses === m ? 'on' : ''} ${bloq ? 'dis' : ''}" data-m="${m}" ${bloq ? 'disabled' : ''}>
+          <b>${m} ${m > 1 ? 'meses' : 'mês'}</b>
+          <span class="v">${bloq ? '—' : brl(o.valor)}</span>
+          <small>${bloq ? (o.erro === 'limite_meses' ? 'passa de 3 meses' : 'indisponível') : eco ? `economize ${brl(eco)}` : `${brl(p1)}/mês`}</small>
+        </button>`;
+      }).join('')}</div>
+      ${sel.erro ? `<div class="warnline" style="margin:10px 0">${esc(MSG[sel.erro] || sel.erro)}</div>` : `
+      <div class="plp-res"><span>Plano ${NOMES[plano]} válido até</span><b>${dataBR(sel.valido_ate)}</b>
+        ${sel.credito_dias ? `<small>Inclui ${sel.credito_dias} dias de crédito do seu plano atual.</small>` : sel.atual === plano && sel.atual_ate ? `<small>Soma depois do vencimento atual (${dataBR(sel.atual_ate)}).</small>` : ''}</div>
+      <div class="seg3 plp-ab" style="grid-template-columns:1fr 1fr"><button type="button" data-ab="pix" class="${aba === 'pix' ? 'on' : ''}">${ic('pix')}Pix</button><button type="button" data-ab="cartao" class="${aba === 'cartao' ? 'on' : ''}">${ic('card')}Cartão</button></div>
+      <div id="plp-pg"></div>`}
+      ${info.historico && info.historico.length ? `<details class="plp-h"><summary>Pagamentos anteriores</summary>${info.historico.map(h => `<div><span>${dataBR(h.criado_em)} · ${NOMES[h.plano]} ${h.meses}m · ${brl(h.valor)}</span><b class="${h.status}">${{ aprovado: 'Pago', pendente: 'Aguardando', recusado: 'Recusado', estornado: 'Devolvido' }[h.status]}</b></div>`).join('')}</details>` : ''}`;
+    $c().querySelector('.plp-pl').onclick = (e) => { const b = e.target.closest('[data-pl]'); if (!b) return; plano = b.dataset.pl; if ((info.tabela[plano][meses] || {}).erro) meses = [1, 2, 3].find(m => !(info.tabela[plano][m] || {}).erro) || 1; render(); };
+    $c().querySelector('.plp-ms').onclick = (e) => { const b = e.target.closest('[data-m]'); if (!b || b.disabled) return; meses = Number(b.dataset.m); render(); };
+    const ab = $c().querySelector('.plp-ab'); if (ab) ab.onclick = (e) => { const b = e.target.closest('[data-ab]'); if (!b) return; aba = b.dataset.ab; render(); };
+    if (!sel.erro) (aba === 'pix' ? areaPix : areaCartao)(sel);
+  }
+
+  function areaPix(sel) {
+    clearInterval(poll);
+    const el = document.getElementById('plp-pg');
+    el.innerHTML = `<button type="button" class="btn btn-primary btn-block" id="plp-gerar">${ic('pix')}Gerar Pix de ${brl(sel.valor)}</button>`;
+    el.querySelector('#plp-gerar').onclick = async (e) => {
+      const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Gerando…';
+      try {
+        const r = await chamar({ acao: 'plano_pix', plano, meses });
+        if (r.pago) return pago();
+        el.innerHTML = `<div class="pixqr">${r.qr_img ? `<img alt="QR Code do Pix" src="data:image/png;base64,${r.qr_img}">` : ''}</div>
+          <p class="small center" style="margin:8px 0">Abra o app do banco, escolha <b>Pix → Ler QR Code</b> ou use o copia e cola:</p>
+          <div class="row" style="gap:6px"><input class="input" readonly value="${esc(r.qr)}" id="plp-cc"><button type="button" class="btn btn-dark btn-sm" id="plp-cp">${ic('copy')}Copiar</button></div>
+          <p class="small muted center" style="margin-top:10px"><span class="dot-live"></span> Esperando o pagamento… o plano libera sozinho. O Pix vale 30 minutos.</p>`;
+        el.querySelector('#plp-cp').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(r.qr); GP.toast('Código Pix copiado', 'ok'); };
+        poll = setInterval(async () => {
+          try { const c = await chamar({ acao: 'plano_conferir', id: r.id }); if (c.status === 'aprovado') pago(c.valido_ate); } catch (_) {}
+        }, 5000);
+      } catch (er) { b.disabled = false; b.innerHTML = ic('pix') + 'Gerar Pix de ' + brl(sel.valor); GP.toast(er.message, 'err'); }
+    };
+  }
+
+  function carregarSDK() {
+    if (window.MercadoPago) return Promise.resolve();
+    return new Promise((ok, falha) => { const s = document.createElement('script'); s.src = 'https://sdk.mercadopago.com/js/v2'; s.onload = ok; s.onerror = () => falha(new Error('sdk')); document.head.appendChild(s); });
+  }
+  async function areaCartao(sel) {
+    clearInterval(poll);
+    const el = document.getElementById('plp-pg');
+    el.innerHTML = `<div id="plp-card"><p class="small muted center" style="padding:20px 0"><span class="spin"></span> Carregando o formulário seguro do Mercado Pago…</p></div>
+      <p class="small muted center" style="margin-top:6px">${ic('lock')} Os dados do cartão vão direto para o Mercado Pago.</p>`;
+    try {
+      if (!info.public_key) throw new Error('chave');
+      await carregarSDK();
+      if (typeof window.MercadoPago !== 'function') throw new Error('sdk');
+      const mpx = new window.MercadoPago(info.public_key, { locale: 'pt-BR' });
+      try { if (brick && brick.unmount) brick.unmount(); } catch (_) {}
+      document.getElementById('plp-card').innerHTML = '';
+      brick = await mpx.bricks().create('cardPayment', 'plp-card', {
+        initialization: { amount: Number(sel.valor), payer: { email: info.email } },
+        customization: { paymentMethods: { maxInstallments: meses, types: { excluded: ['debit_card', 'prepaid_card'] } }, visual: { style: { customVariables: { baseColor: '#F2451C' } } } },
+        callbacks: {
+          onReady: () => {}, onError: () => {},
+          onSubmit: async (dados) => {
+            const r = await chamar({ acao: 'plano_cartao', plano, meses, dados }).catch(er => ({ erro: er.message }));
+            if (r.status === 'aprovado') return pago(r.valido_ate);
+            if (r.status === 'pendente') { GP.toast('Pagamento em análise. O plano libera assim que o Mercado Pago aprovar.'); return; }
+            GP.toast(r.erro || 'O cartão não foi aprovado. Tente outro cartão ou o Pix.' + (r.detalhe ? ' (' + r.detalhe + ')' : ''), 'err');
+            throw new Error('recusado');
+          }
+        }
+      });
+    } catch (er) {
+      el.innerHTML = `<div class="warnline">Não foi possível abrir o cartão agora. Use o Pix ou tente de novo em instantes.</div>`;
+    }
+  }
+
+  function pago(ate) {
+    clearInterval(poll); poll = null;
+    $c().innerHTML = `<div class="center" style="padding:10px 0 4px">
+      <div class="cfm-ic" style="background:#e7f6ec;color:#166534;margin:0 auto 10px">${ic('check')}</div>
+      <h3 style="margin:0 0 6px">Plano ${NOMES[plano]} liberado!</h3>
+      <p class="small muted" style="margin:0 0 16px">${ate ? 'Válido até <b>' + dataBR(ate) + '</b>. ' : ''}Obrigado por assinar o GoPedido. Os limites novos já valem agora.</p>
+      <button type="button" class="btn btn-primary btn-block" id="plp-ok">Continuar</button></div>`;
+    document.getElementById('plp-ok').onclick = fechar;
+    if (aoPagar) aoPagar();
+  }
+
+  window.PlanoPagar = {
+    async abrir(cliente, o = {}) {
+      sb = cliente; aoPagar = o.aoPagar || null;
+      plano = o.plano === 'premium' ? 'premium' : 'profissional'; meses = 1; aba = 'pix';
+      moldura();
+      try { info = await chamar({ acao: 'plano_info' }); }
+      catch (er) { $c().innerHTML = `<h3 style="margin:0 0 6px">Assinar plano</h3><p class="small">${esc(er.message)}</p>${o.whats ? `<a class="btn btn-primary btn-block" target="_blank" rel="noopener" href="${o.whats}">${ic('chat')}Assinar pelo WhatsApp</a>` : ''}`; return; }
+      if (!info.ativo) { $c().innerHTML = `<h3 style="margin:0 0 6px">Assinar plano</h3><p class="small">${MSG.planos_nao_configurados}</p>${o.whats ? `<a class="btn btn-primary btn-block" target="_blank" rel="noopener" href="${o.whats}">${ic('chat')}Assinar pelo WhatsApp</a>` : ''}`; return; }
+      if ((info.tabela[plano][1] || {}).erro && (info.tabela[plano][1] || {}).erro !== 'limite_meses') { /* mostra o aviso na própria tela */ }
+      if ((info.tabela[plano][meses] || {}).erro) meses = [1, 2, 3].find(m => !(info.tabela[plano][m] || {}).erro) || 1;
+      render();
+    }
+  };
+})();

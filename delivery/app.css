@@ -404,3 +404,21 @@ body:not(.modo-agenda) .ag-only{display:none!important}
 
 /* A barra do GoPedido mantém a cor do GoPedido mesmo quando a loja tem cor própria */
 .topbar{--brand:#F2451C;--brand-2:#D9370F;--brand-soft:#FFEDE6;--brand-ink:#FFFFFF}
+
+/* ---------- Compra de plano ---------- */
+.cfm.plp{max-width:460px;width:calc(100% - 24px);text-align:left;max-height:calc(100vh - 32px);overflow:auto}
+.plp-pl{grid-template-columns:1fr 1fr;margin-bottom:12px}
+.plp-ms{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.plp-m{border:1.5px solid var(--line);border-radius:14px;background:#fff;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font:inherit;color:inherit}
+.plp-m b{font-size:.88rem}.plp-m .v{font-size:1.05rem;font-weight:800}.plp-m small{font-size:.7rem;color:var(--ok,#14945A);font-weight:700;text-align:center}
+.plp-m.on{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 3px rgba(242,69,28,.12)}
+.plp-m.dis{opacity:.45;cursor:default}.plp-m.dis small{color:var(--muted)}
+.plp-res{background:var(--bg);border-radius:14px;padding:12px 14px;margin:12px 0;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;align-items:baseline}
+.plp-res span{font-size:.86rem;color:var(--ink-2)}.plp-res b{font-size:1.05rem}.plp-res small{flex-basis:100%;color:var(--muted);font-size:.78rem}
+.plp-ab{margin-bottom:12px}.plp-ab svg{width:16px;height:16px;margin-right:6px;vertical-align:-3px}
+.plp .pixqr{display:flex;justify-content:center}.plp .pixqr img{width:200px;height:200px;border-radius:12px;border:1px solid var(--line)}
+.plp .dot-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok,#14945A);margin-right:4px;animation:plpPulse 1.4s infinite}
+@keyframes plpPulse{50%{opacity:.3}}
+.plp-h{margin-top:14px;font-size:.84rem}.plp-h summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
+.plp-h div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.plp-h b.aprovado{color:var(--ok,#14945A)}.plp-h b.recusado,.plp-h b.estornado{color:#b42318}.plp-h b.pendente{color:var(--muted)}

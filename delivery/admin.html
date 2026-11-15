@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=17081">
+<link rel="stylesheet" href="app.css?v=18099">
 <style>
   .hdr{background:var(--ink);color:#fff;position:sticky;top:0;z-index:30}
   .hdr .wrap{display:flex;align-items:center;gap:12px;height:62px}
@@ -153,14 +153,16 @@
         <button type="button" class="btn btn-ghost btn-sm" data-mes="12">+1 ano</button>
       </div>
     </form>
+    <div class="sec-h">Pagamentos de planos <span class="small muted" id="pg-resumo"></span></div>
+    <div id="pagamentos" style="margin-bottom:16px"></div>
     <div class="sec-h">Lojistas cadastrados</div>
     <div id="lojistas"></div>
   </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=17081"></script>
-<script src="app.js?v=17081"></script>
+<script src="config.js?v=18099"></script>
+<script src="app.js?v=18099"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -320,7 +322,21 @@
   // ---------- Planos ----------
   const somaMes = (n) => { const d = new Date(); d.setMonth(d.getMonth() + n); return d.toISOString().slice(0, 10); };
   document.querySelectorAll('[data-mes]').forEach(b => b.onclick = () => { $('pl-ate').value = somaMes(+b.dataset.mes); });
+  async function renderPagamentos() {
+    const { data, error } = await sb.from('ff_plano_pagamentos').select('*').order('criado_em', { ascending: false }).limit(60);
+    if (error) { $('pagamentos').innerHTML = '<p class="small muted">Rode o SQL v27 para ver os pagamentos de planos.</p>'; return; }
+    const pagos = (data || []).filter(x => x.status === 'aprovado');
+    const mes = new Date().toISOString().slice(0, 7);
+    const noMes = pagos.filter(x => String(x.pago_em || '').slice(0, 7) === mes).reduce((t, x) => t + Number(x.valor), 0);
+    $('pg-resumo').textContent = `· ${GP.brl(noMes)} recebidos este mês`;
+    $('pagamentos').innerHTML = (data || []).length ? (data || []).map(x => `<div class="card pl" style="padding:10px 14px">
+      <div style="min-width:0"><b class="ellipsis" style="display:block">${esc(x.email)}</b>
+        <div class="small muted">${GP.planoNome(x.plano)} · ${x.meses} ${x.meses > 1 ? 'meses' : 'mês'} · ${x.metodo === 'cartao' ? 'cartão' : 'Pix'} · ${new Date(x.criado_em).toLocaleString('pt-BR')}${x.valido_ate ? ' · até ' + x.valido_ate.split('-').reverse().join('/') : ''}</div></div>
+      <div style="text-align:right;white-space:nowrap"><b>${GP.brl(x.valor)}</b><div class="small" style="font-weight:800;color:${x.status === 'aprovado' ? 'var(--ok)' : x.status === 'pendente' ? 'var(--muted)' : '#b42318'}">${{ aprovado: 'Pago', pendente: 'Aguardando', recusado: 'Recusado', estornado: 'Devolvido' }[x.status]}</div></div></div>`).join('')
+      : '<p class="small muted">Nenhum pagamento de plano ainda.</p>';
+  }
   function renderPlanos() {
+    renderPagamentos();
     $('lojistas').innerHTML = lojistas.length ? lojistas.map(u => `<div class="card pl">
       <div style="min-width:0"><b class="ellipsis" style="display:block">${esc(u.email)}</b>
         <div class="small muted">Plano <b>${GP.planoNome(u.plano)}</b>${u.valido_ate ? ' até ' + u.valido_ate.split('-').reverse().join('/') : ''} · ${u.lojas} loja(s) · ${u.produtos} produto(s)</div></div>

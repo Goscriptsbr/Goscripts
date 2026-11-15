@@ -24,6 +24,10 @@
 // Segredos (Edge Functions → Secrets): MP_CLIENT_ID, MP_CLIENT_SECRET
 // Opcional: MP_REDIRECT (padrão https://goscripts.com.br/delivery/painel.html)
 //           MP_TESTE = 1 enquanto testa com contas de teste (usa o comprador test@testuser.com)
+// Planos do GoPedido (SQL v27) — o dinheiro cai na conta do GoPedido, não na da loja:
+//           MP_PLANO_TOKEN      = Access Token de produção da conta que recebe os planos (só aqui, nunca no site)
+//           MP_PLANO_PUBLIC_KEY = Public Key dessa mesma conta (para o formulário de cartão)
+//   { acao: 'plano_info' } · { acao: 'plano_pix', plano, meses } · { acao: 'plano_cartao', plano, meses, token, dados } · { acao: 'plano_conferir', id }
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -79,6 +83,12 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
     const tipo = String(corpo.type || corpo.topic || url.searchParams.get('type') || url.searchParams.get('topic') || '');
     const id = String((corpo.data && corpo.data.id) || url.searchParams.get('data.id') || url.searchParams.get('id') || '');
     try {
+      // Pagamento de plano (conta do GoPedido)
+      if (env.MP_PLANO_TOKEN && /order/.test(tipo) && ORD.test(id) && /^\d{1,20}$/.test(String(corpo.user_id || '')) && String(corpo.user_id) === await idContaPlano()) {
+        const o = await mpPlano('GET', '/v1/orders/' + encodeURIComponent(id));
+        await gravarPlano(o);
+        return { status: 200, corpo: { ok: true } };
+      }
       // Aviso configurado no painel do aplicativo não traz a loja: acha pela conta do Mercado Pago do vendedor
       if (!UUID.test(lojaId) && /^\d{1,20}$/.test(String(corpo.user_id || ''))) {
         const { data } = await admin.from('ff_mp_contas').select('loja_id').eq('mp_user_id', String(corpo.user_id)).limit(1).maybeSingle();
@@ -118,6 +128,57 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
   return await acoes();
 
   // ================= funções =================
+  // ----- planos do GoPedido (conta do GoPedido) -----
+  async function mpPlano(metodo, caminho, corpo, extra = {}) {
+    if (!env.MP_PLANO_TOKEN) throw new Falha('planos_nao_configurados', 500, 'falta o segredo MP_PLANO_TOKEN');
+    const r = await http(API + caminho, { method: metodo, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer ' + env.MP_PLANO_TOKEN, ...extra }, body: corpo === undefined ? undefined : JSON.stringify(corpo) });
+    const texto = await r.text(); let j; try { j = texto ? JSON.parse(texto) : {}; } catch (_) { j = { message: texto.slice(0, 200) }; }
+    const e0 = (j && Array.isArray(j.errors) && j.errors[0]) || {}, det = [].concat(e0.details || []).map(String).join(', ');
+    if (!r.ok) {
+      const ord = (j && j.data && j.data.id) ? j.data : (j && j.id && j.transactions ? j : null);
+      if (ord) { ord._detalhe = det || e0.code || ''; return ord; }
+      throw new Falha('mp_erro', 400, [j.message || j.error || e0.message || e0.code, det].filter(Boolean).join(' · ') || ('HTTP ' + r.status));
+    }
+    return j;
+  }
+  async function idContaPlano() {
+    try { const u = await mpPlano('GET', '/users/me'); return String(u.id || ''); } catch (_) { return ''; }
+  }
+  // Grava o resultado da order do plano; aprovado e com o valor certo → libera o plano
+  async function gravarPlano(o) {
+    const ref = String(o.external_reference || '');
+    if (!ref.startsWith('plano:')) return null;
+    const id = ref.slice(6); if (!UUID.test(id)) return null;
+    const { data: g } = ok(await admin.from('ff_plano_pagamentos').select('*').eq('id', id).maybeSingle(), 'pagamento');
+    if (!g) return null;
+    let st = situacaoOrdem(o);
+    const pago = Number(o.total_paid_amount || o.total_amount || 0);
+    if (st === 'aprovado' && centavos(pago) < centavos(g.valor)) st = 'pendente';
+    if (g.status === 'aprovado') return g;
+    if (st === 'aprovado') { ok(await admin.rpc('ff_plano_aplicar', { p_pag: g.id }), 'liberar plano'); }
+    else if (st !== g.status && !(g.status === 'pendente' && st === 'recusado' && g.metodo === 'pix')) ok(await admin.from('ff_plano_pagamentos').update({ status: st }).eq('id', g.id), 'situação');
+    const { data } = ok(await admin.from('ff_plano_pagamentos').select('*').eq('id', g.id).maybeSingle(), 'pagamento');
+    return data;
+  }
+  // Só o dono da conta compra plano (quem é da equipe não)
+  async function exigeDonoConta() {
+    precisaLogin();
+    const { data } = ok(await admin.from('ff_equipe').select('dono').eq('user_id', usuario.id).limit(1).maybeSingle(), 'equipe');
+    if (data) throw new Falha('so_dono', 403);
+  }
+  async function calcPlano(plano, meses) {
+    if (!['profissional', 'premium'].includes(String(plano)) || ![1, 2, 3].includes(Number(meses))) throw new Falha('plano_invalido');
+    const { data } = ok(await admin.rpc('ff_plano_calc', { p_email: usuario.email, p_plano: plano, p_meses: Number(meses) }), 'preço');
+    if (data && data.erro) throw new Falha(data.erro, 400, data.valido_ate ? String(data.valido_ate) : '');
+    return data;
+  }
+  async function novoPagamentoPlano(plano, meses, metodo) {
+    const c = await calcPlano(plano, meses);
+    const { data } = ok(await admin.from('ff_plano_pagamentos').insert({ user_id: usuario.id, email: String(usuario.email).toLowerCase(), plano, meses: Number(meses), valor: c.valor, metodo }).select('*').single(), 'criar pagamento');
+    return { g: data, c };
+  }
+  function descPlano(g) { return `GoPedido · Plano ${g.plano === 'premium' ? 'Premium' : 'Profissional'} · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}`; }
+
   async function pedirToken(corpo) {
     const r = await http(API + '/oauth/token', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -381,6 +442,79 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
       return { status: 200, corpo: resumo(p) };
     }
 
+    // ===== Planos do GoPedido =====
+    if (acao === 'plano_info') {
+      await exigeDonoConta();
+      const tabela = {};
+      for (const pl of ['profissional', 'premium']) {
+        tabela[pl] = {};
+        for (const m of [1, 2, 3]) {
+          try { tabela[pl][m] = await calcPlano(pl, m); } catch (e) { tabela[pl][m] = { erro: e.message, valido_ate: e.detalhe || null }; }
+        }
+      }
+      const { data: hist } = ok(await admin.from('ff_plano_pagamentos').select('id, plano, meses, valor, status, metodo, criado_em, pago_em, valido_ate')
+        .eq('user_id', usuario.id).order('criado_em', { ascending: false }).limit(10), 'histórico');
+      return { status: 200, corpo: { ativo: !!env.MP_PLANO_TOKEN, public_key: env.MP_PLANO_PUBLIC_KEY || '', email: usuario.email, tabela, historico: hist || [] } };
+    }
+
+    if (acao === 'plano_pix') {
+      await exigeDonoConta();
+      const plano = String(b.plano || ''), meses = Number(b.meses);
+      const qr = (o, g) => {
+        const pg = (o.transactions && o.transactions.payments || [])[0] || {}, m = pg.payment_method || {};
+        return { id: g.id, valor: Number(g.valor), qr: m.qr_code || '', qr_img: m.qr_code_base64 || '', link: m.ticket_url || '' };
+      };
+      // Pix em aberto do mesmo plano e tempo (últimos 30 min): mostra o mesmo QR Code
+      const { data: ab } = ok(await admin.from('ff_plano_pagamentos').select('*').eq('user_id', usuario.id).eq('plano', plano).eq('meses', meses)
+        .eq('metodo', 'pix').eq('status', 'pendente').gte('criado_em', new Date(Date.now() - 30 * 60000).toISOString()).order('criado_em', { ascending: false }).limit(1).maybeSingle(), 'pix aberto');
+      if (ab && ORD.test(ab.mp_id || '')) {
+        try {
+          const ant = await mpPlano('GET', '/v1/orders/' + ab.mp_id);
+          const g2 = await gravarPlano(ant);
+          if (g2 && g2.status === 'aprovado') return { status: 200, corpo: { id: ab.id, pago: true } };
+          const c = await calcPlano(plano, meses);
+          if (situacaoOrdem(ant) === 'pendente' && centavos(ant.total_amount) === centavos(c.valor) && qr(ant, ab).qr) return { status: 200, corpo: qr(ant, ab) };
+        } catch (_) { /* cria outro */ }
+      }
+      const { g } = await novoPagamentoPlano(plano, meses, 'pix');
+      const o = await mpPlano('POST', '/v1/orders', {
+        type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'plano:' + g.id, description: descPlano(g),
+        transactions: { payments: [{ amount: valor(g.valor), payment_method: { id: 'pix', type: 'bank_transfer' }, expiration_time: 'PT30M' }] },
+        payer: { email: compradorTeste(g.email), ...(TESTE ? { first_name: 'APRO' } : {}) }
+      }, { 'X-Idempotency-Key': 'plano-pix-' + g.id });
+      ok(await admin.from('ff_plano_pagamentos').update({ mp_id: String(o.id || '') }).eq('id', g.id), 'pix');
+      return { status: 200, corpo: qr(o, g) };
+    }
+
+    if (acao === 'plano_cartao') {
+      await exigeDonoConta();
+      const d = b.dados || {};
+      if (!/^[A-Za-z0-9]{20,64}$/.test(String(d.token || ''))) throw new Falha('cartao_invalido');
+      const { g } = await novoPagamentoPlano(String(b.plano || ''), Number(b.meses), 'cartao');
+      const ident = d.payer && d.payer.identification;
+      const o = await mpPlano('POST', '/v1/orders', {
+        type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'plano:' + g.id, description: descPlano(g),
+        transactions: { payments: [{ amount: valor(g.valor), payment_method: {
+          id: String(d.payment_method_id || '').slice(0, 40), type: 'credit_card', token: d.token,
+          installments: Math.max(1, Math.min(12, parseInt(d.installments, 10) || 1)), statement_descriptor: 'GOPEDIDO' } }] },
+        payer: { email: compradorTeste(String((d.payer && d.payer.email) || g.email).toLowerCase()), ...(ident && ident.number ? { identification: { type: String(ident.type || 'CPF').slice(0, 10), number: String(ident.number).replace(/\D/g, '').slice(0, 14) } } : {}) }
+      }, { 'X-Idempotency-Key': 'plano-cartao-' + g.id });
+      ok(await admin.from('ff_plano_pagamentos').update({ mp_id: String(o.id || '') }).eq('id', g.id), 'cartão');
+      const g2 = await gravarPlano(o) || g;
+      const pg = (o.transactions && o.transactions.payments || [])[0] || {};
+      return { status: 200, corpo: { id: g.id, status: g2.status, valido_ate: g2.valido_ate, detalhe: pg.status_detail || o.status_detail || o._detalhe || '' } };
+    }
+
+    if (acao === 'plano_conferir') {
+      precisaLogin();
+      if (!UUID.test(String(b.id || ''))) throw new Falha('pagamento_invalido');
+      const { data: g } = ok(await admin.from('ff_plano_pagamentos').select('*').eq('id', b.id).eq('user_id', usuario.id).maybeSingle(), 'pagamento');
+      if (!g) throw new Falha('pagamento_invalido', 404);
+      if (g.status === 'aprovado' || !ORD.test(g.mp_id || '')) return { status: 200, corpo: { status: g.status, valido_ate: g.valido_ate } };
+      const g2 = await gravarPlano(await mpPlano('GET', '/v1/orders/' + g.mp_id)) || g;
+      return { status: 200, corpo: { status: g2.status, valido_ate: g2.valido_ate } };
+    }
+
     if (acao === 'estornar') {
       const p = await pedidoPor();
       const l = await pegaLoja(p.loja_id); await exigeEquipe(l);
@@ -416,7 +550,8 @@ if (typeof Deno !== 'undefined') {
       const admin = createClient(BASE, SECRETA, { auth: { persistSession: false, autoRefreshToken: false } });
       const env = {
         MP_CLIENT_ID: Deno.env.get('MP_CLIENT_ID'), MP_CLIENT_SECRET: Deno.env.get('MP_CLIENT_SECRET'),
-        MP_REDIRECT: Deno.env.get('MP_REDIRECT'), MP_TESTE: Deno.env.get('MP_TESTE')
+        MP_REDIRECT: Deno.env.get('MP_REDIRECT'), MP_TESTE: Deno.env.get('MP_TESTE'),
+        MP_PLANO_TOKEN: Deno.env.get('MP_PLANO_TOKEN'), MP_PLANO_PUBLIC_KEY: Deno.env.get('MP_PLANO_PUBLIC_KEY')
       };
       const r = await tratar(req, admin, env, fetch, BASE + '/functions/v1/ff-mercadopago');
       return resp(r.status, r.corpo);

@@ -145,7 +145,7 @@
   ];
   GP.planoNome = (id) => (GP.PLANOS.find(p => p.id === id) || GP.PLANOS[0]).nome;
   GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano.';
-  GP.planosHtml = (atual, email, publico) => GP.PLANOS.map(p => {
+  GP.planosHtml = (atual, email, publico, comprar) => GP.PLANOS.map(p => {
     const msg = `Olá! Quero assinar o plano ${p.nome} (R$ ${p.preco}/mês) do GoPedido.${email ? ' Meu e-mail no painel: ' + email : ''}`;
     return `<div class="plano ${p.destaque ? 'dest' : ''} ${p.id === atual ? 'atual' : ''}">
       ${p.destaque ? '<span class="pl-tag">Mais escolhido</span>' : ''}
@@ -156,6 +156,8 @@
       <div class="pl-ex">${p.ex || ''}</div>
       <ul>${p.itens.map(i => `<li>${GP.ic('check')}${i}</li>`).join('')}</ul>
       ${publico && !p.preco ? '<a class="btn btn-ghost btn-sm btn-block" href="painel.html?criar=1">Começar grátis</a>'
+        : publico && p.preco ? `<a class="btn ${p.destaque ? 'btn-primary' : 'btn-dark'} btn-sm btn-block" href="painel.html?planos=1">${GP.ic('star')}Assinar</a>`
+        : comprar && p.preco ? `<button type="button" class="btn ${p.id === atual ? 'btn-ghost' : p.destaque ? 'btn-primary' : 'btn-dark'} btn-sm btn-block" data-assinar="${p.id}">${p.id === atual ? GP.ic('calendar') + 'Renovar' : GP.ic('star') + 'Assinar'}</button>`
         : p.id === atual ? '<span class="btn btn-ghost btn-sm btn-block" style="pointer-events:none">Seu plano atual</span>'
         : p.preco ? `<a class="btn ${p.destaque ? 'btn-primary' : 'btn-dark'} btn-sm btn-block" target="_blank" rel="noopener" href="https://wa.me/${GP.WHATS}?text=${encodeURIComponent(msg)}">${GP.ic('chat')}Assinar pelo WhatsApp</a>` : ''}
     </div>`;
@@ -167,8 +169,9 @@
       <button class="icon-btn pl-x" type="button">${GP.ic('x')}</button>
       <div class="cfm-ic">${GP.ic('star')}</div>
       <h3>${GP.esc(o.titulo || 'Planos do GoPedido')}</h3>
-      <p>${GP.esc(o.texto || 'Escolha o plano ideal para o tamanho do seu negócio. A liberação é feita pelo WhatsApp.')}</p>
-      <div class="planos">${GP.planosHtml(o.atual, o.email)}</div>
+      <p>${GP.esc(o.texto || (o.comprar ? 'Escolha o plano ideal para o tamanho do seu negócio. Pague por Pix ou cartão e o plano libera na hora.' : 'Escolha o plano ideal para o tamanho do seu negócio. A liberação é feita pelo WhatsApp.'))}</p>
+      ${o.comprar ? '<p class="small" style="margin:-4px 0 10px"><b>Pagando 2 ou 3 meses de uma vez, sai mais barato.</b></p>' : ''}
+      <div class="planos">${GP.planosHtml(o.atual, o.email, false, !!o.comprar)}</div>
       <p class="pl-nota">${GP.NOTA_PLANOS}</p>
       <p class="small" style="margin-top:12px">Dúvidas? Chame no WhatsApp <a href="https://wa.me/${GP.WHATS}" target="_blank" rel="noopener" style="font-weight:700;color:var(--brand-2)">(19) 98828-3178</a></p>
     </div>`;
@@ -177,7 +180,11 @@
     const fim = () => { wrap.classList.remove('on'); setTimeout(() => wrap.remove(), 180); document.removeEventListener('keydown', key, true); };
     const key = (e) => { if (e.key === 'Escape') { e.stopPropagation(); fim(); } };
     document.addEventListener('keydown', key, true);
-    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('.pl-x')) fim(); });
+    wrap.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-assinar]');
+      if (a && o.comprar) { fim(); o.comprar(a.dataset.assinar); return; }
+      if (e.target === wrap || e.target.closest('.pl-x')) fim();
+    });
   };
 
   // ---------- Confirmação bonita (no lugar do confirm do navegador) ----------

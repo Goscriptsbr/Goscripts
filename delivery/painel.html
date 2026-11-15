@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=17081">
+<link rel="stylesheet" href="app.css?v=18099">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -896,9 +896,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=17081"></script>
-<script src="app.js?v=17081"></script>
-<script src="agenda-painel.js?v=17081"></script>
+<script src="config.js?v=18099"></script>
+<script src="app.js?v=18099"></script>
+<script src="plano-pagar.js?v=18099"></script>
+<script src="agenda-painel.js?v=18099"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1091,6 +1092,7 @@
     if (error) return GP.toast(GP.err(error), 'err');
     lojas = data || [];
     await loadPlano();
+    if (new URLSearchParams(location.search).get('planos') === '1' && plano) { history.replaceState(null, '', location.pathname); setTimeout(() => verPlanos(), 400); }
     if (!lojas.length && !souDono) return semAcesso();
     if (!lojas.length) return novaLoja(true);
     const salva = GP.ls.get('gp_loja_sel');
@@ -1403,7 +1405,9 @@
       <button type="button" class="btn btn-soft btn-sm" id="b-planos2" style="flex:none">${ic('star')}Planos</button>`;
     $('b-planos2').onclick = () => verPlanos();
   }
-  const verPlanos = (titulo, texto) => GP.mostrarPlanos({ atual: plano ? plano.plano : 'gratis', email: user && user.email, titulo, texto });
+  const verPlanos = (titulo, texto) => GP.mostrarPlanos({ atual: plano ? plano.plano : 'gratis', email: user && user.email, titulo, texto,
+    comprar: souDono && window.PlanoPagar ? (id) => window.PlanoPagar.abrir(sb, { plano: id, aoPagar: loadPlano,
+      whats: `https://wa.me/${GP.WHATS}?text=${encodeURIComponent('Olá! Quero assinar o plano ' + GP.planoNome(id) + ' do GoPedido. Meu e-mail no painel: ' + (user && user.email))}` }) : null });
   const limiteProd = () => plano && plano.produtos >= plano.produtos_max;
   const limiteLoja = () => plano && plano.lojas >= plano.lojas_max;
 
