@@ -311,6 +311,14 @@
   // mesma regra do servidor: rota válida entre a linha reta e 3x a linha reta + 1 km; senão linha reta + 30%
   GP.distEntrega = (reta, rota) => rota != null && rota >= reta && rota <= reta * 3 + 1 ? Math.round(rota * 100) / 100 : Math.round(reta * 1.3 * 100) / 100;
 
+  // Celular/tablet com tela de toque = tem GPS. Computador só sabe a região pela internet.
+  GP.temGps = () => {
+    try {
+      if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean' && navigator.userAgentData.mobile) return true;
+      return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0);
+    } catch { return true; }
+  };
+
   // Localização de alta precisão: escuta o GPS por alguns segundos e fica com a leitura mais precisa
   GP.geo = (opts = {}) => new Promise((ok, fail) => {
     if (!navigator.geolocation) return fail(new Error('Seu navegador não permite localização.'));
@@ -616,7 +624,8 @@
     root.innerHTML = `
       <div class="grid2">
         <label class="field"><span>CEP</span><div class="prefix-r"><input class="input" id="${id}-cep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code"><i id="${id}-cepst"></i></div><small><a href="https://buscacepinter.correios.com.br/" target="_blank" rel="noopener" style="text-decoration:underline">Não sei meu CEP</a></small></label>
-        <div class="field"><span>&nbsp;</span><button type="button" class="btn btn-soft btn-block" id="${id}-geo">${GP.ic('locate')}Minha localização</button></div>
+        ${GP.temGps() ? `<div class="field"><span>&nbsp;</span><button type="button" class="btn btn-soft btn-block" id="${id}-geo">${GP.ic('locate')}Minha localização</button></div>`
+          : `<div class="field"><span>&nbsp;</span><p class="small muted geo-pc">No computador, digite o CEP e o número. Depois, clique em <b>Satélite</b> no mapa e clique na porta exata.</p></div>`}
       </div>
       <div class="grid-rua">
         <label class="field"><span>Rua</span><input class="input" id="${id}-rua" maxlength="120" autocomplete="address-line1" placeholder="Nome da rua"></label>
@@ -709,7 +718,7 @@
     $f('numero').addEventListener('change', () => { if (ceps.length > 1) corrigeCorreios(null); locateFromFields(); });
     $f('rua').addEventListener('change', () => { if (!pos) locateFromFields(); });
     KEYS.forEach(k => $f(k) && $f(k).addEventListener('input', fire));
-    $f('geo').onclick = async () => {
+    if ($f('geo')) $f('geo').onclick = async () => {
       const b = $f('geo'), o = b.innerHTML; b.innerHTML = '<span class="spin"></span>Localizando…'; b.disabled = true;
       try {
         const p = await GP.geo({ onProgress: (x) => { b.innerHTML = '<span class="spin"></span>Precisão ±' + x.acc + ' m…'; } });
