@@ -2075,11 +2075,17 @@
   }
   function desligarRealtime() { if (canal) { try { sb.removeChannel(canal); } catch {} canal = null; } rtOk = false; }
   function updLabel() { $('upd').innerHTML = rtOk ? '<span style="color:var(--ok);font-weight:700">● Ao vivo</span>' : 'Conferido às ' + GP.hora(new Date()); }
+  let erroPedMostrado = '';
+  function mostrarErroPed(error) {
+    const m = (error && (error.message || error.details || error.hint)) || String(error);
+    if (!pedidos.length) $('orders').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('receipt')}</div><h4>Não deu para carregar os pedidos</h4><p class="small">${esc(m)}</p></div>`;
+    if (erroPedMostrado !== m) { erroPedMostrado = m; GP.toast('Pedidos: ' + m.slice(0, 140), 'err'); }
+  }
   async function checarPedidos() {
     if (!loja) return;
     ultCheck = Date.now();
     const { data, error } = await sb.from('ff_pedidos').select('atualizado_em').eq('loja_id', loja.id).order('atualizado_em', { ascending: false }).limit(1);
-    if (error) { $('upd').textContent = 'Sem conexão · tentando de novo'; return; }
+    if (error) { $('upd').textContent = 'Sem conexão · tentando de novo'; mostrarErroPed(error); return; }
     const v = data && data[0] ? data[0].atualizado_em : '';
     if (v !== verPed || Date.now() - ultCheio > 10 * 60e3) { verPed = v; return loadPedidos(); }
     updLabel();
@@ -2091,7 +2097,7 @@
     const desde = new Date(Date.now() - 7 * 864e5).toISOString();
     const { data, error } = await sb.from('ff_pedidos').select('*, ff_pedido_itens(*)')
       .eq('loja_id', loja.id).gte('criado_em', desde).order('criado_em', { ascending: false }).limit(200);
-    if (error) { $('upd').textContent = 'Erro ao atualizar'; return; }
+    if (error) { $('upd').textContent = 'Erro ao atualizar'; mostrarErroPed(error); return; }
     // pedidos online que ninguém pagou em 2 horas são cancelados (o estoque volta); só roda se tiver algum
     if (data.some(p => p.pagamento === 'mp' && p.mp_status !== 'aprovado' && p.status === 'novo' && Date.now() - new Date(p.criado_em) > 2 * 3600e3)) {
       sb.rpc('ff_limpar_mp', { p_loja: loja.id }).then(r => { if (r.data) loadPedidos(); }).catch(() => {});
