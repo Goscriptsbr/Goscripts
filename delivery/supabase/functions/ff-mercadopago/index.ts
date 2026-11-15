@@ -67,6 +67,9 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
   if (req.method !== 'POST') throw new Falha('metodo_invalido', 405);
   if (!env.MP_CLIENT_ID || !env.MP_CLIENT_SECRET) throw new Falha('mp_nao_configurado', 500, 'faltam os segredos MP_CLIENT_ID / MP_CLIENT_SECRET');
   const REDIRECT = env.MP_REDIRECT || SITE + 'painel.html';
+  // Modo teste do Mercado Pago: a API de Orders só aceita este comprador de teste
+  const TESTE = env.MP_TESTE === '1';
+  const compradorTeste = (email) => TESTE ? 'test@testuser.com' : email;
   const url = new URL(req.url);
 
   // ---------- aviso do Mercado Pago (webhook) ----------
@@ -238,7 +241,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
     if (acao === 'conectar') {
       const l = await pegaLoja(b.loja); exigeDono(l);
       if (!/^[A-Za-z0-9_-]{6,200}$/.test(String(b.code || ''))) throw new Falha('codigo_invalido');
-      const j = await pedirToken({ grant_type: 'authorization_code', code: b.code, redirect_uri: REDIRECT, ...(env.MP_TESTE === '1' ? { test_token: 'true' } : {}) });
+      const j = await pedirToken({ grant_type: 'authorization_code', code: b.code, redirect_uri: REDIRECT, ...(TESTE ? { test_token: 'true' } : {}) });
       await salvarConta(l.id, j);
       let conta = '';
       try {
@@ -298,7 +301,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
         external_reference: p.id,
         description: descricao(p, l),
         transactions: { payments: [{ amount: valor(p.total), payment_method: { id: 'pix', type: 'bank_transfer' }, expiration_time: 'PT2H' }] },
-        payer: { email, first_name: String(p.cliente_nome || '').split(' ')[0].replace(/[^A-Za-zÀ-ÿ ]/g, '').slice(0, 40) || 'Cliente' }
+        payer: { email: compradorTeste(email), first_name: TESTE ? 'APRO' : (String(p.cliente_nome || '').split(' ')[0].replace(/[^A-Za-zÀ-ÿ ]/g, '').slice(0, 40) || 'Cliente') }
       }, { 'X-Idempotency-Key': 'pix-' + p.id + '-' + centavos(p.total) + '-' + Math.floor(Date.now() / 600000) });
       ok(await admin.from('ff_pedidos').update({ mp_pagamento_id: String(o.id) }).eq('id', p.id), 'pix');
       return { status: 200, corpo: qr(o) };
@@ -323,7 +326,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
           installments: Math.max(1, Math.min(12, parseInt(d.installments, 10) || 1)),
           statement_descriptor: l.nome.replace(/[^A-Za-z0-9 ]/g, '').slice(0, 13) || 'GOPEDIDO'
         } }] },
-        payer: { email, ...(ident && ident.number ? { identification: { type: String(ident.type || 'CPF').slice(0, 10), number: String(ident.number).replace(/\D/g, '').slice(0, 14) } } : {}) }
+        payer: { email: compradorTeste(email), ...(ident && ident.number ? { identification: { type: String(ident.type || 'CPF').slice(0, 10), number: String(ident.number).replace(/\D/g, '').slice(0, 14) } } : {}) }
       }, { 'X-Idempotency-Key': 'cartao-' + p.id + '-' + d.token.slice(-16) });
       const novo = (await gravarOrdem(l.id, o)) || p;
       const pg = (o.transactions && o.transactions.payments || [])[0] || {};
