@@ -22,8 +22,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=14673">
-<link rel="stylesheet" href="site.css?v=14673">
+<link rel="stylesheet" href="app.css?v=15201">
+<link rel="stylesheet" href="site.css?v=15201">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -312,8 +312,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=14673"></script>
-<script src="app.js?v=14673"></script>
+<script src="config.js?v=15201"></script>
+<script src="app.js?v=15201"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -362,7 +362,10 @@
   document.querySelectorAll('.role').forEach(r => r.insertAdjacentHTML('beforeend', '<span class="go">' + ic('right') + '</span>'));
 
   let lojas = [], filtro = 'todas', busca = '';
+  // onde o cliente está: localização do aparelho ou o endereço do último pedido
   let pos = GP.ls.get('gp_pos');
+  { const cl = GP.ls.get('gp_cliente', {}); if ((!pos || pos.acc > 1000) && cl.lat != null) pos = { lat: cl.lat, lng: cl.lng }; }
+  const envia = (l) => l.tipo === 'variedades' && l.envio_externo && l.me_conectado && l.aceita_pix;
 
   const locChip = () => {
     $('loc-chip').innerHTML = ic('pin') + (pos ? '<span>Localização ativa</span>' : '<span>Ativar localização</span>');
@@ -379,9 +382,10 @@
 
   const colsLoja = 'id,slug,nome,descricao,imagem_url,capa_url,lat,lng,taxa_km,taxa_minima,raio_km,taxa_modo,km_arredonda,taxa_tabela,tempo_entrega,aberta,horario_auto,horarios,nota_media,nota_qtd';
   let [{ data, error }, { data: prods }] = await Promise.all([
-    sb.from('ff_lojas').select(colsLoja + ',tipo').eq('ativa', true),
+    sb.from('ff_lojas').select(colsLoja + ',tipo,envio_externo,me_conectado,aceita_pix,aceita_retirada').eq('ativa', true),
     sb.from('ff_produtos').select('loja_id,nome,categoria').eq('disponivel', true)
   ]);
+  if (error) ({ data, error } = await sb.from('ff_lojas').select(colsLoja + ',tipo').eq('ativa', true));
   if (error && /tipo/.test(error.message || '')) ({ data, error } = await sb.from('ff_lojas').select(colsLoja).eq('ativa', true));
   if (error) {
     $('lista').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('store')}</div><h4>Não foi possível carregar as lojas</h4><p>${esc(GP.err(error))}</p></div>`;
@@ -405,12 +409,16 @@
     let arr = lojas.map(l => {
       const d = pos && l.lat != null ? GP.distEntrega(GP.dist(l.lat, l.lng, pos.lat, pos.lng), null) : null;
       const st = GP.statusLoja(l);
-      return { ...l, _st: st, _ab: st.aberta, _d: d, _t: d != null ? GP.taxa(l, d) : null, _fora: d != null && GP.foraArea(l, d) };
+      const preciso = pos && !(pos.acc > 1000);
+      let fora = d != null && preciso && GP.foraArea(l, d);
+      if (d != null && preciso && !fora && envia(l) && l.taxa_modo !== 'tabela' && !(Number(l.raio_km) > 0) && d > 30) fora = true;
+      return { ...l, _st: st, _ab: st.aberta, _d: d, _t: d != null ? GP.taxa(l, d) : null, _fora: fora && !envia(l), _envio: fora && envia(l) };
     });
     if (busca) arr = arr.filter(l => l._busca.includes(busca));
     if (tipoF) arr = arr.filter(l => (l.tipo || 'restaurante') === tipoF);
     if (filtro === 'abertas') arr = arr.filter(l => l._ab);
     arr.sort((a, b) => {
+      if (a._fora !== b._fora) return a._fora ? 1 : -1;   // quem não entrega pra você vai pro fim
       if (a._ab !== b._ab) return a._ab ? -1 : 1;
       if (filtro === 'perto' && a._d != null && b._d != null) return a._d - b._d;
       if (filtro === 'taxa' && a._t != null && b._t != null) return a._t - b._t;
@@ -425,8 +433,8 @@
       const ini = esc((l.nome || '?').trim()[0].toUpperCase());
       const capa = l.capa_url || l.imagem_url;
       const taxa = l._d == null ? GP.regraEntrega(l).replace(/ · mín\..*/, '')
-        : l._fora ? 'Fora da área' : (l._t > 0 ? brl(l._t) : 'Grátis');
-      return ` <a class="card store ${l._ab ? '' : 'closed'}" href="loja.html?l=${encodeURIComponent(l.slug)}">
+        : l._envio ? 'Envio para sua cidade' : l._fora ? (l.aceita_retirada ? 'Não entrega aqui · só retirada' : 'Não entrega na sua região') : (l._t > 0 ? brl(l._t) : 'Grátis');
+      return ` <a class="card store ${l._ab ? '' : 'closed'} ${l._fora ? 'fora' : ''}" href="loja.html?l=${encodeURIComponent(l.slug)}">
         <div class="cover" style="${capa ? `background-image:url('${esc(capa)}')` : 'background:linear-gradient(135deg,#FFB199,#F2451C)'}">
           <span class="badge st ${l._st.cls}"><i class="dot"></i>${l._st.curto}</span>
           ${cupLoja[l.id] ? `<span class="badge cupom-tag">${ic('tag')}${GP.descCupom(cupLoja[l.id])}</span>` : ''}
@@ -438,7 +446,7 @@
           <div class="meta">
             ${l.nota_qtd ? `<span><span class="stars">★</span>${String(l.nota_media).replace('.', ',')} <span class="muted">(${l.nota_qtd})</span></span>` : `<span>${ic('sparkle')}Novo</span>`}
             <span>${ic('clock')}${l._ab ? esc(l.tempo_entrega || '30–50 min') : esc(l._st.texto.replace(/^Fechada · /, '').replace(/^Pedidos pausados.*/, 'Pausada'))}</span>
-            <span>${ic('bike')}${taxa}</span>
+            <span class="${l._fora ? 'fora-t' : ''}">${ic(l._envio ? 'box' : 'bike')}${taxa}</span>
             ${l._d != null ? `<span>${ic('pin')}~${km(l._d)}</span>` : ''}
           </div>
         </div></a>`;

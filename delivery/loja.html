@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=14673">
+<link rel="stylesheet" href="app.css?v=15201">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -333,8 +333,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=14673"></script>
-<script src="app.js?v=14673"></script>
+<script src="config.js?v=15201"></script>
+<script src="app.js?v=15201"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -647,6 +647,27 @@
   // Envio para outras cidades (Melhor Envio): só lojas de Variedades com a conta conectada e Pix ligado
   const podeEnvio = () => loja.tipo === 'variedades' && loja.envio_externo && loja.me_conectado && loja.aceita_pix;
   const RAIO_ENVIO = 30;
+
+  // Avisa logo na entrada se a loja não entrega onde o cliente está (endereço salvo ou localização).
+  // Loja com envio pelo Melhor Envio: fora do raio vira "envio para a sua cidade", não "não entrega".
+  (function avisoArea() {
+    if (loja.lat == null) return;
+    const princ = enderecos.find(x => x.lat != null);
+    const gp = GP.ls.get('gp_pos');
+    const ref = princ ? { lat: princ.lat, lng: princ.lng, de: 'Pelo seu endereço salvo' }
+      : cli.lat != null ? { lat: cli.lat, lng: cli.lng, de: 'Pelo endereço do seu último pedido' }
+      : gp && gp.lat != null && !(gp.acc > 1000) ? { lat: gp.lat, lng: gp.lng, de: 'Pela sua localização' } : null;
+    if (!ref) return;
+    const d = GP.distEntrega(GP.dist(loja.lat, loja.lng, ref.lat, ref.lng), null);
+    let fora = GP.foraArea(loja, d);
+    if (!fora && podeEnvio() && loja.taxa_modo !== 'tabela' && !(Number(loja.raio_km) > 0) && d > RAIO_ENVIO) fora = true;
+    if (!fora) return;
+    const lim = loja.taxa_modo === 'tabela' && GP.faixas(loja).length ? Number(GP.faixas(loja).slice(-1)[0].ate) : Number(loja.raio_km);
+    const html = podeEnvio()
+      ? `<div class="alert envio">${ic('box')}<span>Você está fora da entrega local, mas esta loja <b>envia para a sua cidade</b> pelos Correios ou transportadora. O frete aparece no fim do pedido.</span></div>`
+      : `<div class="alert foraarea">${ic('x')}<span><b>Esta loja não entrega na sua região.</b> ${esc(ref.de)}, você está a cerca de ${km(d)} e ela entrega até ${lim ? km(lim) : 'uma distância menor'}.${loja.aceita_retirada ? ' Você ainda pode pedir para <b>retirar na loja</b>.' : ''}</span></div>`;
+    $('s-alert').insertAdjacentHTML('afterend', `<div id="s-area">${html}</div>`);
+  })();
   let frete = { chave: '', opcoes: null, sel: null, carregando: false, erro: '' };
   const entrega = () => {
     if (modoEnt === 'retirada') return { d: 0, t: 0, fora: false, rota: false, calc: false, ret: true };

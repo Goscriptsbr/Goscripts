@@ -316,6 +316,10 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
 .pular:focus{top:12px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 /* pagamento online (Mercado Pago) */
+.alert.foraarea{background:#fdecea;color:#8a1c12}
+.alert.envio{background:#eaf4ff;color:#14467a}
+.card.store.fora{opacity:.62}
+.card.store .fora-t{color:#b42318;font-weight:700}
 .geo-pc{margin:0;padding:10px 12px;border-radius:12px;background:var(--soft,#f4f4f6);line-height:1.4}
 .mp-wrap{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
 .mp-passos{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:6px}
