@@ -163,7 +163,7 @@
         : publico && p.preco ? `<a class="btn ${p.destaque ? 'btn-primary' : 'btn-dark'} btn-sm btn-block" href="painel.html?planos=1">${GP.ic('star')}Assinar</a>`
         : comprar && p.preco ? `<button type="button" class="btn ${p.id === atual ? 'btn-ghost' : p.destaque ? 'btn-primary' : 'btn-dark'} btn-sm btn-block" data-assinar="${p.id}">${p.id === atual ? GP.ic('calendar') + 'Renovar' : GP.ic('star') + 'Assinar'}</button>`
         : p.id === atual ? '<span class="btn btn-ghost btn-sm btn-block" style="pointer-events:none">Seu plano atual</span>'
-        : p.preco ? `<a class="btn ${p.destaque ? 'btn-primary' : 'btn-dark'} btn-sm btn-block" target="_blank" rel="noopener" href="https://wa.me/${GP.WHATS}?text=${encodeURIComponent(msg)}">${GP.ic('chat')}Assinar pelo WhatsApp</a>` : ''}
+        : p.preco ? '<span class="btn btn-ghost btn-sm btn-block" style="pointer-events:none">Só o dono da conta assina</span>' : ''}
     </div>`;
   }).join('');
   GP.mostrarPlanos = (o = {}) => {
@@ -173,7 +173,7 @@
       <button class="icon-btn pl-x" type="button">${GP.ic('x')}</button>
       <div class="cfm-ic">${GP.ic('star')}</div>
       <h3>${GP.esc(o.titulo || 'Planos do GoPedido')}</h3>
-      <p>${GP.esc(o.texto || (o.comprar ? 'Escolha o plano ideal para o tamanho do seu negócio. Pague por Pix ou cartão e o plano libera na hora.' : 'Escolha o plano ideal para o tamanho do seu negócio. A liberação é feita pelo WhatsApp.'))}</p>
+      <p>${GP.esc(o.texto || (o.comprar ? 'Escolha o plano ideal para o tamanho do seu negócio. Pague por Pix ou cartão e o plano libera na hora.' : 'Escolha o plano ideal para o tamanho do seu negócio. O dono da conta assina pelo painel, com Pix ou cartão, e o plano libera na hora.'))}</p>
       ${o.comprar ? '<p class="small" style="margin:-4px 0 10px"><b>Pagando 2 ou 3 meses de uma vez, sai mais barato.</b></p>' : ''}
       <div class="planos">${GP.planosHtml(o.atual, o.email, false, !!o.comprar)}</div>
       <p class="pl-nota">${GP.NOTA_PLANOS}</p>
