@@ -23,7 +23,7 @@
 //   nome: ff-mercadopago → cole este arquivo inteiro → Deploy → em Details desligue "Verify JWT".
 // Segredos (Edge Functions → Secrets): MP_CLIENT_ID, MP_CLIENT_SECRET
 // Opcional: MP_REDIRECT (padrão https://goscripts.com.br/delivery/painel.html)
-//           MP_TESTE = 1 para conectar contas de teste do Mercado Pago
+//           MP_TESTE = 1 enquanto testa com contas de teste (usa o comprador test@testuser.com)
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -241,7 +241,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
     if (acao === 'conectar') {
       const l = await pegaLoja(b.loja); exigeDono(l);
       if (!/^[A-Za-z0-9_-]{6,200}$/.test(String(b.code || ''))) throw new Falha('codigo_invalido');
-      const j = await pedirToken({ grant_type: 'authorization_code', code: b.code, redirect_uri: REDIRECT, ...(TESTE ? { test_token: 'true' } : {}) });
+      const j = await pedirToken({ grant_type: 'authorization_code', code: b.code, redirect_uri: REDIRECT });
       await salvarConta(l.id, j);
       let conta = '';
       try {
