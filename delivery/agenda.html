@@ -12,10 +12,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=16741">
+<link rel="stylesheet" href="app.css?v=17081">
 <style>
   body{padding-bottom:110px}
-  .cover{height:200px;background:linear-gradient(135deg,#FFB199,#F2451C) center/cover;position:relative}
+  .cover{height:200px;background:linear-gradient(135deg,var(--brand-soft),var(--brand)) center/cover;position:relative}
   .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35))}
   @media(max-width:600px){.cover{height:150px}}
   .head{position:relative;margin-top:-56px;z-index:2}
@@ -91,8 +91,8 @@
 <div id="page"><div class="wrap"><div class="sk" style="height:200px;margin-top:20px;border-radius:20px"></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=16741"></script>
-<script src="app.js?v=16741"></script>
+<script src="config.js?v=17081"></script>
+<script src="app.js?v=17081"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -113,6 +113,7 @@
   if (error) return fail('Não foi possível abrir', esc(GP.err(error)));
   if (!loja) return fail('Estabelecimento não encontrado', 'O link pode estar errado ou saiu do ar.');
   if (loja.tipo !== 'agenda') { location.replace('loja.html?l=' + encodeURIComponent(slug)); return; }
+  GP.aplicarCor(loja.cor);
   document.title = `Agendar · ${loja.nome} · GoPedido`;
   const [{ data: servs }, { data: profs0 }] = await Promise.all([
     sb.from('ff_servicos').select('*').eq('loja_id', loja.id).eq('ativo', true).order('ordem').order('nome'),

@@ -957,6 +957,56 @@
   ];
   GP.tipo = (id) => GP.TIPOS.find(t => t.id === id) || GP.TIPOS[0];
   GP.ehAgenda = (l) => !!l && l.tipo === 'agenda';
+
+  // ---------- Cor da loja ----------
+  // O lojista escolhe só a cor da marca. Aqui ela é ajustada para sempre dar leitura:
+  // escurece cor clara demais (texto/preço em fundo branco) e decide texto branco ou preto nos botões.
+  GP.COR_PADRAO = '#F2451C';
+  GP.CORES = ['#F2451C', '#E11D48', '#DB2777', '#9333EA', '#4F46E5', '#2563EB', '#0891B2', '#059669', '#16A34A', '#65A30D', '#CA8A04', '#EA580C', '#92400E', '#334155', '#111827'];
+  const hexRgb = (h) => { const n = parseInt(String(h).replace('#', ''), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+  const rgbHex = (r, g, b) => '#' + [r, g, b].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('').toUpperCase();
+  const lum = ([r, g, b]) => { const f = (c) => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+  GP.contraste = (a, b) => { const x = lum(hexRgb(a)), y = lum(hexRgb(b)); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const misturar = (h, alvo, t) => { const a = hexRgb(h), b = hexRgb(alvo); return rgbHex(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t); };
+  GP.paletaCor = (cor) => {
+    let c = /^#[0-9a-f]{6}$/i.test(cor || '') ? cor.toUpperCase() : GP.COR_PADRAO;
+    // precisa aparecer em fundo branco (preço, links) e com texto branco por cima: escurece até ter contraste 3,2:1
+    for (let i = 0; i < 14 && GP.contraste(c, '#FFFFFF') < 3.2; i++) c = misturar(c, '#000000', .1);
+    const texto = '#FFFFFF';   // depois do ajuste, texto branco sempre lê bem nos botões
+    return { cor: c, escura: misturar(c, '#000000', .16), suave: misturar(c, '#FFFFFF', .88), texto };
+  };
+  GP.aplicarCor = (cor) => {
+    if (!cor) return;
+    const p = GP.paletaCor(cor), r = document.documentElement.style;
+    r.setProperty('--brand', p.cor); r.setProperty('--brand-2', p.escura); r.setProperty('--brand-soft', p.suave); r.setProperty('--brand-ink', p.texto);
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', p.cor);
+  };
+  // Cor que mais aparece no logo (sem branco, preto e cinzas). Não usa IA: lê os pixels da imagem.
+  GP.corDoLogo = (src) => new Promise((ok) => {
+    if (!src) return ok(null);
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const N = 72, cv = document.createElement('canvas'); cv.width = N; cv.height = N;
+        const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0, N, N);
+        const d = cx.getImageData(0, 0, N, N).data, caixas = {};
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3];
+          if (a < 160) continue;
+          const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, sat = mx === mn ? 0 : (mx - mn) / (255 - Math.abs(mx + mn - 255));
+          if (sat < .28 || l < 28 || l > 235) continue;   // cinza, preto ou branco
+          let h = 0; if (mx !== mn) { h = mx === r ? ((g - b) / (mx - mn)) % 6 : mx === g ? (b - r) / (mx - mn) + 2 : (r - g) / (mx - mn) + 4; h = Math.round(h * 60 + 360) % 360; }
+          const k = Math.floor(h / 15), peso = sat * (1 - Math.abs(l - 128) / 160);
+          const c = caixas[k] || (caixas[k] = { p: 0, r: 0, g: 0, b: 0 });
+          c.p += peso; c.r += r * peso; c.g += g * peso; c.b += b * peso;
+        }
+        const best = Object.values(caixas).sort((x, y) => y.p - x.p)[0];
+        ok(best && best.p > 4 ? rgbHex(best.r / best.p, best.g / best.p, best.b / best.p) : null);
+      } catch { ok(null); }   // imagem de outro site sem permissão de leitura
+    };
+    img.onerror = () => ok(null);
+    img.src = src;
+  });
   // Horário de Brasília (sem horário de verão desde 2019): data "AAAA-MM-DD" + minutos → Date
   GP.dataSP = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
   GP.emSP = (dia, min) => new Date(`${dia}T${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}:00-03:00`);

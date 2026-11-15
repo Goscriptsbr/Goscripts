@@ -1,5 +1,5 @@
 :root{
-  --brand:#F2451C; --brand-2:#D9370F; --brand-soft:#FFEDE6;
+  --brand:#F2451C; --brand-2:#D9370F; --brand-soft:#FFEDE6; --brand-ink:#FFFFFF;
   --ink:#16161B; --ink-2:#3B3B45; --muted:#71717F; --line:#E8E6E1;
   --bg:#F7F6F3; --card:#FFFFFF; --ok:#14945A; --ok-soft:#E3F6EC;
   --warn:#B7791F; --warn-soft:#FFF4DC; --bad:#D92D20; --bad-soft:#FDECEA;
@@ -43,7 +43,7 @@ input,select,textarea{font:inherit;color:inherit}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 20px;border-radius:12px;font-weight:700;font-size:.95rem;transition:transform .08s,background .15s,box-shadow .15s,opacity .15s;white-space:nowrap;user-select:none}
 .btn:active{transform:scale(.98)}
 .btn[disabled]{opacity:.45;pointer-events:none}
-.btn-primary{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(242,69,28,.28)}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(242,69,28,.28);box-shadow:0 6px 18px color-mix(in srgb,var(--brand) 30%,transparent)}
 .btn-primary:hover{background:var(--brand-2)}
 .btn-dark{background:var(--ink);color:#fff}
 .btn-ghost{background:#fff;border:1px solid var(--line)}
@@ -401,3 +401,6 @@ body:not(.modo-agenda) .ag-only{display:none!important}
 @media(max-width:480px){.ep-h{grid-template-columns:1fr}.ep-pausa{grid-column:1}}
 .ep-sv{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
 #ag-mod .sheet-foot{display:flex;gap:8px}
+
+/* A barra do GoPedido mantém a cor do GoPedido mesmo quando a loja tem cor própria */
+.topbar{--brand:#F2451C;--brand-2:#D9370F;--brand-soft:#FFEDE6;--brand-ink:#FFFFFF}
