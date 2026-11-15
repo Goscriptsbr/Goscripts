@@ -146,7 +146,7 @@
     { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 350, ex: 'Ex.: 5 lojas com 70 produtos cada', itens: ['Tudo do Profissional', '8 administradores além de você', 'Produtos extras quando precisar: R$ 0,20 por produto/mês', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
   ];
   GP.planoNome = (id) => (GP.PLANOS.find(p => p.id === id) || GP.PLANOS[0]).nome;
-  GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano.';
+  GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano. Só no Premium dá para comprar produtos a mais quando precisar (R$ 0,20 por produto por mês).';
   GP.planosHtml = (atual, email, publico, comprar) => GP.PLANOS.map(p => {
     const msg = `Olá! Quero assinar o plano ${p.nome} (R$ ${p.preco}/mês) do GoPedido.${email ? ' Meu e-mail no painel: ' + email : ''}`;
     return `<div class="plano ${p.destaque ? 'dest' : ''} ${p.id === atual ? 'atual' : ''}">

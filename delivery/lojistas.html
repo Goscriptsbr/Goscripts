@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=60736">
+<link rel="stylesheet" href="app.css?v=60936">
 <link rel="stylesheet" href="site.css?v=51585">
 </head>
 <body data-sem-rodape>
@@ -334,7 +334,7 @@
 </footer>
 
 <script src="config.js?v=51585"></script>
-<script src="app.js?v=60736"></script>
+<script src="app.js?v=60936"></script>
 <script>
 (() => {
   const { $, ic } = GP;
@@ -368,10 +368,13 @@
       ['Pedidos', () => 'Ilimitados'],
       ['Lojas na conta', p => '<b>' + p.lojas + '</b>'],
       ['Produtos (total da conta)', p => '<b>' + p.produtos + '</b>'],
+      ['Comprar mais produtos quando precisar<small style="display:block;font-weight:500;opacity:.7">R$ 0,20 por produto/mês</small>', p => p.id === 'premium' ? sim : nao],
       ['Administradores além de você', p => '<b>' + adm(p) + '</b>'],
       ['Pix, cartão e dinheiro', p => tem(p, /Pix, cartão/) ? sim : nao],
       ['Motoboys e impressão de pedidos', p => tem(p, /Motoboys/) ? sim : nao],
       ['Cupons e promoções', p => tem(p, /Cupons/) ? sim : nao],
+      ['Cartão fidelidade', () => sim],
+      ['App no celular e PC + aviso de pedido novo', () => sim],
       ['Suporte pelo WhatsApp', p => tem(p, /Suporte pelo WhatsApp/) ? sim : nao],
       ['Atendimento prioritário', p => tem(p, /prioritário/) ? sim : nao]
     ];
