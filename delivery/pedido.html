@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=08895">
+<link rel="stylesheet" href="app.css?v=12078">
 <style>
   .ok-hero{text-align:center;padding:34px 0 8px}
   .ok-hero .big{width:76px;height:76px;border-radius:24px;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(20,148,90,.35);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
@@ -76,8 +76,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=08895"></script>
-<script src="app.js?v=08895"></script>
+<script src="config.js?v=12078"></script>
+<script src="app.js?v=12078"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -216,7 +216,9 @@
             if (data && data.mp_status === 'pendente') { GP.toast('Pagamento em análise pelo Mercado Pago. Esta página atualiza sozinha.'); last = null; await load(); return; }
             const j = data || await erroMP(error);
             const MSG = { cc_rejected_insufficient_amount: 'Saldo ou limite insuficiente.', cc_rejected_bad_filled_security_code: 'Código de segurança (CVV) incorreto.', cc_rejected_bad_filled_date: 'Data de validade incorreta.', cc_rejected_bad_filled_other: 'Confira os dados do cartão.', cc_rejected_call_for_authorize: 'O banco pediu para autorizar a compra. Ligue para o seu banco ou use outro cartão.', cc_rejected_high_risk: 'O pagamento foi recusado por segurança. Tente o Pix.' };
-            GP.toast((MSG[j.detalhe] || 'O cartão não foi aprovado.') + ' Tente outro cartão ou o Pix.', 'err');
+            const cod = [j.error, j.detalhe].filter(Boolean).join(' · ').slice(0, 160);
+            GP.toast((MSG[j.detalhe] || 'O cartão não foi aprovado.') + ' Tente outro cartão ou o Pix.' + (!MSG[j.detalhe] && cod ? ' (' + cod + ')' : ''), 'err');
+            if (cod) console.warn('[mp]', cod);
             last = null; await load();
             throw new Error('recusado');   // avisa o formulário para liberar o botão de novo
           }
