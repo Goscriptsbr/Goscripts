@@ -18,6 +18,8 @@
     bag: '<path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/>',
     pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    scissors: '<circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M8.2 7.4 20 18M8.2 16.6 20 6"/>',
     bike: '<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h4l4 8M10 9 8 5H6m8 4 1-3h2"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
     x: '<path d="M6 6l12 12M18 6 6 18"/>',
@@ -254,6 +256,18 @@
     produto_indisponivel: 'Um dos produtos ficou indisponível. Revise a sacola.',
     carrinho_vazio: 'Sua sacola está vazia.',
     abaixo_do_minimo: 'O pedido não atingiu o valor mínimo da loja.',
+    horario_ocupado: 'Esse horário acabou de ser ocupado. Escolha outro.',
+    horario_passou: 'Esse horário já passou ou está muito em cima. Escolha outro.',
+    horario_longe: 'Esse dia ainda não está aberto para agendamento.',
+    horario_invalido: 'Horário inválido. Escolha de novo.',
+    fora_do_horario: 'Esse horário está fora do expediente do profissional.',
+    servico_invalido: 'Esse serviço não está mais disponível.',
+    profissional_invalido: 'Esse profissional não faz esse serviço ou não está atendendo.',
+    email_obrigatorio_agenda: 'Digite seu e-mail: é por ele que vão a confirmação e o lembrete do horário.',
+    nome_obrigatorio: 'Digite seu nome.', telefone_invalido: 'Digite um WhatsApp válido, com DDD.',
+    limite_agendamentos: 'Você já tem muitos horários marcados aqui. Cancele algum antes de marcar outro.',
+    agendamento_invalido: 'Agendamento não encontrado.', agendamento_encerrado: 'Este horário já foi cancelado ou concluído.',
+    cancelar_tarde: 'Está muito em cima da hora para cancelar por aqui. Fale com o estabelecimento pelo WhatsApp.',
     'Invalid login credentials': 'E-mail ou senha incorretos.',
     'Auth session missing': 'Este link de senha expirou ou já foi usado. Peça um novo em "Esqueci minha senha".',
     'Email link is invalid or has expired': 'Este link expirou ou já foi usado. Peça um novo.',
@@ -938,9 +952,35 @@
     { id: 'pet', nome: 'Pet shop', curto: 'Pet shops', ex: ['Pet Feliz', 'Rações, petiscos, brinquedos e acessórios.'], ic: 'paw', obsItem: 'Ex.: sabor frango, tamanho M…', obsPedido: 'Ex.: troco, cuidado com o cachorro…', desc: 'Ração, acessórios, casa de ração' },
     { id: 'bebidas', nome: 'Bebidas e adega', curto: 'Bebidas', ex: ['Adega do Centro', 'Cervejas, destilados, gelo, água e gás.'], ic: 'wine', obsItem: 'Ex.: bem gelada, marca preferida…', obsPedido: 'Ex.: troco, interfone quebrado…', desc: 'Adega, distribuidora, gelo, água e gás' },
     { id: 'variedades', nome: 'Variedades', curto: 'Variedades', ex: ['Loja da Ana', 'Roupas, presentes, utilidades e eletrônicos.'], ic: 'box', obsItem: 'Ex.: cor preferida, embrulhar para presente…', obsPedido: 'Ex.: é presente, não mandar nota com o preço…', desc: 'Roupas, presentes, eletrônicos, utilidades. Pode enviar para outras cidades.' },
+    { id: 'agenda', nome: 'Agendamentos', curto: 'Agendar', ex: ['Barbearia do Zé', 'Corte, barba e sobrancelha com hora marcada.'], ic: 'calendar', obsItem: '', obsPedido: '', desc: 'Salão, barbearia, manicure, estética: o cliente marca horário online', agenda: true },
     { id: 'outros', nome: 'Outros', curto: 'Outros', ex: ['Minha Loja', 'Conte o que você vende.'], ic: 'grid', obsItem: 'Ex.: algum detalhe sobre este item…', obsPedido: 'Ex.: troco, ponto de referência…', desc: 'Qualquer outro tipo de loja' }
   ];
   GP.tipo = (id) => GP.TIPOS.find(t => t.id === id) || GP.TIPOS[0];
+  GP.ehAgenda = (l) => !!l && l.tipo === 'agenda';
+  // Horário de Brasília (sem horário de verão desde 2019): data "AAAA-MM-DD" + minutos → Date
+  GP.dataSP = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  GP.emSP = (dia, min) => new Date(`${dia}T${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}:00-03:00`);
+  GP.horaSP = (d) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }).format(new Date(d));
+  GP.diaSP = (d, op = { weekday: 'long', day: '2-digit', month: 'long' }) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', ...op }).format(new Date(d));
+  GP.minDe = (t) => { const [h, m] = String(t || '').split(':').map(Number); return isNaN(h) ? null : h * 60 + (m || 0); };
+  // Horários livres de um profissional num dia: [{min, ini: Date, fim: Date}]
+  GP.slotsProf = (prof, dia, dur, passo, ocup, minIni) => {
+    const dow = new Date(dia + 'T12:00:00-03:00').getUTCDay();
+    const h = (prof.horarios || {})[dow] || (prof.horarios || {})[String(dow)];
+    if (!h || !h.aberto) return [];
+    const ini = GP.minDe(h.ini), fim0 = GP.minDe(h.fim); if (ini == null || fim0 == null) return [];
+    const fim = fim0 === 0 ? 1440 : fim0;
+    const pi = GP.minDe(h.pausa_ini), pf = GP.minDe(h.pausa_fim);
+    const out = [];
+    for (let t = ini; t + dur <= fim; t += passo) {
+      if (pi != null && pf != null && pf > pi && t < pf && t + dur > pi) continue;
+      const a = GP.emSP(dia, t), b = new Date(a.getTime() + dur * 60000);
+      if (minIni && a < minIni) continue;
+      if ((ocup || []).some(o => o.profissional_id === prof.id && new Date(o.inicio) < b && new Date(o.fim) > a)) continue;
+      out.push({ min: t, ini: a, fim: b });
+    }
+    return out;
+  };
 
   // ---------- tempo real: escuta "toques" do banco num canal e chama aoMudar ----------
   // Devolve { parar(), ativo() }. Se o Realtime não estiver disponível, ativo() fica false e a tela usa a conferência de reserva.

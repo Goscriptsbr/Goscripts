@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=15201">
+<link rel="stylesheet" href="app.css?v=16448">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -333,8 +333,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=15201"></script>
-<script src="app.js?v=15201"></script>
+<script src="config.js?v=16448"></script>
+<script src="app.js?v=16448"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -354,6 +354,7 @@
   const { data: loja, error } = await sb.from('ff_lojas').select('*').eq('slug', slug).eq('ativa', true).maybeSingle();
   if (error) return fail('Não foi possível abrir a loja', esc(GP.err(error)));
   if (!loja) return fail('Loja não encontrada', 'O link pode estar errado ou a loja saiu do ar.');
+  if (loja.tipo === 'agenda') { location.replace('agenda.html?l=' + encodeURIComponent(slug)); return; }
   { const tp = GP.tipo(loja.tipo); $('pm-obs').placeholder = tp.obsItem || $('pm-obs').placeholder; $('c-obs').placeholder = tp.obsPedido || $('c-obs').placeholder; }
   const { data: prods } = await sb.from('ff_produtos').select('*').eq('loja_id', loja.id).order('ordem').order('nome');
   const { data: etapasLoja } = await sb.from('ff_etapas').select('*').eq('loja_id', loja.id);

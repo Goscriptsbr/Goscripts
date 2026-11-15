@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=15201">
+<link rel="stylesheet" href="app.css?v=16448">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -434,7 +434,7 @@
       <a class="logo" href="./" style="flex:none"><b id="lg3"></b></a>
       <select class="lojasel" id="t-loja" aria-label="Escolher loja"></select>
       <div class="grow"></div>
-      <label class="switch" id="sw-wrap" title="Abrir/fechar a loja"><input type="checkbox" id="sw-aberta"><i></i><span id="sw-txt">Fechada</span></label>
+      <label class="switch dl-only" id="sw-wrap" title="Abrir/fechar a loja"><input type="checkbox" id="sw-aberta"><i></i><span id="sw-txt">Fechada</span></label>
       <a class="icon-btn" id="b-ver" target="_blank" rel="noopener" title="Ver minha loja"></a>
       <a class="icon-btn hide" id="b-admin" href="admin.html" title="Administrador"></a>
       <button class="icon-btn" id="b-sair" title="Sair"></button>
@@ -443,9 +443,11 @@
 
   <main class="wrap" style="padding-bottom:30px">
     <nav class="tabs" id="tabs">
-      <button data-t="pedidos" class="on"><span id="ti1"></span>Pedidos <span class="count hide" id="cnt"></span></button>
-      <button data-t="cardapio"><span id="ti2"></span><span id="tx-card">Cardápio</span></button>
-      <button data-t="promo"><span id="ti4"></span>Promoções</button>
+      <button data-t="pedidos" class="on dl-only"><span id="ti1"></span>Pedidos <span class="count hide" id="cnt"></span></button>
+      <button data-t="cardapio" class="dl-only"><span id="ti2"></span><span id="tx-card">Cardápio</span></button>
+      <button data-t="promo" class="dl-only"><span id="ti4"></span>Promoções</button>
+      <button data-t="agenda" class="ag-only"><span id="ti5"></span>Agenda</button>
+      <button data-t="servicos" class="ag-only"><span id="ti6"></span>Serviços e equipe</button>
       <button data-t="loja"><span id="ti3"></span>Minha loja</button>
     </nav>
 
@@ -520,6 +522,37 @@
       <button class="fab" id="b-novocupom-fab" type="button"></button>
     </section>
 
+    <!-- Agenda (lojas de agendamento) -->
+    <section id="tab-agenda" class="hide">
+      <div class="cm-head">
+        <div class="grow" style="min-width:0"><h2>Agenda</h2><p class="small muted">Os horários marcados pelos clientes aparecem aqui na hora.</p></div>
+        <button class="btn btn-primary" id="ag-novo" type="button"></button>
+      </div>
+      <div id="verif-banner3"></div>
+      <div class="card agnav">
+        <button class="icon-btn" id="ag-prev" type="button" aria-label="Dia anterior"></button>
+        <div class="agdia" id="ag-dia"></div>
+        <button class="icon-btn" id="ag-next" type="button" aria-label="Próximo dia"></button>
+        <button class="btn btn-ghost btn-sm" id="ag-hoje" type="button">Hoje</button>
+        <input class="input agcal" type="date" id="ag-cal" aria-label="Escolher dia">
+      </div>
+      <div class="agkpi" id="ag-kpi"></div>
+      <div class="chips agprofs" id="ag-profs"></div>
+      <div id="ag-lista"></div>
+    </section>
+
+    <section id="tab-servicos" class="hide">
+      <div class="cm-head">
+        <div class="grow" style="min-width:0"><h2>Serviços e equipe</h2><p class="small muted">O que você oferece, quem atende e as regras da agenda.</p></div>
+        <button class="btn btn-ghost btn-sm" id="ag-link" type="button">Copiar link da agenda</button>
+      </div>
+      <div class="agcols">
+        <div class="card pad"><div class="row between" style="margin-bottom:10px"><h3 style="margin:0">Serviços</h3><button class="btn btn-soft btn-sm" id="sv-novo" type="button"></button></div><div id="sv-lista"></div></div>
+        <div class="card pad"><div class="row between" style="margin-bottom:10px"><h3 style="margin:0">Profissionais</h3><button class="btn btn-soft btn-sm" id="pf-novo" type="button"></button></div><div id="pf-lista"></div></div>
+      </div>
+      <div class="card pad" style="margin-top:14px"><h3 style="margin:0 0 4px">Regras da agenda</h3><p class="small muted" style="margin:0 0 12px">Como os horários aparecem para os clientes.</p><div id="ag-cfg"></div></div>
+    </section>
+
     <section id="tab-loja" class="hide">
       <div class="cm-head">
         <div class="grow" style="min-width:0"><h2>Minha loja</h2><p class="small muted">Escolha uma parte no menu para configurar.</p></div>
@@ -529,7 +562,7 @@
       <div class="ml-layout"><nav class="ml-nav" id="ml-nav" aria-label="Módulos da loja">
         <button type="button" data-m="dados" class="on"><i data-mi="store"></i><span>Dados da loja</span></button>
         <button type="button" data-m="entrega"><i data-mi="pin"></i><span>Entrega</span></button>
-        <button type="button" data-m="horario"><i data-mi="clock"></i><span>Horários</span></button>
+        <button type="button" data-m="horario" class="dl-only"><i data-mi="clock"></i><span>Horários</span></button>
         <button type="button" data-m="pag"><i data-mi="card"></i><span>Pagamentos</span></button>
         <button type="button" data-m="envio" id="nav-envio" class="hide"><i data-mi="box"></i><span>Envio</span></button>
         <button type="button" data-m="equipe" id="nav-equipe" class="hide"><i data-mi="user"></i><span>Equipe</span></button>
@@ -573,6 +606,7 @@
             <p class="small muted" style="margin:-6px 0 12px">Digite o CEP e o número, que o pino vai sozinho para o lugar. Ou toque no mapa, ou use "Minha localização", que os campos se preenchem.</p>
             <div id="l-addr"></div>
             <p class="hide" id="l-coord"></p><div style="height:12px"></div>
+            <div class="dl-only">
             <label class="paytile rettile"><span class="pi" data-ic="store"></span><span style="min-width:0"><b>Aceitar retirada no local</b><small>O cliente busca na loja, sem taxa de entrega</small></span><span class="switch"><input type="checkbox" id="l-ret"><i></i></span></label>
             <div class="sub-t">Como cobrar a entrega</div>
             <div class="modos" id="l-modo">
@@ -600,9 +634,10 @@
               <input type="range" id="sim-km" min="0.1" max="20" step="0.1" value="4.6">
               <div class="simres" id="l-sim"></div>
             </div>
+            </div>
           </div>
 
-          <div class="card pad fs ml-anchor" id="sec-horario" data-mod="horario" style="grid-column:1/-1">
+          <div class="card pad fs ml-anchor dl-only" id="sec-horario" data-mod="horario" style="grid-column:1/-1">
             <h3><span id="fi4"></span>Horário de funcionamento</h3>
             <p class="fsub">Os dias e horários em que a loja recebe pedidos.</p>
             <label class="switch" style="margin-bottom:6px"><input type="checkbox" id="l-auto"><i></i>Abrir e fechar sozinha pelo horário</label>
@@ -631,7 +666,7 @@
             <div class="grid2" style="margin-top:16px">
               <label class="field"><span>Pedido mínimo</span><div class="prefix"><i>R$</i><input class="input" id="l-min" inputmode="numeric" placeholder="0,00"></div><small>Valor mínimo dos produtos para o cliente fechar o pedido. Deixe 0 para não ter mínimo.</small></label>
             </div>
-            <div class="mp-wrap">
+            <div class="mp-wrap dl-only">
               <div class="mp-h"><b>Pagamento online pelo Mercado Pago</b><span class="chip-opc">Opcional</span></div>
               <p class="small muted" style="margin:2px 0 12px">O cliente paga com cartão de crédito ou Pix sem sair do pedido, e o pedido é liberado sozinho quando o pagamento é aprovado. O dinheiro cai na <b>sua</b> conta do Mercado Pago, com as taxas do Mercado Pago. O GoPedido não cobra nada a mais.</p>
               <div id="mp-box"></div>
@@ -812,8 +847,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=15201"></script>
-<script src="app.js?v=15201"></script>
+<script src="config.js?v=16448"></script>
+<script src="app.js?v=16448"></script>
+<script src="agenda-painel.js?v=16448"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1333,7 +1369,15 @@
     prods = []; pedidos = []; conhecidos = null; codigo = null;
     $('orders').innerHTML = ''; $('plist').innerHTML = '';
     $('welcome').classList.add('hide');
-    fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel(); renderVerif(); loadAvaliacoes();
+    fillLoja(); setTabsLocked(false); applyHeader(); renderLojaSel(); renderVerif();
+    modoAgenda();
+    if (GP.ehAgenda(l)) {
+      clearInterval(timer); desligarRealtime();
+      go('agenda'); await window.AgendaPainel.abrir(sb, l);
+      return;
+    }
+    if (window.AgendaPainel) window.AgendaPainel.parar();
+    loadAvaliacoes();
     await loadProds();
     go('pedidos');
     verPed = null; await checarPedidos();
@@ -1345,7 +1389,8 @@
   function novaLoja(primeira) {
     clearInterval(timer); desligarRealtime();
     loja = null; prods = []; pedidos = []; conhecidos = null; codigo = null;
-    fillLoja(); renderLojaSel(); setTabsLocked(true); go('loja');
+    if (window.AgendaPainel) window.AgendaPainel.parar();
+    fillLoja(); renderLojaSel(); setTabsLocked(true); modoAgenda(); go('loja');
     renderVerif(); escolherTipo(true);
     $('welcome').classList.remove('hide');
     $('w-tit').textContent = primeira ? 'Bem-vindo! Vamos configurar sua loja.' : 'Cadastrar uma nova loja';
@@ -1462,19 +1507,30 @@
   $('w-cancel').onclick = () => { const l = lojas.find(x => x.id === GP.ls.get('gp_loja_sel')) || lojas[0]; if (l) abrirLoja(l); };
 
   // ================= ABAS =================
+  // Lojas de agendamento escondem pedidos/cardápio/entrega e mostram agenda/serviços
+  function modoAgenda() {
+    const ag = GP.ehAgenda(loja);
+    document.body.classList.toggle('modo-agenda', ag);
+    const nb = document.querySelector('#ml-nav [data-m="entrega"] span'); if (nb) nb.textContent = ag ? 'Endereço' : 'Entrega';
+    const h = document.querySelector('#sec-entrega h3'); if (h && h.lastChild) h.lastChild.textContent = ag ? 'Endereço do estabelecimento' : 'Localização e entrega';
+    const fs = document.querySelector('#sec-entrega .fsub'); if (fs) fs.textContent = ag ? 'Onde o cliente vai ser atendido.' : 'De onde sai a entrega e quanto você cobra.';
+    document.querySelectorAll('#sec-pag .paytile small').forEach(x => { if (/Na entrega|No atendimento/.test(x.textContent)) x.textContent = ag ? 'No atendimento' : 'Na entrega'; });
+  }
   function setTabsLocked(v) { document.querySelectorAll('#tabs [data-t]').forEach(b => { if (b.dataset.t !== 'loja') b.disabled = v; }); $('sw-wrap').classList.toggle('hide', v); $('b-ver').classList.toggle('hide', v); $('b-ver2').classList.toggle('hide', v); }
   function go(t) {
     document.querySelectorAll('#tabs [data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-    ['pedidos', 'cardapio', 'promo', 'loja'].forEach(s => $('tab-' + s).classList.toggle('hide', s !== t));
+    ['pedidos', 'cardapio', 'promo', 'agenda', 'servicos', 'loja'].forEach(s => $('tab-' + s).classList.toggle('hide', s !== t));
     if (t === 'promo') loadCupons();
+    if ((t === 'agenda' || t === 'servicos') && window.AgendaPainel) window.AgendaPainel.mostrar(t);
     if (t === 'loja') initMap();
   }
   $('tabs').onclick = (e) => { const b = e.target.closest('[data-t]'); if (b) go(b.dataset.t); };
+  window.__goTab = go;
 
   // ---------- Verificação da loja ----------
   async function renderVerif() {
     const v = loja && loja.verificacao;
-    if (!loja || v === 'verificada') { $('verif-banner').innerHTML = ''; $('verif-banner2').innerHTML = ''; return; }
+    if (!loja || v === 'verificada') { $('verif-banner').innerHTML = ''; $('verif-banner2').innerHTML = ''; $('verif-banner3').innerHTML = ''; return; }
     const { data: dv } = await sb.from('ff_verificacoes').select('*').eq('loja_id', loja.id).maybeSingle();
     // Só libera o pedido de verificação depois de salvar nome completo e CPF válido
     const pronto = !!(dv && String(dv.responsavel_nome || '').trim().length >= 5 && GP.cpfValido(dv.responsavel_cpf));
@@ -1482,7 +1538,7 @@
     const html = `<div class="vbanner ${v === 'recusada' ? 'rec' : 'pend'}">
       <div class="row" style="align-items:flex-start;gap:10px">${ic('shield')}<div class="grow">
         <b>${v === 'recusada' ? 'Sua loja não foi aprovada' : 'Sua loja está em análise'}</b>
-        <div class="small" style="margin-top:2px">${v === 'recusada' ? (esc(loja.verificacao_motivo) || 'Fale com a gente para entender.') : 'Para proteger os clientes contra golpes, toda loja nova é conferida antes de aparecer no site e receber pedidos. Enquanto isso, você já pode montar o cardápio.'}</div></div></div>
+        <div class="small" style="margin-top:2px">${v === 'recusada' ? (esc(loja.verificacao_motivo) || 'Fale com a gente para entender.') : 'Para proteger os clientes contra golpes, toda loja nova é conferida antes de aparecer no site e receber pedidos. Enquanto isso, você já pode ' + (GP.ehAgenda(loja) ? 'cadastrar os serviços e a equipe.' : 'montar o cardápio.')}</div></div></div>
       <div class="grid2">
         <label class="field" style="margin:0"><span>Nome do responsável</span><input class="input vb-nome" maxlength="80" value="${esc(dv ? dv.responsavel_nome : '')}" placeholder="Nome completo"></label>
         <label class="field" style="margin:0"><span>CPF do responsável</span><input class="input vb-cpf" inputmode="numeric" maxlength="14" value="${esc(dv ? dv.responsavel_cpf : '')}" placeholder="000.000.000-00"></label>
@@ -1492,7 +1548,7 @@
         ${pronto ? `<a class="btn btn-ok btn-sm" target="_blank" rel="noopener" href="https://wa.me/${GP.WHATS}?text=${encodeURIComponent(msgWa)}">${ic('chat')}Pedir verificação no WhatsApp</a>`
                  : `<button type="button" class="btn btn-ok btn-sm vb-wa" style="opacity:.5">${ic('lock')}Pedir verificação no WhatsApp</button>`}</div>
     </div>`;
-    $('verif-banner').innerHTML = html; $('verif-banner2').innerHTML = html;
+    $('verif-banner').innerHTML = html; $('verif-banner2').innerHTML = html; $('verif-banner3').innerHTML = html;
     document.querySelectorAll('.vb-cpf').forEach(el => el.addEventListener('input', () => { const d = GP.digits(el.value).slice(0, 11); el.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4'); }));
     document.querySelectorAll('.vb-wa').forEach(b => b.onclick = () => {
       const box = b.closest('.vbanner'); GP.toast('Antes, preencha o nome completo e o CPF e toque em "Salvar dados".', 'err');
@@ -2415,7 +2471,7 @@
   };
 
   // ================= PROMOÇÕES / CUPONS =================
-  $('ti4').innerHTML = ic('star');
+  $('ti4').innerHTML = ic('star'); $('ti5').innerHTML = ic('calendar'); $('ti6').innerHTML = ic('scissors');
   GP.moneyMask($('c-min'));
   let cupons = [];
   const abrirCupom = () => { $('f-cupom').reset(); $('c-tipo').value = 'percentual'; $('c-porcli').value = '1'; $('c-pub').checked = true; tipoUI(); $('cmod').classList.add('on'); $('ov').classList.add('on'); setTimeout(() => $('c-cod').focus(), 250); };

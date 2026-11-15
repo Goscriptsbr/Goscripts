@@ -10,6 +10,8 @@
 //   cancelado → quando a loja cancela o pedido
 //   nota      → quando a loja anexa a nota fiscal (PDF e/ou chave de acesso) — precisa do SQL v23
 // Ação { acao: 'nf_link', token } → link temporário (10 min) para o cliente baixar o PDF da nota
+// Agendamentos (SQL v25): { agendamento: token, tipo: 'ag_novo' | 'ag_remarcado' | 'ag_cancelado' }
+//   e { acao: 'lembretes' } → chamado de 5 em 5 minutos pelo agendador; manda o lembrete 3 h antes
 //
 // Como publicar: Supabase → Edge Functions → "Deploy a new function" → "Via Editor"
 //   nome: ff-email → cole este arquivo inteiro → Deploy → em Details desligue "Verify JWT".
@@ -40,7 +42,7 @@ const so = (s) => String(s || '').replace(/\D/g, '');
 const wa = (tel, msg) => { let d = so(tel); if (d.length <= 11) d = '55' + d; return 'https://wa.me/' + d + '?text=' + encodeURIComponent(msg); };
 
 // Moldura igual à dos e-mails de cadastro
-export function moldura({ previa, titulo, texto, corpo = '', botao = null, botao2 = null, rodapeLoja = '' }) {
+export function moldura({ previa, titulo, texto, corpo = '', botao = null, botao2 = null, rodapeLoja = '', agenda = false }) {
   const btn = (b, cheio) => b ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px"><tr><td align="center" style="border-radius:14px;background:${cheio ? COR : '#ffffff'};${cheio ? '' : 'border:1.5px solid #E6E3DE;'}">
       <a href="${h(b.url)}" style="display:block;padding:15px 20px;color:${cheio ? '#ffffff' : '#16161B'};font-size:16px;font-weight:700;text-decoration:none;border-radius:14px">${h(b.texto)}</a></td></tr></table>` : '';
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${h(titulo)}</title></head>
@@ -57,8 +59,8 @@ export function moldura({ previa, titulo, texto, corpo = '', botao = null, botao
     ${rodapeLoja}
   </td></tr>
   <tr><td align="center" style="padding:20px 10px 0;font-size:12px;line-height:1.6;color:#9a9aa5">
-    Você recebeu este e-mail porque fez um pedido pelo GoPedido.<br>
-    O GoPedido é a plataforma; a venda e a entrega são feitas pela loja. <a href="${SITE}termos.html" style="color:#9a9aa5">Termos de Uso</a>
+    ${agenda ? 'Você recebeu este e-mail porque marcou um horário pelo GoPedido.<br>O GoPedido é a plataforma; o atendimento é feito pelo estabelecimento.'
+             : 'Você recebeu este e-mail porque fez um pedido pelo GoPedido.<br>O GoPedido é a plataforma; a venda e a entrega são feitas pela loja.'} <a href="${SITE}termos.html" style="color:#9a9aa5">Termos de Uso</a>
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -144,10 +146,132 @@ export function montarEmail(tipo, p, l, itens) {
   throw new Falha('tipo_invalido');
 }
 
+// ---------- Agendamentos (salão, barbearia…) ----------
+export const quando = (iso) => {
+  const d = new Date(iso);
+  const dia = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: '2-digit', month: 'long' }).format(d);
+  const hora = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }).format(d);
+  return { dia: dia.charAt(0).toUpperCase() + dia.slice(1), hora };
+};
+const gcal = (a, l) => {
+  const f = (iso) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(a.servico_nome + ' · ' + l.nome)
+    + '&dates=' + f(a.inicio) + '/' + f(a.fim) + '&location=' + encodeURIComponent(l.endereco || '') + '&details=' + encodeURIComponent('Com ' + a.profissional_nome + '. Marcado pelo GoPedido.');
+};
+export function montarAgenda(tipo, a, l) {
+  const link = SITE + 'agenda.html?t=' + encodeURIComponent(a.token);
+  const q = quando(a.inicio);
+  const card = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:#F7F6F3;border-radius:14px;padding:16px 18px">
+      <div style="font-size:13px;color:#71717F">${h(q.dia)}</div>
+      <div style="font-size:26px;font-weight:800;letter-spacing:-0.5px;margin:2px 0 8px">${h(q.hora)}</div>
+      <div style="font-size:15px;font-weight:700">${h(a.servico_nome)}</div>
+      <div style="font-size:14px;color:#4a4a55;margin-top:2px">com ${h(a.profissional_nome)} · ${a.duracao_min} min${Number(a.preco) ? ' · ' + brl(a.preco) : ''}</div>
+      ${l.endereco ? `<div style="font-size:13px;color:#71717F;margin-top:10px">📍 ${h(l.endereco)}</div>` : ''}
+    </td></tr></table>`;
+  const contato = l.telefone ? `<p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#71717F">Precisa falar com <b>${h(l.nome)}</b>? <a href="${h(wa(l.telefone, 'Olá! Sobre o meu horário de ' + q.dia.toLowerCase() + ' às ' + q.hora + ' (' + a.servico_nome + ') pelo GoPedido.'))}" style="color:${COR};font-weight:700">Chamar no WhatsApp</a>.</p>` : '';
+  if (tipo === 'ag_novo') return {
+    assunto: `Horário marcado: ${q.dia.toLowerCase()} às ${q.hora} · ${l.nome}`,
+    html: moldura({ agenda: true,
+      previa: `${a.servico_nome} com ${a.profissional_nome}, ${q.dia.toLowerCase()} às ${q.hora}.`,
+      titulo: 'Seu horário está marcado!',
+      texto: `Tudo certo com <b>${h(l.nome)}</b>. Vamos te lembrar por e-mail 3 horas antes. Se não puder ir, cancele pelo botão abaixo para liberar o horário.`,
+      corpo: card, botao: { texto: 'Ver ou cancelar meu horário', url: link }, botao2: { texto: 'Adicionar à minha agenda', url: gcal(a, l) }, rodapeLoja: contato
+    })
+  };
+  if (tipo === 'ag_lembrete') return {
+    assunto: `Lembrete: hoje às ${q.hora} · ${l.nome}`,
+    html: moldura({ agenda: true,
+      previa: `Seu horário de ${a.servico_nome} é hoje às ${q.hora}.`,
+      titulo: `Seu horário é às ${q.hora}`,
+      texto: `Passando para lembrar do seu horário com <b>${h(l.nome)}</b>. Se não puder ir, avise a loja ou cancele pelo botão abaixo.`,
+      corpo: card, botao: { texto: 'Ver meu horário', url: link },
+      botao2: l.lat != null ? { texto: 'Como chegar', url: 'https://www.google.com/maps/dir/?api=1&destination=' + l.lat + ',' + l.lng } : null, rodapeLoja: contato
+    })
+  };
+  if (tipo === 'ag_remarcado') return {
+    assunto: `Horário alterado: ${q.dia.toLowerCase()} às ${q.hora} · ${l.nome}`,
+    html: moldura({ agenda: true,
+      previa: `Novo horário: ${q.dia.toLowerCase()} às ${q.hora}.`,
+      titulo: 'Seu horário foi alterado',
+      texto: `<b>${h(l.nome)}</b> alterou o seu horário. Confira como ficou:`,
+      corpo: card, botao: { texto: 'Ver meu horário', url: link }, botao2: { texto: 'Adicionar à minha agenda', url: gcal(a, l) }, rodapeLoja: contato
+    })
+  };
+  if (tipo === 'ag_cancelado') return {
+    assunto: `Horário cancelado · ${l.nome}`,
+    html: moldura({ agenda: true,
+      previa: `O horário de ${q.dia.toLowerCase()} às ${q.hora} foi cancelado.`,
+      titulo: 'Horário cancelado',
+      texto: a.cancelado_por === 'cliente'
+        ? `Você cancelou o seu horário de <b>${h(a.servico_nome)}</b> em <b>${h(l.nome)}</b> (${h(q.dia.toLowerCase())} às ${h(q.hora)}). Quando quiser, é só marcar de novo.`
+        : `<b>${h(l.nome)}</b> cancelou o seu horário de <b>${h(a.servico_nome)}</b> (${h(q.dia.toLowerCase())} às ${h(q.hora)}). Você pode marcar outro horário pelo botão abaixo.`,
+      corpo: '', botao: { texto: 'Marcar outro horário', url: SITE + 'agenda.html?l=' + encodeURIComponent(l.slug || '') }, rodapeLoja: contato
+    })
+  };
+  throw new Falha('tipo_invalido');
+}
+
+async function enviarAgenda(admin, enviar, a, tipo) {
+  const ja = a.emails || {};
+  const { data: l } = ok(await admin.from('ff_lojas').select('nome, slug, telefone, endereco, lat, lng, dono').eq('id', a.loja_id).maybeSingle(), 'loja');
+  const { assunto, html } = montarAgenda(tipo, a, l || { nome: 'Estabelecimento' });
+  let responder = '';
+  try { const { data: u } = await admin.auth.admin.getUserById(l && l.dono); responder = (u && u.user && u.user.email) || ''; } catch (_) {}
+  const marca = { emails: { ...ja, [tipo]: new Date().toISOString() }, ...(tipo === 'ag_lembrete' ? { lembrete_em: new Date().toISOString() } : {}) };
+  ok(await admin.from('ff_agendamentos').update(marca).eq('id', a.id), 'marcar');
+  try {
+    await enviar({ para: a.cliente_email, assunto, html, texto: textoSimples(html), loja: (l && l.nome) || '', responder });
+  } catch (e) {
+    await admin.from('ff_agendamentos').update({ emails: ja, ...(tipo === 'ag_lembrete' ? { lembrete_em: null } : {}) }).eq('id', a.id);
+    throw new Falha('email_falhou', 502, String(e && e.message || e).slice(0, 300));
+  }
+}
+
+// Roda de 5 em 5 minutos (agendador do Supabase): manda o lembrete de quem tem horário nas próximas 3 horas
+export async function lembretes(admin, enviar, agora = new Date()) {
+  const ate = new Date(agora.getTime() + 3 * 3600e3).toISOString();
+  const { data } = ok(await admin.from('ff_agendamentos').select('*')
+    .eq('status', 'agendado').is('lembrete_em', null).gt('inicio', agora.toISOString()).lte('inicio', ate)
+    .order('inicio').limit(40), 'lembretes');
+  let enviados = 0, pulados = 0, falhas = 0;
+  for (const a of data || []) {
+    // marcou faz pouco (menos de 3h30 antes): o e-mail de confirmação já serve de lembrete
+    const curto = new Date(a.inicio).getTime() - new Date(a.criado_em).getTime() < 3.5 * 3600e3 && !(a.emails && a.emails.ag_remarcado);
+    if (!a.cliente_email || curto) {
+      ok(await admin.from('ff_agendamentos').update({ lembrete_em: agora.toISOString() }).eq('id', a.id), 'pular');
+      pulados++; continue;
+    }
+    try { await enviarAgenda(admin, enviar, a, 'ag_lembrete'); enviados++; } catch (_) { falhas++; }
+  }
+  return { enviados, pulados, falhas };
+}
+
 export async function tratar(req, admin, enviar) {
   if (req.method === 'OPTIONS') return { status: 200, corpo: 'ok' };
   if (req.method !== 'POST') throw new Falha('metodo_invalido', 405);
-  const b = await req.json().catch(() => ({}));
+  const b = (await req.json().catch(() => ({}))) || {};
+
+  if (b.acao === 'lembretes') return { status: 200, corpo: await lembretes(admin, enviar) };
+
+  // E-mails de agendamento: { agendamento: token, tipo: 'ag_novo' | 'ag_remarcado' | 'ag_cancelado' }
+  if (b.agendamento !== undefined) {
+    if (!/^[a-z0-9]{16,40}$/i.test(String(b.agendamento || ''))) throw new Falha('agendamento_invalido');
+    const tipo = String(b.tipo || '');
+    if (!['ag_novo', 'ag_remarcado', 'ag_cancelado'].includes(tipo)) throw new Falha('tipo_invalido');
+    const { data: a } = ok(await admin.from('ff_agendamentos').select('*').eq('token', b.agendamento).maybeSingle(), 'agendamento');
+    if (!a) throw new Falha('agendamento_invalido', 404);
+    const ja = a.emails || {};
+    const pula = (motivo) => ({ status: 200, corpo: { enviado: false, motivo } });
+    if (!a.cliente_email) return pula('sem_email');
+    if (tipo === 'ag_novo' && (ja.ag_novo || a.status !== 'agendado')) return pula(ja.ag_novo ? 'ja_enviado' : 'situacao');
+    if (tipo === 'ag_cancelado' && (ja.ag_cancelado || a.status !== 'cancelado')) return pula(ja.ag_cancelado ? 'ja_enviado' : 'situacao');
+    // remarcado: só se a última mudança é depois do último aviso, e o horário ainda vai acontecer
+    if (tipo === 'ag_remarcado' && (a.status !== 'agendado' || new Date(a.inicio) < new Date()
+        || (ja.ag_remarcado && new Date(a.atualizado_em) <= new Date(ja.ag_remarcado)))) return pula('situacao');
+    await enviarAgenda(admin, enviar, a, tipo);
+    return { status: 200, corpo: { enviado: true } };
+  }
+
   if (!/^[a-z0-9]{8,40}$/i.test(String(b.token || ''))) throw new Falha('pedido_invalido');
 
   // Link do PDF da nota: quem tem o token do pedido é o cliente (mesma regra da página de acompanhamento)

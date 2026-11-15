@@ -22,8 +22,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=15201">
-<link rel="stylesheet" href="site.css?v=15201">
+<link rel="stylesheet" href="app.css?v=16448">
+<link rel="stylesheet" href="site.css?v=16448">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -312,8 +312,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=15201"></script>
-<script src="app.js?v=15201"></script>
+<script src="config.js?v=16448"></script>
+<script src="app.js?v=16448"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -412,7 +412,8 @@
       const preciso = pos && !(pos.acc > 1000);
       let fora = d != null && preciso && GP.foraArea(l, d);
       if (d != null && preciso && !fora && envia(l) && l.taxa_modo !== 'tabela' && !(Number(l.raio_km) > 0) && d > 30) fora = true;
-      return { ...l, _st: st, _ab: st.aberta, _d: d, _t: d != null ? GP.taxa(l, d) : null, _fora: fora && !envia(l), _envio: fora && envia(l) };
+      if (l.tipo === 'agenda') fora = false;
+      return { ...l, _st: st, _ab: l.tipo === 'agenda' ? true : st.aberta, _d: d, _t: d != null ? GP.taxa(l, d) : null, _fora: fora && !envia(l), _envio: fora && envia(l) };
     });
     if (busca) arr = arr.filter(l => l._busca.includes(busca));
     if (tipoF) arr = arr.filter(l => (l.tipo || 'restaurante') === tipoF);
@@ -434,9 +435,10 @@
       const capa = l.capa_url || l.imagem_url;
       const taxa = l._d == null ? GP.regraEntrega(l).replace(/ · mín\..*/, '')
         : l._envio ? 'Envio para sua cidade' : l._fora ? (l.aceita_retirada ? 'Não entrega aqui · só retirada' : 'Não entrega na sua região') : (l._t > 0 ? brl(l._t) : 'Grátis');
-      return ` <a class="card store ${l._ab ? '' : 'closed'} ${l._fora ? 'fora' : ''}" href="loja.html?l=${encodeURIComponent(l.slug)}">
+      const ag = l.tipo === 'agenda';
+      return ` <a class="card store ${l._ab || ag ? '' : 'closed'} ${l._fora && !ag ? 'fora' : ''}" href="${ag ? 'agenda' : 'loja'}.html?l=${encodeURIComponent(l.slug)}">
         <div class="cover" style="${capa ? `background-image:url('${esc(capa)}')` : 'background:linear-gradient(135deg,#FFB199,#F2451C)'}">
-          <span class="badge st ${l._st.cls}"><i class="dot"></i>${l._st.curto}</span>
+          ${ag ? `<span class="badge st ok"><i class="dot"></i>Agenda aberta</span>` : `<span class="badge st ${l._st.cls}"><i class="dot"></i>${l._st.curto}</span>`}
           ${cupLoja[l.id] ? `<span class="badge cupom-tag">${ic('tag')}${GP.descCupom(cupLoja[l.id])}</span>` : ''}
         </div>
         <div class="logo-s" style="${l.imagem_url ? `background-image:url('${esc(l.imagem_url)}')` : ''}">${l.imagem_url ? '' : ini}</div>
@@ -445,8 +447,8 @@
           <p class="desc clamp2">${esc(l.descricao || GP.tipo(l.tipo).nome)}</p>
           <div class="meta">
             ${l.nota_qtd ? `<span><span class="stars">★</span>${String(l.nota_media).replace('.', ',')} <span class="muted">(${l.nota_qtd})</span></span>` : `<span>${ic('sparkle')}Novo</span>`}
-            <span>${ic('clock')}${l._ab ? esc(l.tempo_entrega || '30–50 min') : esc(l._st.texto.replace(/^Fechada · /, '').replace(/^Pedidos pausados.*/, 'Pausada'))}</span>
-            <span class="${l._fora ? 'fora-t' : ''}">${ic(l._envio ? 'box' : 'bike')}${taxa}</span>
+            ${ag ? `<span>${ic('calendar')}Agende online</span>` : `<span>${ic('clock')}${l._ab ? esc(l.tempo_entrega || '30–50 min') : esc(l._st.texto.replace(/^Fechada · /, '').replace(/^Pedidos pausados.*/, 'Pausada'))}</span>
+            <span class="${l._fora ? 'fora-t' : ''}">${ic(l._envio ? 'box' : 'bike')}${taxa}</span>`}
             ${l._d != null ? `<span>${ic('pin')}~${km(l._d)}</span>` : ''}
           </div>
         </div></a>`;
