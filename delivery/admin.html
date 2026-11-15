@@ -101,12 +101,13 @@
 <main class="wrap narrow hide" id="v-login" style="max-width:420px;padding-top:40px">
   <h1 style="font-size:1.5rem;letter-spacing:-.03em">Acesso do administrador</h1>
   <p class="muted" style="margin-bottom:18px">Entre com o e-mail cadastrado como administrador.</p>
+  <div id="g-wrap"></div>
   <form id="f-login">
     <label class="field"><span>E-mail</span><input class="input" type="email" id="a-email" autocomplete="email" required></label>
     <label class="field"><span>Senha</span><input class="input" type="password" id="a-pass" autocomplete="current-password" required></label>
     <button class="btn btn-primary btn-block" id="a-btn">Entrar</button>
   </form>
-  <p class="small muted" style="margin-top:14px">É a mesma conta de e-mail e senha do painel do lojista. <a href="painel.html" style="text-decoration:underline">Esqueci minha senha</a></p>
+  <p class="small muted" style="margin-top:14px">É a mesma conta do painel do lojista (e-mail e senha ou Google). <a href="painel.html" style="text-decoration:underline">Esqueci minha senha</a></p>
 </main>
 
 <main class="wrap narrow hide" id="v-negado" style="max-width:460px;padding-top:60px;text-align:center">
@@ -171,6 +172,8 @@
   let user = null, lojas = [], dens = [], lojistas = [], filtro = 'pendente', busca = '';
   const show = (id) => ['v-login', 'v-negado', 'v-app'].forEach(v => $(v).classList.toggle('hide', v !== id));
 
+  $('g-wrap').innerHTML = GP.botaoGoogle() + '<div class="ou-sep">ou com e-mail e senha</div>';
+  $('g-wrap').querySelector('[data-google]').onclick = () => GP.loginGoogle(sb, GP.cfg.siteUrl + 'admin.html');
   $('f-login').onsubmit = async (e) => {
     e.preventDefault();
     const b = $('a-btn'); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
