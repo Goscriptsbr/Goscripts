@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=19626">
+<link rel="stylesheet" href="app.css?v=46888">
 <style>
   .hdr{background:var(--ink);color:#fff;position:sticky;top:0;z-index:30}
   .hdr .wrap{display:flex;align-items:center;gap:12px;height:62px}
@@ -161,8 +161,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=19626"></script>
-<script src="app.js?v=19626"></script>
+<script src="config.js?v=46888"></script>
+<script src="app.js?v=46888"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -331,7 +331,7 @@
     $('pg-resumo').textContent = `· ${GP.brl(noMes)} recebidos este mês`;
     $('pagamentos').innerHTML = (data || []).length ? (data || []).map(x => `<div class="card pl" style="padding:10px 14px">
       <div style="min-width:0"><b class="ellipsis" style="display:block">${esc(x.email)}</b>
-        <div class="small muted">${GP.planoNome(x.plano)} · ${x.meses} ${x.meses > 1 ? 'meses' : 'mês'} · ${x.metodo === 'cartao' ? 'cartão' : 'Pix'} · ${new Date(x.criado_em).toLocaleString('pt-BR')}${x.valido_ate ? ' · até ' + x.valido_ate.split('-').reverse().join('/') : ''}</div></div>
+        <div class="small muted">${x.plano === 'extra' ? '+' + x.qtd + ' produtos extras' : GP.planoNome(x.plano)} · ${x.meses} ${x.meses > 1 ? 'meses' : 'mês'} · ${x.metodo === 'cartao' ? 'cartão' : 'Pix'} · ${new Date(x.criado_em).toLocaleString('pt-BR')}${x.valido_ate ? ' · até ' + x.valido_ate.split('-').reverse().join('/') : ''}</div></div>
       <div style="text-align:right;white-space:nowrap"><b>${GP.brl(x.valor)}</b><div class="small" style="font-weight:800;color:${x.status === 'aprovado' ? 'var(--ok)' : x.status === 'pendente' ? 'var(--muted)' : '#b42318'}">${{ aprovado: 'Pago', pendente: 'Aguardando', recusado: 'Recusado', estornado: 'Devolvido' }[x.status]}</div></div></div>`).join('')
       : '<p class="small muted">Nenhum pagamento de plano ainda.</p>';
   }

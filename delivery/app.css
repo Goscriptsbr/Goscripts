@@ -422,3 +422,6 @@ body:not(.modo-agenda) .ag-only{display:none!important}
 .plp-h{margin-top:14px;font-size:.84rem}.plp-h summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
 .plp-h div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
 .plp-h b.aprovado{color:var(--ok,#14945A)}.plp-h b.recusado,.plp-h b.estornado{color:#b42318}.plp-h b.pendente{color:var(--muted)}
+
+.plp-q{display:grid;grid-template-columns:52px 1fr 52px;gap:8px}.plp-q .input{text-align:center;font-weight:800;font-size:1.1rem}.plp-q .btn{font-size:1.3rem;padding:0}
+.plp-qs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}.plp-qs .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}

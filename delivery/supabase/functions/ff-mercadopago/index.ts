@@ -27,7 +27,7 @@
 // Planos do GoPedido (SQL v27) — o dinheiro cai na conta do GoPedido, não na da loja:
 //           MP_PLANO_TOKEN      = Access Token de produção da conta que recebe os planos (só aqui, nunca no site)
 //           MP_PLANO_PUBLIC_KEY = Public Key dessa mesma conta (para o formulário de cartão)
-//   { acao: 'plano_info' } · { acao: 'plano_pix', plano, meses } · { acao: 'plano_cartao', plano, meses, token, dados } · { acao: 'plano_conferir', id }
+//   { acao: 'plano_info' } · { acao: 'plano_pix', plano, meses, qtd? } (plano 'extra' = produtos a mais, só Premium, SQL v28) · { acao: 'plano_cartao', plano, meses, token, dados } · { acao: 'plano_conferir', id }
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -167,18 +167,20 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
     const { data } = ok(await admin.from('ff_equipe').select('dono').eq('user_id', usuario.id).limit(1).maybeSingle(), 'equipe');
     if (data) throw new Falha('so_dono', 403);
   }
-  async function calcPlano(plano, meses) {
-    if (!['profissional', 'premium'].includes(String(plano)) || ![1, 2, 3].includes(Number(meses))) throw new Falha('plano_invalido');
-    const { data } = ok(await admin.rpc('ff_plano_calc', { p_email: usuario.email, p_plano: plano, p_meses: Number(meses) }), 'preço');
+  async function calcPlano(plano, meses, qtd = 0) {
+    if (!['profissional', 'premium', 'extra'].includes(String(plano)) || ![1, 2, 3].includes(Number(meses))) throw new Falha('plano_invalido');
+    const { data } = plano === 'extra'
+      ? ok(await admin.rpc('ff_extra_calc', { p_email: usuario.email, p_qtd: Math.floor(Number(qtd) || 0), p_meses: Number(meses) }), 'preço')
+      : ok(await admin.rpc('ff_plano_calc', { p_email: usuario.email, p_plano: plano, p_meses: Number(meses) }), 'preço');
     if (data && data.erro) throw new Falha(data.erro, 400, data.valido_ate ? String(data.valido_ate) : '');
     return data;
   }
-  async function novoPagamentoPlano(plano, meses, metodo) {
-    const c = await calcPlano(plano, meses);
-    const { data } = ok(await admin.from('ff_plano_pagamentos').insert({ user_id: usuario.id, email: String(usuario.email).toLowerCase(), plano, meses: Number(meses), valor: c.valor, metodo }).select('*').single(), 'criar pagamento');
+  async function novoPagamentoPlano(plano, meses, metodo, qtd = 0) {
+    const c = await calcPlano(plano, meses, qtd);
+    const { data } = ok(await admin.from('ff_plano_pagamentos').insert({ user_id: usuario.id, email: String(usuario.email).toLowerCase(), plano, meses: Number(meses), valor: c.valor, metodo, ...(plano === 'extra' ? { qtd: Math.floor(Number(qtd)) } : {}) }).select('*').single(), 'criar pagamento');
     return { g: data, c };
   }
-  function descPlano(g) { return `GoPedido · Plano ${g.plano === 'premium' ? 'Premium' : 'Profissional'} · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}`; }
+  function descPlano(g) { return g.plano === 'extra' ? `GoPedido · +${g.qtd} produtos extras · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}` : `GoPedido · Plano ${g.plano === 'premium' ? 'Premium' : 'Profissional'} · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}`; }
 
   async function pedirToken(corpo) {
     const r = await http(API + '/oauth/token', {
@@ -453,31 +455,34 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
           try { tabela[pl][m] = await calcPlano(pl, m); } catch (e) { tabela[pl][m] = { erro: e.message, valido_ate: e.detalhe || null }; }
         }
       }
-      const { data: hist } = ok(await admin.from('ff_plano_pagamentos').select('id, plano, meses, valor, status, metodo, criado_em, pago_em, valido_ate')
+      let extra = null;
+      try { extra = await calcPlano('extra', 1, 10); extra = { preco: Number(extra.preco), premium_ate: extra.premium_ate }; } catch (e) { extra = { erro: e.message }; }
+      tabela.extra = extra;
+      const { data: hist } = ok(await admin.from('ff_plano_pagamentos').select('id, plano, meses, qtd, valor, status, metodo, criado_em, pago_em, valido_ate')
         .eq('user_id', usuario.id).order('criado_em', { ascending: false }).limit(10), 'histórico');
       return { status: 200, corpo: { ativo: !!env.MP_PLANO_TOKEN, public_key: env.MP_PLANO_PUBLIC_KEY || '', email: usuario.email, tabela, historico: hist || [] } };
     }
 
     if (acao === 'plano_pix') {
       await exigeDonoConta();
-      const plano = String(b.plano || ''), meses = Number(b.meses);
+      const plano = String(b.plano || ''), meses = Number(b.meses), qtd = Math.floor(Number(b.qtd) || 0);
       const qr = (o, g) => {
         const pg = (o.transactions && o.transactions.payments || [])[0] || {}, m = pg.payment_method || {};
         return { id: g.id, valor: Number(g.valor), qr: m.qr_code || '', qr_img: m.qr_code_base64 || '', link: m.ticket_url || '' };
       };
       // Pix em aberto do mesmo plano e tempo (últimos 30 min): mostra o mesmo QR Code
       const { data: ab } = ok(await admin.from('ff_plano_pagamentos').select('*').eq('user_id', usuario.id).eq('plano', plano).eq('meses', meses)
-        .eq('metodo', 'pix').eq('status', 'pendente').gte('criado_em', new Date(Date.now() - 30 * 60000).toISOString()).order('criado_em', { ascending: false }).limit(1).maybeSingle(), 'pix aberto');
+        .eq('metodo', 'pix').eq('status', 'pendente').eq('qtd', plano === 'extra' ? qtd : 0).gte('criado_em', new Date(Date.now() - 30 * 60000).toISOString()).order('criado_em', { ascending: false }).limit(1).maybeSingle(), 'pix aberto');
       if (ab && ORD.test(ab.mp_id || '')) {
         try {
           const ant = await mpPlano('GET', '/v1/orders/' + ab.mp_id);
           const g2 = await gravarPlano(ant);
           if (g2 && g2.status === 'aprovado') return { status: 200, corpo: { id: ab.id, pago: true } };
-          const c = await calcPlano(plano, meses);
+          const c = await calcPlano(plano, meses, qtd);
           if (situacaoOrdem(ant) === 'pendente' && centavos(ant.total_amount) === centavos(c.valor) && qr(ant, ab).qr) return { status: 200, corpo: qr(ant, ab) };
         } catch (_) { /* cria outro */ }
       }
-      const { g } = await novoPagamentoPlano(plano, meses, 'pix');
+      const { g } = await novoPagamentoPlano(plano, meses, 'pix', qtd);
       const o = await mpPlano('POST', '/v1/orders', {
         type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'plano-' + g.id, description: descPlano(g),
         transactions: { payments: [{ amount: valor(g.valor), payment_method: { id: 'pix', type: 'bank_transfer' }, expiration_time: 'PT30M' }] },
@@ -491,7 +496,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
       await exigeDonoConta();
       const d = b.dados || {};
       if (!/^[A-Za-z0-9]{20,64}$/.test(String(d.token || ''))) throw new Falha('cartao_invalido');
-      const { g } = await novoPagamentoPlano(String(b.plano || ''), Number(b.meses), 'cartao');
+      const { g } = await novoPagamentoPlano(String(b.plano || ''), Number(b.meses), 'cartao', Math.floor(Number(b.qtd) || 0));
       const ident = d.payer && d.payer.identification;
       const o = await mpPlano('POST', '/v1/orders', {
         type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'plano-' + g.id, description: descPlano(g),

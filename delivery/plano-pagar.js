@@ -7,9 +7,10 @@
     plano_invalido: 'Plano inválido.', limite_meses: 'Você já tem o máximo de 3 meses pagos neste plano.',
     plano_vitalicio: 'Sua conta tem um plano liberado sem vencimento. Fale com a gente pelo WhatsApp para mudar.',
     planos_nao_configurados: 'O pagamento automático dos planos ainda não foi ligado. Assine pelo WhatsApp.',
-    cartao_invalido: 'Confira os dados do cartão.'
+    cartao_invalido: 'Confira os dados do cartão.',
+    extra_so_premium: 'Produtos extras são só para quem tem o plano Premium ativo.', extra_qtd: 'Escolha de 10 a 2.000 produtos extras.'
   };
-  let sb = null, info = null, plano = 'profissional', meses = 1, aba = 'pix', poll = null, aoPagar = null, brick = null;
+  let sb = null, info = null, plano = 'profissional', meses = 1, aba = 'pix', poll = null, aoPagar = null, brick = null, qtd = 50;
   const dataBR = (d) => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '';
 
   async function chamar(body) {
@@ -42,7 +43,36 @@
   }
   const $c = () => document.getElementById('plp-c');
 
+  function renderExtra() {
+    const ex = info.tabela.extra || {};
+    if (ex.erro) { $c().innerHTML = `<h3 style="margin:0 0 6px">Produtos extras</h3><p class="small">${esc(MSG[ex.erro] || ex.erro)}</p>`; return; }
+    const preco = Number(ex.preco) || 0.2;
+    const total = (m) => Math.round(qtd * preco * m * 100) / 100;
+    const hoje = new Date(); const fim = (m) => { const d = new Date(hoje.getTime() + m * 30 * 86400e3); return d.toISOString().slice(0, 10); };
+    const sel = { valor: total(meses), valido_ate: fim(meses) };
+    const passa = ex.premium_ate && sel.valido_ate > ex.premium_ate;
+    $c().innerHTML = `
+      <h3 style="margin:0 0 4px">Produtos extras</h3>
+      <p class="small muted" style="margin:0 0 14px">Para o Premium: ${brl(preco)} por produto, por mês. Liberado na hora para <b>${esc(info.email)}</b>.</p>
+      <label class="field" style="margin-bottom:10px"><span>Quantos produtos a mais?</span>
+        <div class="plp-q"><button type="button" class="btn btn-ghost" data-q="-10">−</button><input class="input" id="plp-qtd" inputmode="numeric" value="${qtd}"><button type="button" class="btn btn-ghost" data-q="10">+</button></div></label>
+      <div class="plp-qs">${[20, 50, 100, 200].map(n => `<button type="button" class="chip ${qtd === n ? 'on' : ''}" data-qn="${n}">+${n}</button>`).join('')}</div>
+      <div class="plp-ms">${[1, 2, 3].map(m => `<button type="button" class="plp-m ${meses === m ? 'on' : ''}" data-m="${m}"><b>${m} ${m > 1 ? 'meses' : 'mês'}</b><span class="v">${brl(total(m))}</span><small>${brl(qtd * preco)}/mês</small></button>`).join('')}</div>
+      <div class="plp-res"><span>+${qtd} produtos válidos até</span><b>${dataBR(sel.valido_ate)}</b>
+        ${passa ? `<small style="color:#9a3412">Os extras só valem enquanto o Premium estiver ativo (até ${dataBR(ex.premium_ate)}). Renove o Premium para aproveitar todo o período.</small>` : ''}</div>
+      <div class="seg3 plp-ab" style="grid-template-columns:1fr 1fr"><button type="button" data-ab="pix" class="${aba === 'pix' ? 'on' : ''}">${ic('pix')}Pix</button><button type="button" data-ab="cartao" class="${aba === 'cartao' ? 'on' : ''}">${ic('card')}Cartão</button></div>
+      <div id="plp-pg"></div>`;
+    const setQ = (n) => { qtd = Math.max(10, Math.min(2000, Math.round((Number(n) || 10) / 10) * 10)); renderExtra(); };
+    $c().querySelector('.plp-q').onclick = (e) => { const b = e.target.closest('[data-q]'); if (b) setQ(qtd + Number(b.dataset.q)); };
+    $c().querySelector('#plp-qtd').onchange = (e) => setQ(e.target.value);
+    $c().querySelector('.plp-qs').onclick = (e) => { const b = e.target.closest('[data-qn]'); if (b) setQ(b.dataset.qn); };
+    $c().querySelector('.plp-ms').onclick = (e) => { const b = e.target.closest('[data-m]'); if (b) { meses = Number(b.dataset.m); renderExtra(); } };
+    $c().querySelector('.plp-ab').onclick = (e) => { const b = e.target.closest('[data-ab]'); if (b) { aba = b.dataset.ab; renderExtra(); } };
+    (aba === 'pix' ? areaPix : areaCartao)(sel);
+  }
+
   function render() {
+    if (plano === 'extra') return renderExtra();
     const t = info.tabela[plano] || {};
     const p1 = Number((t[1] || {}).valor) || (plano === 'premium' ? 100 : 50);
     const sel = t[meses] || {};
@@ -64,7 +94,7 @@
         ${sel.credito_dias ? `<small>Inclui ${sel.credito_dias} dias de crédito do seu plano atual.</small>` : sel.atual === plano && sel.atual_ate ? `<small>Soma depois do vencimento atual (${dataBR(sel.atual_ate)}).</small>` : ''}</div>
       <div class="seg3 plp-ab" style="grid-template-columns:1fr 1fr"><button type="button" data-ab="pix" class="${aba === 'pix' ? 'on' : ''}">${ic('pix')}Pix</button><button type="button" data-ab="cartao" class="${aba === 'cartao' ? 'on' : ''}">${ic('card')}Cartão</button></div>
       <div id="plp-pg"></div>`}
-      ${info.historico && info.historico.length ? `<details class="plp-h"><summary>Pagamentos anteriores</summary>${info.historico.map(h => `<div><span>${dataBR(h.criado_em)} · ${NOMES[h.plano]} ${h.meses}m · ${brl(h.valor)}</span><b class="${h.status}">${{ aprovado: 'Pago', pendente: 'Aguardando', recusado: 'Recusado', estornado: 'Devolvido' }[h.status]}</b></div>`).join('')}</details>` : ''}`;
+      ${info.historico && info.historico.length ? `<details class="plp-h"><summary>Pagamentos anteriores</summary>${info.historico.map(h => `<div><span>${dataBR(h.criado_em)} · ${h.plano === 'extra' ? '+' + h.qtd + ' produtos' : NOMES[h.plano]} ${h.meses}m · ${brl(h.valor)}</span><b class="${h.status}">${{ aprovado: 'Pago', pendente: 'Aguardando', recusado: 'Recusado', estornado: 'Devolvido' }[h.status]}</b></div>`).join('')}</details>` : ''}`;
     $c().querySelector('.plp-pl').onclick = (e) => { const b = e.target.closest('[data-pl]'); if (!b) return; plano = b.dataset.pl; if ((info.tabela[plano][meses] || {}).erro) meses = [1, 2, 3].find(m => !(info.tabela[plano][m] || {}).erro) || 1; render(); };
     $c().querySelector('.plp-ms').onclick = (e) => { const b = e.target.closest('[data-m]'); if (!b || b.disabled) return; meses = Number(b.dataset.m); render(); };
     const ab = $c().querySelector('.plp-ab'); if (ab) ab.onclick = (e) => { const b = e.target.closest('[data-ab]'); if (!b) return; aba = b.dataset.ab; render(); };
@@ -78,7 +108,7 @@
     el.querySelector('#plp-gerar').onclick = async (e) => {
       const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Gerando…';
       try {
-        const r = await chamar({ acao: 'plano_pix', plano, meses });
+        const r = await chamar({ acao: 'plano_pix', plano, meses, qtd });
         if (r.pago) return pago();
         el.innerHTML = `<div class="pixqr">${r.qr_img ? `<img alt="QR Code do Pix" src="data:image/png;base64,${r.qr_img}">` : ''}</div>
           <p class="small center" style="margin:8px 0">Abra o app do banco, escolha <b>Pix → Ler QR Code</b> ou use o copia e cola:</p>
@@ -114,7 +144,7 @@
         callbacks: {
           onReady: () => {}, onError: () => {},
           onSubmit: async (dados) => {
-            const r = await chamar({ acao: 'plano_cartao', plano, meses, dados }).catch(er => ({ erro: er.message }));
+            const r = await chamar({ acao: 'plano_cartao', plano, meses, qtd, dados }).catch(er => ({ erro: er.message }));
             if (r.status === 'aprovado') return pago(r.valido_ate);
             if (r.status === 'pendente') { GP.toast('Pagamento em análise. O plano libera assim que o Mercado Pago aprovar.'); return; }
             GP.toast(r.erro || 'O cartão não foi aprovado. Tente outro cartão ou o Pix.' + (r.detalhe ? ' (' + r.detalhe + ')' : ''), 'err');
@@ -131,7 +161,7 @@
     clearInterval(poll); poll = null;
     $c().innerHTML = `<div class="center" style="padding:10px 0 4px">
       <div class="cfm-ic" style="background:#e7f6ec;color:#166534;margin:0 auto 10px">${ic('check')}</div>
-      <h3 style="margin:0 0 6px">Plano ${NOMES[plano]} liberado!</h3>
+      <h3 style="margin:0 0 6px">${plano === 'extra' ? '+' + qtd + ' produtos liberados!' : 'Plano ' + NOMES[plano] + ' liberado!'}</h3>
       <p class="small muted" style="margin:0 0 16px">${ate ? 'Válido até <b>' + dataBR(ate) + '</b>. ' : ''}Obrigado por assinar o GoPedido. Os limites novos já valem agora.</p>
       <button type="button" class="btn btn-primary btn-block" id="plp-ok">Continuar</button></div>`;
     document.getElementById('plp-ok').onclick = fechar;
@@ -141,13 +171,12 @@
   window.PlanoPagar = {
     async abrir(cliente, o = {}) {
       sb = cliente; aoPagar = o.aoPagar || null;
-      plano = o.plano === 'premium' ? 'premium' : 'profissional'; meses = 1; aba = 'pix';
+      plano = o.plano === 'premium' ? 'premium' : o.plano === 'extra' ? 'extra' : 'profissional'; meses = 1; aba = 'pix'; qtd = 50;
       moldura();
       try { info = await chamar({ acao: 'plano_info' }); }
       catch (er) { $c().innerHTML = `<h3 style="margin:0 0 6px">Assinar plano</h3><p class="small">${esc(er.message)}</p>${o.whats ? `<a class="btn btn-primary btn-block" target="_blank" rel="noopener" href="${o.whats}">${ic('chat')}Assinar pelo WhatsApp</a>` : ''}`; return; }
       if (!info.ativo) { $c().innerHTML = `<h3 style="margin:0 0 6px">Assinar plano</h3><p class="small">${MSG.planos_nao_configurados}</p>${o.whats ? `<a class="btn btn-primary btn-block" target="_blank" rel="noopener" href="${o.whats}">${ic('chat')}Assinar pelo WhatsApp</a>` : ''}`; return; }
-      if ((info.tabela[plano][1] || {}).erro && (info.tabela[plano][1] || {}).erro !== 'limite_meses') { /* mostra o aviso na própria tela */ }
-      if ((info.tabela[plano][meses] || {}).erro) meses = [1, 2, 3].find(m => !(info.tabela[plano][m] || {}).erro) || 1;
+      if (plano !== 'extra' && (info.tabela[plano][meses] || {}).erro) meses = [1, 2, 3].find(m => !(info.tabela[plano][m] || {}).erro) || 1;
       render();
     }
   };
