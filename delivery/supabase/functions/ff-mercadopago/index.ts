@@ -147,7 +147,8 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
   // Grava o resultado da order do plano; aprovado e com o valor certo → libera o plano
   async function gravarPlano(o) {
     const ref = String(o.external_reference || '');
-    if (!ref.startsWith('plano:')) return null;
+    // código do pedido do plano: "plano-<id>" (o Mercado Pago só aceita letras, números, - e _)
+    if (!/^plano[-:]/.test(ref)) return null;
     const id = ref.slice(6); if (!UUID.test(id)) return null;
     const { data: g } = ok(await admin.from('ff_plano_pagamentos').select('*').eq('id', id).maybeSingle(), 'pagamento');
     if (!g) return null;
@@ -478,7 +479,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
       }
       const { g } = await novoPagamentoPlano(plano, meses, 'pix');
       const o = await mpPlano('POST', '/v1/orders', {
-        type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'plano:' + g.id, description: descPlano(g),
+        type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'plano-' + g.id, description: descPlano(g),
         transactions: { payments: [{ amount: valor(g.valor), payment_method: { id: 'pix', type: 'bank_transfer' }, expiration_time: 'PT30M' }] },
         payer: { email: compradorTeste(g.email), ...(TESTE ? { first_name: 'APRO' } : {}) }
       }, { 'X-Idempotency-Key': 'plano-pix-' + g.id });
@@ -493,7 +494,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
       const { g } = await novoPagamentoPlano(String(b.plano || ''), Number(b.meses), 'cartao');
       const ident = d.payer && d.payer.identification;
       const o = await mpPlano('POST', '/v1/orders', {
-        type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'plano:' + g.id, description: descPlano(g),
+        type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'plano-' + g.id, description: descPlano(g),
         transactions: { payments: [{ amount: valor(g.valor), payment_method: {
           id: String(d.payment_method_id || '').slice(0, 40), type: 'credit_card', token: d.token,
           installments: Math.max(1, Math.min(12, parseInt(d.installments, 10) || 1)), statement_descriptor: 'GOPEDIDO' } }] },
