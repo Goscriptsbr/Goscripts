@@ -309,3 +309,16 @@ main.wrap{padding-bottom:56px}
 .rv{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
 @keyframes sobe{from{opacity:0;transform:translateY(16px)}}
+
+/* Integração Mercado Pago (faixa azul-clara) */
+.mp-band{background:linear-gradient(135deg,#00365F,#0077C8 55%,#00A6E8);box-shadow:0 24px 50px rgba(0,119,200,.22);margin-bottom:16px}
+.taxas-mp{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px 22px;margin-bottom:34px}
+.taxas-mp>b{display:block;font-size:1rem;margin-bottom:12px}
+.tx-g{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tx-g>div{background:var(--bg);border-radius:14px;padding:12px}
+.tx-g span{display:block;font-size:.74rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tx-g b{display:block;font-size:1.3rem;letter-spacing:-.02em;margin:2px 0}
+.tx-g small{font-size:.8rem;color:var(--ink-2)}
+.taxas-mp .me-nota{text-align:left;margin-top:12px}
+.taxas-mp .me-nota a{color:var(--brand-2);font-weight:700}
+@media(max-width:760px){.tx-g{grid-template-columns:1fr 1fr}}

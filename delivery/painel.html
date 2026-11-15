@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=18099">
+<link rel="stylesheet" href="app.css?v=19626">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -157,6 +157,10 @@
   .cp-chip{font-size:.76rem;font-weight:800;padding:5px 10px;border-radius:999px;background:var(--brand);color:#fff}
   .cp-chip.off{background:#fff;color:var(--ink-2);border:1px solid var(--line)}
   .cp-btn{margin-left:auto;font-size:.8rem;font-weight:800;padding:8px 12px;border-radius:12px;background:var(--brand);color:#fff}
+  .mp-taxas{margin-top:12px;background:var(--bg);border-radius:14px;padding:12px 14px}
+  .mp-taxas>b{display:block;font-size:.88rem;margin-bottom:6px}
+  .mp-taxas>div{display:flex;justify-content:space-between;font-size:.9rem;padding:3px 0}
+  .mp-taxas p{margin:8px 0 0;line-height:1.45}.mp-taxas a{color:var(--brand-2);font-weight:700}
   .ml-wz .ml-nav,.ml-wz #ml-save,.ml-wz .cm-head,.ml-wz .tipo-pick>h3,.ml-wz .tipo-pick>h3+p{display:none!important}
   .ml-wz .ml-layout{grid-template-columns:1fr!important;max-width:760px;margin:0 auto}
   .wz{max-width:760px;margin:0 auto 14px}
@@ -896,10 +900,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=18099"></script>
-<script src="app.js?v=18099"></script>
-<script src="plano-pagar.js?v=18099"></script>
-<script src="agenda-painel.js?v=18099"></script>
+<script src="config.js?v=19626"></script>
+<script src="app.js?v=19626"></script>
+<script src="plano-pagar.js?v=19626"></script>
+<script src="agenda-painel.js?v=19626"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1151,7 +1155,12 @@
         <div class="grow" style="min-width:0"><b>Conecte sua conta do Mercado Pago</b>
           <div class="small muted">Use a conta onde você quer receber. Pode ser pessoa física ou empresa.</div></div>
         ${souDono ? `<button type="button" class="btn btn-primary btn-sm" id="mp-conectar">${ic('ext')}Conectar</button>` : ''}
-      </div>${souDono ? '' : '<div class="warnline" style="margin-top:10px">Só o dono da conta pode conectar o Mercado Pago.</div>'}`;
+      </div>${souDono ? '' : '<div class="warnline" style="margin-top:10px">Só o dono da conta pode conectar o Mercado Pago.</div>'}
+      <div class="mp-taxas"><b>Quanto o Mercado Pago cobra por venda</b>
+        <div><span>Pix</span><b>0,99%</b></div>
+        <div><span>Cartão de crédito</span><b>3,98% a 4,98%</b></div>
+        <p class="small muted">No cartão, a taxa depende do prazo para receber: 4,98% na hora, 4,48% em 14 dias e cerca de 3,98% em 30 dias. Você escolhe o prazo na sua conta do Mercado Pago. Valores consultados em novembro de 2026: <b>eles podem mudar</b>, então confira em <a href="https://www.mercadopago.com.br/ferramentas-para-vender/check-out" target="_blank" rel="noopener">mercadopago.com.br</a> antes de conectar. O GoPedido não cobra nada sobre essas vendas.</p>
+      </div>`;
       if ($('mp-conectar')) $('mp-conectar').onclick = async (e) => {
         const b = e.currentTarget;
         if (!(await GP.confirmar('Conectar o Mercado Pago da sua loja', { texto: 'Os pagamentos online vão cair na SUA conta do Mercado Pago, com as taxas do Mercado Pago. Devoluções de pedidos pagos online saem dessa conta. O GoPedido não recebe nem segura o dinheiro.', ok: 'Conectar' }))) return;

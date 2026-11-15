@@ -22,8 +22,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=18099">
-<link rel="stylesheet" href="site.css?v=18099">
+<link rel="stylesheet" href="app.css?v=19626">
+<link rel="stylesheet" href="site.css?v=19626">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
   .hero .wrap{padding:46px 18px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
@@ -312,8 +312,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=18099"></script>
-<script src="app.js?v=18099"></script>
+<script src="config.js?v=19626"></script>
+<script src="app.js?v=19626"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -337,7 +337,7 @@
   document.querySelectorAll('[data-ic]').forEach(el => { el.innerHTML = ic(el.dataset.ic); }); $('hb-ic').innerHTML = ic('bolt');
   const ri = document.querySelectorAll('.role .ic'); ['user', 'bike', 'store'].forEach((n, k) => ri[k].innerHTML = ic(n));
   $('t1').innerHTML = ic('check') + 'Pix na hora';
-  $('t2').innerHTML = ic('check') + 'Cartão na entrega';
+  $('t2').innerHTML = ic('check') + 'Cartão online ou na entrega';
   $('t3').innerHTML = ic('check') + 'Envio para todo o Brasil';
   $('t4').innerHTML = ic('check') + 'Acompanhe o pedido';
   $('how').innerHTML = [
