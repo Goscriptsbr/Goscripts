@@ -28,6 +28,8 @@
     copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
     upload: '<path d="M12 15V4m0 0-4 4m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
     check: '<path d="m5 12 5 5 9-10"/>',
+    mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+    users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2"/>',
     download: '<path d="M12 4v11m0 0-4-4m4 4 4-4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
     monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
     store: '<path d="M4 9 5.5 4h13L20 9M4 9v11h16V9M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/><path d="M10 20v-5h4v5"/>',
@@ -141,12 +143,12 @@
   // ---------- Planos ----------
   GP.WHATS = '5519988283178';
   GP.PLANOS = [
-    { id: 'gratis', nome: 'Grátis', desc: 'Para começar a vender', preco: 0, lojas: 1, produtos: 30, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 administrador além de você', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções'] },
-    { id: 'profissional', nome: 'Profissional', desc: 'Para quem tem mais produtos ou uma segunda loja', preco: 50, lojas: 2, produtos: 150, destaque: true, ex: 'Ex.: 100 produtos numa loja e 50 na outra', itens: ['Tudo do plano Grátis', '4 administradores além de você', 'Suporte pelo WhatsApp'] },
-    { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 350, ex: 'Ex.: 5 lojas com 70 produtos cada', itens: ['Tudo do Profissional', '8 administradores além de você', 'Produtos extras quando precisar: R$ 0,20 por produto/mês', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
+    { id: 'gratis', nome: 'Grátis', desc: 'Para começar a vender', preco: 0, lojas: 1, produtos: 30, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 administrador além de você', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções', 'Loja de assinaturas: até 10 assinantes'] },
+    { id: 'profissional', nome: 'Profissional', desc: 'Para quem tem mais produtos ou uma segunda loja', preco: 50, lojas: 2, produtos: 150, destaque: true, ex: 'Ex.: 100 produtos numa loja e 50 na outra', itens: ['Tudo do plano Grátis', '4 administradores além de você', 'Loja de assinaturas: até 50 assinantes', 'Suporte pelo WhatsApp'] },
+    { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 350, ex: 'Ex.: 5 lojas com 70 produtos cada', itens: ['Tudo do Profissional', '8 administradores além de você', 'Produtos extras quando precisar: R$ 0,20 por produto/mês', 'Loja de assinaturas: até 150 assinantes (+ extras a R$ 1,00 por assinante/mês)', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
   ];
   GP.planoNome = (id) => (GP.PLANOS.find(p => p.id === id) || GP.PLANOS[0]).nome;
-  GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano. Só no Premium dá para comprar produtos a mais quando precisar (R$ 0,20 por produto por mês).';
+  GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano. Só no Premium dá para comprar produtos a mais quando precisar (R$ 0,20 por produto por mês). Nas lojas de assinaturas, o limite é de assinantes ativos (10, 50 ou 150), somando todas as lojas; no Premium dá para comprar assinantes a mais (R$ 1,00 por assinante por mês).';
   GP.planosHtml = (atual, email, publico, comprar) => GP.PLANOS.map(p => {
     const msg = `Olá! Quero assinar o plano ${p.nome} (R$ ${p.preco}/mês) do GoPedido.${email ? ' Meu e-mail no painel: ' + email : ''}`;
     return `<div class="plano ${p.destaque ? 'dest' : ''} ${p.id === atual ? 'atual' : ''}">
@@ -229,6 +231,11 @@
     cupom_esgotado: 'Este cupom já foi usado o máximo de vezes.',
     limite_lojas: 'Você chegou no limite de lojas do seu plano.',
     limite_produtos: 'Você chegou no limite de produtos do seu plano.',
+    limite_assinantes: 'Você chegou no limite de assinantes do seu plano do GoPedido.',
+    sem_vagas: 'Esta loja não está aceitando novos assinantes no momento. Fale com ela pelo WhatsApp.',
+    assinante_invalido: 'Assinatura não encontrada. Confira o link do e-mail.', assinante_cancelado: 'Esta assinatura foi cancelada. Fale com a loja.',
+    periodo_invalido: 'Escolha um período disponível.', loja_indisponivel: 'Esta loja não está disponível no momento.',
+    nome_obrigatorio: 'Digite seu nome.', extra_assin_qtd: 'Escolha de 5 a 2.000 assinantes extras.',
     peso_invalido: 'Um produto por peso está com uma quantidade inválida. Remova da sacola e escolha de novo.',
     loja_bloqueada_plano: 'Esta loja está temporariamente indisponível. Tente mais tarde.',
     push_negado: 'Os avisos foram bloqueados. Libere as notificações deste site nas configurações do navegador e tente de novo.',
@@ -978,10 +985,57 @@
     { id: 'bebidas', nome: 'Bebidas e adega', curto: 'Bebidas', ex: ['Adega do Centro', 'Cervejas, destilados, gelo, água e gás.'], ic: 'wine', obsItem: 'Ex.: bem gelada, marca preferida…', obsPedido: 'Ex.: troco, interfone quebrado…', desc: 'Adega, distribuidora, gelo, água e gás' },
     { id: 'variedades', nome: 'Variedades', curto: 'Variedades', ex: ['Loja da Ana', 'Roupas, presentes, utilidades e eletrônicos.'], ic: 'box', obsItem: 'Ex.: cor preferida, embrulhar para presente…', obsPedido: 'Ex.: é presente, não mandar nota com o preço…', desc: 'Roupas, presentes, eletrônicos, utilidades. Pode enviar para outras cidades.' },
     { id: 'agenda', nome: 'Agendamentos', curto: 'Agendar', ex: ['Barbearia do Zé', 'Corte, barba e sobrancelha com hora marcada.'], ic: 'calendar', obsItem: '', obsPedido: '', desc: 'Salão, barbearia, manicure, estética: o cliente marca horário online', agenda: true },
+    { id: 'assinatura', nome: 'Assinaturas', curto: 'Assinaturas', ex: ['Clube do Gamer', 'Planos mensais com renovação pelo e-mail.'], ic: 'star', obsItem: '', obsPedido: '', desc: 'Planos mensais, clubes, mensalidades e códigos digitais: cobrança e lembrete automáticos', assin: true },
     { id: 'outros', nome: 'Outros', curto: 'Outros', ex: ['Minha Loja', 'Conte o que você vende.'], ic: 'grid', obsItem: 'Ex.: algum detalhe sobre este item…', obsPedido: 'Ex.: troco, ponto de referência…', desc: 'Qualquer outro tipo de loja' }
   ];
   GP.tipo = (id) => GP.TIPOS.find(t => t.id === id) || GP.TIPOS[0];
   GP.ehAgenda = (l) => !!l && l.tipo === 'agenda';
+  GP.ehAssin = (l) => !!l && l.tipo === 'assinatura';
+  // Situação de um pagamento (planos e assinaturas): Pix não pago em 30 min aparece como expirado, igual ao Mercado Pago
+  GP.statusPag = (h) => {
+    if (h.status === 'pendente' && h.metodo === 'pix' && Date.now() - new Date(h.criado_em).getTime() > 31 * 60e3) return ['expirado', 'Expirado'];
+    if (h.status === 'pendente') return ['pendente', h.metodo === 'cartao' ? 'Em análise' : 'Aguardando'];
+    return [h.status, { aprovado: 'Pago', recusado: 'Recusado', estornado: 'Devolvido' }[h.status] || h.status];
+  };
+  // Gerenciador de códigos digitais (produto ou plano de assinatura): colar vários, ver os livres, apagar.
+  GP.codigos = {
+    async abrir(sb, box, o) {
+      const campo = o.produto_id ? 'produto_id' : 'plano_id', id = o.produto_id || o.plano_id;
+      const desenhar = async () => {
+        const { data, error } = await sb.from('ff_codigos').select('id, codigo, usado_em').eq(campo, id).order('criado_em').limit(3000);
+        if (error) { box.innerHTML = `<div class="warnline">${GP.esc(/ff_codigos|relation|schema/i.test(error.message || '') ? 'Falta rodar o SQL v33 no Supabase.' : GP.err(error))}</div>`; return; }
+        const livres = (data || []).filter(c => !c.usado_em), usados = (data || []).length - livres.length;
+        if (o.aoMudar) o.aoMudar(livres.length);
+        const mask = (c) => c.length <= 6 ? c : c.slice(0, 4) + '•••' + c.slice(-3);
+        box.innerHTML = `<div class="codbox">
+          <div class="row between" style="gap:8px;margin-bottom:8px"><b class="${livres.length < 3 ? 'cod-pouco' : ''}">${livres.length} código${livres.length === 1 ? '' : 's'} disponíve${livres.length === 1 ? 'l' : 'is'}</b><span class="small muted">${usados} já entregue${usados === 1 ? '' : 's'}</span></div>
+          <textarea class="input" rows="3" placeholder="Cole os códigos aqui, um por linha" data-cod-tx></textarea>
+          <button type="button" class="btn btn-soft btn-sm" data-cod-add style="margin-top:6px">${GP.ic('plus')}Adicionar códigos</button>
+          ${livres.length ? `<details style="margin-top:10px"><summary class="small" style="cursor:pointer">Ver os disponíveis</summary><div class="codlist">${livres.slice(0, 300).map(c => `<div><code>${GP.esc(mask(c.codigo))}</code><button type="button" class="icon-btn" data-cod-del="${c.id}" aria-label="Apagar">${GP.ic('trash')}</button></div>`).join('')}${livres.length > 300 ? `<p class="small muted">… e mais ${livres.length - 300}</p>` : ''}</div></details>` : ''}
+          <p class="small muted" style="margin:8px 0 0">Cada código é entregue uma vez só, por e-mail, assim que o pagamento é aprovado.${o.produto_id ? ' O estoque do produto acompanha a quantidade de códigos.' : ''}</p></div>`;
+        box.querySelector('[data-cod-add]').onclick = async (e) => {
+          const lin = [...new Set(box.querySelector('[data-cod-tx]').value.split(/\r?\n/).map(x => x.trim()).filter(Boolean))];
+          if (!lin.length) return GP.toast('Cole pelo menos um código.', 'err');
+          if (lin.some(x => x.length > 500)) return GP.toast('Cada código pode ter até 500 caracteres.', 'err');
+          const ja = new Set((data || []).map(c => c.codigo)), novos = lin.filter(x => !ja.has(x));
+          if (!novos.length) return GP.toast('Esses códigos já estavam cadastrados.', 'err');
+          const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+          for (let i = 0; i < novos.length; i += 200) {
+            const { error: er } = await sb.from('ff_codigos').insert(novos.slice(i, i + 200).map(c => ({ loja_id: o.loja_id, [campo]: id, codigo: c })));
+            if (er) { b.disabled = false; GP.toast(GP.err(er), 'err'); return desenhar(); }
+          }
+          GP.toast(`${novos.length} código${novos.length > 1 ? 's adicionados' : ' adicionado'}${lin.length > novos.length ? ` (${lin.length - novos.length} repetido${lin.length - novos.length > 1 ? 's' : ''} ignorado${lin.length - novos.length > 1 ? 's' : ''})` : ''}.`, 'ok');
+          desenhar();
+        };
+        box.querySelectorAll('[data-cod-del]').forEach(b => { b.onclick = async () => {
+          const { error: er } = await sb.from('ff_codigos').delete().eq('id', b.dataset.codDel);
+          if (er) return GP.toast(GP.err(er), 'err');
+          desenhar();
+        }; });
+      };
+      await desenhar();
+    }
+  };
 
   // ---------- Cor da loja ----------
   // O lojista escolhe só a cor da marca. Aqui ela é ajustada para sempre dar leitura:

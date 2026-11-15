@@ -27,7 +27,11 @@
 // Planos do GoPedido (SQL v27) — o dinheiro cai na conta do GoPedido, não na da loja:
 //           MP_PLANO_TOKEN      = Access Token de produção da conta que recebe os planos (só aqui, nunca no site)
 //           MP_PLANO_PUBLIC_KEY = Public Key dessa mesma conta (para o formulário de cartão)
-//   { acao: 'plano_info' } · { acao: 'plano_pix', plano, meses, qtd? } (plano 'extra' = produtos a mais, só Premium, SQL v28) · { acao: 'plano_cartao', plano, meses, token, dados } · { acao: 'plano_conferir', id }
+//   { acao: 'plano_info' } · { acao: 'plano_pix', plano, meses, qtd? } (plano 'extra' = produtos a mais, só Premium, SQL v28;
+//     'extra_assin' = assinantes a mais, SQL v33) · { acao: 'plano_cartao', plano, meses, token, dados } · { acao: 'plano_conferir', id }
+// Lojas de assinatura (SQL v33) — o dinheiro cai na conta Mercado Pago da loja:
+//   { acao: 'assin_novo', loja, plano, nome, email, telefone } → cria o assinante (pendente) e devolve o link de pagamento
+//   { acao: 'assin_info', token } · { acao: 'assin_pix', token, meses, plano? } · { acao: 'assin_cartao', token, meses, plano?, dados } · { acao: 'assin_conferir', id }
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -168,19 +172,19 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
     if (data) throw new Falha('so_dono', 403);
   }
   async function calcPlano(plano, meses, qtd = 0) {
-    if (!['profissional', 'premium', 'extra'].includes(String(plano)) || ![1, 2, 3].includes(Number(meses))) throw new Falha('plano_invalido');
-    const { data } = plano === 'extra'
-      ? ok(await admin.rpc('ff_extra_calc', { p_email: usuario.email, p_qtd: Math.floor(Number(qtd) || 0), p_meses: Number(meses) }), 'preço')
+    if (!['profissional', 'premium', 'extra', 'extra_assin'].includes(String(plano)) || ![1, 2, 3].includes(Number(meses))) throw new Falha('plano_invalido');
+    const { data } = plano === 'extra' || plano === 'extra_assin'
+      ? ok(await admin.rpc(plano === 'extra' ? 'ff_extra_calc' : 'ff_extra_assin_calc', { p_email: usuario.email, p_qtd: Math.floor(Number(qtd) || 0), p_meses: Number(meses) }), 'preço')
       : ok(await admin.rpc('ff_plano_calc', { p_email: usuario.email, p_plano: plano, p_meses: Number(meses) }), 'preço');
     if (data && data.erro) throw new Falha(data.erro, 400, data.valido_ate ? String(data.valido_ate) : '');
     return data;
   }
   async function novoPagamentoPlano(plano, meses, metodo, qtd = 0) {
     const c = await calcPlano(plano, meses, qtd);
-    const { data } = ok(await admin.from('ff_plano_pagamentos').insert({ user_id: usuario.id, email: String(usuario.email).toLowerCase(), plano, meses: Number(meses), valor: c.valor, metodo, ...(plano === 'extra' ? { qtd: Math.floor(Number(qtd)) } : {}) }).select('*').single(), 'criar pagamento');
+    const { data } = ok(await admin.from('ff_plano_pagamentos').insert({ user_id: usuario.id, email: String(usuario.email).toLowerCase(), plano, meses: Number(meses), valor: c.valor, metodo, ...(plano === 'extra' || plano === 'extra_assin' ? { qtd: Math.floor(Number(qtd)) } : {}) }).select('*').single(), 'criar pagamento');
     return { g: data, c };
   }
-  function descPlano(g) { return g.plano === 'extra' ? `GoPedido · +${g.qtd} produtos extras · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}` : `GoPedido · Plano ${g.plano === 'premium' ? 'Premium' : 'Profissional'} · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}`; }
+  function descPlano(g) { return g.plano === 'extra_assin' ? `GoPedido · +${g.qtd} assinantes extras · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}` : g.plano === 'extra' ? `GoPedido · +${g.qtd} produtos extras · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}` : `GoPedido · Plano ${g.plano === 'premium' ? 'Premium' : 'Profissional'} · ${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}`; }
 
   async function pedirToken(corpo) {
     const r = await http(API + '/oauth/token', {
@@ -260,7 +264,56 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
   }
   async function aplicarOrdem(lojaId, ordemId) {
     const o = await mp(lojaId, 'GET', '/v1/orders/' + encodeURIComponent(ordemId));
+    if (/^assin-/.test(String(o.external_reference || ''))) return gravarAssin(lojaId, o);
     return gravarOrdem(lojaId, o);
+  }
+
+  // ----- lojas de assinatura (conta Mercado Pago da loja) -----
+  async function gravarAssin(lojaId, o) {
+    const id = String(o.external_reference || '').slice(6); if (!UUID.test(id)) return null;
+    const { data: g } = ok(await admin.from('ff_assin_pagamentos').select('*').eq('id', id).eq('loja_id', lojaId).maybeSingle(), 'pagamento');
+    if (!g) return null;
+    if (g.status === 'aprovado') return g;
+    let st = situacaoOrdem(o);
+    const pago = Number(o.total_paid_amount || o.total_amount || 0);
+    if (st === 'aprovado' && centavos(pago) < centavos(g.valor)) st = 'pendente';
+    if (st === 'aprovado') ok(await admin.rpc('ff_assin_aplicar', { p_pag: g.id }), 'renovar assinatura');
+    else if (st !== g.status && !(g.status === 'pendente' && st === 'recusado' && g.metodo === 'pix')) ok(await admin.from('ff_assin_pagamentos').update({ status: st }).eq('id', g.id), 'situação');
+    const { data } = ok(await admin.from('ff_assin_pagamentos').select('*').eq('id', g.id).maybeSingle(), 'pagamento');
+    return data;
+  }
+  async function assinantePor(token) {
+    if (!/^[a-f0-9]{32,64}$/i.test(String(token || ''))) throw new Falha('assinante_invalido');
+    const { data: a } = ok(await admin.from('ff_assinantes').select('*').eq('token', token).maybeSingle(), 'assinante');
+    if (!a) throw new Falha('assinante_invalido', 404);
+    if (a.status === 'cancelado') throw new Falha('assinante_cancelado');
+    const { data: l } = ok(await admin.from('ff_lojas').select('id, nome, slug, tipo, imagem_url, cor, telefone, mp_conectado, ativa, verificacao').eq('id', a.loja_id).maybeSingle(), 'loja');
+    if (!l) throw new Falha('loja_invalida', 404);
+    return { a, l };
+  }
+  async function lojaAssinPodeCobrar(l, novo) {
+    if (l.tipo !== 'assinatura' || !l.ativa || l.verificacao !== 'verificada') throw new Falha('loja_indisponivel');
+    if (!l.mp_conectado) throw new Falha('mp_desconectado');
+    const { data: bq } = ok(await admin.rpc('ff_bloqueio_loja', { p_loja: l.id }), 'bloqueio');
+    if (bq) throw new Falha('loja_bloqueada_plano');
+    if (novo) { const { data: cabe } = ok(await admin.rpc('ff_assin_cabe', { p_loja: l.id }), 'vagas'); if (!cabe) throw new Falha('sem_vagas'); }
+  }
+  async function planoAssin(lojaId, planoId) {
+    if (!UUID.test(String(planoId || ''))) throw new Falha('plano_invalido');
+    const { data: pl } = ok(await admin.from('ff_assin_planos').select('*').eq('id', planoId).eq('loja_id', lojaId).maybeSingle(), 'plano');
+    if (!pl || !pl.ativo) throw new Falha('plano_invalido');
+    return pl;
+  }
+  function precoAssin(pl, meses) {
+    const v = Number((pl.precos || {})[String(meses)]);
+    if (![1, 3, 6, 12].includes(Number(meses)) || !(v > 0)) throw new Falha('periodo_invalido');
+    return Math.round(v * 100) / 100;
+  }
+  function descAssin(pl, l, meses) { return `${pl.nome} · ${meses} ${meses > 1 ? 'meses' : 'mês'} · ${l.nome}`.slice(0, 200); }
+  async function novoPagAssin(a, l, pl, meses, metodo) {
+    await lojaAssinPodeCobrar(l, a.status !== 'ativo');
+    const { data } = ok(await admin.from('ff_assin_pagamentos').insert({ assinante_id: a.id, loja_id: l.id, plano_id: pl.id, meses: Number(meses), valor: precoAssin(pl, meses), metodo }).select('*').single(), 'criar pagamento');
+    return data;
   }
   async function gravarOrdem(lojaId, o) {
     const pedidoId = String(o.external_reference || '');
@@ -445,6 +498,91 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
       return { status: 200, corpo: resumo(p) };
     }
 
+    // ===== Lojas de assinatura =====
+    if (acao === 'assin_novo') {
+      const l = await pegaLoja(b.loja);
+      await lojaAssinPodeCobrar(l, false);
+      const pl = await planoAssin(l.id, b.plano);
+      const nome = String(b.nome || '').trim().slice(0, 80), email = String(b.email || '').trim().toLowerCase(), tel = String(b.telefone || '').replace(/\D/g, '').slice(0, 13);
+      if (nome.length < 2) throw new Falha('nome_obrigatorio');
+      if (!EMAIL.test(email)) throw new Falha('email_obrigatorio');
+      const { data: ex } = ok(await admin.from('ff_assinantes').select('id, token, status').eq('loja_id', l.id).eq('plano_id', pl.id).eq('email', email).neq('status', 'cancelado').maybeSingle(), 'assinante');
+      if (ex && ex.status === 'ativo') {
+        // já é assinante: manda o link de renovação para o e-mail dele (não mostra o link aqui)
+        try { await http(fnUrl.replace('ff-mercadopago', 'ff-email'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'assin_link', id: ex.id }) }); } catch (_) {}
+        return { status: 200, corpo: { ja_assinante: true } };
+      }
+      if (ex) { ok(await admin.from('ff_assinantes').update({ nome, telefone: tel }).eq('id', ex.id), 'atualizar'); return { status: 200, corpo: { token: ex.token } }; }
+      const { data: cabe } = ok(await admin.rpc('ff_assin_cabe', { p_loja: l.id }), 'vagas'); if (!cabe) throw new Falha('sem_vagas');
+      const { data: a } = ok(await admin.from('ff_assinantes').insert({ loja_id: l.id, plano_id: pl.id, nome, email, telefone: tel, origem: 'site' }).select('token').single(), 'criar assinante');
+      return { status: 200, corpo: { token: a.token } };
+    }
+
+    if (acao === 'assin_info') {
+      const { a, l } = await assinantePor(b.token);
+      const { data: planos } = ok(await admin.from('ff_assin_planos').select('id, nome, descricao, precos, entrega_codigo').eq('loja_id', l.id).eq('ativo', true).order('ordem').order('criado_em'), 'planos');
+      let public_key = '';
+      if (l.mp_conectado) { try { await chaveDaLoja(l.id); const { data: c } = ok(await admin.from('ff_mp_contas').select('public_key').eq('loja_id', l.id).maybeSingle(), 'chave'); public_key = (c && c.public_key) || ''; } catch (_) {} }
+      const { data: hist } = ok(await admin.from('ff_assin_pagamentos').select('id, meses, valor, status, metodo, criado_em, pago_em, valido_ate').eq('assinante_id', a.id).order('criado_em', { ascending: false }).limit(6), 'histórico');
+      return { status: 200, corpo: {
+        assinante: { nome: a.nome, email: a.email, status: a.status, valido_ate: a.valido_ate, plano_id: a.plano_id },
+        loja: { id: l.id, nome: l.nome, slug: l.slug, imagem_url: l.imagem_url, cor: l.cor, telefone: l.telefone, pode_pagar: !!l.mp_conectado },
+        planos: planos || [], public_key, historico: hist || [] } };
+    }
+
+    if (acao === 'assin_pix' || acao === 'assin_cartao') {
+      const { a, l } = await assinantePor(b.token);
+      const pl = await planoAssin(l.id, b.plano || a.plano_id);
+      const meses = Number(b.meses);
+      precoAssin(pl, meses);
+      if (acao === 'assin_pix') {
+        const qr = (o, g) => { const pg = (o.transactions && o.transactions.payments || [])[0] || {}, m = pg.payment_method || {}; return { id: g.id, valor: Number(g.valor), qr: m.qr_code || '', qr_img: m.qr_code_base64 || '', link: m.ticket_url || '' }; };
+        const { data: ab } = ok(await admin.from('ff_assin_pagamentos').select('*').eq('assinante_id', a.id).eq('plano_id', pl.id).eq('meses', meses)
+          .eq('metodo', 'pix').eq('status', 'pendente').gte('criado_em', new Date(Date.now() - 25 * 60000).toISOString()).order('criado_em', { ascending: false }).limit(1).maybeSingle(), 'pix aberto');
+        if (ab && ORD.test(ab.mp_ordem || '')) {
+          try {
+            const ant = await mp(l.id, 'GET', '/v1/orders/' + ab.mp_ordem);
+            const g2 = await gravarAssin(l.id, ant);
+            if (g2 && g2.status === 'aprovado') return { status: 200, corpo: { id: ab.id, pago: true, valido_ate: g2.valido_ate } };
+            if (situacaoOrdem(ant) === 'pendente' && centavos(ant.total_amount) === centavos(precoAssin(pl, meses)) && qr(ant, ab).qr) return { status: 200, corpo: qr(ant, ab) };
+          } catch (_) { /* cria outro */ }
+        }
+        const g = await novoPagAssin(a, l, pl, meses, 'pix');
+        const o = await mp(l.id, 'POST', '/v1/orders', {
+          type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'assin-' + g.id, description: descAssin(pl, l, meses),
+          transactions: { payments: [{ amount: valor(g.valor), payment_method: { id: 'pix', type: 'bank_transfer' }, expiration_time: 'PT30M' }] },
+          payer: { email: compradorTeste(a.email), first_name: TESTE ? 'APRO' : (String(a.nome).split(' ')[0].replace(/[^A-Za-zÀ-ÿ ]/g, '').slice(0, 40) || 'Cliente') }
+        }, { 'X-Idempotency-Key': 'assin-pix-' + g.id });
+        ok(await admin.from('ff_assin_pagamentos').update({ mp_ordem: String(o.id || '') }).eq('id', g.id), 'pix');
+        return { status: 200, corpo: qr(o, g) };
+      }
+      const d = b.dados || {};
+      if (!/^[A-Za-z0-9]{20,64}$/.test(String(d.token || ''))) throw new Falha('cartao_invalido');
+      const g = await novoPagAssin(a, l, pl, meses, 'cartao');
+      const ident = d.payer && d.payer.identification;
+      const o = await mp(l.id, 'POST', '/v1/orders', {
+        type: 'online', processing_mode: 'automatic', total_amount: valor(g.valor), external_reference: 'assin-' + g.id, description: descAssin(pl, l, meses),
+        transactions: { payments: [{ amount: valor(g.valor), payment_method: {
+          id: String(d.payment_method_id || '').slice(0, 40), type: 'credit_card', token: d.token,
+          installments: Math.max(1, Math.min(12, parseInt(d.installments, 10) || 1)),
+          statement_descriptor: l.nome.replace(/[^A-Za-z0-9 ]/g, '').slice(0, 13) || 'GOPEDIDO' } }] },
+        payer: { email: compradorTeste(String((d.payer && d.payer.email) || a.email).toLowerCase()), ...(ident && ident.number ? { identification: { type: String(ident.type || 'CPF').slice(0, 10), number: String(ident.number).replace(/\D/g, '').slice(0, 14) } } : {}) }
+      }, { 'X-Idempotency-Key': 'assin-cartao-' + g.id });
+      ok(await admin.from('ff_assin_pagamentos').update({ mp_ordem: String(o.id || '') }).eq('id', g.id), 'cartão');
+      const g2 = await gravarAssin(l.id, o) || g;
+      const pg = (o.transactions && o.transactions.payments || [])[0] || {};
+      return { status: 200, corpo: { id: g.id, status: g2.status, valido_ate: g2.valido_ate, detalhe: pg.status_detail || o.status_detail || o._detalhe || '' } };
+    }
+
+    if (acao === 'assin_conferir') {
+      if (!UUID.test(String(b.id || ''))) throw new Falha('pagamento_invalido');
+      const { data: g } = ok(await admin.from('ff_assin_pagamentos').select('*').eq('id', b.id).maybeSingle(), 'pagamento');
+      if (!g) throw new Falha('pagamento_invalido', 404);
+      if (g.status !== 'pendente' || !ORD.test(g.mp_ordem || '')) return { status: 200, corpo: { status: g.status, valido_ate: g.valido_ate } };
+      const g2 = await gravarAssin(g.loja_id, await mp(g.loja_id, 'GET', '/v1/orders/' + g.mp_ordem)) || g;
+      return { status: 200, corpo: { status: g2.status, valido_ate: g2.valido_ate } };
+    }
+
     // ===== Planos do GoPedido =====
     if (acao === 'plano_info') {
       await exigeDonoConta();
@@ -458,6 +596,9 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
       let extra = null;
       try { extra = await calcPlano('extra', 1, 10); extra = { preco: Number(extra.preco), premium_ate: extra.premium_ate }; } catch (e) { extra = { erro: e.message }; }
       tabela.extra = extra;
+      let extraA = null;
+      try { extraA = await calcPlano('extra_assin', 1, 5); extraA = { preco: Number(extraA.preco), premium_ate: extraA.premium_ate }; } catch (e) { extraA = { erro: e.message }; }
+      tabela.extra_assin = extraA;
       const { data: hist } = ok(await admin.from('ff_plano_pagamentos').select('id, plano, meses, qtd, valor, status, metodo, criado_em, pago_em, valido_ate')
         .eq('user_id', usuario.id).order('criado_em', { ascending: false }).limit(10), 'histórico');
       return { status: 200, corpo: { ativo: !!env.MP_PLANO_TOKEN, public_key: env.MP_PLANO_PUBLIC_KEY || '', email: usuario.email, tabela, historico: hist || [] } };
@@ -472,7 +613,7 @@ export async function tratar(req, admin, env, http = fetch, fnUrl = '') {
       };
       // Pix em aberto do mesmo plano e tempo (últimos 30 min): mostra o mesmo QR Code
       const { data: ab } = ok(await admin.from('ff_plano_pagamentos').select('*').eq('user_id', usuario.id).eq('plano', plano).eq('meses', meses)
-        .eq('metodo', 'pix').eq('status', 'pendente').eq('qtd', plano === 'extra' ? qtd : 0).gte('criado_em', new Date(Date.now() - 30 * 60000).toISOString()).order('criado_em', { ascending: false }).limit(1).maybeSingle(), 'pix aberto');
+        .eq('metodo', 'pix').eq('status', 'pendente').eq('qtd', plano === 'extra' || plano === 'extra_assin' ? qtd : 0).gte('criado_em', new Date(Date.now() - 30 * 60000).toISOString()).order('criado_em', { ascending: false }).limit(1).maybeSingle(), 'pix aberto');
       if (ab && ORD.test(ab.mp_id || '')) {
         try {
           const ant = await mpPlano('GET', '/v1/orders/' + ab.mp_id);

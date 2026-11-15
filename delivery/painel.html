@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=68970">
+<link rel="stylesheet" href="app.css?v=70284">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -534,6 +534,8 @@
       <button data-t="promo" class="dl-only"><span id="ti4"></span>Promoções</button>
       <button data-t="agenda" class="ag-only"><span id="ti5"></span>Agenda</button>
       <button data-t="servicos" class="ag-only"><span id="ti6"></span>Serviços e equipe</button>
+      <button data-t="assin" class="as-only"><span id="ti7"></span>Assinantes</button>
+      <button data-t="planos" class="as-only"><span id="ti8"></span>Planos</button>
       <button data-t="loja"><span id="ti3"></span>Minha loja</button>
     </nav>
 
@@ -634,6 +636,28 @@
       <div id="ag-lista"></div>
     </section>
 
+    <section id="tab-assin" class="hide">
+      <div class="cm-head">
+        <div class="grow" style="min-width:0"><h2>Assinantes</h2><p class="small muted">Quem assina, até quando vale e quem precisa renovar. Os avisos de vencimento vão sozinhos por e-mail.</p></div>
+        <button class="btn btn-primary" id="as-novo" type="button"></button>
+      </div>
+      <div id="verif-banner4"></div>
+      <div id="bloq-banner4"></div>
+      <div id="app-banner3"></div>
+      <div id="as-uso"></div>
+      <div class="asbusca"><input class="input" id="as-busca" placeholder="Buscar por nome, e-mail ou WhatsApp…" autocomplete="off"><button type="button" class="btn btn-ghost btn-sm" id="as-link">Copiar link da página</button></div>
+      <div class="seg3" id="as-filtro" style="grid-template-columns:repeat(5,1fr);margin:0 0 12px"></div>
+      <div id="as-lista"></div>
+    </section>
+
+    <section id="tab-planos" class="hide">
+      <div class="cm-head">
+        <div class="grow" style="min-width:0"><h2>Planos</h2><p class="small muted">O que você vende por assinatura e o preço de cada período. O cliente escolhe na sua página e paga pelo Pix ou cartão.</p></div>
+        <button class="btn btn-primary" id="pl-novo" type="button"></button>
+      </div>
+      <div id="pl-lista"></div>
+    </section>
+
     <section id="tab-servicos" class="hide">
       <div class="cm-head">
         <div class="grow" style="min-width:0"><h2>Serviços e equipe</h2><p class="small muted">O que você oferece, quem atende e as regras da agenda.</p></div>
@@ -655,7 +679,7 @@
       <div id="bloq-banner2"></div>
       <div class="ml-layout"><nav class="ml-nav" id="ml-nav" aria-label="Módulos da loja">
         <button type="button" data-m="dados" class="on"><i data-mi="store"></i><span>Dados da loja</span></button>
-        <button type="button" data-m="entrega"><i data-mi="pin"></i><span>Entrega</span></button>
+        <button type="button" data-m="entrega" class="as-hide"><i data-mi="pin"></i><span>Entrega</span></button>
         <button type="button" data-m="horario" class="dl-only"><i data-mi="clock"></i><span>Horários</span></button>
         <button type="button" data-m="pag"><i data-mi="card"></i><span>Pagamentos</span></button>
         <button type="button" data-m="envio" id="nav-envio" class="hide"><i data-mi="box"></i><span>Envio</span></button>
@@ -707,7 +731,7 @@
               <div class="linkbox"><code id="l-link">—</code><button type="button" class="btn btn-ghost btn-sm" id="b-copylink"></button></div></div>
           </div>
 
-          <div class="card pad fs ml-anchor" id="sec-entrega" data-mod="entrega">
+          <div class="card pad fs ml-anchor as-hide" id="sec-entrega" data-mod="entrega">
             <h3><span id="fi2"></span>Localização e entrega</h3>
             <p class="fsub">De onde sai a entrega e quanto você cobra.</p>
             <p class="small muted" style="margin:-6px 0 12px">Digite o CEP e o número, que o pino vai sozinho para o lugar. Ou toque no mapa, ou use "Minha localização", que os campos se preenchem.</p>
@@ -758,25 +782,26 @@
             <h3><span id="fi3"></span>Formas de pagamento</h3>
             <p class="fsub">Ligue as formas que sua loja aceita.</p>
             <div class="warnline hide" id="pix-dono" style="margin-bottom:12px">Só o dono da conta pode alterar as formas de pagamento e a chave Pix. Isso protege o dinheiro da loja.</div>
-            <div class="paygrid">
+            <div class="paygrid as-hide">
               <label class="paytile"><span class="pi" data-ic="pix"></span><span style="min-width:0"><b>Pix</b><small>Pago na hora</small></span><span class="switch"><input type="checkbox" id="l-pix"><i></i></span></label>
               <label class="paytile"><span class="pi" data-ic="card"></span><span style="min-width:0"><b>Débito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-deb"><i></i></span></label>
               <label class="paytile"><span class="pi" data-ic="card"></span><span style="min-width:0"><b>Crédito</b><small>Na entrega</small></span><span class="switch"><input type="checkbox" id="l-cred"><i></i></span></label>
               <label class="paytile"><span class="pi" data-ic="cash"></span><span style="min-width:0"><b>Dinheiro</b><small>Com troco</small></span><span class="switch"><input type="checkbox" id="l-din"><i></i></span></label>
             </div>
-            <div id="pix-cfg" class="grid2 pixbox">
+            <div class="as-hide"><div id="pix-cfg" class="grid2 pixbox">
               <label class="field"><span>Tipo de chave Pix</span>
                 <select class="input" id="l-pixtipo"><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="telefone">Telefone</option><option value="email">E-mail</option><option value="aleatoria">Chave aleatória</option></select></label>
               <label class="field"><span>Chave Pix</span><input class="input" id="l-pixchave" maxlength="80"><small id="pix-prev"></small></label>
               <label class="field"><span>Nome do recebedor</span><input class="input" id="l-pixnome" maxlength="60" placeholder="Como aparece no banco"><small>Usado para gerar o QR Code com o valor certo.</small></label>
               <label class="field"><span>Cidade do recebedor</span><input class="input" id="l-pixcidade" maxlength="40" placeholder="Mogi Guaçu"></label>
             </div>
-            <div class="grid2" style="margin-top:16px">
+            </div><div class="grid2 as-hide" style="margin-top:16px">
               <label class="field"><span>Pedido mínimo</span><div class="prefix"><i>R$</i><input class="input" id="l-min" inputmode="numeric" placeholder="0,00"></div><small>Valor mínimo dos produtos para o cliente fechar o pedido. Deixe 0 para não ter mínimo.</small></label>
             </div>
-            <div class="mp-wrap dl-only">
-              <div class="mp-h"><b>Pagamento online pelo Mercado Pago</b><span class="chip-opc">Opcional</span></div>
-              <p class="small muted" style="margin:2px 0 12px">O cliente paga com cartão de crédito ou Pix sem sair do pedido, e o pedido é liberado sozinho quando o pagamento é aprovado. O dinheiro cai na <b>sua</b> conta do Mercado Pago, com as taxas do Mercado Pago. O GoPedido não cobra nada a mais.</p>
+            <div class="mp-wrap dl-only as-show">
+              <p class="small as-only" style="margin:0 0 10px;padding:10px 12px;border-radius:12px;background:var(--brand-soft)"><b>Obrigatório para a loja de assinaturas:</b> é pelo Mercado Pago que seus assinantes pagam (Pix ou cartão) e a assinatura renova sozinha.</p>
+              <div class="mp-h"><b>Pagamento online pelo Mercado Pago</b><span class="chip-opc as-hide">Opcional</span></div>
+              <p class="small muted as-hide" style="margin:2px 0 12px">O cliente paga com cartão de crédito ou Pix sem sair do pedido, e o pedido é liberado sozinho quando o pagamento é aprovado. O dinheiro cai na <b>sua</b> conta do Mercado Pago, com as taxas do Mercado Pago. O GoPedido não cobra nada a mais.</p>
               <div id="mp-box"></div>
             </div>
           </div>
@@ -897,6 +922,11 @@
         <div id="p-vars"></div>
         <button type="button" class="btn btn-soft btn-sm" id="p-var-add"></button>
       </div>
+      <div class="psec" id="p-cod-sec">
+        <label class="switch"><input type="checkbox" id="p-cod"><i></i>Entregar código digital</label>
+        <p class="small muted" style="margin:6px 0 0">Gift card, chave de jogo, código de assinatura… Quando o pagamento é aprovado (ou você aceita o pedido), o sistema manda um código por unidade para o e-mail do cliente, sozinho.</p>
+        <div id="p-cod-box"></div>
+      </div>
 
       <div class="psec hide" id="p-envio">
         <b>Peso e medidas (para o frete)</b>
@@ -969,10 +999,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=51585"></script>
-<script src="app.js?v=68970"></script>
-<script src="plano-pagar.js?v=51585"></script>
-<script src="agenda-painel.js?v=51585"></script>
+<script src="config.js?v=70284"></script>
+<script src="app.js?v=70284"></script>
+<script src="plano-pagar.js?v=70284"></script>
+<script src="assin-painel.js?v=70284"></script>
+<script src="agenda-painel.js?v=70284"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1197,27 +1228,29 @@
     if (!plano || !l || plano.produtos_ativos == null) return '';
     if ((plano.lojas_bloqueadas || []).includes(l.id)) return 'lojas';
     if (plano.produtos_ativos > plano.produtos_max) return 'produtos';
+    if (plano.assinantes_max != null && plano.assinantes > plano.assinantes_max) return 'assinantes';
     return '';
   }
   function textoBloqueio(b) {
     const venceu = plano.plano_pago && plano.plano_pago !== plano.plano && plano.valido_ate && plano.valido_ate < plano.hoje
       ? `O plano ${NOME_PLANO[plano.plano_pago] || plano.plano_pago} venceu em ${dataBR(plano.valido_ate)} e a conta voltou para o ${NOME_PLANO[plano.plano] || plano.plano}. ` : '';
     if (b === 'lojas') return venceu + `O plano ${NOME_PLANO[plano.plano]} permite ${plano.lojas_max} loja${plano.lojas_max > 1 ? 's' : ''} funcionando e esta passou do limite (ficam funcionando as mais antigas). Renove o plano para ela voltar a receber ${GP.ehAgenda(loja) ? 'agendamentos' : 'pedidos'}.`;
+    if (b === 'assinantes') { const ea = plano.assinantes - plano.assinantes_max; return venceu + `Você tem ${plano.assinantes} assinantes ativos e o plano ${NOME_PLANO[plano.plano]} permite ${plano.assinantes_max}. Cancele ${ea} assinante${ea > 1 ? 's' : ''} (ou renove o plano) para a loja voltar a receber assinaturas.`; }
     const exc = plano.produtos_ativos - plano.produtos_max;
     return venceu + `Você tem ${plano.produtos_ativos} produtos ativos e o plano ${NOME_PLANO[plano.plano]} permite ${plano.produtos_max}. Pause ou exclua ${exc} produto${exc > 1 ? 's' : ''} (ou renove o plano) para a loja voltar a receber pedidos.`;
   }
   function renderBloqueio() {
     const b = bloqueioDe(loja);
     const html = b ? `<div class="pausa bloq"><div class="pic">${ic('lock')}</div><div class="grow">
-      <b>Loja bloqueada: ninguém consegue ${GP.ehAgenda(loja) ? 'marcar horário' : 'fazer pedido'}</b>
+      <b>Loja bloqueada: ninguém consegue ${GP.ehAgenda(loja) ? 'marcar horário' : GP.ehAssin(loja) ? 'assinar' : 'fazer pedido'}</b>
       <p>${esc(textoBloqueio(b))}</p>
-      <div class="row">${souDono ? `<button type="button" class="btn btn-primary btn-sm" data-bq="renovar">${ic('star')}Renovar o plano</button>` : ''}${b === 'produtos' ? `<button type="button" class="btn btn-ghost btn-sm" data-bq="prods">Pausar produtos</button>` : ''}</div>
+      <div class="row">${souDono ? `<button type="button" class="btn btn-primary btn-sm" data-bq="renovar">${ic('star')}Renovar o plano</button>` : ''}${b === 'produtos' ? `<button type="button" class="btn btn-ghost btn-sm" data-bq="prods">Pausar produtos</button>` : ''}${b === 'assinantes' ? `<button type="button" class="btn btn-ghost btn-sm" data-bq="assin">Ver assinantes</button>` : ''}</div>
       ${souDono ? '' : '<p class="small" style="margin:8px 0 0">Avise o dono da conta para renovar o plano.</p>'}</div></div>` : '';
-    ['bloq-banner', 'bloq-banner2', 'bloq-banner3'].forEach(id => { const el = $(id); if (el) el.innerHTML = html; });
+    ['bloq-banner', 'bloq-banner2', 'bloq-banner3', 'bloq-banner4'].forEach(id => { const el = $(id); if (el) el.innerHTML = html; });
   }
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-bq]'); if (!b) return;
-    if (b.dataset.bq === 'renovar') verPlanos(); else go('cardapio');
+    if (b.dataset.bq === 'renovar') verPlanos(); else if (b.dataset.bq === 'assin') go('assin'); else go('cardapio');
   });
   let avisoPlanoFeito = false;
   // Toda vez que entra no painel: avisa se o plano vence em até 5 dias ou se a loja está bloqueada
@@ -1274,7 +1307,7 @@
     const box = $('mp-box'); if (!box) return;
     if (!loja) { box.innerHTML = '<p class="small muted" style="margin:0">Crie a loja primeiro. Depois você conecta o Mercado Pago aqui.</p>'; return; }
     if (!('mp_conectado' in loja)) { box.innerHTML = '<div class="warnline">Falta rodar o SQL v23 no Supabase para ligar o pagamento online.</div>'; return; }
-    const passos = (n) => `<ol class="mp-passos">
+    const passos = (n) => `<ol class="mp-passos as-hide">
         <li class="${n > 1 ? 'ok' : 'on'}"><i>${n > 1 ? ic('check') : '1'}</i><span><b>Conectar</b> sua conta do Mercado Pago</span></li>
         <li class="${n > 2 ? 'ok' : n === 2 ? 'on' : ''}"><i>${n > 2 ? ic('check') : '2'}</i><span><b>Ligar</b> "Oferecer pagamento online no pedido"</span></li>
       </ol>`;
@@ -1304,13 +1337,13 @@
         <div class="grow" style="min-width:0"><b>Mercado Pago conectado</b><div class="small muted">${esc(loja.mp_conta || 'Conta conectada')}</div></div>
         ${souDono ? `<button type="button" class="btn btn-ghost btn-sm" id="mp-desc">Desconectar</button>` : ''}
       </div>
-      <div class="mp-liga ${loja.aceita_mp ? 'ativo' : 'falta'}">
+      <div class="as-hide mp-liga ${loja.aceita_mp ? 'ativo' : 'falta'}">
         <label class="switch"><input type="checkbox" id="l-mp" ${loja.aceita_mp ? 'checked' : ''} ${souDono ? '' : 'disabled'}><i></i><b>Oferecer pagamento online no pedido</b></label>
         <div class="small">${loja.aceita_mp
           ? '✓ Ativo: seus clientes já veem a opção <b>Pagar online agora</b> (Pix ou cartão) no pedido.'
           : '⚠ <b>Falta este passo.</b> Ligue a chave acima. Sem ela, a opção de pagar online <b>não aparece</b> para os seus clientes.'}</div>
       </div>
-      <p class="small muted" style="margin:10px 0 0">Pedidos online aparecem como <b>Aguardando pagamento</b> e só podem ser aceitos depois de aprovados. Se ninguém pagar em 2 horas, o pedido é cancelado sozinho e o estoque volta.</p>`;
+      <p class="small muted as-hide" style="margin:10px 0 0">Pedidos online aparecem como <b>Aguardando pagamento</b> e só podem ser aceitos depois de aprovados. Se ninguém pagar em 2 horas, o pedido é cancelado sozinho e o estoque volta.</p>`;
     $('l-mp').onchange = async (e) => {
       const v = e.target.checked;
       const { data, error } = await sb.from('ff_lojas').update({ aceita_mp: v }).eq('id', loja.id).select().single();
@@ -1549,6 +1582,7 @@
       whats: `https://wa.me/${GP.WHATS}?text=${encodeURIComponent('Olá! Quero assinar o plano ' + GP.planoNome(id) + ' do GoPedido. Meu e-mail no painel: ' + (user && user.email))}` }) : null });
   // Produtos extras: só no Premium (o lojista digita quantos quer)
   const comprarExtras = () => window.PlanoPagar ? window.PlanoPagar.abrir(sb, { plano: 'extra', aoPagar: loadPlano }) : verPlanos();
+  const comprarExtrasAssin = () => window.PlanoPagar ? window.PlanoPagar.abrir(sb, { plano: 'extra_assin', aoPagar: async () => { await loadPlano(); if (window.AssinPainel) window.AssinPainel.uso(); } }) : verPlanos();
   const limiteProd = () => plano && plano.produtos >= plano.produtos_max;
   const limiteLoja = () => plano && plano.lojas >= plano.lojas_max;
 
@@ -1569,6 +1603,13 @@
     if (GP.ehAgenda(l)) {
       clearInterval(timer); desligarRealtime();
       go('agenda'); await window.AgendaPainel.abrir(sb, l);
+      return;
+    }
+    if (GP.ehAssin(l)) {
+      clearInterval(timer); desligarRealtime();
+      if (window.AgendaPainel) window.AgendaPainel.parar();
+      go('assin');
+      await window.AssinPainel.abrir(sb, l, { plano: () => plano && Object.assign({ sou_dono: souDono }, plano), comprarExtras: comprarExtrasAssin, verPlanos: () => verPlanos('Limite de assinantes', 'Para ter mais assinantes ativos, escolha um plano maior.') });
       return;
     }
     if (window.AgendaPainel) window.AgendaPainel.parar();
@@ -1704,7 +1745,11 @@
   // ================= CADASTRO DE LOJA NOVA: PASSO A PASSO =================
   let wz = 0;
   const wzAgenda = () => $('l-tipo').value === 'agenda';
-  const wzPassos = () => [
+  const wzAssin = () => $('l-tipo').value === 'assinatura';
+  const wzPassos = () => wzAssin() ? [
+    { id: 'tipo', nome: 'Tipo', tit: 'Que tipo de negócio é o seu?' },
+    { id: 'dados', nome: 'Dados', tit: 'Como os clientes vão ver sua loja' }
+  ] : [
     { id: 'tipo', nome: 'Tipo', tit: 'Que tipo de negócio é o seu?' },
     { id: 'dados', nome: 'Dados', tit: 'Como os clientes vão ver sua loja' },
     { id: 'entrega', nome: wzAgenda() ? 'Endereço' : 'Entrega', tit: wzAgenda() ? 'Onde você atende' : 'De onde sai a entrega e quanto custa' },
@@ -1767,6 +1812,7 @@
   function modoAgenda(forcar) {
     const ag = forcar !== undefined ? forcar : GP.ehAgenda(loja);
     document.body.classList.toggle('modo-agenda', ag);
+    document.body.classList.toggle('modo-assin', loja ? GP.ehAssin(loja) : $('l-tipo').value === 'assinatura');
     const nb = document.querySelector('#ml-nav [data-m="entrega"] span'); if (nb) nb.textContent = ag ? 'Endereço' : 'Entrega';
     const h = document.querySelector('#sec-entrega h3'); if (h && h.lastChild) h.lastChild.textContent = ag ? 'Endereço do estabelecimento' : 'Localização e entrega';
     const fs = document.querySelector('#sec-entrega .fsub'); if (fs) fs.textContent = ag ? 'Onde o cliente vai ser atendido.' : 'De onde sai a entrega e quanto você cobra.';
@@ -1775,7 +1821,8 @@
   function setTabsLocked(v) { document.querySelectorAll('#tabs [data-t]').forEach(b => { if (b.dataset.t !== 'loja') b.disabled = v; }); $('sw-wrap').classList.toggle('hide', v); $('b-ver').classList.toggle('hide', v); $('b-ver2').classList.toggle('hide', v); }
   function go(t) {
     document.querySelectorAll('#tabs [data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-    ['pedidos', 'cardapio', 'promo', 'agenda', 'servicos', 'loja'].forEach(s => $('tab-' + s).classList.toggle('hide', s !== t));
+    ['pedidos', 'cardapio', 'promo', 'agenda', 'servicos', 'assin', 'planos', 'loja'].forEach(s => $('tab-' + s).classList.toggle('hide', s !== t));
+    if ((t === 'assin' || t === 'planos') && window.AssinPainel) window.AssinPainel.mostrar(t);
     if (t === 'promo') loadCupons();
     if ((t === 'agenda' || t === 'servicos') && window.AgendaPainel) window.AgendaPainel.mostrar(t);
     if (t === 'loja') initMap();
@@ -1786,7 +1833,7 @@
   // ---------- Verificação da loja ----------
   async function renderVerif() {
     const v = loja && loja.verificacao;
-    if (!loja || v === 'verificada') { $('verif-banner').innerHTML = ''; $('verif-banner2').innerHTML = ''; $('verif-banner3').innerHTML = ''; return; }
+    if (!loja || v === 'verificada') { $('verif-banner').innerHTML = ''; $('verif-banner2').innerHTML = ''; $('verif-banner3').innerHTML = ''; $('verif-banner4').innerHTML = ''; return; }
     const { data: dv } = await sb.from('ff_verificacoes').select('*').eq('loja_id', loja.id).maybeSingle();
     // Só libera o pedido de verificação depois de salvar nome completo e CPF válido
     const pronto = !!(dv && String(dv.responsavel_nome || '').trim().length >= 5 && GP.cpfValido(dv.responsavel_cpf));
@@ -1804,7 +1851,7 @@
         ${pronto ? `<a class="btn btn-ok btn-sm" target="_blank" rel="noopener" href="https://wa.me/${GP.WHATS}?text=${encodeURIComponent(msgWa)}">${ic('chat')}Pedir verificação no WhatsApp</a>`
                  : `<button type="button" class="btn btn-ok btn-sm vb-wa" style="opacity:.5">${ic('lock')}Pedir verificação no WhatsApp</button>`}</div>
     </div>`;
-    $('verif-banner').innerHTML = html; $('verif-banner2').innerHTML = html; $('verif-banner3').innerHTML = html;
+    $('verif-banner').innerHTML = html; $('verif-banner2').innerHTML = html; $('verif-banner3').innerHTML = html; $('verif-banner4').innerHTML = html;
     document.querySelectorAll('.vb-cpf').forEach(el => el.addEventListener('input', () => { const d = GP.digits(el.value).slice(0, 11); el.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4'); }));
     document.querySelectorAll('.vb-wa').forEach(b => b.onclick = () => {
       const box = b.closest('.vbanner'); GP.toast('Antes, preencha o nome completo e o CPF e toque em "Salvar dados".', 'err');
@@ -1855,7 +1902,7 @@
   }
   // Horário automático ligado + chave lá em cima desligada = loja fechada para o cliente o tempo todo. Avisa e marca a chave.
   function renderPausa() {
-    const pausada = !!(loja && loja.horario_auto && !loja.aberta && loja.verificacao === 'verificada' && !GP.ehAgenda(loja));
+    const pausada = !!(loja && loja.horario_auto && !loja.aberta && loja.verificacao === 'verificada' && !GP.ehAgenda(loja) && !GP.ehAssin(loja));
     $('sw-wrap').classList.toggle('sw-alerta', pausada);
     $('pausa-banner').innerHTML = pausada ? `<div class="pausa"><div class="pic">${ic('bell')}</div><div class="grow">
       <b>Sua loja está pausada: os clientes veem ela fechada</b>
@@ -1927,7 +1974,7 @@
   }
   // Faixa nos Pedidos/Agenda enquanto os avisos não estão ligados (some por 7 dias se fechar)
   async function renderAppBanner() {
-    const alvos = [$('app-banner'), $('app-banner2')];
+    const alvos = [$('app-banner'), $('app-banner2'), $('app-banner3')];
     const est = await GP.app.estadoPush();
     const off = Number(GP.ls.get('gp_app_ban') || 0) > Date.now() - 7 * 86400e3;
     if (!loja || off || !['desligado', 'ios_instalar'].includes(est)) { alvos.forEach(a => a.innerHTML = ''); return; }
@@ -1944,7 +1991,7 @@
     const id = new URL(e.data.url).searchParams.get('loja');
     const l = id && lojas.find(x => x.id === id);
     if (l && (!loja || loja.id !== l.id)) abrirLoja(l);
-    else if (loja) { if (GP.ehAgenda(loja)) go('agenda'); else { go('pedidos'); checarPedidos(); } }
+    else if (loja) { if (GP.ehAgenda(loja)) go('agenda'); else if (GP.ehAssin(loja)) go('assin'); else { go('pedidos'); checarPedidos(); } }
   });
 
   // ================= CARTÃO FIDELIDADE =================
@@ -2546,6 +2593,7 @@
     $('p-pmin').value = String(p && p.peso_min || 100); $('p-ppasso').value = String(p && p.peso_passo || 100);
     if (!$('p-pmin').value) $('p-pmin').value = '100'; if (!$('p-ppasso').value) $('p-ppasso').value = '100';
     vendeUI();
+    $('p-cod').checked = !!(p && p.entrega_codigo); codUI();
     $('p-del').classList.toggle('hide', !p);
     setPv('pv-prod', prodImg);
     $('pmod').classList.add('on'); ov.classList.add('on');
@@ -2723,6 +2771,18 @@
     $('p-preco-wrap').querySelector('span').textContent = kg ? 'Preço do quilo' : 'Preço';
     $('p-est-on').closest('.psec').classList.toggle('hide', kg);
   }
+  function codUI() {
+    const on = $('p-cod').checked;
+    if (on && pVende === 'kg') { pVende = 'un'; vendeUI(); }
+    $('p-vende').closest('.field') && $('p-vende').closest('.field').classList.toggle('hide', on);
+    $('p-est-on').closest('.psec').classList.toggle('hide', on || pVende === 'kg');
+    const box = $('p-cod-box');
+    if (!on) { box.innerHTML = ''; return; }
+    if (!editing) { box.innerHTML = '<p class="small" style="margin:8px 0 0"><b>Salve o produto</b> e depois cole os códigos aqui. O estoque passa a ser a quantidade de códigos.</p>'; return; }
+    box.innerHTML = '<div style="margin-top:10px"><p class="small muted"><span class="spin"></span></p></div>';
+    GP.codigos.abrir(sb, box.firstChild, { loja_id: loja.id, produto_id: editing.id });
+  }
+  $('p-cod').onchange = codUI;
   $('p-vende').onclick = (e) => { const b = e.target.closest('[data-v]'); if (!b) return; pVende = b.dataset.v; vendeUI(); };
   function poropsUI() {
     const on = $('p-porops').checked;
@@ -2857,7 +2917,11 @@
     const row = { ...medidas, ...pesoRow, nome: $('p-nome').value.trim(), descricao: $('p-desc').value.trim(), preco, categoria: catEscolhida(), disponivel: $('p-disp').checked, imagem_url: prodImg || '', grupos, preco_promo, promo_ate, etapas_ids: prodEtapas.filter(id => etapas.some(e => e.id === id)), estoque, variacoes };
     const b = $('p-save'); b.disabled = true;
     const salvar = (r) => editing ? sb.from('ff_produtos').update(r).eq('id', editing.id) : sb.from('ff_produtos').insert({ ...r, loja_id: loja.id, ordem: prods.length });
+    const cod = $('p-cod').checked;
+    if (cod && variacoes.length) { $('p-vars').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Produto com código digital não pode ter variações. Crie um produto para cada valor (ex.: Gift card R$ 50, R$ 100).', 'err'); }
+    if (cod || (editing && editing.entrega_codigo)) { row.entrega_codigo = cod; if (cod) { delete row.estoque; row.variacoes = []; } }
     let { error } = await salvar(kg ? { ...row, variacoes: [] } : row);
+    if (error && /entrega_codigo/.test(error.message || '')) { b.disabled = false; return GP.toast('Para entregar códigos digitais, falta rodar o SQL v33 no Supabase.', 'err'); }
     if (error && /vende_por|peso_min|peso_passo/.test(error.message || '')) { b.disabled = false; return GP.toast('Para vender por quilo, falta rodar o SQL v32 no Supabase.', 'err'); }
     // Sem o SQL v20 ainda: salva sem peso e medidas
     if (error && /peso_kg|altura_cm|largura_cm|comprimento_cm/.test(error.message || '')) {
@@ -2876,6 +2940,13 @@
       if (/limite_produtos/.test(error.message)) { await loadPlano(); return plano && plano.plano === 'premium' && souDono ? comprarExtras() : verPlanos('Limite de produtos atingido', 'Para cadastrar mais produtos, escolha um plano maior.'); }
       return GP.toast(GP.err(error), 'err');
     }
+    if (cod && !editing) {
+      closeModal(); await loadProds(); loadPlano();
+      const novo = prods.filter(x => x.nome === row.nome && x.entrega_codigo).slice(-1)[0];
+      GP.toast('Produto adicionado! Agora cole os códigos.', 'ok');
+      if (novo) setTimeout(() => openProd(novo), 250);
+      return;
+    }
     closeModal(); GP.toast(editing ? 'Produto atualizado' : 'Produto adicionado', 'ok'); loadProds(); if (!editing) loadPlano();
   };
   $('p-del').onclick = async () => {
@@ -2886,7 +2957,7 @@
   };
 
   // ================= PROMOÇÕES / CUPONS =================
-  $('ti4').innerHTML = ic('star'); $('ti5').innerHTML = ic('calendar'); $('ti6').innerHTML = ic('scissors');
+  $('ti4').innerHTML = ic('star'); $('ti5').innerHTML = ic('calendar'); $('ti6').innerHTML = ic('scissors'); $('ti7').innerHTML = ic('users'); $('ti8').innerHTML = ic('star');
   GP.moneyMask($('c-min'));
   let cupons = [];
   const abrirCupom = () => { $('f-cupom').reset(); $('c-tipo').value = 'percentual'; $('c-porcli').value = '1'; $('c-pub').checked = true; tipoUI(); $('cmod').classList.add('on'); $('ov').classList.add('on'); setTimeout(() => $('c-cod').focus(), 250); };
@@ -3199,22 +3270,24 @@
     const nome = $('l-nome').value.trim();
     if (!nome) { $('l-nome').scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => $('l-nome').focus({ preventScroll: true }), 300); return GP.toast('Informe o nome da loja.', 'err'); }
     if (GP.digits($('l-cnpj').value) && !cnpjMsg()) { $('l-cnpj').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('CNPJ inválido. Corrija ou deixe em branco.', 'err'); }
+    const assinT = ($('l-tipo').value || (loja && loja.tipo)) === 'assinatura';
     const ende = lojaAddr ? lojaAddr.get() : GP.parseEnd(lojaEnd);
-    if (!ende.rua || !ende.numero || !ende.cidade) { GP.toast('Preencha o endereço da loja: rua, número e cidade.', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    if (!lojaPos || (lojaAddr && lojaAddr.precisaPino())) { GP.toast('Toque no mapa exatamente na porta da loja (use "Satélite" para ver melhor).', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    const pix = $('l-pix').checked;
+    if (assinT) { /* loja de assinaturas: sem entrega, horário ou formas de pagamento manuais */ }
+    else if (!ende.rua || !ende.numero || !ende.cidade) { GP.toast('Preencha o endereço da loja: rua, número e cidade.', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    else if (!lojaPos || (lojaAddr && lojaAddr.precisaPino())) { GP.toast('Toque no mapa exatamente na porta da loja (use "Satélite" para ver melhor).', 'err'); $('l-addr').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    const pix = $('l-pix').checked && !assinT;
     if (pix && !$('l-pixchave').value.trim()) { $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err'); }
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }
-    if (modoAtual() === 'tabela' && !cfgTaxa().taxa_tabela.length) { $('faixas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Coloque pelo menos uma faixa na tabela de entrega.', 'err'); }
-    if ($('l-auto').checked && !Object.values(lerHoras()).some(x => x.aberto)) { $('horas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Marque pelo menos um dia aberto no horário de funcionamento.', 'err'); }
-    if (!pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
+    if (!assinT && modoAtual() === 'tabela' && !cfgTaxa().taxa_tabela.length) { $('faixas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Coloque pelo menos uma faixa na tabela de entrega.', 'err'); }
+    if (!assinT && $('l-auto').checked && !Object.values(lerHoras()).some(x => x.aberto)) { $('horas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Marque pelo menos um dia aberto no horário de funcionamento.', 'err'); }
+    if (!assinT && !pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
     const row = {
       tipo: $('l-tipo').value || 'restaurante',
       nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
-      endereco: lojaAddr ? lojaAddr.texto() : lojaEnd, lat: lojaPos.lat, lng: lojaPos.lng, imagem_url: lojaImg, capa_url: lojaCapa,
+      endereco: assinT && !(ende.rua && ende.cidade) ? '' : lojaAddr ? lojaAddr.texto() : lojaEnd, lat: lojaPos ? lojaPos.lat : null, lng: lojaPos ? lojaPos.lng : null, imagem_url: lojaImg, capa_url: lojaCapa,
       ...cfgTaxa(), pedido_minimo: num($('l-min').value),
       aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked, aceita_retirada: $('l-ret').checked,
-      horarios: lerHoras(), horario_auto: $('l-auto').checked,
+      horarios: lerHoras(), horario_auto: assinT ? false : $('l-auto').checked,
       ...((loja && 'cor' in loja) || lojas.some(x => 'cor' in x) || $('l-cor').value ? { cor: $('l-cor').value } : {}),
       pix_tipo: $('l-pixtipo').value, pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()
     };
@@ -3236,13 +3309,13 @@
     if (!loja) {
       lojas.push(res.data);
       await abrirLoja(res.data);
-      go('cardapio');
-      GP.toast('Loja criada! Agora monte seu cardápio.', 'ok');
+      if (GP.ehAssin(res.data)) { go('planos'); GP.toast('Loja criada! Agora crie seus planos e conecte o Mercado Pago em Minha loja → Pagamentos.', 'ok'); }
+      else { go('cardapio'); GP.toast('Loja criada! Agora monte seu cardápio.', 'ok'); }
     } else {
       loja = res.data; lojas = lojas.map(l => l.id === loja.id ? loja : l);
       fillLoja(); applyHeader();
       GP.toast('Alterações salvas', 'ok');
-      if (loja.horario_auto && !loja.aberta && loja.verificacao === 'verificada' && !GP.ehAgenda(loja)) {
+      if (loja.horario_auto && !loja.aberta && loja.verificacao === 'verificada' && !GP.ehAgenda(loja) && !GP.ehAssin(loja)) {
         setTimeout(async () => {
           if (await GP.confirmar('Ligar a loja agora?', { texto: 'O horário automático só funciona com a chave lá em cima ligada. Ligando agora, a loja abre e fecha sozinha nos horários que você cadastrou.', ok: 'Ligar a chave', cancelar: 'Depois', icone: 'clock' })) {
             $('sw-aberta').checked = true; $('sw-aberta').dispatchEvent(new Event('change'));

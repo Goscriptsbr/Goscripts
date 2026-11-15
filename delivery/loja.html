@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=68970">
+<link rel="stylesheet" href="app.css?v=70284">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -341,8 +341,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=51585"></script>
-<script src="app.js?v=68970"></script>
+<script src="config.js?v=70284"></script>
+<script src="app.js?v=70284"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -363,6 +363,7 @@
   if (error) return fail('Não foi possível abrir a loja', esc(GP.err(error)));
   if (!loja) return fail('Loja não encontrada', 'O link pode estar errado ou a loja saiu do ar.');
   if (loja.tipo === 'agenda') { location.replace('agenda.html?l=' + encodeURIComponent(slug)); return; }
+  if (loja.tipo === 'assinatura') { location.replace('assinatura.html?l=' + encodeURIComponent(slug)); return; }
   // plano vencido com produtos/lojas acima do limite: a loja aparece fechada
   try { const { data: bq } = await sb.rpc('ff_loja_bloqueada', { p_loja: loja.id }); if (bq === true) { loja.aberta = false; loja.horario_auto = false; } } catch (_) {}
   GP.aplicarCor(loja.cor);

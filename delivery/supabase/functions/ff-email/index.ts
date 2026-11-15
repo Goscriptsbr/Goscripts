@@ -45,7 +45,7 @@ const so = (s) => String(s || '').replace(/\D/g, '');
 const wa = (tel, msg) => { let d = so(tel); if (d.length <= 11) d = '55' + d; return 'https://wa.me/' + d + '?text=' + encodeURIComponent(msg); };
 
 // Moldura igual à dos e-mails de cadastro
-export function moldura({ previa, titulo, texto, corpo = '', botao = null, botao2 = null, rodapeLoja = '', agenda = false }) {
+export function moldura({ previa, titulo, texto, corpo = '', botao = null, botao2 = null, rodapeLoja = '', agenda = false, aviso = '' }) {
   const btn = (b, cheio) => b ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px"><tr><td align="center" style="border-radius:14px;background:${cheio ? COR : '#ffffff'};${cheio ? '' : 'border:1.5px solid #E6E3DE;'}">
       <a href="${h(b.url)}" style="display:block;padding:15px 20px;color:${cheio ? '#ffffff' : '#16161B'};font-size:16px;font-weight:700;text-decoration:none;border-radius:14px">${h(b.texto)}</a></td></tr></table>` : '';
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${h(titulo)}</title></head>
@@ -62,7 +62,7 @@ export function moldura({ previa, titulo, texto, corpo = '', botao = null, botao
     ${rodapeLoja}
   </td></tr>
   <tr><td align="center" style="padding:20px 10px 0;font-size:12px;line-height:1.6;color:#9a9aa5">
-    ${agenda ? 'Você recebeu este e-mail porque marcou um horário pelo GoPedido.<br>O GoPedido é a plataforma; o atendimento é feito pelo estabelecimento.'
+    ${aviso ? aviso : agenda ? 'Você recebeu este e-mail porque marcou um horário pelo GoPedido.<br>O GoPedido é a plataforma; o atendimento é feito pelo estabelecimento.'
              : 'Você recebeu este e-mail porque fez um pedido pelo GoPedido.<br>O GoPedido é a plataforma; a venda e a entrega são feitas pela loja.'} <a href="${SITE}termos.html" style="color:#9a9aa5">Termos de Uso</a>
   </td></tr>
 </table></td></tr></table></body></html>`;
@@ -244,6 +244,143 @@ async function enviarAgenda(admin, enviar, a, tipo) {
 }
 
 // Roda de 5 em 5 minutos (agendador do Supabase): manda o lembrete de quem tem horário nas próximas 3 horas
+
+// ---------------------------------------------------------------------------
+// Lojas de assinatura e códigos digitais (SQL v33)
+//   { acao: 'assin_pago', id }     → pagamento aprovado: confirmação (+ código, se o plano entrega código)
+//   { acao: 'assin_convite', id }  → o lojista cadastrou o assinante: link para escolher o período e pagar
+//   { acao: 'assin_link', id }     → quem já é assinante tentou assinar de novo: manda o link de renovação
+//   { acao: 'codigos_pedido', id } → pedido com produto de código digital: manda os códigos por e-mail
+//   e o agendador (acao 'lembretes') avisa 3 dias antes, no dia e 3 dias depois do vencimento.
+// ---------------------------------------------------------------------------
+const dBR = (d) => String(d || '').slice(0, 10).split('-').reverse().join('/');
+const AVISO_ASSIN = 'Você recebeu este e-mail porque tem uma assinatura feita pelo GoPedido.<br>O GoPedido é a plataforma; a assinatura é vendida pela loja.';
+const caixaCodigo = (rot, cod) => `<div style="margin:0 0 10px;padding:14px 16px;border:1.5px dashed ${COR};border-radius:14px;background:#FFF7F3">
+  <div style="font-size:12px;color:#7a7a85;margin-bottom:4px">${h(rot)}</div>
+  <div style="font-family:Menlo,Consolas,monospace;font-size:17px;font-weight:700;letter-spacing:.5px;word-break:break-all;color:#16161B">${h(cod)}</div></div>`;
+const linkAssin = (a) => SITE + 'assinatura.html?t=' + encodeURIComponent(a.token);
+async function dadosAssin(admin, assinanteId) {
+  const { data: a } = ok(await admin.from('ff_assinantes').select('*').eq('id', assinanteId).maybeSingle(), 'assinante');
+  if (!a) return null;
+  const { data: pl } = ok(await admin.from('ff_assin_planos').select('*').eq('id', a.plano_id).maybeSingle(), 'plano');
+  const { data: l } = ok(await admin.from('ff_lojas').select('id, nome, telefone, dono').eq('id', a.loja_id).maybeSingle(), 'loja');
+  return { a, pl: pl || { nome: 'Assinatura' }, l: l || { nome: 'Loja' } };
+}
+async function emailDoDono(admin, dono) {
+  try { const { data: u } = await admin.auth.admin.getUserById(dono); return (u && u.user && u.user.email) || ''; } catch (_) { return ''; }
+}
+const contatoLoja = (l) => {
+  const w = String(l.telefone || '').replace(/\D/g, '');
+  return w ? `<p style="margin:18px 0 0;font-size:13px;color:#7a7a85">Dúvidas? Fale com a loja: <a href="https://wa.me/${w.length <= 11 ? '55' + w : w}" style="color:${COR}">WhatsApp da ${h(l.nome)}</a></p>` : '';
+};
+
+export async function assinPago(admin, enviar, id) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(id || ''))) throw new Falha('pagamento_invalido');
+  const { data: g } = ok(await admin.from('ff_assin_pagamentos').update({ email_em: new Date().toISOString() })
+    .eq('id', id).eq('status', 'aprovado').is('email_em', null).select('*').maybeSingle(), 'pagamento');
+  if (!g) return { enviado: false, motivo: 'ja_enviado_ou_situacao' };
+  const d = await dadosAssin(admin, g.assinante_id); if (!d) return { enviado: false };
+  const { a, pl, l } = d;
+  const per = `${g.meses} ${g.meses > 1 ? 'meses' : 'mês'}`;
+  const html = moldura({
+    previa: `Sua assinatura ${pl.nome} está ativa até ${dBR(g.valido_ate)}.`,
+    titulo: g.codigo ? 'Pagamento confirmado: aqui está seu código' : 'Pagamento confirmado!',
+    texto: `Oi, ${h(a.nome.split(' ')[0])}! Recebemos o pagamento de <b>${h(pl.nome)}</b> (${per}${Number(g.valor) ? ' · ' + brl(g.valor) : ''}) na <b>${h(l.nome)}</b>. Sua assinatura vale até <b>${dBR(g.valido_ate)}</b>.`,
+    corpo: (g.codigo ? caixaCodigo('Seu código', g.codigo) + `<p style="margin:0 0 6px;font-size:13px;color:#7a7a85">Guarde este e-mail. Se tiver dúvida sobre como usar o código, fale com a loja.</p>` : '')
+      + `<p style="margin:10px 0 0;font-size:13px;color:#7a7a85">Antes de vencer, avisamos por e-mail com o link para renovar.</p>`,
+    botao: { texto: 'Ver minha assinatura', url: linkAssin(a) }, rodapeLoja: contatoLoja(l), aviso: AVISO_ASSIN
+  });
+  await enviar({ para: a.email, assunto: g.codigo ? `Seu código: ${pl.nome} · ${l.nome}` : `Assinatura confirmada: ${pl.nome} · ${l.nome}`, html, texto: textoSimples(html), loja: l.nome, responder: await emailDoDono(admin, l.dono) });
+  return { enviado: true };
+}
+
+export async function assinConvite(admin, enviar, id, tipo = 'convite') {
+  if (!/^[0-9a-f-]{36}$/i.test(String(id || ''))) throw new Falha('assinante_invalido');
+  const d = await dadosAssin(admin, id); if (!d) return { enviado: false };
+  const { a, pl, l } = d;
+  const av = a.avisos || {};
+  if (tipo === 'convite' && (a.status !== 'pendente' || av.convite)) return { enviado: false, motivo: 'situacao' };
+  if (tipo === 'link' && (a.status !== 'ativo' || (av.link && Date.now() - new Date(av.link).getTime() < 10 * 60e3))) return { enviado: false, motivo: 'situacao' };
+  ok(await admin.from('ff_assinantes').update({ avisos: { ...av, [tipo]: new Date().toISOString() } }).eq('id', a.id), 'marcar');
+  const html = tipo === 'convite' ? moldura({
+    previa: `Ative sua assinatura ${pl.nome} na ${l.nome}.`,
+    titulo: `Sua assinatura na ${l.nome}`,
+    texto: `Oi, ${h(a.nome.split(' ')[0])}! A <b>${h(l.nome)}</b> cadastrou você na assinatura <b>${h(pl.nome)}</b>. Para ativar, escolha por quanto tempo quer assinar e pague pelo Pix ou cartão.`,
+    botao: { texto: 'Escolher o período e pagar', url: linkAssin(a) }, rodapeLoja: contatoLoja(l), aviso: AVISO_ASSIN
+  }) : moldura({
+    previa: `Você já é assinante de ${pl.nome}.`,
+    titulo: 'Você já é assinante',
+    texto: `Oi, ${h(a.nome.split(' ')[0])}! Alguém tentou assinar <b>${h(pl.nome)}</b> na <b>${h(l.nome)}</b> com o seu e-mail, mas você já é assinante${a.valido_ate ? ' até <b>' + dBR(a.valido_ate) + '</b>' : ''}. Para renovar antes, use o botão abaixo.`,
+    botao: { texto: 'Ver minha assinatura', url: linkAssin(a) }, rodapeLoja: contatoLoja(l), aviso: AVISO_ASSIN
+  });
+  await enviar({ para: a.email, assunto: tipo === 'convite' ? `Ative sua assinatura: ${pl.nome} · ${l.nome}` : `Sua assinatura ${pl.nome} · ${l.nome}`, html, texto: textoSimples(html), loja: l.nome, responder: await emailDoDono(admin, l.dono) });
+  return { enviado: true };
+}
+
+export async function codigosPedido(admin, enviar, id, rede = fetch) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(id || ''))) throw new Falha('pedido_invalido');
+  const { data: p } = ok(await admin.from('ff_pedidos').update({ codigos_em: new Date().toISOString() })
+    .eq('id', id).is('codigos_em', null).select('*').maybeSingle(), 'pedido');
+  if (!p) return { enviado: false, motivo: 'ja_enviado' };
+  const { data: cods } = ok(await admin.from('ff_codigos').select('codigo, produto_id').eq('pedido_id', p.id), 'códigos');
+  const { data: itens } = ok(await admin.from('ff_pedido_itens').select('produto_id, nome, qtd').eq('pedido_id', p.id), 'itens');
+  const { data: l } = ok(await admin.from('ff_lojas').select('id, nome, telefone, dono').eq('id', p.loja_id).maybeSingle(), 'loja');
+  const ids = [...new Set((cods || []).map(c => c.produto_id))];
+  const nomes = {}; (itens || []).forEach(i => { if (!nomes[i.produto_id]) nomes[i.produto_id] = i.nome; });
+  // quantos o pedido precisava × quantos foram separados
+  const { data: prods } = ok(await admin.from('ff_produtos').select('id, nome').in('id', [...new Set((itens || []).map(i => i.produto_id))]).eq('entrega_codigo', true), 'produtos');
+  const precisa = (itens || []).filter(i => (prods || []).some(x => x.id === i.produto_id)).reduce((t, i) => t + Number(i.qtd), 0);
+  const faltou = Math.max(0, precisa - (cods || []).length);
+  if (faltou && l) {
+    try {
+      await mandarPush(admin, await pessoasDaLoja(admin, l), { titulo: `Faltaram ${faltou} código${faltou > 1 ? 's' : ''} no pedido #${p.numero}`, corpo: 'Cadastre mais códigos no produto e mande para o cliente pelo WhatsApp.', url: SITE + 'painel.html?loja=' + l.id, tag: 'cod-' + p.id }, rede);
+    } catch (_) {}
+  }
+  if (!p.cliente_email || !(cods || []).length) return { enviado: false, faltou };
+  const html = moldura({
+    previa: `Seus códigos do pedido #${p.numero} chegaram.`,
+    titulo: 'Seus códigos chegaram',
+    texto: `Oi, ${h(String(p.cliente_nome || '').split(' ')[0])}! Aqui estão os códigos do seu pedido <b>#${p.numero}</b> na <b>${h(l ? l.nome : '')}</b>.`,
+    corpo: (cods || []).map(c => caixaCodigo(nomes[c.produto_id] || 'Código', c.codigo)).join('')
+      + (faltou ? `<p style="margin:6px 0 0;font-size:13px;color:#b45309">${faltou} código${faltou > 1 ? 's' : ''} ainda não ${faltou > 1 ? 'estão disponíveis' : 'está disponível'}: a loja vai mandar para você em breve.</p>` : '')
+      + `<p style="margin:10px 0 0;font-size:13px;color:#7a7a85">Guarde este e-mail. Dúvidas sobre como usar, fale com a loja.</p>`,
+    botao: { texto: 'Acompanhar o pedido', url: SITE + 'pedido.html?t=' + encodeURIComponent(p.token) }, rodapeLoja: l ? contatoLoja(l) : ''
+  });
+  await enviar({ para: p.cliente_email, assunto: `Seus códigos · pedido #${p.numero} · ${l ? l.nome : ''}`, html, texto: textoSimples(html), loja: l ? l.nome : '', responder: l ? await emailDoDono(admin, l.dono) : '' });
+  return { enviado: true, faltou };
+}
+
+// Avisos de vencimento: 3 dias antes, no dia e 3 dias depois (só entre 8h e 21h)
+export async function lembretesAssin(admin, enviar, agora = new Date()) {
+  const sp = new Date(agora.getTime() - 3 * 3600e3), hora = sp.getUTCHours();
+  if (hora < 8 || hora >= 21) return 0;
+  const hoje = sp.toISOString().slice(0, 10);
+  const dia = (n) => new Date(Date.parse(hoje + 'T12:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+  const { data } = ok(await admin.from('ff_assinantes').select('*').eq('status', 'ativo').gte('valido_ate', dia(-3)).lte('valido_ate', dia(3)).order('valido_ate').limit(40), 'assinantes vencendo');
+  let n = 0;
+  for (const a of data || []) {
+    const d = Math.round((Date.parse(a.valido_ate + 'T12:00:00Z') - Date.parse(hoje + 'T12:00:00Z')) / 864e5);
+    const chave = d > 0 ? 'v3' : d === 0 ? 'v0' : d <= -3 ? 'vx' : '';
+    const av = a.avisos || {};
+    if (!chave || av[chave] === a.valido_ate) continue;
+    ok(await admin.from('ff_assinantes').update({ avisos: { ...av, [chave]: a.valido_ate } }).eq('id', a.id), 'marcar aviso');
+    try {
+      const dd = await dadosAssin(admin, a.id); if (!dd) continue;
+      const { pl, l } = dd;
+      const tit = d > 0 ? `Sua assinatura vence em ${d} dia${d > 1 ? 's' : ''}` : d === 0 ? 'Sua assinatura vence hoje' : 'Sua assinatura venceu';
+      const html = moldura({
+        previa: `${pl.nome} na ${l.nome}: renove pelo Pix ou cartão.`,
+        titulo: tit,
+        texto: `Oi, ${h(a.nome.split(' ')[0])}! Sua assinatura <b>${h(pl.nome)}</b> na <b>${h(l.nome)}</b> ${d >= 0 ? 'vale até' : 'venceu em'} <b>${dBR(a.valido_ate)}</b>. ${d >= 0 ? 'Renove agora para não ficar sem.' : 'Renove para voltar a ter acesso.'} Você escolhe por quanto tempo e paga pelo Pix ou cartão.`,
+        botao: { texto: 'Renovar minha assinatura', url: linkAssin(a) }, rodapeLoja: contatoLoja(l), aviso: AVISO_ASSIN
+      });
+      await enviar({ para: a.email, assunto: `${tit}: ${pl.nome} · ${l.nome}`, html, texto: textoSimples(html), loja: l.nome, responder: await emailDoDono(admin, l.dono) });
+      n++;
+    } catch (_) { /* tenta no próximo ciclo só se desmarcar; aqui segue */ }
+  }
+  return n;
+}
+
 export async function lembretes(admin, enviar, agora = new Date()) {
   const ate = new Date(agora.getTime() + 3 * 3600e3).toISOString();
   const { data } = ok(await admin.from('ff_agendamentos').select('*')
@@ -305,7 +442,9 @@ export async function lembretes(admin, enviar, agora = new Date()) {
       catch (_) { await admin.from('ff_assinaturas').update({ aviso_em: null }).eq('email', v.email); }
     }
   } catch (_) { /* sem o SQL v27 ainda */ }
-  return { enviados, pulados, falhas, planos, avaliar };
+  let assinaturas = 0;
+  try { assinaturas = await lembretesAssin(admin, enviar, agora); } catch (_) {}
+  return { enviados, pulados, falhas, planos, avaliar, assinaturas };
 }
 
 // ---------------------------------------------------------------------------
@@ -510,6 +649,11 @@ export async function tratar(req, admin, enviar, rede = fetch) {
   if (b.acao === 'push_pedido') return { status: 200, corpo: await pushPedido(admin, b.id, rede) };
   if (b.acao === 'push_agenda') return { status: 200, corpo: await pushAgenda(admin, b.id, rede) };
   if (b.acao === 'push_moto') return { status: 200, corpo: await pushMoto(admin, b.id, String(b.evento || ''), rede) };
+  // Assinaturas e códigos digitais (SQL v33)
+  if (b.acao === 'assin_pago') return { status: 200, corpo: await assinPago(admin, enviar, b.id) };
+  if (b.acao === 'assin_convite') return { status: 200, corpo: await assinConvite(admin, enviar, b.id, 'convite') };
+  if (b.acao === 'assin_link') return { status: 200, corpo: await assinConvite(admin, enviar, b.id, 'link') };
+  if (b.acao === 'codigos_pedido') return { status: 200, corpo: await codigosPedido(admin, enviar, b.id, rede) };
   if (b.acao === 'push_teste') {
     const jwt = String(req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
     const { data: u } = jwt ? await admin.auth.getUser(jwt) : { data: null };

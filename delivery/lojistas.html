@@ -21,8 +21,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=68970">
-<link rel="stylesheet" href="site.css?v=51585">
+<link rel="stylesheet" href="app.css?v=70284">
+<link rel="stylesheet" href="site.css?v=70284">
 </head>
 <body data-sem-rodape>
 <a class="pular" href="#recursos">Pular para o conteúdo</a>
@@ -333,8 +333,8 @@
   </div>
 </footer>
 
-<script src="config.js?v=51585"></script>
-<script src="app.js?v=68970"></script>
+<script src="config.js?v=70284"></script>
+<script src="app.js?v=70284"></script>
 <script>
 (() => {
   const { $, ic } = GP;
@@ -369,6 +369,9 @@
       ['Lojas na conta', p => '<b>' + p.lojas + '</b>'],
       ['Produtos (total da conta)', p => '<b>' + p.produtos + '</b>'],
       ['Comprar mais produtos quando precisar<small style="display:block;font-weight:500;opacity:.7">R$ 0,20 por produto/mês</small>', p => p.id === 'premium' ? sim : nao],
+      ['Loja de assinaturas: assinantes ativos', p => ({ gratis: '10', profissional: '50', premium: '150' })[p.id]],
+      ['Comprar mais assinantes<small style="display:block;font-weight:500;opacity:.7">R$ 1,00 por assinante/mês</small>', p => p.id === 'premium' ? sim : nao],
+      ['Entrega automática de códigos digitais', p => sim],
       ['Administradores além de você', p => '<b>' + adm(p) + '</b>'],
       ['Pix, cartão e dinheiro', p => tem(p, /Pix, cartão/) ? sim : nao],
       ['Motoboys e impressão de pedidos', p => tem(p, /Motoboys/) ? sim : nao],
