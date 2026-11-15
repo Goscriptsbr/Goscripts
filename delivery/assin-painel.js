@@ -157,28 +157,51 @@
   const validaAssin = (r) => r.nome.length < 2 ? 'Digite o nome.' : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(r.email) ? 'Digite um e-mail válido.' : !r.plano_id ? 'Escolha o plano.' : '';
   function novoAssin() {
     if (!planos.some(p => p.ativo)) return GP.toast('Crie um plano ativo antes de cadastrar assinantes.', 'err');
+    const INFO = {
+      link: 'Mandamos um e-mail com o link para ele escolher o período e pagar pelo Pix ou cartão.',
+      pago: 'Na próxima tela você escolhe o período e o valor recebido. A assinatura começa hoje.',
+      antigo: 'Para quem já pagava antes de você usar o sistema. Coloque até quando já está pago: ele entra como ativo, sem cobrança agora, e recebe os avisos de renovação perto dessa data.'
+    };
+    let modo = 'link';
     janela('Novo assinante', formAssin(null) + `
-      <label class="switch" style="margin:4px 0 6px"><input type="checkbox" id="na-pago"><i></i>Já pagou (registrar o pagamento agora)</label>
-      <p class="small muted" id="na-info" style="margin:0">Mandamos um e-mail com o link para ele escolher o período e pagar pelo Pix ou cartão.</p>`,
+      <div class="field"><span>Situação</span><div class="seg3" id="na-modo" style="margin-top:4px">
+        <button type="button" class="on" data-md="link">Vai pagar</button><button type="button" data-md="pago">Pagou agora</button><button type="button" data-md="antigo">Já era assinante</button></div></div>
+      <label class="field hide" id="na-ate-w"><span>Pago até (vencimento)</span><input class="input" type="date" id="na-ate"></label>
+      <p class="small muted" id="na-info" style="margin:0">${INFO.link}</p>`,
       `<button type="button" class="btn btn-primary btn-block" id="na-ok">Cadastrar</button>`);
-    $('na-pago').onchange = () => { $('na-info').textContent = $('na-pago').checked ? 'Na próxima tela você escolhe o período e o valor recebido.' : 'Mandamos um e-mail com o link para ele escolher o período e pagar pelo Pix ou cartão.'; };
+    $('na-modo').onclick = (e) => {
+      const b = e.target.closest('[data-md]'); if (!b) return; modo = b.dataset.md;
+      $('na-modo').querySelectorAll('[data-md]').forEach(x => x.classList.toggle('on', x === b));
+      $('na-ate-w').classList.toggle('hide', modo !== 'antigo'); $('na-info').textContent = INFO[modo];
+      if (modo === 'antigo') setTimeout(() => $('na-ate').focus(), 50);
+    };
     $('na-ok').onclick = async (e) => {
       const r = lerAssin(), msg = validaAssin(r); if (msg) return GP.toast(msg, 'err');
-      const pago = $('na-pago').checked;
+      const extra = { loja_id: loja.id, origem: modo === 'link' ? 'painel' : 'site' };
+      if (modo === 'antigo') {
+        const ate = $('na-ate').value;
+        if (!ate) return GP.toast('Coloque até quando ele já está pago.', 'err');
+        if (ate < hoje()) return GP.toast('Essa data já passou. Use "Vai pagar" para mandar o link de renovação.', 'err');
+        Object.assign(extra, { status: 'ativo', valido_ate: ate, obs: 'Cadastrado como assinante antigo (pago até ' + dataBR(ate) + ')' });
+      }
       const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
-      // "já pagou": cadastra como site (sem e-mail de convite) e registra o pagamento em seguida
-      const { data, error } = await sb.from('ff_assinantes').insert({ ...r, loja_id: loja.id, origem: pago ? 'site' : 'painel' }).select().single();
+      const { data, error } = await sb.from('ff_assinantes').insert({ ...r, ...extra }).select().single();
       b.disabled = false; b.textContent = 'Cadastrar';
-      if (error) return GP.toast(/ff_assinantes_unico|duplicate/.test(error.message || '') ? 'Esse e-mail já é assinante deste plano.' : erroSQL(error), 'err');
+      if (error) return GP.toast(/ff_assinantes_unico|duplicate/.test(error.message || '') ? 'Esse e-mail já é assinante deste plano.' : /limite_assinantes/.test(error.message || '') ? GP.err(error) + ' Aumente o limite para ativar mais assinantes.' : erroSQL(error), 'err');
       assin.unshift(data);
-      if (pago) return registrarPago(data);
+      if (modo === 'pago') return registrarPago(data);
+      if (modo === 'antigo') { GP.toast(`Assinante cadastrado como ativo até ${dataBR(data.valido_ate)}.`, 'ok'); fechar(); filtro = 'ativos'; await recarregar(); return; }
       GP.toast('Assinante cadastrado! O link de pagamento foi para o e-mail dele.', 'ok'); fechar(); filtro = 'pendentes'; renderAssin();
     };
   }
   function editarAssin(a) {
-    janela('Editar assinante', formAssin(a), `<button type="button" class="btn btn-primary btn-block" id="na-ok">Salvar</button>`);
+    janela('Editar assinante', formAssin(a) + (a.status === 'ativo' ? `<label class="field"><span>Vale até (vencimento)</span><input class="input" type="date" id="na-ate" value="${esc(a.valido_ate || '')}"><small>Para corrigir a data. Para renovar com pagamento, use "Registrar pagamento recebido".</small></label>` : ''),
+      `<button type="button" class="btn btn-primary btn-block" id="na-ok">Salvar</button>`);
     $('na-ok').onclick = async () => {
       const r = lerAssin(), msg = validaAssin(r); if (msg) return GP.toast(msg, 'err');
+      const ate = $('na-ate') && $('na-ate').value;
+      if ($('na-ate') && !ate) return GP.toast('Coloque a data de vencimento.', 'err');
+      if (ate && ate !== a.valido_ate) { r.valido_ate = ate; r.avisos = {}; }
       const { error } = await sb.from('ff_assinantes').update(r).eq('id', a.id);
       if (error) return GP.toast(/ff_assinantes_unico|duplicate/.test(error.message || '') ? 'Esse e-mail já é assinante deste plano.' : erroSQL(error), 'err');
       GP.toast('Dados salvos.', 'ok'); fechar(); await recarregar();
