@@ -1105,6 +1105,10 @@
   }
 
   let booting = null;
+  // Mostra na tela qualquer erro inesperado (ajuda a descobrir problemas pelo celular)
+  const mostrarErro = (m) => { try { console.error(m); GP.toast('Erro: ' + String(m).slice(0, 160), 'err'); } catch (_) {} };
+  window.addEventListener('error', (e) => mostrarErro((e.error && e.error.message) || e.message));
+  window.addEventListener('unhandledrejection', (e) => mostrarErro((e.reason && (e.reason.message || e.reason)) || 'erro'));
   function boot() { if (!booting) booting = doBoot().finally(() => { booting = null; }); return booting; }
   // ================= TERMOS DE USO =================
   const TERMOS_VERSAO = '1';
