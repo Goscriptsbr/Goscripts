@@ -16,7 +16,8 @@
 <style>
   html,body{height:100%}
   body{background:var(--bg);overflow:hidden}
-  .cx{display:grid;grid-template-rows:auto 1fr;height:100vh;height:100dvh}
+  .cx{display:flex;flex-direction:column;height:100vh;height:100dvh}
+  .cx>#corpo{flex:1;min-height:0}
   .cx-top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--ink);color:#fff;flex-wrap:wrap}
   .cx-top .lg{width:36px;height:36px;border-radius:11px;background:var(--brand) center/cover;display:grid;place-items:center;font-weight:800;flex:none}
   .cx-top .nm{min-width:0;flex:1}
@@ -109,6 +110,10 @@
   .dif{padding:12px 14px;border-radius:14px;font-weight:700;margin-top:10px}
   .dif.ok{background:#e7f6ec;color:#166534}.dif.mais{background:#e8f0fe;color:#1e40af}.dif.menos{background:#fdecea;color:#8a1c12}
   #recibo-frame{position:fixed;width:0;height:0;border:0;left:-9999px}
+  .cx-faixa{display:none}
+  .cx-faixa.off,.cx-faixa.env{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:.84rem;font-weight:600}
+  .cx-faixa.off{background:#fdecea;color:#8a1c12}.cx-faixa.env{background:#FEF3C7;color:#92400e}
+  .cx-faixa svg{width:18px;height:18px;flex:none}
 </style>
 </head>
 <body data-sem-rodape>
@@ -118,6 +123,7 @@
     <div class="nm"><b id="t-nome">Caixa</b><span id="t-sub"></span></div>
     <div class="tb" id="t-acts"></div>
   </header>
+  <div id="cx-faixa" class="cx-faixa"></div>
   <div id="corpo" class="cx-tela"><div class="sk" style="width:min(440px,90vw);height:220px;border-radius:20px"></div></div>
 </div>
 <div class="overlay" id="ov"></div>
@@ -125,8 +131,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=34641"></script>
-<script src="pdv-ui.js?v=32758"></script>
+<script src="app.js?v=35439"></script>
+<script src="pdv-ui.js?v=35439"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -156,8 +162,13 @@
   // ----------------- sessão e loja -----------------
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.replace('painel.html?volta=caixa'); return; }
-  let lojas = [];
-  try { lojas = (await rpc('ff_minhas_lojas')) || []; } catch (e) { return tela('Não foi possível abrir', esc(erroMsg(e))); }
+  let lojas = [], offline = false;
+  const ehRede = (e) => /Failed to fetch|NetworkError|Load failed|fetch|network/i.test((e && e.message) || String(e || '')) || !navigator.onLine;
+  try { lojas = (await rpc('ff_minhas_lojas')) || []; GP.ls.set('gp_cx_lojas', lojas.map(l => ({ id: l.id, nome: l.nome, tipo: l.tipo }))); }
+  catch (e) {
+    if (ehRede(e) && (GP.ls.get('gp_cx_lojas') || []).length) { lojas = GP.ls.get('gp_cx_lojas'); offline = true; }
+    else return tela('Não foi possível abrir', esc(erroMsg(e)));
+  }
   const qs = new URLSearchParams(location.search);
   let estado = null, loja = null, catalogo = [], carrinho = [], cat = '', busca = '', vendaAtual = null;
   const lojaId = [qs.get('loja'), GP.ls.get('gp_loja_sel')].find(id => id && lojas.some(l => l.id === id)) || (lojas[0] && lojas[0].id);
@@ -171,9 +182,19 @@
   }
   async function sair_() { await sb.auth.signOut(); location.replace('painel.html'); }
 
+  const kCache = 'gp_cx_cache_' + lojaId, kFila = 'gp_cx_fila_' + lojaId;
+  const fila = () => GP.ls.get(kFila, []) || [];
   async function carregarEstado() {
-    estado = await rpc('ff_caixa_estado', { p_loja: lojaId });
+    try {
+      estado = await rpc('ff_caixa_estado', { p_loja: lojaId });
+      offline = false; GP.ls.set(kCache, { ...(GP.ls.get(kCache) || {}), estado, em: Date.now() });
+    } catch (e) {
+      const c = GP.ls.get(kCache);
+      if (!ehRede(e) || !c || !c.estado) throw e;
+      estado = c.estado; offline = true;
+    }
     loja = estado.loja;
+    faixa();
     GP.aplicarCor && GP.aplicarCor(loja.cor);
     document.title = `Caixa · ${loja.nome} · GoPedido`;
     $('t-nome').textContent = loja.nome;
@@ -181,14 +202,16 @@
     const c = estado.caixa;
     $('t-sub').textContent = (c ? `Caixa nº ${c.numero} aberto às ${hora(c.aberto_em)} · ` : '') + 'Operador: ' + (estado.usuario || '');
     const gerente = estado.papel === 'dono' || estado.papel === 'admin';
+    const contas = loja.mesas_ativo || estado.comandas_abertas;
     $('t-acts').innerHTML = `
-      ${loja.mesas_ativo && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-mesas" style="${estado.comandas_conta ? 'background:var(--brand)' : ''}">${ic('users')}<span>Mesas${estado.comandas_abertas ? ' (' + estado.comandas_abertas + ')' : ''}</span></button>` : ''}
+      ${temCozinha() ? `<button class="btn btn-sm" id="a-coz" title="Impressão da cozinha">${ic('print')}<span>Cozinha</span></button>` : ''}
+      ${contas && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-mesas" style="${estado.comandas_conta ? 'background:var(--brand)' : ''}">${ic('users')}<span>${loja.mesas_ativo ? 'Mesas' : 'Contas'}${estado.comandas_abertas ? ' (' + estado.comandas_abertas + ')' : ''}</span></button>` : ''}
       ${loja.pdv_ativo && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-vendas">${ic('list')}<span>Vendas</span></button>` : ''}
       ${c ? `<button class="btn btn-sm" id="a-ret">${ic('download')}<span>Retirada</span></button><button class="btn btn-sm" id="a-ref">${ic('plus')}<span>Reforço</span></button><button class="btn btn-sm" id="a-fechar">${ic('lock')}<span>Fechar caixa</span></button>` : ''}
       ${lojas.length > 1 ? `<select class="btn btn-sm" id="a-loja" style="max-width:160px">${lojas.map(l => `<option value="${l.id}" ${l.id === lojaId ? 'selected' : ''}>${esc(l.nome)}</option>`).join('')}</select>` : ''}
       ${gerente ? `<a class="btn btn-sm" href="painel.html?loja=${lojaId}">${ic('left')}<span>Painel</span></a>` : `<button class="btn btn-sm" id="a-sair">${ic('logout')}<span>Sair</span></button>`}`;
     const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
-    on('a-vendas', verVendas); on('a-mesas', verMesas); on('a-ret', () => movimentar('sangria')); on('a-ref', () => movimentar('suprimento')); on('a-fechar', fecharCaixa); on('a-sair', sair_);
+    on('a-vendas', verVendas); on('a-mesas', () => online() && verMesas()); on('a-coz', cfgCozinha); on('a-ret', () => online() && movimentar('sangria')); on('a-ref', () => online() && movimentar('suprimento')); on('a-fechar', () => online() && fecharCaixa()); on('a-sair', sair_);
     const sl = $('a-loja'); if (sl) sl.onchange = () => { GP.ls.set('gp_loja_sel', sl.value); location.href = 'caixa.html?loja=' + sl.value; };
   }
 
@@ -199,9 +222,11 @@
       const g = estado.papel === 'dono' || estado.papel === 'admin';
       return tela('O caixa está desligado', g ? 'Para vender no balcão, ligue o caixa em <b>Minha loja → Caixa e mesas</b>.' : 'Peça para o dono da loja ligar o caixa no painel.', !g);
     }
-    if (loja.pdv_gaveta && !estado.caixa) return telaAbrir();
+    if (loja.pdv_gaveta && !estado.caixa) return offline ? tela('Sem internet', 'O caixa está fechado e só dá para abrir com internet.', false) : telaAbrir();
     await carregarCatalogo();
+    if (!catalogo.length && offline) { const c = GP.ls.get(kCache); if (c && c.catalogo) catalogo = c.catalogo; }
     telaVenda();
+    sincronizar();
   }
 
   // ----------------- abrir caixa -----------------
@@ -223,7 +248,93 @@
 
   // ----------------- catálogo -----------------
   async function carregarCatalogo() {
-    try { catalogo = (await rpc('ff_pdv_catalogo', { p_loja: lojaId })) || []; } catch (e) { GP.toast(erroMsg(e), 'err'); }
+    try { catalogo = (await rpc('ff_pdv_catalogo', { p_loja: lojaId })) || []; GP.ls.set(kCache, { ...(GP.ls.get(kCache) || {}), catalogo }); }
+    catch (e) {
+      const c = GP.ls.get(kCache);
+      if (ehRede(e) && c && c.catalogo) { if (!catalogo.length) catalogo = c.catalogo; }
+      else GP.toast(erroMsg(e), 'err');
+    }
+  }
+
+  // ----------------- sem internet: fila de vendas guardadas no aparelho -----------------
+  function online() { if (offline || !navigator.onLine) { GP.toast('Sem internet agora. Isso volta a funcionar quando a conexão voltar.', 'err'); return false; } return true; }
+  function faixa() {
+    let f = $('cx-faixa');
+    if (!f) { f = document.createElement('div'); f.id = 'cx-faixa'; $('app').insertBefore(f, $('corpo')); }
+    const n = fila().length;
+    f.className = 'cx-faixa ' + (offline ? 'off' : n ? 'env' : '');
+    f.innerHTML = offline ? `${ic('shield')}<span><b>Sem internet.</b> Pode continuar vendendo: ${n ? `${n} venda${n > 1 ? 's guardadas' : ' guardada'} neste aparelho` : 'as vendas ficam guardadas neste aparelho'} e são enviadas quando a internet voltar.</span>`
+      : n ? `<span class="spin"></span><span>Enviando ${n} venda${n > 1 ? 's' : ''} feita${n > 1 ? 's' : ''} sem internet…</span>` : '';
+  }
+  let sincronizando = false;
+  async function sincronizar() {
+    if (sincronizando || !navigator.onLine) return;
+    const F = fila(); if (!F.length) return;
+    sincronizando = true; faixa();
+    let enviadas = 0;
+    try {
+      for (const v of F) {
+        try {
+          await rpc('ff_pdv_vender_offline', { p_loja: lojaId, p_itens: v.itens, p_desconto: v.desconto, p_pagamentos: v.pagamentos, p_cliente: v.cliente, p_idem: v.idem, p_quando: v.quando });
+          GP.ls.set(kFila, fila().filter(x => x.idem !== v.idem)); enviadas++;
+        } catch (e) {
+          if (ehRede(e)) { offline = true; break; }
+          if (/ff_pdv_vender_offline|function .* does not exist|schema cache/i.test(e.message || '')) { GP.toast('Para enviar as vendas feitas sem internet, falta rodar o SQL v38 no Supabase.', 'err'); break; }
+          // erro que não se resolve sozinho: separa para o gerente ver, sem travar as outras
+          GP.ls.set('gp_cx_fila_erro_' + lojaId, (GP.ls.get('gp_cx_fila_erro_' + lojaId) || []).concat([{ ...v, erro: GP.err(e) }]));
+          GP.ls.set(kFila, fila().filter(x => x.idem !== v.idem));
+          GP.toast(`Uma venda feita sem internet não pôde ser enviada: ${GP.err(e)}`, 'err');
+        }
+      }
+    } finally { sincronizando = false; }
+    if (enviadas) { offline = false; GP.toast(`${enviadas} venda${enviadas > 1 ? 's feitas' : ' feita'} sem internet enviada${enviadas > 1 ? 's' : ''}.`, 'ok'); carregarEstado().catch(() => {}); carregarCatalogo().then(() => $('v-grid') && renderGrid()); }
+    faixa();
+  }
+  function guardarOffline(pags) {
+    const tot = total(), pago = pags.reduce((t, p) => t + p.valor, 0);
+    const v = { idem, quando: new Date().toISOString(), desconto, cliente, pagamentos: pags,
+      itens: carrinho.map(l => ({ id: l.p.id, nome: l.nome, preco: l.unit, qtd: l.g ? 1 : l.qtd, g: l.g || null, v: l.v || null, obs: l.obs || '', opcoes: (l.opcoes || []).map(o => ({ nome: o.nome, preco: o.preco })) })) };
+    GP.ls.set(kFila, fila().concat([v]));
+    // estoque deste aparelho acompanha
+    carrinho.forEach(l => { if (!l.g && !l.v && l.p.estoque != null) { const p = catalogo.find(x => x.id === l.p.id); if (p) p.estoque = Math.max(0, p.estoque - l.qtd); } });
+    GP.ls.set(kCache, { ...(GP.ls.get(kCache) || {}), catalogo });
+    return { numero: 'offline', total: tot, subtotal: subtotal(), desconto, troco: r2(pago - tot), pagamentos: pags, criado_em: v.quando, usuario_nome: estado.usuario, offline: true,
+      itens: v.itens.map(i => ({ nome: i.nome, preco: i.preco, qtd: i.qtd, opcoes: i.opcoes, obs: i.obs })) };
+  }
+
+  // ----------------- cozinha (lanchonete, restaurante, bar…) -----------------
+  const TIPOS_COZINHA = ['restaurante', 'bebidas', 'outros'];
+  const temCozinha = () => loja && TIPOS_COZINHA.includes(loja.tipo);
+  const kCoz = 'gp_cx_cozinha_' + lojaId;
+  const cozCfg = () => ({ balcao: false, mesas: false, ...(GP.ls.get(kCoz) || {}) });
+  function cfgCozinha() {
+    const c = cozCfg();
+    janela('Impressão da cozinha', `
+      <p class="small muted" style="margin:0 0 12px">Vale só para <b>este aparelho</b>. Ligue no computador que está com a impressora da cozinha.</p>
+      <div style="display:grid;gap:10px">
+        <label class="switch"><input type="checkbox" id="cz-b" ${c.balcao ? 'checked' : ''}><i></i>Imprimir o pedido da cozinha ao finalizar uma venda do balcão</label>
+        <label class="switch"><input type="checkbox" id="cz-m" ${c.mesas ? 'checked' : ''}><i></i>Imprimir sozinho o que os garçons lançam nas mesas e as contas "pagar depois"</label>
+      </div>
+      <p class="small muted" style="margin:12px 0 0">Para imprimir sem a janela de confirmação, abra o caixa pelo Chrome com a opção de impressão direta (atalho com <code>--kiosk-printing</code>). Cada pedido sai uma vez só, mesmo com dois aparelhos ligados.</p>`,
+      `<button class="btn btn-primary btn-block" id="cz-ok">Salvar</button>`);
+    $('cz-ok').onclick = () => { GP.ls.set(kCoz, { balcao: $('cz-b').checked, mesas: $('cz-m').checked }); fechar(); GP.toast('Impressão da cozinha salva neste aparelho.', 'ok'); foco(); };
+  }
+  // fila de impressão: uma de cada vez (a janela de imprimir trava a tela)
+  let filaImp = Promise.resolve();
+  function imprimirCozinha(t) {
+    filaImp = filaImp.then(() => new Promise(res => {
+      imprimirHTML(`<div class="c b" style="font-size:20px">${esc(t.onde)}</div><div class="c">${dataHora(t.quando || new Date())}${t.quem ? ' · ' + esc(t.quem) : ''}</div><hr>
+        ${t.itens.map(i => `<div class="b" style="font-size:16px;margin-top:6px">${i.qtd > 1 ? i.qtd + 'x ' : ''}${esc(i.nome)}</div>${(i.opcoes || []).length ? `<div style="font-size:13px">  + ${esc(i.opcoes.map(o => o.nome).join(', '))}</div>` : ''}${i.obs ? `<div style="font-size:14px" class="b">  OBS: ${esc(i.obs)}</div>` : ''}`).join('')}
+        <hr><div class="c s">COZINHA · ${esc(loja.nome)}</div>`);
+      setTimeout(res, 1500);
+    }));
+  }
+  async function puxarCozinha() {
+    if (!temCozinha() || !cozCfg().mesas || offline || document.hidden) return;
+    try {
+      const g = (await rpc('ff_cozinha_pegar', { p_loja: lojaId })) || [];
+      g.forEach(x => imprimirCozinha({ onde: x.onde, quando: x.primeiro, quem: x.garcom, itens: x.itens }));
+    } catch (_) {}
   }
   const temOpcoes = (p) => (p.variacoes || []).length > 0 || (p.grupos || []).some(g => (g.opcoes || []).length) || p.vende_por === 'kg';
   const estoqueDe = (p) => p.estoque == null ? null : p.estoque - carrinho.filter(l => l.p.id === p.id && !l.v).reduce((t, l) => t + l.qtd, 0);
@@ -318,9 +429,11 @@
       <div class="r"><span>Subtotal (${qtd} ite${qtd === 1 ? 'm' : 'ns'})</span><span>${brl(subtotal())}</span></div>
       ${desconto ? `<div class="r" style="color:var(--ok)"><span>Desconto</span><span>− ${brl(desconto)}</span></div>` : ''}
       <div class="big"><span>Total</span><b>${brl(total())}</b></div>
+      ${carrinho.length ? `<button class="btn btn-ghost btn-block btn-sm" id="v-depois" style="margin-bottom:8px">${ic('clock')}Pagar depois (lançar no nome do cliente)</button>` : ''}
       <div class="acts"><button class="btn btn-ghost" id="v-desc" title="Desconto">${ic('tag')}${desconto ? '' : '<span class="small">%</span>'}</button><button class="btn btn-ghost" id="v-cli" title="Cliente">${ic('user')}</button>
         <button class="btn btn-primary" id="v-cobrar" ${carrinho.length ? '' : 'disabled'}>Cobrar ${brl(total())}<span class="kbd">F2</span></button></div>`;
     $('v-desc').onclick = pedirDesconto; $('v-cobrar').onclick = cobrar; $('v-cli').onclick = pedirCliente;
+    if ($('v-depois')) $('v-depois').onclick = pagarDepois;
     $('v-mob-q').textContent = qtd + (qtd === 1 ? ' item' : ' itens'); $('v-mob-t').textContent = 'Cobrar ' + brl(total());
     $('v-mob').style.display = carrinho.length ? '' : 'none';
   }
@@ -431,8 +544,14 @@
         if (l.v) o.v = l.v;
         return o;
       });
-      const r = await rpc('ff_pdv_vender', { p_loja: lojaId, p_itens: itens, p_desconto: desconto, p_pagamentos: pags, p_cliente: cliente, p_idem: idem, p_obs: '' });
+      let r;
+      try { r = await rpc('ff_pdv_vender', { p_loja: lojaId, p_itens: itens, p_desconto: desconto, p_pagamentos: pags, p_cliente: cliente, p_idem: idem, p_obs: '' }); }
+      catch (er) {
+        if (!ehRede(er) || (loja.pdv_gaveta && !estado.caixa)) throw er;
+        r = guardarOffline(pags); offline = true; faixa();     // mesma venda (mesmo código) vai quando a internet voltar
+      }
       idem = null; vendaAtual = { ...r, cliente };
+      if (temCozinha() && cozCfg().balcao) imprimirCozinha({ onde: cliente ? 'Balcão · ' + cliente : 'Balcão · venda ' + (r.numero === 'offline' ? '(sem internet)' : 'nº ' + r.numero), quem: estado.usuario, itens: r.itens || [] });
       carrinho = []; desconto = 0; cliente = '';
       fechar(); vendaOk(vendaAtual);
       carregarCatalogo().then(renderGrid);
@@ -443,9 +562,39 @@
     } });
   }
 
+  // Pagar depois: os itens vão para uma conta no nome do cliente (sem mesa), saem na cozinha e ficam em "Contas"
+  function pagarDepois() {
+    if (!carrinho.length || !online()) return;
+    $('v-cart').classList.remove('on');
+    janela('Pagar depois', `<p class="small muted" style="margin:0 0 10px">Os itens vão para uma conta no nome do cliente. Ela fica em <b>${loja.mesas_ativo ? 'Mesas' : 'Contas'}</b> até ele pagar. Se já existir conta aberta com esse nome, os itens entram nela.</p>
+      <label class="field"><span>Nome do cliente</span><input class="input" id="pd-n" maxlength="40" value="${esc(cliente)}" placeholder="Ex.: João da oficina"></label>
+      <div class="row between small"><span>${carrinho.length} ite${carrinho.length === 1 ? 'm' : 'ns'}</span><b>${brl(subtotal())}</b></div>
+      ${desconto ? '<p class="small" style="color:#92400e;margin:8px 0 0">O desconto não vai junto: dê o desconto na hora de receber a conta.</p>' : ''}`,
+      `<button class="btn btn-primary btn-block" id="pd-ok" style="height:54px">${ic('clock')}Lançar na conta</button>`);
+    setTimeout(() => $('pd-n').focus(), 60);
+    $('pd-n').onkeydown = (e) => { if (e.key === 'Enter') $('pd-ok').click(); };
+    const idens = carrinho.map(() => GP.uuid());     // código de cada item: reenviar não duplica
+    $('pd-ok').onclick = async (e) => {
+      const nome = $('pd-n').value.trim().replace(/\s+/g, ' ');
+      if (nome.length < 2) return GP.toast('Digite o nome do cliente.', 'err');
+      const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+      const itens = carrinho.map((l, i) => { const o = { idem: idens[i], id: l.p.id, obs: l.obs || '', opcoes: (l.opcoes || []).map(x => ({ g: x.g, o: x.o })) }; if (l.g) o.g = l.g; else o.qtd = l.qtd; if (l.v) o.v = l.v; return o; });
+      try {
+        let c = await rpc('ff_comanda_abrir', { p_loja: lojaId, p_mesa: null, p_identificador: nome, p_pessoas: 1 });
+        if (c.status === 'conta') c = await rpc('ff_comanda_conta', { p_comanda: c.id, p_pedir: false });
+        c = await rpc('ff_comanda_lancar', { p_comanda: c.id, p_itens: itens });
+        if (temCozinha() && cozCfg().balcao && !cozCfg().mesas) imprimirCozinha({ onde: nome + ' (pagar depois)', quem: estado.usuario, itens: carrinho.map(l => ({ nome: l.nome, qtd: l.qtd, opcoes: l.opcoes, obs: l.obs })) });
+        carrinho = []; desconto = 0; cliente = '';
+        fechar(); renderCarrinho(); renderGrid();
+        GP.toast(`Lançado na conta de ${nome}: ${brl(c.total)} no total.`, 'ok');
+        carregarEstado().catch(() => {}); carregarCatalogo().then(renderGrid); foco();
+      } catch (er) { b.disabled = false; b.innerHTML = ic('clock') + 'Tentar de novo'; GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+
   // ----------------- mesas e comandas (receber no caixa) -----------------
   async function verMesas() {
-    const w = janela('Mesas e comandas abertas', `<p class="small muted"><span class="spin"></span> Carregando…</p>`);
+    const w = janela(loja.mesas_ativo ? 'Mesas e contas abertas' : 'Contas abertas (pagar depois)', `<p class="small muted"><span class="spin"></span> Carregando…</p>`);
     let st;
     try { st = await rpc('ff_mesas_estado', { p_loja: lojaId }); }
     catch (e) { w.querySelector('.sheet-body').innerHTML = `<div class="warnline">${esc(erroMsg(e))}</div>`; return; }
@@ -454,7 +603,7 @@
     w.querySelector('.sheet-body').innerHTML = (lst.length ? lst.map(c => `<button type="button" class="vl mesa-it" data-c="${c.id}" style="width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0;font:inherit;cursor:pointer">
         <b>${esc(nomeMesa(c))}</b><div><div>${c.itens} ite${c.itens == 1 ? 'm' : 'ns'} · aberta às ${hora(c.aberta_em)} por ${esc(c.aberta_por_nome)}</div>${c.status === 'conta' ? `<span class="badge b-warn" style="margin-top:4px">${ic('cash')}Pediu a conta</span>` : ''}</div>
         <b>${brl(c.total)}</b></button>`).join('') : '<div class="cx-vazio">Nenhuma mesa aberta agora.</div>')
-      + `<a class="btn btn-ghost btn-block" href="garcom.html?loja=${lojaId}" style="margin-top:12px">${ic('list')}Abrir a tela do garçom (lançar pedidos)</a>`;
+      + (loja.mesas_ativo ? `<a class="btn btn-ghost btn-block" href="garcom.html?loja=${lojaId}" style="margin-top:12px">${ic('list')}Abrir a tela do garçom (lançar pedidos)</a>` : '');
     w.querySelector('.sheet-body').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) receberComanda(b.dataset.c); };
   }
   let idemComanda = {};
@@ -500,14 +649,16 @@
   function vendaOk(v) {
     $('v-cart') && $('v-cart').classList.remove('on');
     renderCarrinho();
-    janela(`Venda nº ${v.numero}`, `<div class="ok-venda"><div class="ic">${ic('check')}</div>
-      <p style="margin:0 0 4px;font-weight:700">Venda registrada${v.repetida ? ' (já estava salva)' : ''}</p>
+    janela(v.offline ? 'Venda sem internet' : `Venda nº ${v.numero}`, `<div class="ok-venda"><div class="ic">${ic('check')}</div>
+      <p style="margin:0 0 4px;font-weight:700">${v.offline ? 'Venda guardada neste aparelho' : 'Venda registrada' + (v.repetida ? ' (já estava salva)' : '')}</p>
+      ${v.offline ? '<p class="small" style="margin:0 0 6px;color:#92400e">Sem internet: ela é enviada sozinha quando a conexão voltar.</p>' : ''}
       <p class="small muted" style="margin:0 0 12px">Total ${brl(v.total)}</p>
       ${Number(v.troco) > 0 ? `<p class="small" style="margin:0">Troco</p><div class="troco">${brl(v.troco)}</div>` : ''}</div>`,
-      `<div class="row" style="gap:8px"><button class="btn btn-ghost" id="ok-imp">${ic('print')}Imprimir recibo</button><button class="btn btn-primary grow" id="ok-nova" style="height:54px">Nova venda<span class="kbd">Enter</span></button></div>`);
+      `<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" id="ok-imp">${ic('print')}Recibo</button>${temCozinha() && (v.itens || []).length ? `<button class="btn btn-ghost" id="ok-coz">${ic('print')}Cozinha</button>` : ''}<button class="btn btn-primary grow" id="ok-nova" style="height:54px">Nova venda<span class="kbd">Enter</span></button></div>`);
     const nova = () => { fechar(); renderCarrinho(); foco(); };
     $('ok-nova').onclick = nova; setTimeout(() => $('ok-nova').focus(), 60);
     $('ok-imp').onclick = () => imprimirRecibo(v);
+    if ($('ok-coz')) $('ok-coz').onclick = () => imprimirCozinha({ onde: v.cliente ? 'Balcão · ' + v.cliente : 'Balcão · venda ' + (v.offline ? '(sem internet)' : 'nº ' + v.numero), quem: estado.usuario, itens: v.itens || [] });
   }
 
   // ----------------- recibo (não fiscal) -----------------
@@ -523,7 +674,7 @@
   function imprimirRecibo(v) {
     const itens = v.itens || [];
     imprimirHTML(`<h1>${esc(loja.nome)}</h1>${loja.endereco ? `<div class="c s">${esc(loja.endereco)}</div>` : ''}
-      <div class="c s">${dataHora(v.criado_em || new Date())} · Venda nº ${v.numero}${v.obs ? ' · ' + esc(v.obs) : ''}</div>${v.cliente ? `<div class="c s">Cliente: ${esc(v.cliente)}</div>` : ''}<hr>
+      <div class="c s">${dataHora(v.criado_em || new Date())} · ${v.offline ? 'Venda sem internet (enviada depois)' : 'Venda nº ' + v.numero}${v.obs ? ' · ' + esc(v.obs) : ''}</div>${v.cliente ? `<div class="c s">Cliente: ${esc(v.cliente)}</div>` : ''}<hr>
       ${itens.map(i => `<div>${esc(i.nome)}</div><div class="r s"><span>${i.qtd} × ${GP.fmtMoeda(i.preco)}</span><span>${GP.fmtMoeda(i.preco * i.qtd)}</span></div>${(i.opcoes || []).length ? `<div class="s">  ${esc(i.opcoes.map(o => o.nome).join(', '))}</div>` : ''}`).join('')}
       <hr><div class="r"><span>Subtotal</span><span>${GP.fmtMoeda(v.subtotal)}</span></div>${Number(v.desconto) ? `<div class="r"><span>Desconto</span><span>-${GP.fmtMoeda(v.desconto)}</span></div>` : ''}${Number(v.taxa_servico) ? `<div class="r"><span>Taxa de serviço</span><span>${GP.fmtMoeda(v.taxa_servico)}</span></div>` : ''}
       <div class="r b"><span>TOTAL</span><span>${brl(v.total)}</span></div><hr>
@@ -587,6 +738,7 @@
   // ----------------- fechar caixa (conferência às cegas) -----------------
   function fecharCaixa() {
     if (carrinho.length) return GP.toast('Termine ou limpe a venda atual antes de fechar o caixa.', 'err');
+    if (fila().length) { sincronizar(); return GP.toast('Ainda tem venda feita sem internet para enviar. Espere enviar e feche de novo.', 'err'); }
     janela(`Fechar o caixa nº ${estado.caixa.numero}`, `
       <p class="small muted" style="margin:0 0 12px">Conte o dinheiro da gaveta e digite abaixo. Se quiser, confira também os totais da maquininha e do Pix. Depois o sistema mostra se bateu.</p>
       <label class="field"><span><b>Dinheiro na gaveta</b> (contado)</span><div class="prefix"><i>R$</i><input class="input" id="fc-din" inputmode="numeric" style="font-size:1.3rem;height:56px"></div></label>
@@ -669,6 +821,12 @@
   setInterval(() => { if (!document.hidden && $('v-grid') && !$('cx-mod')) carregarCatalogo().then(renderGrid); }, 300000);
   window.addEventListener('beforeunload', (e) => { if (carrinho.length) { e.preventDefault(); e.returnValue = ''; } });
 
+  window.addEventListener('online', () => { sincronizar(); carregarEstado().catch(() => {}); });
+  window.addEventListener('offline', () => { offline = true; faixa(); });
+  setInterval(() => { if (fila().length) sincronizar(); else if (offline && navigator.onLine) carregarEstado().then(() => faixa()).catch(() => {}); }, 20000);
+  setInterval(puxarCozinha, 8000);
+  // guarda a tela para abrir sem internet
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   iniciar();
 })();
 </script>

@@ -1,7 +1,35 @@
 // GoPedido — service worker: recebe os avisos (push) e permite instalar como aplicativo.
-// Não guarda páginas em cache, para o site sempre abrir a versão mais nova.
+// Guarda só as telas do CAIXA e do GARÇOM (e o que elas usam) para abrirem mesmo sem internet.
+// Sempre tenta a versão nova primeiro; a cópia guardada só é usada quando a internet cai.
+const CACHE = 'gp-offline-v1';
+const OFFLINE = ['caixa.html', 'garcom.html', 'app.js', 'app.css', 'config.js', 'pdv-ui.js', 'img/icone.svg', 'manifest-painel.json'];
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener('activate', (e) => e.waitUntil((async () => {
+  for (const k of await caches.keys()) if (k.startsWith('gp-offline-') && k !== CACHE) await caches.delete(k);
+  await self.clients.claim();
+})()));
+const guardavel = (url) => {
+  if (url.origin === self.location.origin) return OFFLINE.some(f => url.pathname.endsWith('/' + f));
+  return url.hostname === 'cdn.jsdelivr.net' && url.pathname.includes('supabase-js');
+};
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  let url; try { url = new URL(req.url); } catch (_) { return; }
+  if (!guardavel(url)) return;
+  e.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    try {
+      const r = await fetch(req);
+      if (r && r.ok) cache.put(url.origin + url.pathname, r.clone()).catch(() => {});
+      return r;
+    } catch (err) {
+      const c = await cache.match(url.origin + url.pathname);
+      if (c) return c;
+      throw err;
+    }
+  })());
+});
 
 self.addEventListener('push', (e) => {
   let d = {};

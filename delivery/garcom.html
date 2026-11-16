@@ -90,8 +90,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=34641"></script>
-<script src="pdv-ui.js?v=32758"></script>
+<script src="app.js?v=35439"></script>
+<script src="pdv-ui.js?v=35439"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -443,6 +443,7 @@
   window.addEventListener('offline', () => $('offline').classList.add('on'));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { atualizar(); carregarCatalogo(); } });
 
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   try { await carregarEstado(); } catch (e) { return aviso('Não foi possível abrir as mesas', esc(erroMsg(e)), true); }
   await carregarCatalogo();
   renderMapa();
