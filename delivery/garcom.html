@@ -90,7 +90,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=32771"></script>
+<script src="app.js?v=33919"></script>
 <script src="pdv-ui.js?v=32758"></script>
 <script>
 (async () => {
@@ -155,7 +155,7 @@
   function renderMapa() {
     vista = 'mapa'; comanda = null;
     $('bar').classList.add('hide');
-    if (!st.loja.mesas_ativo) return aviso('Mesas desligadas', st.papel === 'dono' || st.papel === 'admin' ? 'Ligue em <b>Painel → Financeiro → Mesas e comandas</b>.' : 'Peça ao responsável para ligar as mesas no painel.', st.papel === 'garcom');
+    if (!st.loja.mesas_ativo) return aviso('Mesas desligadas', st.papel === 'dono' || st.papel === 'admin' ? 'Ligue em <b>Minha loja → Caixa e mesas</b>.' : 'Peça ao responsável para ligar as mesas no painel.', st.papel === 'garcom');
     const avulsas = st.comandas.filter(c => !c.mesa_id);
     const pend = (id) => pendentes(id).length;
     $('corpo').innerHTML = `
@@ -165,7 +165,7 @@
         return `<button class="ms ${cls}" data-m="${m.id}"><i class="dot"></i><b>${esc(m.nome)}</b>
           <span class="st">${!c ? 'Livre' : c.status === 'conta' ? 'Pediu a conta' : `Aberta há ${ha(c.aberta_em)}`}${c && pend(c.id) ? ' · ' + pend(c.id) + ' não enviado' + (pend(c.id) > 1 ? 's' : '') : ''}</span>
           ${c ? `<span class="tt">${brl(c.total)}</span>` : ''}</button>`;
-      }).join('')}</div>` : '<div class="card pad small muted">Nenhuma mesa cadastrada. O responsável cadastra em Painel → Financeiro → Mesas e comandas.</div>'}
+      }).join('')}</div>` : '<div class="card pad small muted">Nenhuma mesa cadastrada. O responsável cadastra em Minha loja → Caixa e mesas.</div>'}
       <div class="sec-t" style="margin-top:20px"><h2>Comandas avulsas</h2><button class="btn btn-soft btn-sm" id="g-nova">${ic('plus')}Nova comanda</button></div>
       <div class="avs">${avulsas.length ? avulsas.map(c => `<button class="ms ${c.status === 'conta' ? 'conta' : 'ocupada'}" data-c="${c.id}" style="min-height:0;flex-direction:row;align-items:center;gap:10px">
           <b style="flex:1">${esc(c.identificador || 'Comanda ' + c.numero)}</b><span class="st">${c.status === 'conta' ? 'Pediu a conta' : 'há ' + ha(c.aberta_em)}</span><span class="tt" style="margin:0">${brl(c.total)}</span></button>`).join('')

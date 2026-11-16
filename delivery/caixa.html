@@ -125,7 +125,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=32771"></script>
+<script src="app.js?v=33919"></script>
 <script src="pdv-ui.js?v=32758"></script>
 <script>
 (async () => {
@@ -197,7 +197,7 @@
     catch (e) { return tela('Não foi possível abrir o caixa', esc(erroMsg(e)), true); }
     if (!loja.pdv_ativo) {
       const g = estado.papel === 'dono' || estado.papel === 'admin';
-      return tela('O caixa está desligado', g ? 'Para vender no balcão, ligue o caixa em <b>Painel → Financeiro → Caixa no balcão</b>.' : 'Peça para o dono da loja ligar o caixa no painel.', !g);
+      return tela('O caixa está desligado', g ? 'Para vender no balcão, ligue o caixa em <b>Minha loja → Caixa e mesas</b>.' : 'Peça para o dono da loja ligar o caixa no painel.', !g);
     }
     if (loja.pdv_gaveta && !estado.caixa) return telaAbrir();
     await carregarCatalogo();

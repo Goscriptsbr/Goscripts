@@ -240,7 +240,7 @@
     confirmacao_errada: 'O nome digitado não confere com o nome da loja.', so_dono_exclui: 'Só o dono da conta pode excluir a loja.',
     loja_com_pedidos_abertos: 'A loja tem pedidos em andamento. Entregue ou cancele antes de excluir.', loja_com_agendamentos: 'A loja tem horários marcados. Cancele antes de excluir.',
     loja_com_assinantes: 'A loja tem assinantes com assinatura paga. Cancele antes de excluir.', loja_excluida: 'Esta loja foi excluída.', loja_nao_encontrada: 'Loja não encontrada.',
-    sem_permissao: 'Você não tem permissão para isso.', pdv_desligado: 'O caixa desta loja está desligado. Ligue em Painel → Financeiro.',
+    sem_permissao: 'Você não tem permissão para isso.', pdv_desligado: 'O caixa desta loja está desligado. Ligue em Minha loja → Caixa e mesas.',
     gaveta_desligada: 'O controle de abrir e fechar o caixa está desligado.', caixa_ja_aberto: 'Já existe um caixa aberto nesta loja.',
     caixa_fechado: 'Abra o caixa antes de vender.', sangria_maior: 'A retirada é maior que o dinheiro que deveria ter na gaveta.',
     carrinho_vazio: 'Adicione pelo menos um produto.', venda_grande: 'Venda com itens demais. Divida em duas.', quantidade_invalida: 'Quantidade inválida.',

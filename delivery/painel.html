@@ -641,8 +641,7 @@
 
     <section id="tab-fin" class="hide">
       <div class="cm-head"><div class="grow" style="min-width:0"><h2>Financeiro</h2><p class="small muted">Quanto entrou e saiu: delivery, balcão, assinaturas e o que você lançar. Tudo opcional.</p></div></div>
-      <div class="card pad" id="fin-pdv" style="margin-bottom:12px"></div>
-      <div class="card pad" id="fin-mesas" style="margin-bottom:12px"></div>
+      <div id="fin-dica"></div>
       <div class="fin-per-w">
         <div class="cx-chips" id="fin-per"><button data-p="hoje">Hoje</button><button data-p="ontem">Ontem</button><button data-p="7">7 dias</button><button data-p="30">30 dias</button><button data-p="mes" class="on">Este mês</button><button data-p="mesp">Mês passado</button><button data-p="outro">Escolher datas</button></div>
         <div class="row hide" id="fin-datas" style="gap:8px;margin-top:8px;flex-wrap:wrap"><input class="input" type="date" id="fin-de" style="max-width:170px"><input class="input" type="date" id="fin-ate" style="max-width:170px"><button class="btn btn-dark btn-sm" id="fin-ir">Ver</button></div>
@@ -698,6 +697,7 @@
         <button type="button" data-m="pag"><i data-mi="card"></i><span>Pagamentos</span></button>
         <button type="button" data-m="envio" id="nav-envio" class="hide"><i data-mi="box"></i><span>Envio</span></button>
         <button type="button" data-m="equipe" id="nav-equipe" class="hide"><i data-mi="user"></i><span>Equipe</span></button>
+        <button type="button" data-m="caixa" id="nav-caixa" class="dl-only hide"><i data-mi="cash"></i><span>Caixa e mesas</span></button>
         <button type="button" data-m="app"><i data-mi="bell"></i><span>App e avisos</span></button>
         <button type="button" data-m="conta"><i data-mi="star"></i><span>Plano e conta</span></button>
       </nav><div class="ml-body">
@@ -835,6 +835,10 @@
         <div class="eq-top"><span id="eq-uso"></span><button type="button" class="btn btn-primary btn-sm" id="b-eq-add"></button></div>
         <div id="eq-lista"></div>
         <p class="small muted" style="margin-top:12px">Quem é da equipe cuida de pedidos, cardápio, promoções, horários e entrega. Só você mexe na chave Pix, na equipe, no plano e cria lojas.</p>
+      </section>
+      <section class="ml-anchor" id="sec-caixa" data-mod="caixa">
+        <div class="card pad" id="fin-pdv" style="margin-bottom:12px"></div>
+        <div class="card pad" id="fin-mesas"></div>
       </section>
       <section class="card pad fs ml-anchor" id="sec-app" data-mod="app">
         <h3><span id="fi-app"></span>App e avisos</h3>
@@ -1019,9 +1023,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=32771"></script>
+<script src="app.js?v=33919"></script>
 <script src="plano-pagar.js?v=32758"></script>
-<script src="financeiro-painel.js?v=32758"></script>
+<script src="financeiro-painel.js?v=33919"></script>
 <script src="assin-painel.js?v=32758"></script>
 <script src="agenda-painel.js?v=32758"></script>
 <script>
@@ -1063,6 +1067,7 @@
     document.querySelectorAll('#tab-loja [data-mod]').forEach(el => el.classList.toggle('ml-off', !tudo && el.dataset.mod !== m));
     $('ml-save').classList.toggle('ml-off', !tudo && !MOD_SALVAR.includes(m));
     if (m === 'entrega' && typeof initMap === 'function') setTimeout(initMap, 30);
+    if (m === 'caixa' && loja && window.FinPainel) window.FinPainel.config(sb, loja, { aoMudar: (l) => { Object.assign(loja, l); mostrarPdvTab(); } });
     if (rolar) { const t = $('ml-nav').getBoundingClientRect().top + scrollY - 70; if (scrollY > t) window.scrollTo({ top: t, behavior: 'smooth' }); }
   }
   window.__mlSetMod = setMod;
@@ -1677,6 +1682,7 @@
     const ok = loja && !GP.ehAgenda(loja) && !GP.ehAssin(loja);
     $('tab-pdv-btn').classList.toggle('hide', !(ok && loja.pdv_ativo));
     $('tab-mesas-btn').classList.toggle('hide', !(ok && loja.mesas_ativo));
+    $('nav-caixa').classList.toggle('hide', !ok);
   }
   async function abrirLoja(l) {
     loja = l; GP.ls.set('gp_loja_sel', l.id);

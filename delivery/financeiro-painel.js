@@ -41,10 +41,10 @@
   // ---------- Caixa no balcão (liga/desliga) ----------
   function renderPdv() {
     const on = !!loja.pdv_ativo, gav = !!loja.pdv_gaveta;
-    $('fin-pdv').innerHTML = `<div class="fin-pdv-h"><div class="fic">${ic('cash')}</div><div class="grow" style="min-width:0"><b>Caixa no balcão</b>
-        <div class="small muted">Opcional. Para vender no balcão com leitor de código de barras, desconto, troco e recibo. As vendas entram aqui no Financeiro.</div></div></div>
-      <div style="margin-top:12px"><label class="switch"><input type="checkbox" id="fin-on" ${on ? 'checked' : ''}><i></i>Vender no balcão</label></div>
-      <div class="${on ? '' : 'hide'}" style="margin-top:8px"><label class="switch"><input type="checkbox" id="fin-gav" ${gav ? 'checked' : ''}><i></i>Controlar a gaveta (abrir e fechar o caixa conferindo o dinheiro)</label></div>
+    $('fin-pdv').innerHTML = `<div class="fin-pdv-h"><div class="fic">${ic('cash')}</div><div class="grow" style="min-width:0"><b>Caixa no balcão (venda presencial)</b>
+        <div class="small muted">Opcional. Para quem também vende no balcão: leitor de código de barras, desconto, troco e recibo. As vendas entram no Financeiro junto com o delivery.</div></div></div>
+      <div style="margin-top:12px"><label class="switch"><input type="checkbox" id="fin-on" ${on ? 'checked' : ''}><i></i>Usar o caixa no balcão</label></div>
+      <div class="${on ? '' : 'hide'}" style="margin-top:8px"><label class="switch"><input type="checkbox" id="fin-gav" ${gav ? 'checked' : ''}><i></i>Tenho caixa físico (gaveta de dinheiro): abrir e fechar o caixa conferindo o dinheiro</label></div>
       <p class="small muted ${on ? '' : 'hide'}" style="margin:8px 0 0">Na equipe (Minha loja → Equipe), escolha a função <b>Caixa</b> para quem só deve usar o caixa, sem mexer na loja.</p>
       ${on ? `<a class="btn btn-primary" style="margin-top:12px" href="caixa.html?loja=${loja.id}">${ic('cash')}Abrir a tela do caixa</a>` : ''}`;
     const salvar = async () => {
@@ -125,6 +125,12 @@
       } catch (er) { GP.toast(erroMsg(er), 'err'); }
       b.disabled = false; renderMesas();
     };
+  }
+
+  function dica() {
+    const el = $('fin-dica'); if (!el) return;
+    el.innerHTML = loja.pdv_ativo ? `<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px"><a class="btn btn-primary btn-sm" href="caixa.html?loja=${loja.id}">${ic('cash')}Abrir o caixa</a>${loja.mesas_ativo ? `<a class="btn btn-ghost btn-sm" href="garcom.html?loja=${loja.id}">${ic('users')}Mesas</a>` : ''}</div>`
+      : `<p class="small muted" style="margin:0 0 12px">Vende também no balcão ou tem mesas? Ligue em <b>Minha loja → Caixa e mesas</b>.</p>`;
   }
 
   // ---------- Relatório ----------
@@ -256,7 +262,10 @@
     };
   }
   window.FinPainel = {
-    abrir(cliente, l, c) { if (!loja || loja.id !== l.id) { mesas = null; configurando = false; } sb = cliente; loja = l; ctx = c || {}; ligar(); renderPdv(); renderMesas(); carregar(); },
-    mostrar() { if (sb && loja) { renderPdv(); renderMesas(); carregar(); } }
+    // aba Financeiro: só os números
+    abrir(cliente, l, c) { if (!loja || loja.id !== l.id) { mesas = null; configurando = false; } sb = cliente; loja = l; ctx = c || {}; ligar(); dica(); carregar(); },
+    // Minha loja → Caixa e mesas: as configurações
+    config(cliente, l, c) { if (!loja || loja.id !== l.id) { mesas = null; configurando = false; } sb = cliente; loja = l; ctx = c || {}; renderPdv(); renderMesas(); },
+    mostrar() { if (sb && loja) { dica(); carregar(); } }
   };
 })();
