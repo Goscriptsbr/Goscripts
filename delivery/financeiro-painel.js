@@ -49,6 +49,7 @@
       ${on ? `<a class="btn btn-primary" style="margin-top:12px" href="caixa.html?loja=${loja.id}">${ic('cash')}Abrir a tela do caixa</a>` : ''}`;
     const salvar = async () => {
       const a = $('fin-on').checked, g = a && $('fin-gav').checked;
+      if (!a && loja.mesas_ativo) { GP.toast('Desligue as mesas antes: as comandas fecham no caixa.', 'err'); return renderPdv(); }
       try {
         const { data, error } = await sb.rpc('ff_pdv_config', { p_loja: loja.id, p_ativo: a, p_gaveta: g });
         if (error) throw error;
@@ -59,6 +60,71 @@
       renderPdv();
     };
     $('fin-on').onchange = salvar; $('fin-gav').onchange = salvar;
+  }
+
+  // ---------- Mesas e comandas ----------
+  let mesas = null, configurando = false;
+  async function renderMesas() {
+    const box = $('fin-mesas'); if (!box) return;
+    if (mesas === null) {
+      const { data, error } = await sb.from('ff_mesas').select('id, nome, ordem').eq('loja_id', loja.id).eq('ativa', true).order('ordem');
+      if (error) { box.innerHTML = /ff_mesas|relation|schema/i.test(error.message || '') ? '<div class="small muted">Mesas e comandas: falta rodar o SQL v36 no Supabase.</div>' : ''; return; }
+      mesas = data || [];
+    }
+    const on = !!loja.mesas_ativo || configurando;
+    box.innerHTML = `<div class="fin-pdv-h"><div class="fic">${ic('users')}</div><div class="grow" style="min-width:0"><b>Mesas e comandas</b>
+        <div class="small muted">Opcional. O garçom lança os pedidos pelo celular e o caixa recebe e fecha a conta.</div></div></div>
+      <div style="margin-top:12px"><label class="switch"><input type="checkbox" id="ms-on" ${on ? 'checked' : ''}><i></i>Usar mesas e comandas</label></div>
+      <div class="${on ? '' : 'hide'}" id="ms-cfg">
+        <div class="grid2" style="margin-top:12px">
+          <label class="field" style="margin:0"><span>Taxa de serviço (%)</span><input class="input" id="ms-tx" inputmode="decimal" value="${String(Number(loja.taxa_servico || 0)).replace('.', ',')}" placeholder="0 = sem taxa"><small>O caixa pode tirar na hora, se o cliente pedir.</small></label>
+          <label class="field" style="margin:0"><span>Criar mesas numeradas</span><div class="row" style="gap:6px"><input class="input" id="ms-n" inputmode="numeric" placeholder="Ex.: 12"><button type="button" class="btn btn-ghost" id="ms-gerar">Criar</button></div></label>
+        </div>
+        <div class="field" style="margin-top:12px"><span>Mesas (${mesas.length})</span>
+          <div id="ms-lista" class="ms-lista">${mesas.map((m, i) => `<div class="ms-li"><input class="input" data-i="${i}" maxlength="30" value="${esc(m.nome)}"><button type="button" class="icon-btn" data-x="${i}" title="Tirar">${ic('x')}</button></div>`).join('')}</div>
+          <button type="button" class="btn btn-ghost btn-sm" id="ms-add" style="margin-top:6px">${ic('plus')}Mesa</button></div>
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" class="btn btn-primary" id="ms-salvar">Salvar mesas</button>
+          <a class="btn btn-ghost" href="garcom.html?loja=${loja.id}">${ic('list')}Abrir a tela do garçom</a></div>
+        <p class="small muted" style="margin:10px 0 0">Na equipe, escolha a função <b>Garçom</b> para quem só lança pedidos nas mesas (cada um com o próprio login).</p>
+      </div>`;
+    const ler = () => { box.querySelectorAll('#ms-lista input').forEach(el => { mesas[+el.dataset.i].nome = el.value; }); };
+    $('ms-on').onchange = async (e) => {
+      if (e.target.checked) { configurando = true; if (!mesas.length) mesas = Array.from({ length: 10 }, (_, i) => ({ nome: 'Mesa ' + (i + 1) })); renderMesas(); GP.toast('Confira as mesas e toque em "Salvar mesas".'); return; }
+      if (!loja.mesas_ativo) { configurando = false; return renderMesas(); }
+      try {
+        const { data, error } = await sb.rpc('ff_mesas_config', { p_loja: loja.id, p_ativo: false, p_taxa: Number(loja.taxa_servico || 0), p_mesas: null });
+        if (error) throw error;
+        loja.mesas_ativo = false; configurando = false; if (ctx.aoMudar) ctx.aoMudar(loja); GP.toast('Mesas desligadas.', 'ok');
+      } catch (er) { e.target.checked = true; GP.toast(erroMsg(er), 'err'); }
+      renderMesas();
+    };
+    $('ms-gerar').onclick = () => {
+      ler(); const n = parseInt($('ms-n').value, 10);
+      if (!(n >= 1 && n <= 200)) return GP.toast('Digite de 1 a 200 mesas.', 'err');
+      const ja = new Set(mesas.map(m => m.nome.trim().toLowerCase()));
+      for (let i = 1; i <= n; i++) { const nm = 'Mesa ' + i; if (!ja.has(nm.toLowerCase())) mesas.push({ nome: nm }); }
+      renderMesas();
+    };
+    $('ms-add').onclick = () => { ler(); mesas.push({ nome: 'Mesa ' + (mesas.length + 1) }); renderMesas().then(() => { const ins = box.querySelectorAll('#ms-lista input'); if (ins.length) ins[ins.length - 1].select(); }); };
+    box.querySelector('#ms-lista').onclick = (e) => { const b = e.target.closest('[data-x]'); if (!b) return; ler(); mesas.splice(+b.dataset.x, 1); renderMesas(); };
+    $('ms-salvar').onclick = async (e) => {
+      ler();
+      const lista = mesas.map(m => ({ id: m.id || null, nome: m.nome.trim() })).filter(m => m.nome);
+      const nomes = lista.map(m => m.nome.toLowerCase());
+      if (new Set(nomes).size !== nomes.length) return GP.toast('Tem mesas com o mesmo nome.', 'err');
+      if (!lista.length) return GP.toast('Cadastre pelo menos uma mesa.', 'err');
+      const tx = num($('ms-tx').value);
+      if (tx < 0 || tx > 30) return GP.toast('A taxa de serviço vai de 0 a 30%.', 'err');
+      const b = e.currentTarget; b.disabled = true;
+      try {
+        const { data, error } = await sb.rpc('ff_mesas_config', { p_loja: loja.id, p_ativo: true, p_taxa: tx, p_mesas: lista });
+        if (error) throw error;
+        configurando = false; loja.mesas_ativo = true; loja.taxa_servico = data.taxa_servico; loja.pdv_ativo = data.pdv_ativo; mesas = data.mesas;
+        if (ctx.aoMudar) ctx.aoMudar(loja);
+        GP.toast(`Mesas salvas (${mesas.length}).`, 'ok'); renderPdv();
+      } catch (er) { GP.toast(erroMsg(er), 'err'); }
+      b.disabled = false; renderMesas();
+    };
   }
 
   // ---------- Relatório ----------
@@ -91,7 +157,7 @@
     const fs = formas(), fsT = fs.reduce((s, x) => s + x[1], 0) || 1;
     const qtdV = Number(d.delivery.qtd) + Number(d.balcao.qtd);
     const origem = [['Delivery e retirada (site)', d.delivery.total, `${d.delivery.qtd} pedido${d.delivery.qtd == 1 ? '' : 's'} entregue${d.delivery.qtd == 1 ? '' : 's'}${Number(d.delivery.taxas) ? ' · ' + brl(d.delivery.taxas) + ' de taxa de entrega' : ''}`],
-      ['Balcão (caixa)', d.balcao.total, `${d.balcao.qtd} venda${d.balcao.qtd == 1 ? '' : 's'}${d.balcao_cancelados ? ' · ' + d.balcao_cancelados + ' cancelada' + (d.balcao_cancelados > 1 ? 's' : '') : ''}`]];
+      ['Balcão e mesas (caixa)', d.balcao.total, `${d.balcao.qtd} venda${d.balcao.qtd == 1 ? '' : 's'}${d.balcao_cancelados ? ' · ' + d.balcao_cancelados + ' cancelada' + (d.balcao_cancelados > 1 ? 's' : '') : ''}`]];
     if (d.assinaturas) origem.push(['Assinaturas', d.assinaturas.total, `${d.assinaturas.qtd} pagamento${d.assinaturas.qtd == 1 ? '' : 's'}`]);
     origem.push(['Outras receitas (lançadas)', d.receitas, '']);
     $('fin-dados').innerHTML = `
@@ -190,7 +256,7 @@
     };
   }
   window.FinPainel = {
-    abrir(cliente, l, c) { sb = cliente; loja = l; ctx = c || {}; ligar(); renderPdv(); carregar(); },
-    mostrar() { if (sb && loja) { renderPdv(); carregar(); } }
+    abrir(cliente, l, c) { if (!loja || loja.id !== l.id) { mesas = null; configurando = false; } sb = cliente; loja = l; ctx = c || {}; ligar(); renderPdv(); renderMesas(); carregar(); },
+    mostrar() { if (sb && loja) { renderPdv(); renderMesas(); carregar(); } }
   };
 })();

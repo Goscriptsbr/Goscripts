@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=31456">
+<link rel="stylesheet" href="app.css?v=32758">
 <link rel="stylesheet" href="site.css?v=31456">
 </head>
 <body data-sem-rodape>
@@ -334,8 +334,8 @@
   </div>
 </footer>
 
-<script src="config.js?v=31456"></script>
-<script src="app.js?v=31456"></script>
+<script src="config.js?v=32758"></script>
+<script src="app.js?v=32758"></script>
 <script>
 (() => {
   const { $, ic } = GP;
@@ -373,8 +373,9 @@
       ['Loja de assinaturas: assinantes ativos', p => ({ gratis: '10', profissional: '50', premium: '150' })[p.id]],
       ['Comprar mais assinantes<small style="display:block;font-weight:500;opacity:.7">R$ 1,00 por assinante/mês</small>', p => p.id === 'premium' ? sim : nao],
       ['Entrega automática de códigos digitais', p => sim],
-      ['Equipe além de você (administradores e caixa)', p => '<b>' + adm(p) + '</b>'],
+      ['Equipe além de você (administradores, caixa e garçons)', p => '<b>' + adm(p) + '</b>'],
       ['Caixa no balcão, financeiro e leitor de código de barras', p => sim],
+      ['Mesas e comandas com garçom pelo celular', p => sim],
       ['Pix, cartão e dinheiro', p => tem(p, /Pix, cartão/) ? sim : nao],
       ['Motoboys e impressão de pedidos', p => tem(p, /Motoboys/) ? sim : nao],
       ['Cupons e promoções', p => tem(p, /Cupons/) ? sim : nao],
@@ -417,7 +418,8 @@
     ['bike', 'Entrega com seus motoboys', 'Taxa calculada pela distância e uma área própria para os entregadores.'],
     ['pix', 'Pix direto na sua conta', 'QR Code com o valor certo e comprovante anexado. O dinheiro não passa por ninguém.'],
     ['ext', 'Link de cada produto', 'Compartilhe no Instagram, TikTok ou WhatsApp e o cliente cai direto no produto.'],
-    ['user', 'Equipe com acesso controlado', 'Administradores e operadores de caixa, cada um com o próprio login e só as lojas que você escolher.'],
+    ['user', 'Equipe com acesso controlado', 'Administradores, caixa e garçons, cada um com o próprio login e só as lojas que você escolher.'],
+    ['list', 'Mesas e comandas', 'O garçom lança os pedidos pelo celular, a mesa pede a conta e o caixa recebe com taxa de serviço e divisão por pessoa.'],
     ['cash', 'Caixa no balcão e financeiro', 'Venda no balcão com leitor de código de barras, abertura e fechamento de caixa e o faturamento de cada período.'],
     ['tag', 'Cupons e promoções', 'Desconto em porcentagem, valor fixo ou frete grátis, com limite de uso.'],
     ['star', 'Avaliações dos clientes', 'Notas e comentários na página da loja, com resposta do lojista.'],

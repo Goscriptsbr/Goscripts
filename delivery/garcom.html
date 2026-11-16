@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mesas · GoPedido</title>
+<meta name="theme-color" content="#16161B">
+<meta name="robots" content="noindex">
+<link rel="icon" href="img/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/icone-180.png">
+<link rel="manifest" href="manifest-painel.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=32758">
+<style>
+  body{background:var(--bg);padding-bottom:110px}
+  .gt{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--ink);color:#fff}
+  .gt .lg{width:34px;height:34px;border-radius:10px;background:var(--brand) center/cover;display:grid;place-items:center;font-weight:800;flex:none}
+  .gt .nm{min-width:0;flex:1}
+  .gt .nm b{display:block;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gt .nm span{font-size:.74rem;color:#bdbdc7}
+  .gt .btn{background:rgba(255,255,255,.1);color:#fff;border:0}
+  .gt .btn svg{width:17px;height:17px}
+  .gw{max-width:980px;margin:0 auto;padding:14px}
+  .sec-t{display:flex;align-items:center;justify-content:space-between;margin:6px 0 10px}
+  .sec-t h2{font-size:1.05rem;margin:0}
+  .mapa{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .ms{border:2px solid var(--line);border-radius:18px;background:#fff;padding:14px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:104px;display:flex;flex-direction:column;gap:3px;position:relative}
+  .ms b{font-size:1.05rem}
+  .ms .st{font-size:.76rem;font-weight:700;color:var(--muted)}
+  .ms .tt{margin-top:auto;font-weight:800;font-size:1.05rem}
+  .ms.ocupada{border-color:#f5b49f;background:#FFF5F1}
+  .ms.ocupada .st{color:var(--brand-2)}
+  .ms.conta{border-color:#93c5fd;background:#EFF6FF}
+  .ms.conta .st{color:#1d4ed8}
+  .ms .dot{position:absolute;top:12px;right:12px;width:10px;height:10px;border-radius:50%;background:#22c55e}
+  .ms.ocupada .dot{background:var(--brand)}
+  .ms.conta .dot{background:#2563eb;animation:pul 1.2s infinite}
+  @keyframes pul{50%{opacity:.3}}
+  .avs{display:grid;gap:8px}
+  /* comanda */
+  .ch{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .ch h2{font-size:1.25rem;margin:0;letter-spacing:-.02em}
+  .ch .sub{font-size:.8rem;color:var(--muted)}
+  .itl{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+  .it{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:12px 14px;border-bottom:1px solid var(--line);align-items:center}
+  .it:last-child{border-bottom:0}
+  .it .n{font-weight:700}
+  .it .o{grid-column:1/-1;font-size:.78rem;color:var(--muted)}
+  .it .p{font-weight:800;text-align:right}
+  .it.canc{opacity:.5}.it.canc .n,.it.canc .p{text-decoration:line-through}
+  .it.pend{background:#FFFBEB}
+  .it .acts{grid-column:1/-1;display:flex;gap:6px;justify-content:flex-end;margin-top:4px}
+  .tag-p{display:inline-block;font-size:.68rem;font-weight:800;color:#92400e;background:#fde68a;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+  .tag-c{display:inline-block;font-size:.68rem;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;background:#e7f6ec;color:#166534}
+  .bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px rgba(0,0,0,.06)}
+  .bar .in{max-width:980px;margin:0 auto;display:flex;gap:8px;align-items:center}
+  .bar .tot{flex:1;min-width:0}
+  .bar .tot small{display:block;font-size:.74rem;color:var(--muted)}
+  .bar .tot b{font-size:1.15rem;white-space:nowrap}
+  .bar .btn{padding:0 14px}
+  .bar .btn{height:54px}
+  /* catálogo */
+  .cat-top{position:sticky;top:0;background:#fff;z-index:2;padding-bottom:8px}
+  .cats{display:flex;gap:6px;overflow-x:auto;padding:8px 0;scrollbar-width:none}
+  .cats::-webkit-scrollbar{display:none}
+  .cats button{flex:none;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:.84rem}
+  .cats button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .pl{display:flex;align-items:center;gap:10px;width:100%;padding:12px 4px;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+  .pl .n{flex:1;min-width:0;font-weight:700}
+  .pl .n small{display:block;font-weight:500;color:var(--muted);font-size:.76rem}
+  .pl .pr{font-weight:800;color:var(--brand-2)}
+  .pl .qn{min-width:26px;height:26px;border-radius:13px;background:var(--brand);color:#fff;font-size:.8rem;font-weight:800;display:grid;place-items:center}
+  .pl.sem{opacity:.45}
+  .off{display:none;align-items:center;gap:8px;background:#fdecea;color:#8a1c12;font-weight:700;font-size:.84rem;padding:8px 14px}
+  .off.on{display:flex}
+</style>
+</head>
+<body data-sem-rodape>
+<header class="gt">
+  <div class="lg" id="t-lg"></div>
+  <div class="nm"><b id="t-nome">Mesas</b><span id="t-sub"></span></div>
+  <div class="row" style="gap:6px" id="t-acts"></div>
+</header>
+<div class="off" id="offline">Sem internet. Os itens não enviados ficam guardados neste celular.</div>
+<main class="gw" id="corpo"><div class="sk" style="height:220px;border-radius:20px"></div></main>
+<div class="bar hide" id="bar"><div class="in" id="bar-in"></div></div>
+<div class="overlay" id="ov"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js?v=32758"></script>
+<script src="app.js?v=32758"></script>
+<script src="pdv-ui.js?v=32758"></script>
+<script>
+(async () => {
+  const { $, esc, brl, ic } = GP;
+  const sb = GP.client(true);
+  const hora = (d) => new Date(d).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  const ha = (d) => { const m = Math.max(0, Math.round((Date.now() - new Date(d).getTime()) / 60000)); return m < 60 ? m + ' min' : Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0'); };
+  const erroMsg = (e) => {
+    const m = (e && e.message) || String(e || '');
+    if (/ff_mesas|ff_comanda|function .* does not exist|schema cache/i.test(m)) return 'Falta rodar o SQL v36 no Supabase.';
+    if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(m)) return 'Sem conexão com a internet. Tente de novo.';
+    return GP.err(e);
+  };
+  const rede = (e) => /Failed to fetch|NetworkError|Load failed|fetch/i.test((e && e.message) || '');
+  async function rpc(nome, args) { const { data, error } = await sb.rpc(nome, args); if (error) throw error; return data; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.replace('painel.html?volta=garcom'); return; }
+  const meuId = session.user.id;
+  let lojas = [];
+  try { lojas = (await rpc('ff_minhas_lojas')) || []; } catch (e) { return aviso('Não foi possível abrir', esc(erroMsg(e))); }
+  const qs = new URLSearchParams(location.search);
+  const lojaId = [qs.get('loja'), GP.ls.get('gp_loja_sel')].find(id => id && lojas.some(l => l.id === id)) || (lojas[0] && lojas[0].id);
+  if (!lojaId) return aviso('Sem acesso', 'Sua conta não tem acesso a nenhuma loja.', true);
+
+  let st = null, catalogo = [], vista = 'mapa', comanda = null, cat = '', busca = '', timer = null;
+
+  function aviso(tit, txt, sair) {
+    $('bar').classList.add('hide');
+    $('corpo').innerHTML = `<div class="card pad center" style="margin-top:40px"><h2 style="margin:0 0 6px">${tit}</h2><p class="small muted">${txt}</p>
+      <div class="row" style="justify-content:center;gap:8px;margin-top:14px">${sair ? '<button class="btn btn-ghost" id="av-sair">Sair</button>' : ''}<a class="btn btn-primary" href="painel.html">Ir para o painel</a></div></div>`;
+    const s = $('av-sair'); if (s) s.onclick = sair_;
+  }
+  async function sair_() { await sb.auth.signOut(); location.replace('painel.html'); }
+
+  // ---------- itens ainda não enviados (guardados no celular) ----------
+  const kPend = (id) => 'gp_garcom_pend_' + id;
+  const pendentes = (id) => GP.ls.get(kPend(id), []) || [];
+  const salvarPend = (id, l) => { if (l.length) GP.ls.set(kPend(id), l); else localStorage.removeItem(kPend(id)); };
+
+  // ---------- topo ----------
+  function topo() {
+    const l = st.loja, gerente = st.papel === 'dono' || st.papel === 'admin';
+    document.title = `Mesas · ${l.nome} · GoPedido`;
+    GP.aplicarCor && GP.aplicarCor(l.cor);
+    $('t-nome').textContent = l.nome;
+    if (l.imagem_url) { $('t-lg').style.backgroundImage = `url('${l.imagem_url}')`; $('t-lg').textContent = ''; } else $('t-lg').textContent = l.nome.trim()[0].toUpperCase();
+    $('t-sub').textContent = (st.papel === 'garcom' ? 'Garçom: ' : '') + (st.usuario || '');
+    $('t-acts').innerHTML = `${st.papel !== 'garcom' && l.pdv_ativo ? `<a class="btn btn-sm" href="caixa.html?loja=${lojaId}">${ic('cash')}<span>Caixa</span></a>` : ''}
+      ${gerente ? `<a class="btn btn-sm" href="painel.html?loja=${lojaId}">${ic('left')}</a>` : `<button class="btn btn-sm" id="t-sair">${ic('logout')}</button>`}`;
+    const s = $('t-sair'); if (s) s.onclick = sair_;
+  }
+
+  async function carregarEstado() {
+    st = await rpc('ff_mesas_estado', { p_loja: lojaId });
+    topo();
+  }
+  async function carregarCatalogo() { try { catalogo = (await rpc('ff_pdv_catalogo', { p_loja: lojaId })) || []; } catch (_) {} }
+
+  // ---------- mapa das mesas ----------
+  function comandaDaMesa(m) { return st.comandas.find(c => c.mesa_id === m.id); }
+  function renderMapa() {
+    vista = 'mapa'; comanda = null;
+    $('bar').classList.add('hide');
+    if (!st.loja.mesas_ativo) return aviso('Mesas desligadas', st.papel === 'dono' || st.papel === 'admin' ? 'Ligue em <b>Painel → Financeiro → Mesas e comandas</b>.' : 'Peça ao responsável para ligar as mesas no painel.', st.papel === 'garcom');
+    const avulsas = st.comandas.filter(c => !c.mesa_id);
+    const pend = (id) => pendentes(id).length;
+    $('corpo').innerHTML = `
+      <div class="sec-t"><h2>Mesas</h2><span class="small muted">${st.comandas.length} aberta${st.comandas.length === 1 ? '' : 's'}</span></div>
+      ${st.mesas.length ? `<div class="mapa">${st.mesas.map(m => {
+        const c = comandaDaMesa(m), cls = !c ? '' : c.status === 'conta' ? 'conta' : 'ocupada';
+        return `<button class="ms ${cls}" data-m="${m.id}"><i class="dot"></i><b>${esc(m.nome)}</b>
+          <span class="st">${!c ? 'Livre' : c.status === 'conta' ? 'Pediu a conta' : `Aberta há ${ha(c.aberta_em)}`}${c && pend(c.id) ? ' · ' + pend(c.id) + ' não enviado' + (pend(c.id) > 1 ? 's' : '') : ''}</span>
+          ${c ? `<span class="tt">${brl(c.total)}</span>` : ''}</button>`;
+      }).join('')}</div>` : '<div class="card pad small muted">Nenhuma mesa cadastrada. O responsável cadastra em Painel → Financeiro → Mesas e comandas.</div>'}
+      <div class="sec-t" style="margin-top:20px"><h2>Comandas avulsas</h2><button class="btn btn-soft btn-sm" id="g-nova">${ic('plus')}Nova comanda</button></div>
+      <div class="avs">${avulsas.length ? avulsas.map(c => `<button class="ms ${c.status === 'conta' ? 'conta' : 'ocupada'}" data-c="${c.id}" style="min-height:0;flex-direction:row;align-items:center;gap:10px">
+          <b style="flex:1">${esc(c.identificador || 'Comanda ' + c.numero)}</b><span class="st">${c.status === 'conta' ? 'Pediu a conta' : 'há ' + ha(c.aberta_em)}</span><span class="tt" style="margin:0">${brl(c.total)}</span></button>`).join('')
+        : '<p class="small muted" style="margin:0">Para balcão, cartão numerado ou cliente sem mesa.</p>'}</div>`;
+    $('corpo').onclick = (e) => {
+      const m = e.target.closest('[data-m]'), c = e.target.closest('[data-c]');
+      if (m) { const mesa = st.mesas.find(x => x.id === m.dataset.m), cm = comandaDaMesa(mesa); cm ? abrirComanda(cm.id) : abrirMesa(mesa); }
+      if (c) abrirComanda(c.dataset.c);
+    };
+    $('g-nova').onclick = novaAvulsa;
+  }
+  function abrirMesa(mesa) {
+    let p = 2;
+    janela(`Abrir ${mesa.nome}`, `<div class="row between"><b>Quantas pessoas?</b><div class="qstep"><button type="button" id="am-m">−</button><span id="am-q">${p}</span><button type="button" id="am-p">+</button></div></div>`,
+      `<button class="btn btn-primary btn-block" id="am-ok" style="height:54px">Abrir mesa</button>`);
+    $('am-m').onclick = () => { p = Math.max(1, p - 1); $('am-q').textContent = p; };
+    $('am-p').onclick = () => { p = Math.min(99, p + 1); $('am-q').textContent = p; };
+    $('am-ok').onclick = async (e) => {
+      const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+      try { const c = await rpc('ff_comanda_abrir', { p_loja: lojaId, p_mesa: mesa.id, p_identificador: null, p_pessoas: p }); fechar(); mostrarComanda(c); carregarEstado().catch(() => {}); }
+      catch (er) { b.disabled = false; b.textContent = 'Abrir mesa'; GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+  function novaAvulsa() {
+    janela('Nova comanda', `<label class="field"><span>Número do cartão ou nome do cliente</span><input class="input" id="na-id" maxlength="40" placeholder="Ex.: 15 ou João"></label>`,
+      `<button class="btn btn-primary btn-block" id="na-ok" style="height:54px">Abrir comanda</button>`);
+    setTimeout(() => $('na-id').focus(), 60);
+    $('na-id').onkeydown = (e) => { if (e.key === 'Enter') $('na-ok').click(); };
+    $('na-ok').onclick = async (e) => {
+      const v = $('na-id').value.trim(); if (!v) return GP.toast('Digite o número ou o nome.', 'err');
+      const b = e.currentTarget; b.disabled = true;
+      try { const c = await rpc('ff_comanda_abrir', { p_loja: lojaId, p_mesa: null, p_identificador: /^\d+$/.test(v) ? 'Cartão ' + v : v, p_pessoas: 1 }); fechar(); mostrarComanda(c); carregarEstado().catch(() => {}); }
+      catch (er) { b.disabled = false; GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+
+  // ---------- comanda ----------
+  async function abrirComanda(id) {
+    try { mostrarComanda(await rpc('ff_comanda_ver', { p_comanda: id })); } catch (e) { GP.toast(erroMsg(e), 'err'); }
+  }
+  const nomeComanda = (c) => c.mesa || c.identificador || 'Comanda ' + c.numero;
+  function mostrarComanda(c) {
+    vista = 'comanda'; comanda = c;
+    if (c.status !== 'aberta' && c.status !== 'conta') { GP.toast(c.status === 'fechada' ? 'Esta comanda já foi fechada no caixa.' : 'Esta comanda foi cancelada.', 'err'); salvarPend(c.id, []); return voltarMapa(); }
+    const pend = pendentes(c.id);
+    const gerente = st.papel !== 'garcom';
+    const totPend = pend.reduce((t, l) => t + l.unit * l.qtd, 0);
+    const ativos = c.itens.filter(i => i.status === 'ativo');
+    $('corpo').innerHTML = `
+      <div class="ch"><button class="icon-btn" id="c-volta">${ic('left')}</button>
+        <div class="grow" style="min-width:0"><h2>${esc(nomeComanda(c))}</h2><div class="sub">Comanda nº ${c.numero} · ${c.pessoas} pessoa${c.pessoas > 1 ? 's' : ''} · aberta às ${hora(c.aberta_em)} por ${esc(c.aberta_por_nome)}${c.obs ? ' · ' + esc(c.obs) : ''}</div></div>
+        <button class="icon-btn" id="c-menu" title="Mais opções">${ic('more')}</button></div>
+      ${c.status === 'conta' ? `<div class="alert" style="background:#EFF6FF;color:#1e3a8a;margin-bottom:12px">${ic('cash')}<span>Conta pedida às ${hora(c.conta_em)}. O caixa vai receber. Para lançar mais itens, reabra a mesa.</span></div>` : ''}
+      ${pend.length ? `<div class="sec-t"><h2 style="font-size:.95rem">Não enviados (${pend.length})</h2><button class="btn btn-ghost btn-sm" id="c-limpa">Descartar</button></div>
+        <div class="itl" style="margin-bottom:14px">${pend.map((l, i) => `<div class="it pend"><div class="n">${l.qtd > 1 ? l.qtd + '× ' : ''}${esc(l.nome)}<span class="tag-p">não enviado</span></div><div class="p">${brl(l.unit * l.qtd)}</div>
+          ${(l.opcoes || []).length || l.obs ? `<div class="o">${esc((l.opcoes || []).map(o => o.nome).join(', '))}${l.obs ? ' · ' + esc(l.obs) : ''}</div>` : ''}
+          <div class="acts">${l.g ? '' : `<div class="qstep"><button data-pm="${i}">−</button><span>${l.qtd}</span><button data-pp="${i}">+</button></div>`}<button class="icon-btn" data-px="${i}" style="color:var(--bad)">${ic('trash')}</button></div></div>`).join('')}</div>` : ''}
+      <div class="sec-t"><h2 style="font-size:.95rem">Lançados (${ativos.length})</h2><span class="small muted">${brl(c.total)}</span></div>
+      <div class="itl">${c.itens.length ? c.itens.slice().reverse().map(i => {
+        const pode = i.status === 'ativo' && (gerente || (i.lancado_por === meuId && Date.now() - new Date(i.criado_em).getTime() < 5 * 60000));
+        return `<div class="it ${i.status === 'cancelado' ? 'canc' : ''}"><div class="n">${i.qtd > 1 ? i.qtd + '× ' : ''}${esc(i.nome)}${i.cozinha === 'pronto' ? '<span class="tag-c">pronto</span>' : ''}</div><div class="p">${brl(i.preco * i.qtd)}</div>
+          <div class="o">${(i.opcoes || []).length ? esc(i.opcoes.map(o => o.nome).join(', ')) + ' · ' : ''}${i.obs ? esc(i.obs) + ' · ' : ''}${hora(i.criado_em)} · ${esc(i.lancado_por_nome)}${i.status === 'cancelado' ? ' · cancelado por ' + esc(i.cancelado_por_nome) + ': ' + esc(i.cancel_motivo) : ''}</div>
+          ${pode ? `<div class="acts"><button class="btn btn-ghost btn-sm" data-ci="${i.id}" style="color:var(--bad)">Cancelar item</button></div>` : ''}</div>`;
+      }).join('') : '<div class="it"><div class="o" style="text-align:center;padding:10px 0">Nada lançado ainda. Toque em "Adicionar itens".</div></div>'}</div>
+      ${!gerente ? '<p class="small muted" style="margin:10px 2px 0">Você pode cancelar só o que lançou, até 5 minutos depois. Para o resto, chame o caixa ou o gerente.</p>' : ''}`;
+    // barra de baixo
+    $('bar').classList.remove('hide');
+    $('bar-in').innerHTML = c.status === 'conta'
+      ? `<div class="tot"><small>Total da mesa</small><b>${brl(c.total)}</b></div><button class="btn btn-ghost" id="b-reabrir">Reabrir</button>`
+      : pend.length
+        ? `<button class="btn btn-ghost" id="b-add">${ic('plus')}</button><button class="btn btn-primary grow" id="b-enviar">Enviar ${pend.length} ite${pend.length === 1 ? 'm' : 'ns'} · ${brl(totPend)}</button>`
+        : `<div class="tot"><small>Total</small><b>${brl(c.total)}</b></div><button class="btn btn-ghost" id="b-conta" ${c.total > 0 ? '' : 'disabled'}>${ic('cash')}Conta</button><button class="btn btn-primary" id="b-add">${ic('plus')}Adicionar</button>`;
+    const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+    on('c-volta', voltarMapa); on('b-add', catalogoAbrir); on('b-enviar', enviar); on('b-conta', pedirConta); on('b-reabrir', reabrir); on('c-menu', menu);
+    on('c-limpa', async () => { if (await GP.confirmar('Descartar os itens não enviados?', { texto: 'Eles saem só deste celular. Nada foi lançado ainda.', ok: 'Descartar', perigo: true })) { salvarPend(c.id, []); mostrarComanda(comanda); } });
+    $('corpo').onclick = async (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      const P = pendentes(c.id);
+      if (b.dataset.pm !== undefined) { const l = P[+b.dataset.pm]; l.qtd--; if (l.qtd < 1) P.splice(+b.dataset.pm, 1); salvarPend(c.id, P); return mostrarComanda(comanda); }
+      if (b.dataset.pp !== undefined) { P[+b.dataset.pp].qtd = Math.min(99, P[+b.dataset.pp].qtd + 1); salvarPend(c.id, P); return mostrarComanda(comanda); }
+      if (b.dataset.px !== undefined) { P.splice(+b.dataset.px, 1); salvarPend(c.id, P); return mostrarComanda(comanda); }
+      if (b.dataset.ci) return cancelarItem(c.itens.find(i => i.id === b.dataset.ci));
+    };
+  }
+  function voltarMapa() { carregarEstado().then(renderMapa).catch((e) => GP.toast(erroMsg(e), 'err')); }
+
+  // ---------- adicionar itens ----------
+  function catalogoAbrir() {
+    if (comanda.status !== 'aberta') return;
+    const w = janela('Adicionar itens', `<div class="cat-top"><input class="input" id="ct-b" placeholder="Buscar produto…" autocomplete="off"><div class="cats" id="ct-c"></div></div><div id="ct-l"></div>`,
+      `<button class="btn btn-primary btn-block" id="ct-ok" style="height:52px">Pronto</button>`);
+    w.classList.add('tall');
+    const desenhar = () => {
+      const P = pendentes(comanda.id);
+      const cats = [...new Set(catalogo.map(p => p.categoria || 'Outros'))];
+      $('ct-c').innerHTML = `<button data-c="" class="${!cat ? 'on' : ''}">Todos</button>` + cats.map(c => `<button data-c="${esc(c)}" class="${cat === c ? 'on' : ''}">${esc(c)}</button>`).join('');
+      const q = busca.trim().toLowerCase();
+      const lst = catalogo.filter(p => !p.entrega_codigo && (!cat || (p.categoria || 'Outros') === cat) && (!q || p.nome.toLowerCase().includes(q)));
+      $('ct-l').innerHTML = lst.length ? lst.map(p => {
+        const n = P.filter(l => l.pid === p.id).reduce((t, l) => t + (l.g ? 1 : l.qtd), 0);
+        const sem = p.estoque != null && p.estoque <= 0;
+        return `<button class="pl ${sem ? 'sem' : ''}" data-p="${p.id}"><span class="n">${esc(p.nome)}${sem ? '<small>Sem estoque</small>' : p.estoque != null ? `<small>${p.estoque} em estoque</small>` : ''}</span><span class="pr">${brl(p.preco)}${p.vende_por === 'kg' ? '/kg' : ''}</span>${n ? `<span class="qn">${n}</span>` : ''}</button>`;
+      }).join('') : '<p class="small muted center" style="padding:20px 0">Nenhum produto.</p>';
+      $('ct-ok').textContent = P.length ? `Pronto · ${P.length} para enviar` : 'Pronto';
+    };
+    $('ct-b').oninput = (e) => { busca = e.target.value; desenhar(); };
+    $('ct-c').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) { cat = b.dataset.c; desenhar(); } };
+    $('ct-l').onclick = (e) => {
+      const b = e.target.closest('[data-p]'); if (!b) return;
+      const p = catalogo.find(x => x.id === b.dataset.p);
+      if (p.estoque != null && p.estoque <= 0) return GP.toast(p.nome + ': sem estoque.', 'err');
+      const guarda = (l) => {
+        const P = pendentes(comanda.id);
+        const igual = !l.g && !l.v && !(l.opcoes || []).length && !l.obs && P.find(x => x.pid === p.id && !x.g && !x.v && !(x.opcoes || []).length && !x.obs);
+        if (igual) { igual.qtd = Math.min(99, igual.qtd + (l.qtd || 1)); salvarPend(comanda.id, P); return; }
+        P.push({ idem: GP.uuid(), pid: p.id, nome: l.nome, unit: l.unit, qtd: l.qtd, g: l.g || null, v: l.v || null, opcoes: l.opcoes || [], obs: l.obs || '' });
+        salvarPend(comanda.id, P);
+      };
+      if (!GP.pdvTemOpcoes(p)) { guarda({ nome: p.nome, unit: Number(p.preco), qtd: 1, opcoes: [] }); if (navigator.vibrate) navigator.vibrate(20); desenhar(); return; }
+      // escolhe as opções numa segunda janela e volta para a lista
+      GP.pdvOpcoes({ p, janela: (t, corpo, rod) => janela2(t, corpo, rod), aoConfirmar: (l) => { guarda(l); fechar2(); desenhar(); } });
+    };
+    $('ct-ok').onclick = () => { fechar(); mostrarComanda(comanda); };
+    desenhar(); if (window.innerWidth > 760) setTimeout(() => $('ct-b').focus(), 60);
+  }
+  let enviando = false;
+  async function enviar() {
+    if (enviando) return;
+    const P = pendentes(comanda.id); if (!P.length) return;
+    enviando = true;
+    const b = $('b-enviar'); if (b) { b.disabled = true; b.innerHTML = '<span class="spin"></span>Enviando…'; }
+    const itens = P.map(l => { const o = { idem: l.idem, id: l.pid, obs: l.obs, opcoes: (l.opcoes || []).map(x => ({ g: x.g, o: x.o })) }; if (l.g) o.g = l.g; else o.qtd = l.qtd; if (l.v) o.v = l.v; return o; });
+    try {
+      const c = await rpc('ff_comanda_lancar', { p_comanda: comanda.id, p_itens: itens });
+      salvarPend(comanda.id, []);
+      GP.toast(`${itens.length} ite${itens.length === 1 ? 'm enviado' : 'ns enviados'}.`, 'ok');
+      if (navigator.vibrate) navigator.vibrate(40);
+      mostrarComanda(c); carregarCatalogo();
+    } catch (er) {
+      GP.toast(erroMsg(er), 'err');
+      // erro de produto: tira o item com problema? Não: mantém tudo e mostra o motivo; o garçom ajusta.
+      if (/comanda_fechada/.test(er.message || '')) { salvarPend(comanda.id, []); voltarMapa(); }
+      else if (/comanda_na_conta/.test(er.message || '')) abrirComanda(comanda.id);
+      else if (b) { b.disabled = false; b.innerHTML = rede(er) ? 'Sem internet · tentar de novo' : 'Tentar de novo'; }
+    } finally { enviando = false; }
+  }
+  async function pedirConta() {
+    const tx = Number(comanda.taxa_servico) || 0, t = comanda.total, comTx = Math.round(t * (1 + tx / 100) * 100) / 100;
+    janela('Pedir a conta', `<div class="resumo-g">
+        <div class="row between"><span>Itens</span><b>${brl(t)}</b></div>
+        ${tx ? `<div class="row between"><span>Taxa de serviço (${String(tx).replace('.', ',')}%)</span><b>${brl(comTx - t)}</b></div>` : ''}
+        <div class="row between" style="font-size:1.15rem;margin-top:6px"><b>Total</b><b>${brl(tx ? comTx : t)}</b></div>
+        ${comanda.pessoas > 1 ? `<p class="small muted" style="margin:6px 0 0">Dividido por ${comanda.pessoas}: <b>${brl((tx ? comTx : t) / comanda.pessoas)}</b> cada</p>` : ''}</div>
+        <p class="small muted" style="margin:12px 0 0">O caixa recebe o pagamento. A mesa fica marcada como "pediu a conta" para ninguém lançar mais nada sem reabrir.</p>`,
+      `<div class="row" style="gap:8px"><button class="btn btn-ghost" id="pc-imp">Imprimir conferência</button><button class="btn btn-primary grow" id="pc-ok" style="height:52px">Pedir a conta</button></div>`);
+    $('pc-imp').onclick = () => imprimirConferencia(comanda);
+    $('pc-ok').onclick = async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try { const c = await rpc('ff_comanda_conta', { p_comanda: comanda.id, p_pedir: true }); fechar(); GP.toast('Conta pedida. O caixa já está vendo.', 'ok'); mostrarComanda(c); }
+      catch (er) { b.disabled = false; GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+  async function reabrir() {
+    try { const c = await rpc('ff_comanda_conta', { p_comanda: comanda.id, p_pedir: false }); GP.toast('Mesa reaberta para lançar mais itens.', 'ok'); mostrarComanda(c); }
+    catch (er) { GP.toast(erroMsg(er), 'err'); }
+  }
+  function cancelarItem(i) {
+    janela('Cancelar item', `<p class="small" style="margin:0 0 10px"><b>${i.qtd > 1 ? i.qtd + '× ' : ''}${esc(i.nome)}</b> · ${brl(i.preco * i.qtd)}</p>
+      <label class="field"><span>Motivo</span><input class="input" id="ci-m" maxlength="200" placeholder="Ex.: lancei errado, cliente desistiu"></label>`,
+      `<button class="btn btn-block" id="ci-ok" style="background:var(--bad);color:#fff;height:50px">Cancelar item</button>`);
+    setTimeout(() => $('ci-m').focus(), 60);
+    $('ci-ok').onclick = async (e) => {
+      const m = $('ci-m').value.trim(); if (m.length < 3) return GP.toast('Escreva o motivo.', 'err');
+      const b = e.currentTarget; b.disabled = true;
+      try { const c = await rpc('ff_comanda_item_cancelar', { p_item: i.id, p_motivo: m }); fechar(); GP.toast('Item cancelado.', 'ok'); mostrarComanda(c); carregarCatalogo(); }
+      catch (er) { b.disabled = false; GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+  function menu() {
+    const gerente = st.papel === 'dono' || st.papel === 'admin';
+    janela(nomeComanda(comanda), `<div style="display:grid;gap:8px">
+        <button class="btn btn-ghost btn-block" data-a="trans">${ic('refresh')}Trocar de mesa / juntar mesas</button>
+        <button class="btn btn-ghost btn-block" data-a="dados">${ic('users')}Pessoas e observação</button>
+        <button class="btn btn-ghost btn-block" data-a="imp">${ic('print')}Imprimir conferência</button>
+        ${gerente ? `<button class="btn btn-ghost btn-block" data-a="canc" style="color:var(--bad)">${ic('x')}Cancelar comanda inteira</button>` : ''}</div>`);
+    $('gm-mod').querySelector('.sheet-body').onclick = (e) => {
+      const b = e.target.closest('[data-a]'); if (!b) return;
+      if (b.dataset.a === 'trans') return transferir();
+      if (b.dataset.a === 'dados') return dados();
+      if (b.dataset.a === 'imp') { fechar(); return imprimirConferencia(comanda); }
+      if (b.dataset.a === 'canc') return cancelarComanda();
+    };
+  }
+  function transferir() {
+    const livres = st.mesas.filter(m => m.id !== comanda.mesa_id);
+    janela('Trocar de mesa', `<p class="small muted" style="margin:0 0 10px">Mesa livre: a comanda só muda de lugar. Mesa ocupada: tudo é juntado na comanda dela.</p>
+      <div class="mapa">${livres.map(m => { const c = comandaDaMesa(m); return `<button class="ms ${c ? 'ocupada' : ''}" data-m="${m.id}" style="min-height:70px"><b>${esc(m.nome)}</b><span class="st">${c ? 'Ocupada · juntar' : 'Livre'}</span></button>`; }).join('')}</div>`);
+    $('gm-mod').querySelector('.sheet-body').onclick = async (e) => {
+      const b = e.target.closest('[data-m]'); if (!b) return;
+      const m = st.mesas.find(x => x.id === b.dataset.m), oc = comandaDaMesa(m);
+      if (oc && !(await GP.confirmar(`Juntar com a ${m.nome}?`, { texto: `Todos os itens desta comanda vão para a ${m.nome}.`, ok: 'Juntar' }))) return;
+      try { const c = await rpc('ff_comanda_transferir', { p_comanda: comanda.id, p_mesa: m.id }); fechar(); GP.toast(oc ? 'Mesas juntadas.' : 'Mesa trocada.', 'ok'); await carregarEstado(); mostrarComanda(c); }
+      catch (er) { GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+  function dados() {
+    let p = comanda.pessoas;
+    janela('Pessoas e observação', `<div class="row between" style="margin-bottom:12px"><b>Pessoas</b><div class="qstep"><button type="button" id="dd-m">−</button><span id="dd-q">${p}</span><button type="button" id="dd-p">+</button></div></div>
+      <label class="field"><span>Observação</span><input class="input" id="dd-o" maxlength="200" value="${esc(comanda.obs || '')}" placeholder="Ex.: aniversário, cadeirinha"></label>`,
+      `<button class="btn btn-primary btn-block" id="dd-ok">Salvar</button>`);
+    $('dd-m').onclick = () => { p = Math.max(1, p - 1); $('dd-q').textContent = p; };
+    $('dd-p').onclick = () => { p = Math.min(99, p + 1); $('dd-q').textContent = p; };
+    $('dd-ok').onclick = async () => { try { const c = await rpc('ff_comanda_dados', { p_comanda: comanda.id, p_pessoas: p, p_obs: $('dd-o').value }); fechar(); mostrarComanda(c); } catch (er) { GP.toast(erroMsg(er), 'err'); } };
+  }
+  function cancelarComanda() {
+    janela('Cancelar comanda inteira', `<p class="small" style="margin:0 0 10px">Todos os itens são cancelados e o estoque volta. Use só se a mesa foi aberta por engano ou o cliente foi embora sem consumir.</p>
+      <label class="field"><span>Motivo</span><input class="input" id="cc-m" maxlength="200"></label>`,
+      `<button class="btn btn-block" id="cc-ok" style="background:var(--bad);color:#fff;height:50px">Cancelar comanda</button>`);
+    $('cc-ok').onclick = async (e) => {
+      const m = $('cc-m').value.trim(); if (m.length < 3) return GP.toast('Escreva o motivo.', 'err');
+      const b = e.currentTarget; b.disabled = true;
+      try { await rpc('ff_comanda_cancelar', { p_comanda: comanda.id, p_motivo: m }); salvarPend(comanda.id, []); fechar(); GP.toast('Comanda cancelada.', 'ok'); voltarMapa(); }
+      catch (er) { b.disabled = false; GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+  function imprimirConferencia(c) {
+    const tx = Number(c.taxa_servico) || 0, t = c.total, comTx = Math.round(t * (1 + tx / 100) * 100) / 100;
+    const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;width:0;height:0;border:0;left:-9999px'; document.body.appendChild(f);
+    const d = f.contentWindow.document;
+    d.open(); d.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>@page{size:80mm auto;margin:3mm}body{font-family:Menlo,Consolas,monospace;font-size:12px;width:74mm;margin:0}
+      h1{font-size:15px;text-align:center;margin:0}.c{text-align:center}.r{display:flex;justify-content:space-between;gap:6px}hr{border:0;border-top:1px dashed #000;margin:6px 0}.b{font-weight:700}</style></head><body>
+      <h1>${esc(st.loja.nome)}</h1><div class="c">CONFERÊNCIA · ${esc(nomeComanda(c))}</div><div class="c">${new Date().toLocaleString('pt-BR')}</div><hr>
+      ${c.itens.filter(i => i.status === 'ativo').map(i => `<div>${esc(i.nome)}</div><div class="r"><span>${i.qtd} × ${GP.fmtMoeda(i.preco)}</span><span>${GP.fmtMoeda(i.preco * i.qtd)}</span></div>`).join('')}<hr>
+      <div class="r"><span>Itens</span><span>${GP.fmtMoeda(t)}</span></div>${tx ? `<div class="r"><span>Serviço ${String(tx).replace('.', ',')}% (opcional)</span><span>${GP.fmtMoeda(comTx - t)}</span></div>` : ''}
+      <div class="r b"><span>TOTAL</span><span>${brl(tx ? comTx : t)}</span></div>${c.pessoas > 1 ? `<div class="r"><span>Por pessoa (${c.pessoas})</span><span>${GP.fmtMoeda((tx ? comTx : t) / c.pessoas)}</span></div>` : ''}
+      <hr><div class="c b">NÃO É DOCUMENTO FISCAL</div></body></html>`);
+    d.close();
+    setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (_) {} setTimeout(() => f.remove(), 3000); }, 250);
+  }
+
+  // ---------- janelas ----------
+  function janela(titulo, corpo, rodape) {
+    fechar();
+    const w = document.createElement('div');
+    w.className = 'sheet modal on'; w.id = 'gm-mod'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-modal', 'true');
+    w.innerHTML = `<div class="sheet-head"><h3>${esc(titulo)}</h3><button class="icon-btn" type="button" data-fx>${ic('x')}</button></div><div class="sheet-body">${corpo}</div>${rodape ? `<div class="sheet-foot">${rodape}</div>` : ''}`;
+    document.body.appendChild(w); $('ov').classList.add('on');
+    w.querySelector('[data-fx]').onclick = () => { fechar(); if (vista === 'comanda' && comanda) mostrarComanda(comanda); };
+    return w;
+  }
+  function fechar() { fechar2(); const w = $('gm-mod'); if (w) w.remove(); $('ov').classList.remove('on'); }
+  // segunda janela por cima (opções do produto)
+  function janela2(titulo, corpo, rodape) {
+    fechar2();
+    const w = document.createElement('div');
+    w.className = 'sheet modal on'; w.id = 'gm-mod2'; w.style.zIndex = 95;
+    w.innerHTML = `<div class="sheet-head"><h3>${esc(titulo)}</h3><button class="icon-btn" type="button" data-fx>${ic('x')}</button></div><div class="sheet-body">${corpo}</div>${rodape ? `<div class="sheet-foot">${rodape}</div>` : ''}`;
+    document.body.appendChild(w);
+    w.querySelector('[data-fx]').onclick = fechar2;
+    return w;
+  }
+  function fechar2() { const w = $('gm-mod2'); if (w) w.remove(); }
+  $('ov').onclick = () => { fechar(); if (vista === 'comanda' && comanda) mostrarComanda(comanda); };
+
+  // ---------- atualização automática (a cada 5 s, sem atrapalhar quem está escolhendo) ----------
+  async function atualizar() {
+    if (document.hidden || $('gm-mod') || enviando) return;
+    try {
+      if (vista === 'mapa') { await carregarEstado(); if (!$('gm-mod')) renderMapa(); }
+      else if (comanda) { const c = await rpc('ff_comanda_ver', { p_comanda: comanda.id }); if (!$('gm-mod') && vista === 'comanda') mostrarComanda(c); }
+      $('offline').classList.remove('on');
+    } catch (e) { if (rede(e)) $('offline').classList.add('on'); }
+  }
+  window.addEventListener('online', () => { $('offline').classList.remove('on'); atualizar(); });
+  window.addEventListener('offline', () => $('offline').classList.add('on'));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { atualizar(); carregarCatalogo(); } });
+
+  try { await carregarEstado(); } catch (e) { return aviso('Não foi possível abrir as mesas', esc(erroMsg(e)), true); }
+  await carregarCatalogo();
+  renderMapa();
+  timer = setInterval(atualizar, 5000);
+  setInterval(() => { if (!document.hidden) carregarCatalogo(); }, 120000);
+})();
+</script>
+</body>
+</html>

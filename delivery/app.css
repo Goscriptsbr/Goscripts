@@ -515,3 +515,14 @@ body:not(.modo-assin) .as-only{display:none!important}
 .fin-lanc .dt{font-size:.76rem;color:var(--muted);width:72px;flex:none}
 .fin-lanc small{display:block;color:var(--muted);font-size:.74rem}
 .fin-lanc .canc{opacity:.5}.fin-lanc .canc b{text-decoration:line-through}
+/* opções do produto nas telas de venda */
+.og{margin-bottom:14px}
+.og h4{display:flex;justify-content:space-between;font-size:.92rem;margin:0 0 6px}
+.og h4 small{color:var(--muted);font-weight:600}
+.oo{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:6px;cursor:pointer}
+.oo input{width:18px;height:18px;accent-color:var(--brand)}
+.oo.on{border-color:var(--brand);background:#FFF9F6}
+.oo span{flex:1}
+.qstep{display:flex;align-items:center;gap:6px}.qstep button{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800;font-size:1.05rem;display:grid;place-items:center}.qstep span{min-width:28px;text-align:center;font-weight:800}
+.ms-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:6px}
+.ms-li{display:flex;gap:4px;align-items:center}.ms-li .input{height:40px}.ms-li .icon-btn{width:34px;height:34px;flex:none}

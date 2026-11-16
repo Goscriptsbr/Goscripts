@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=31456">
+<link rel="stylesheet" href="app.css?v=32758">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -538,6 +538,7 @@
       <button data-t="planos" class="as-only"><span id="ti8"></span>Planos</button>
       <button data-t="fin" class="dl-only as-show gerente-only"><span id="ti9"></span>Financeiro</button>
       <button data-t="pdv" class="dl-only hide" id="tab-pdv-btn"><span id="ti10"></span>Caixa</button>
+      <button data-t="mesas" class="dl-only hide" id="tab-mesas-btn"><span id="ti11"></span>Mesas</button>
       <button data-t="loja"><span id="ti3"></span>Minha loja</button>
     </nav>
 
@@ -641,6 +642,7 @@
     <section id="tab-fin" class="hide">
       <div class="cm-head"><div class="grow" style="min-width:0"><h2>Financeiro</h2><p class="small muted">Quanto entrou e saiu: delivery, balcão, assinaturas e o que você lançar. Tudo opcional.</p></div></div>
       <div class="card pad" id="fin-pdv" style="margin-bottom:12px"></div>
+      <div class="card pad" id="fin-mesas" style="margin-bottom:12px"></div>
       <div class="fin-per-w">
         <div class="cx-chips" id="fin-per"><button data-p="hoje">Hoje</button><button data-p="ontem">Ontem</button><button data-p="7">7 dias</button><button data-p="30">30 dias</button><button data-p="mes" class="on">Este mês</button><button data-p="mesp">Mês passado</button><button data-p="outro">Escolher datas</button></div>
         <div class="row hide" id="fin-datas" style="gap:8px;margin-top:8px;flex-wrap:wrap"><input class="input" type="date" id="fin-de" style="max-width:170px"><input class="input" type="date" id="fin-ate" style="max-width:170px"><button class="btn btn-dark btn-sm" id="fin-ir">Ver</button></div>
@@ -863,7 +865,7 @@
       </div>
       <p class="small muted" id="eq-senha-dica" style="margin:-4px 0 14px">Mínimo de 6 caracteres. Passe o e-mail e a senha para a pessoa entrar no painel.</p>
       <div class="fsec">Função</div>
-      <div class="seg3" id="eq-func" style="grid-template-columns:1fr 1fr;margin:0 0 6px"><button type="button" class="on" data-f="admin">Administrador</button><button type="button" data-f="caixa">Caixa</button></div>
+      <div class="seg3" id="eq-func" style="grid-template-columns:1fr 1fr 1fr;margin:0 0 6px"><button type="button" class="on" data-f="admin">Administrador</button><button type="button" data-f="caixa">Caixa</button><button type="button" data-f="garcom">Garçom</button></div>
       <p class="small muted" id="eq-func-info" style="margin:0 0 14px">Cuida de pedidos, cardápio, promoções, horários e entrega.</p>
       <div class="fsec">Acesso às lojas</div>
       <div class="seg3" id="eq-modo" style="grid-template-columns:1fr 1fr;margin:0 0 10px"><button type="button" class="on" data-m="todas">Todas as lojas</button><button type="button" data-m="algumas">Escolher lojas</button></div>
@@ -1016,12 +1018,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="config.js?v=31456"></script>
-<script src="app.js?v=31456"></script>
-<script src="plano-pagar.js?v=31456"></script>
-<script src="financeiro-painel.js?v=31456"></script>
-<script src="assin-painel.js?v=31456"></script>
-<script src="agenda-painel.js?v=31456"></script>
+<script src="config.js?v=32758"></script>
+<script src="app.js?v=32758"></script>
+<script src="plano-pagar.js?v=32758"></script>
+<script src="financeiro-painel.js?v=32758"></script>
+<script src="assin-painel.js?v=32758"></script>
+<script src="agenda-painel.js?v=32758"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic, num } = GP;
@@ -1264,7 +1266,8 @@
     await loadPlano();
     if (new URLSearchParams(location.search).get('planos') === '1' && plano) { history.replaceState(null, '', location.pathname); setTimeout(() => verPlanos(), 400); }
     if (plano && (plano.funcao === 'caixa' || plano.funcao === 'garcom')) return;
-    if (new URLSearchParams(location.search).get('volta') === 'caixa' && lojas.length) { location.replace('caixa.html'); return; }
+    const volta = new URLSearchParams(location.search).get('volta');
+    if ((volta === 'caixa' || volta === 'garcom') && lojas.length) { location.replace(volta + '.html'); return; }
     if (!lojas.length && !souDono) return semAcesso();
     if (!lojas.length) return novaLoja(true);
     const qLoja = new URLSearchParams(location.search).get('loja');
@@ -1281,7 +1284,8 @@
     const { data, error } = await sb.rpc('ff_meu_plano');
     if (error) { plano = null; $('uso-prod').innerHTML = ''; $('uso-prod').classList.add('hide'); return; }
     plano = data; souDono = plano.sou_dono !== false;
-    if (plano.funcao === 'caixa' || plano.funcao === 'garcom') { location.replace('caixa.html'); return; }
+    if (plano.funcao === 'caixa') { location.replace('caixa.html'); return; }
+    if (plano.funcao === 'garcom') { location.replace('garcom.html'); return; }
     renderUso(); aplicarPapel(); renderBloqueio();
   }
   // ---- Plano vencendo / vencido com excesso ----
@@ -1669,7 +1673,11 @@
       + (souDono ? '<option value="__nova">+ Cadastrar outra loja</option>' : '');
     $('t-loja').value = loja ? loja.id : '';
   }
-  function mostrarPdvTab() { $('tab-pdv-btn').classList.toggle('hide', !(loja && loja.pdv_ativo && !GP.ehAgenda(loja) && !GP.ehAssin(loja))); }
+  function mostrarPdvTab() {
+    const ok = loja && !GP.ehAgenda(loja) && !GP.ehAssin(loja);
+    $('tab-pdv-btn').classList.toggle('hide', !(ok && loja.pdv_ativo));
+    $('tab-mesas-btn').classList.toggle('hide', !(ok && loja.mesas_ativo));
+  }
   async function abrirLoja(l) {
     loja = l; GP.ls.set('gp_loja_sel', l.id);
     prods = []; pedidos = []; conhecidos = null; codigo = null;
@@ -1722,7 +1730,7 @@
   };
   // ---- Equipe (só o dono) ----
   let equipe = [], eqEdit = null, eqModo = 'todas', eqFunc = 'admin';
-  const FUNC_INFO = { admin: 'Cuida de pedidos, cardápio, promoções, horários e entrega.', caixa: 'Só usa a tela do caixa (vender no balcão, abrir e fechar o caixa). Não vê o faturamento nem mexe na loja.' };
+  const FUNC_INFO = { admin: 'Cuida de pedidos, cardápio, promoções, horários e entrega.', caixa: 'Só usa a tela do caixa (vender no balcão, receber as mesas, abrir e fechar o caixa). Não vê o faturamento nem mexe na loja.', garcom: 'Só usa a tela das mesas pelo celular: abre mesa, lança os pedidos e pede a conta. Não recebe pagamento nem mexe na loja.' };
   function setEqFunc(f) { eqFunc = f; document.querySelectorAll('#eq-func [data-f]').forEach(b => b.classList.toggle('on', b.dataset.f === f)); $('eq-func-info').textContent = FUNC_INFO[f]; }
   $('eq-func').onclick = (e) => { const b = e.target.closest('[data-f]'); if (b) setEqFunc(b.dataset.f); };
   $('fi-env').innerHTML = ic('box'); $('fi-eq').innerHTML = ic('user'); $('b-eq-add').innerHTML = ic('plus') + 'Adicionar'; $('eq-x').innerHTML = ic('x');
@@ -1738,7 +1746,7 @@
     $('eq-uso').innerHTML = `<b>${equipe.length}</b> de ${max} pessoa${max > 1 ? 's' : ''} na equipe no plano ${plano ? GP.planoNome(plano.plano) : 'Grátis'}`;
     const nome = (id) => (lojas.find(l => l.id === id) || {}).nome || 'loja removida';
     $('eq-lista').innerHTML = equipe.length ? equipe.map(m => `<div class="eqm"><span class="av">${esc((m.nome || '?').trim()[0].toUpperCase())}</span>
-      <span class="tx"><b>${esc(m.nome)} <span class="badge ${m.funcao === 'caixa' ? 'b-warn' : 'b-ok'}" style="font-size:.68rem;vertical-align:middle">${m.funcao === 'caixa' ? 'Caixa' : 'Administrador'}</span></b><span>${esc(m.email)}</span><span>${m.todas ? 'Acesso a todas as lojas' : 'Acesso: ' + esc(m.lojas.map(nome).join(', '))}</span></span>
+      <span class="tx"><b>${esc(m.nome)} <span class="badge ${m.funcao === 'caixa' || m.funcao === 'garcom' ? 'b-warn' : 'b-ok'}" style="font-size:.68rem;vertical-align:middle">${{ caixa: 'Caixa', garcom: 'Garçom' }[m.funcao] || 'Administrador'}</span></b><span>${esc(m.email)}</span><span>${m.todas ? 'Acesso a todas as lojas' : 'Acesso: ' + esc(m.lojas.map(nome).join(', '))}</span></span>
       <span class="ac"><button type="button" class="icon-btn" data-eqe="${m.id}" title="Editar">${ic('edit')}</button><button type="button" class="icon-btn" data-eqr="${m.id}" title="Remover" style="color:var(--bad)">${ic('trash')}</button></span></div>`).join('')
       : '<p class="small muted" style="margin:4px 0 0">Ninguém na equipe ainda.</p>';
   }
@@ -1750,7 +1758,7 @@
   function abrirEq(m) {
     eqEdit = m || null;
     $('eq-tit').textContent = m ? 'Editar pessoa da equipe' : 'Adicionar à equipe';
-    setEqFunc(m && m.funcao === 'caixa' ? 'caixa' : 'admin');
+    setEqFunc(m && (m.funcao === 'caixa' || m.funcao === 'garcom') ? m.funcao : 'admin');
     $('eq-save').textContent = m ? 'Salvar alterações' : 'Adicionar';
     $('eq-nome').value = m ? m.nome : ''; $('eq-email').value = m ? m.email : '';
     $('eq-senha').value = ''; $('eq-senha2').value = '';
@@ -1796,7 +1804,7 @@
       let avisoFunc = '';
       if (id && eqFunc !== antes) {
         const { error: ef } = await sb.rpc('ff_equipe_funcao', { p_id: id, p_funcao: eqFunc });
-        if (ef) avisoFunc = /ff_equipe_funcao|function|schema cache/i.test(ef.message || '') ? ' Para a função Caixa, falta rodar o SQL v35.' : ' Não foi possível salvar a função: ' + GP.err(ef);
+        if (ef) avisoFunc = /ff_equipe_funcao|function|schema cache/i.test(ef.message || '') ? ' Para essa função, falta rodar o SQL ' + (eqFunc === 'garcom' ? 'v36' : 'v35') + '.' : ' Não foi possível salvar a função: ' + GP.err(ef);
       }
       fecharEq(); GP.toast((eqEdit ? 'Pessoa atualizada.' : 'Adicionada à equipe. Passe o e-mail e a senha para ela.') + avisoFunc, avisoFunc ? 'err' : 'ok'); await loadPlano();
     }
@@ -1915,6 +1923,7 @@
   function go(t) {
     document.querySelectorAll('#tabs [data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === t));
     if (t === 'pdv') { if (loja) location.href = 'caixa.html?loja=' + loja.id; return; }
+    if (t === 'mesas') { if (loja) location.href = 'garcom.html?loja=' + loja.id; return; }
     ['pedidos', 'cardapio', 'promo', 'agenda', 'servicos', 'assin', 'planos', 'fin', 'loja'].forEach(s => $('tab-' + s).classList.toggle('hide', s !== t));
     if (t === 'fin' && window.FinPainel && loja) window.FinPainel.abrir(sb, loja, { aoMudar: (l) => { Object.assign(loja, l); mostrarPdvTab(); } });
     if ((t === 'assin' || t === 'planos') && window.AssinPainel) window.AssinPainel.mostrar(t);
@@ -3066,7 +3075,7 @@
   };
 
   // ================= PROMOÇÕES / CUPONS =================
-  $('ti4').innerHTML = ic('star'); $('ti5').innerHTML = ic('calendar'); $('ti6').innerHTML = ic('scissors'); $('ti7').innerHTML = ic('users'); $('ti8').innerHTML = ic('star'); $('ti9').innerHTML = ic('chart'); $('ti10').innerHTML = ic('cash');
+  $('ti4').innerHTML = ic('star'); $('ti5').innerHTML = ic('calendar'); $('ti6').innerHTML = ic('scissors'); $('ti7').innerHTML = ic('users'); $('ti8').innerHTML = ic('star'); $('ti9').innerHTML = ic('chart'); $('ti10').innerHTML = ic('cash'); $('ti11').innerHTML = ic('users');
   GP.moneyMask($('c-min'));
   let cupons = [];
   const abrirCupom = () => { $('f-cupom').reset(); $('c-tipo').value = 'percentual'; $('c-porcli').value = '1'; $('c-pub').checked = true; tipoUI(); $('cmod').classList.add('on'); $('ov').classList.add('on'); setTimeout(() => $('c-cod').focus(), 250); };

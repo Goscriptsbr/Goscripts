@@ -150,8 +150,8 @@
   GP.WHATS = '5519988283178';
   GP.PLANOS = [
     { id: 'gratis', nome: 'Grátis', desc: 'Para começar a vender', preco: 0, lojas: 1, produtos: 30, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 pessoa na equipe além de você (administrador ou caixa)', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções', 'Loja de assinaturas: até 10 assinantes'] },
-    { id: 'profissional', nome: 'Profissional', desc: 'Para quem tem mais produtos ou uma segunda loja', preco: 50, lojas: 2, produtos: 150, destaque: true, ex: 'Ex.: 100 produtos numa loja e 50 na outra', itens: ['Tudo do plano Grátis', '4 pessoas na equipe além de você (administradores ou caixa)', 'Loja de assinaturas: até 50 assinantes', 'Suporte pelo WhatsApp'] },
-    { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 350, ex: 'Ex.: 5 lojas com 70 produtos cada', itens: ['Tudo do Profissional', '8 pessoas na equipe além de você (administradores ou caixa)', 'Produtos extras quando precisar: R$ 0,20 por produto/mês', 'Loja de assinaturas: até 150 assinantes (+ extras a R$ 1,00 por assinante/mês)', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
+    { id: 'profissional', nome: 'Profissional', desc: 'Para quem tem mais produtos ou uma segunda loja', preco: 50, lojas: 2, produtos: 150, destaque: true, ex: 'Ex.: 100 produtos numa loja e 50 na outra', itens: ['Tudo do plano Grátis', '4 pessoas na equipe além de você (administrador, caixa ou garçom)', 'Loja de assinaturas: até 50 assinantes', 'Suporte pelo WhatsApp'] },
+    { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 350, ex: 'Ex.: 5 lojas com 70 produtos cada', itens: ['Tudo do Profissional', '8 pessoas na equipe além de você (administrador, caixa ou garçom)', 'Produtos extras quando precisar: R$ 0,20 por produto/mês', 'Loja de assinaturas: até 150 assinantes (+ extras a R$ 1,00 por assinante/mês)', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
   ];
   GP.planoNome = (id) => (GP.PLANOS.find(p => p.id === id) || GP.PLANOS[0]).nome;
   GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano. Só no Premium dá para comprar produtos a mais quando precisar (R$ 0,20 por produto por mês). Nas lojas de assinaturas, o limite é de assinantes ativos (10, 50 ou 150), somando todas as lojas; no Premium dá para comprar assinantes a mais (R$ 1,00 por assinante por mês).';
@@ -252,6 +252,13 @@
     descricao_obrigatoria: 'Escreva uma descrição.', data_invalida: 'Data inválida.', lancamento_invalido: 'Lançamento inválido.',
     periodo_longo: 'Escolha um período de até 400 dias.', feche_o_caixa: 'Feche o caixa aberto antes de desligar.', funcao_invalida: 'Função inválida.',
     membro_invalido: 'Pessoa não encontrada na equipe.',
+    mesas_desligadas: 'As mesas desta loja estão desligadas.', mesa_invalida: 'Mesa não encontrada.', identifique_comanda: 'Digite o número do cartão ou o nome do cliente.',
+    comanda_nao_encontrada: 'Comanda não encontrada.', comanda_na_conta: 'A conta desta mesa já foi pedida. Reabra a mesa para lançar mais itens.',
+    comanda_fechada: 'Esta comanda já foi fechada ou cancelada.', item_nao_encontrado: 'Item não encontrado.', item_ja_cancelado: 'Este item já foi cancelado.',
+    cancelar_so_gerente: 'Só o caixa ou o gerente pode cancelar este item (o garçom cancela só o que lançou, até 5 minutos depois).',
+    comanda_vazia: 'A comanda não tem itens.', taxa_invalida: 'A taxa de serviço vai de 0 a 30%.', feche_as_comandas: 'Ainda tem mesas ou comandas abertas. Feche ou cancele antes.',
+    mesas_invalidas: 'Confira os nomes das mesas.', mesa_com_comanda: 'Não dá para tirar uma mesa que está com comanda aberta.',
+    desligue_as_mesas: 'Desligue as mesas antes: as comandas fecham no caixa.',
     limite_assinantes: 'Você chegou no limite de assinantes do seu plano do GoPedido.',
     sem_vagas: 'Esta loja não está aceitando novos assinantes no momento. Fale com ela pelo WhatsApp.',
     assinante_invalido: 'Assinatura não encontrada. Confira o link do e-mail.', assinante_cancelado: 'Esta assinatura foi cancelada. Fale com a loja.',

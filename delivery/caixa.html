@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=31456">
+<link rel="stylesheet" href="app.css?v=32758">
 <style>
   html,body{height:100%}
   body{background:var(--bg);overflow:hidden}
@@ -100,13 +100,6 @@
   .ok-venda .ic svg{width:32px;height:32px}
   .ok-venda .troco{font-size:2.2rem;font-weight:800;color:var(--ok);letter-spacing:-.02em}
   /* opções do produto */
-  .og{margin-bottom:14px}
-  .og h4{display:flex;justify-content:space-between;font-size:.92rem;margin:0 0 6px}
-  .og h4 small{color:var(--muted);font-weight:600}
-  .oo{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:6px;cursor:pointer}
-  .oo input{width:18px;height:18px;accent-color:var(--brand)}
-  .oo.on{border-color:var(--brand);background:#FFF9F6}
-  .oo span{flex:1}
   .vl{font-size:.82rem;padding:8px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
   .vl.canc{opacity:.55}
   .vl.canc .tt{text-decoration:line-through}
@@ -118,7 +111,7 @@
   #recibo-frame{position:fixed;width:0;height:0;border:0;left:-9999px}
 </style>
 </head>
-<body>
+<body data-sem-rodape>
 <div class="cx" id="app">
   <header class="cx-top">
     <div class="lg" id="t-lg"></div>
@@ -131,8 +124,9 @@
 <iframe id="recibo-frame" title="Recibo"></iframe>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=31456"></script>
-<script src="app.js?v=31456"></script>
+<script src="config.js?v=32758"></script>
+<script src="app.js?v=32758"></script>
+<script src="pdv-ui.js?v=32758"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -188,12 +182,13 @@
     $('t-sub').textContent = (c ? `Caixa nº ${c.numero} aberto às ${hora(c.aberto_em)} · ` : '') + 'Operador: ' + (estado.usuario || '');
     const gerente = estado.papel === 'dono' || estado.papel === 'admin';
     $('t-acts').innerHTML = `
+      ${loja.mesas_ativo && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-mesas" style="${estado.comandas_conta ? 'background:var(--brand)' : ''}">${ic('users')}<span>Mesas${estado.comandas_abertas ? ' (' + estado.comandas_abertas + ')' : ''}</span></button>` : ''}
       ${loja.pdv_ativo && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-vendas">${ic('list')}<span>Vendas</span></button>` : ''}
       ${c ? `<button class="btn btn-sm" id="a-ret">${ic('download')}<span>Retirada</span></button><button class="btn btn-sm" id="a-ref">${ic('plus')}<span>Reforço</span></button><button class="btn btn-sm" id="a-fechar">${ic('lock')}<span>Fechar caixa</span></button>` : ''}
       ${lojas.length > 1 ? `<select class="btn btn-sm" id="a-loja" style="max-width:160px">${lojas.map(l => `<option value="${l.id}" ${l.id === lojaId ? 'selected' : ''}>${esc(l.nome)}</option>`).join('')}</select>` : ''}
       ${gerente ? `<a class="btn btn-sm" href="painel.html?loja=${lojaId}">${ic('left')}<span>Painel</span></a>` : `<button class="btn btn-sm" id="a-sair">${ic('logout')}<span>Sair</span></button>`}`;
     const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
-    on('a-vendas', verVendas); on('a-ret', () => movimentar('sangria')); on('a-ref', () => movimentar('suprimento')); on('a-fechar', fecharCaixa); on('a-sair', sair_);
+    on('a-vendas', verVendas); on('a-mesas', verMesas); on('a-ret', () => movimentar('sangria')); on('a-ref', () => movimentar('suprimento')); on('a-fechar', fecharCaixa); on('a-sair', sair_);
     const sl = $('a-loja'); if (sl) sl.onchange = () => { GP.ls.set('gp_loja_sel', sl.value); location.href = 'caixa.html?loja=' + sl.value; };
   }
 
@@ -365,81 +360,25 @@
 
   // ----------------- opções (variação, adicionais, peso) -----------------
   function abrirOpcoes(p, linhaEdit, idx) {
-    let qtd = linhaEdit ? linhaEdit.qtd : 1, v = linhaEdit ? linhaEdit.v : ((p.variacoes || [])[0] || {}).id || null;
-    const sel = new Set((linhaEdit && linhaEdit.sel) || []);
-    const kg = p.vende_por === 'kg';
-    const grupos = (p.grupos || []).filter(g => (g.opcoes || []).length);
-    janela(p.nome, `
-      ${kg ? `<label class="field"><span>Peso (da balança)</span><div class="row" style="gap:8px"><input class="input" id="op-peso" inputmode="decimal" placeholder="Ex.: 0,350" style="font-size:1.3rem;height:56px;flex:1" value="${linhaEdit && linhaEdit.g ? String(linhaEdit.g / 1000).replace('.', ',') : ''}"><span style="font-weight:800">kg</span></div><small id="op-pv"></small></label>` : ''}
-      ${(p.variacoes || []).length ? `<div class="og"><h4>Escolha <small>obrigatório</small></h4>${p.variacoes.map(x => `<label class="oo ${x.id === v ? 'on' : ''}"><input type="radio" name="op-v" value="${esc(x.id)}" ${x.id === v ? 'checked' : ''}><span>${esc(x.nome)}</span><b>${brl(x.preco != null && x.preco !== '' ? x.preco : p.preco)}</b></label>`).join('')}</div>` : ''}
-      ${grupos.map(g => `<div class="og" data-g="${esc(g.id)}"><h4>${esc(g.nome)} <small>${g.min ? 'escolha ' + (g.min === g.max ? g.min : 'de ' + g.min + ' a ' + g.max) : 'até ' + (g.max || 99)}</small></h4>
-        ${(g.opcoes || []).map(o => `<label class="oo ${sel.has(g.id + ':' + o.id) ? 'on' : ''}"><input type="${g.max === 1 ? 'radio' : 'checkbox'}" name="og-${esc(g.id)}" value="${esc(o.id)}" ${sel.has(g.id + ':' + o.id) ? 'checked' : ''}><span>${esc(o.nome)}</span>${Number(o.preco) ? `<b>+ ${brl(o.preco)}</b>` : ''}</label>`).join('')}</div>`).join('')}
-      <label class="field"><span>Observação <span class="muted">(opcional)</span></span><input class="input" id="op-obs" maxlength="200" value="${esc(linhaEdit ? linhaEdit.obs || '' : '')}"></label>
-      ${!kg ? `<div class="row between" style="margin-top:6px"><b>Quantidade</b><div class="li" style="border:0;padding:0"><div class="q"><button type="button" id="op-m">−</button><span id="op-q">${qtd}</span><button type="button" id="op-p">+</button></div></div></div>` : ''}`,
-      `<button class="btn btn-primary btn-block" id="op-ok" style="height:54px">${linhaEdit ? 'Atualizar' : 'Adicionar'}</button>`);
-    const corpo = $('cx-mod');
-    const preco = () => {
-      const vv = (p.variacoes || []).find(x => x.id === v);
-      let u = vv && vv.preco != null && vv.preco !== '' ? Number(vv.preco) : Number(p.preco);
-      const base = u;
-      const opc = [];
-      grupos.forEach(g => (g.opcoes || []).forEach(o => { if (sel.has(g.id + ':' + o.id)) { u += Number(o.preco) || 0; opc.push({ g: g.id, o: o.id, nome: o.nome, preco: Number(o.preco) || 0 }); } }));
-      let g = null;
-      if (kg) { g = gramas(($('op-peso') || {}).value); u = r2(base * g / 1000) + (u - base); }
-      return { u: r2(u), opc, gramas: g, vv };
-    };
-    const atual = () => { const r = preco(); $('op-ok').textContent = `${linhaEdit ? 'Atualizar' : 'Adicionar'} · ${brl(r.u * (kg ? 1 : qtd))}`; if (kg) $('op-pv').textContent = r.gramas > 0 ? `${fmtG(r.gramas)} × ${brl(p.preco)}/kg` : ''; };
-    corpo.addEventListener('change', (e) => {
-      const t = e.target;
-      if (t.name === 'op-v') v = t.value;
-      const og = t.closest('[data-g]');
-      if (og) {
-        const gid = og.dataset.g, g = grupos.find(x => String(x.id) === gid);
-        if (t.type === 'radio') [...sel].filter(k => k.startsWith(gid + ':')).forEach(k => sel.delete(k));
-        const k = gid + ':' + t.value;
-        if (t.checked) {
-          const n = [...sel].filter(x => x.startsWith(gid + ':')).length;
-          if (t.type === 'checkbox' && g.max && n >= g.max) { t.checked = false; return GP.toast(`Escolha no máximo ${g.max} em "${g.nome}".`, 'err'); }
-          sel.add(k);
-        } else sel.delete(k);
-      }
-      corpo.querySelectorAll('.oo').forEach(lb => lb.classList.toggle('on', lb.querySelector('input').checked));
-      atual();
-    });
-    const pz = $('op-peso'); if (pz) { pz.oninput = atual; pz.onkeydown = (e) => { if (e.key === 'Enter') $('op-ok').click(); }; setTimeout(() => pz.focus(), 60); }
-    const m = $('op-m'); if (m) { m.onclick = () => { qtd = Math.max(1, qtd - 1); $('op-q').textContent = qtd; atual(); }; $('op-p').onclick = () => { qtd = Math.min(999, qtd + 1); $('op-q').textContent = qtd; atual(); }; }
-    atual();
-    $('op-ok').onclick = () => {
-      const r = preco();
-      if (kg && (!r.gramas || r.gramas < 1 || r.gramas > 100000)) return GP.toast('Digite o peso em kg (ex.: 0,350).', 'err');
-      if ((p.variacoes || []).length && !v) return GP.toast('Escolha uma opção.', 'err');
-      for (const g of grupos) {
-        const n = [...sel].filter(x => x.startsWith(g.id + ':')).length;
-        if (n < (g.min || 0)) return GP.toast(`Escolha ${g.min} em "${g.nome}".`, 'err');
-        if (g.max && n > g.max) return GP.toast(`Escolha no máximo ${g.max} em "${g.nome}".`, 'err');
-      }
-      const nome = p.nome + (r.vv ? ` (${r.vv.nome})` : '') + (kg ? ` (${fmtG(r.gramas)})` : '');
-      const linha = { p, qtd: kg ? 1 : qtd, unit: r.u, nome, v, g: kg ? r.gramas : null, opcoes: r.opc, sel: [...sel], obs: $('op-obs').value.trim() };
+    GP.pdvOpcoes({ p, linha: linhaEdit, janela, aoConfirmar: (linha) => {
       if (linhaEdit) carrinho.splice(idx, 1);
       if (!adicionar(linha) && linhaEdit) { carrinho.splice(idx, 0, linhaEdit); renderCarrinho(); return; }
       fechar(); foco();
-    };
+    } });
   }
-
   // ----------------- cobrar -----------------
   let idem = null;
-  function cobrar() {
-    if (!carrinho.length) return;
-    const tot = total();
+  // Tela de pagamento (balcão e mesas). cfg: { titulo, total() , topo, ligarTopo(atualizar), enviar(pags) }
+  function telaPagamento(cfg) {
     let pags = [];
-    if (!idem) idem = GP.uuid();     // o mesmo código até a venda dar certo: nunca registra duas vezes
-    janela(`Cobrar ${brl(tot)}`, `
+    const tot = () => r2(cfg.total());
+    janela(cfg.titulo, `${cfg.topo || ''}
       <p class="small muted" style="margin:0 0 10px">Toque na forma de pagamento. Dá para dividir (ex.: parte no cartão, parte em dinheiro).</p>
       <div class="fp" id="pg-f">${Object.entries(FORMAS).map(([k, [n]]) => `<button type="button" data-f="${k}">${icF(k)}${n}</button>`).join('')}</div>
       <div id="pg-l"></div><div class="pgres" id="pg-r"></div>
       <p class="small muted" style="margin:10px 0 0">${ic('shield')} Cartão: confirme que a maquininha aprovou <b>antes</b> de finalizar. O sistema não fala com a maquininha.</p>`,
-      `<button class="btn btn-primary btn-block" id="pg-ok" style="height:58px;font-size:1.05rem" disabled>Finalizar venda<span class="kbd">Enter</span></button>`);
-    const falta = () => r2(tot - pags.reduce((t, p) => t + p.valor, 0));
+      `<button class="btn btn-primary btn-block" id="pg-ok" style="height:58px;font-size:1.05rem" disabled>Finalizar<span class="kbd">Enter</span></button>`);
+    const falta = () => r2(tot() - pags.reduce((t, p) => t + p.valor, 0));
     const desenhar = () => {
       $('pg-l').innerHTML = pags.map((p, i) => `<div class="pgl"><b>${icF(p.forma)} ${FORMAS[p.forma][0]}${p.forma === 'dinheiro' ? ' <span class="small muted">(recebido)</span>' : ''}</b>
         <div class="prefix"><i>R$</i><input class="input" data-i="${i}" inputmode="numeric" value="${GP.fmtMoeda(p.valor)}"></div>
@@ -447,13 +386,14 @@
       resumo();
     };
     const resumo = () => {
-      const pago = r2(pags.reduce((t, p) => t + p.valor, 0)), din = r2(pags.filter(p => p.forma === 'dinheiro').reduce((t, p) => t + p.valor, 0));
-      const outros = r2(pago - din), troco = r2(pago - tot);
-      let ok = pago >= tot && outros <= tot && troco <= din;
-      if (tot === 0) ok = true;
-      $('pg-r').innerHTML = `<div class="r"><span>Total</span><b>${brl(tot)}</b></div><div class="r"><span>Pago</span><b>${brl(pago)}</b></div>
-        ${pago < tot ? `<div class="r falta"><span>Falta</span><b>${brl(tot - pago)}</b></div>` : troco > 0 ? (troco <= din ? `<div class="r troco"><span>Troco</span><b>${brl(troco)}</b></div>` : `<div class="r falta"><span>Cartão/Pix passou do total</span><b>${brl(outros - tot)}</b></div>`) : ''}`;
+      const t = tot(), pago = r2(pags.reduce((s, p) => s + p.valor, 0)), din = r2(pags.filter(p => p.forma === 'dinheiro').reduce((s, p) => s + p.valor, 0));
+      const outros = r2(pago - din), troco = r2(pago - t);
+      let ok = pago >= t && outros <= t && troco <= din;
+      if (t === 0) ok = true;
+      $('pg-r').innerHTML = `<div class="r"><span>Total</span><b>${brl(t)}</b></div><div class="r"><span>Pago</span><b>${brl(pago)}</b></div>
+        ${pago < t ? `<div class="r falta"><span>Falta</span><b>${brl(t - pago)}</b></div>` : troco > 0 ? (troco <= din ? `<div class="r troco"><span>Troco</span><b>${brl(troco)}</b></div>` : `<div class="r falta"><span>Cartão/Pix passou do total</span><b>${brl(outros - t)}</b></div>`) : ''}`;
       $('pg-ok').disabled = !ok;
+      $('cx-mod').querySelector('.sheet-head h3').textContent = cfg.tituloDe ? cfg.tituloDe(t) : cfg.titulo;
       return ok;
     };
     $('pg-f').onclick = (e) => {
@@ -466,33 +406,95 @@
     };
     $('pg-l').oninput = (e) => { const i = e.target.dataset.i; if (i === undefined) return; moeda(e.target); pags[+i].valor = num(e.target.value); resumo(); };
     $('pg-l').onclick = (e) => { const b = e.target.closest('[data-xi]'); if (b) { pags.splice(+b.dataset.xi, 1); desenhar(); } };
-    $('cx-mod').onkeydown = (e) => { if (e.key === 'Enter' && !$('pg-ok').disabled) { e.preventDefault(); $('pg-ok').click(); } };
-    if (tot === 0) pags = [];
+    $('cx-mod').onkeydown = (e) => { if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !$('pg-ok').disabled) { e.preventDefault(); $('pg-ok').click(); } };
+    if (cfg.ligarTopo) cfg.ligarTopo(resumo);
     desenhar();
     $('pg-ok').onclick = async (e) => {
       if (!resumo()) return;
       const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Registrando…';
+      try { await cfg.enviar(pags.filter(p => p.valor > 0)); }
+      catch (er) {
+        b.disabled = false; b.innerHTML = 'Tentar de novo';
+        GP.toast(erroMsg(er), 'err');
+        if (cfg.erro) cfg.erro(er);
+      }
+    };
+  }
+  function cobrar() {
+    if (!carrinho.length) return;
+    if (!idem) idem = GP.uuid();     // o mesmo código até a venda dar certo: nunca registra duas vezes
+    telaPagamento({ titulo: `Cobrar ${brl(total())}`, total, enviar: async (pags) => {
       const itens = carrinho.map(l => {
         const o = { id: l.p.id, obs: l.obs || '', opcoes: (l.opcoes || []).map(x => ({ g: x.g, o: x.o })) };
         if (l.g) o.g = l.g; else o.qtd = l.qtd;
         if (l.v) o.v = l.v;
         return o;
       });
-      try {
-        const r = await rpc('ff_pdv_vender', { p_loja: lojaId, p_itens: itens, p_desconto: desconto, p_pagamentos: pags.filter(p => p.valor > 0), p_cliente: cliente, p_idem: idem, p_obs: '' });
-        idem = null; vendaAtual = { ...r, cliente, itensTela: carrinho.slice(), pagsTela: pags.slice() };
-        carrinho = []; desconto = 0; cliente = '';
-        fechar(); vendaOk(vendaAtual);
-        carregarCatalogo().then(renderGrid);
+      const r = await rpc('ff_pdv_vender', { p_loja: lojaId, p_itens: itens, p_desconto: desconto, p_pagamentos: pags, p_cliente: cliente, p_idem: idem, p_obs: '' });
+      idem = null; vendaAtual = { ...r, cliente };
+      carrinho = []; desconto = 0; cliente = '';
+      fechar(); vendaOk(vendaAtual);
+      carregarCatalogo().then(renderGrid);
+      carregarEstado().catch(() => {});
+    }, erro: (er) => {
+      if (/sem_estoque|produto_indisponivel|opcoes_invalidas|escolha_variacao/.test(er.message || '')) { idem = null; carregarCatalogo().then(renderGrid); }
+      if (/caixa_fechado/.test(er.message || '')) { fechar(); iniciar(); }
+    } });
+  }
+
+  // ----------------- mesas e comandas (receber no caixa) -----------------
+  async function verMesas() {
+    const w = janela('Mesas e comandas abertas', `<p class="small muted"><span class="spin"></span> Carregando…</p>`);
+    let st;
+    try { st = await rpc('ff_mesas_estado', { p_loja: lojaId }); }
+    catch (e) { w.querySelector('.sheet-body').innerHTML = `<div class="warnline">${esc(erroMsg(e))}</div>`; return; }
+    const nomeMesa = (c) => c.mesa_id ? ((st.mesas.find(m => m.id === c.mesa_id) || {}).nome || 'Mesa') : (c.identificador || 'Comanda ' + c.numero);
+    const lst = st.comandas.slice().sort((a, b) => (a.status === 'conta' ? 0 : 1) - (b.status === 'conta' ? 0 : 1) || a.numero - b.numero);
+    w.querySelector('.sheet-body').innerHTML = (lst.length ? lst.map(c => `<button type="button" class="vl mesa-it" data-c="${c.id}" style="width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0;font:inherit;cursor:pointer">
+        <b>${esc(nomeMesa(c))}</b><div><div>${c.itens} ite${c.itens == 1 ? 'm' : 'ns'} · aberta às ${hora(c.aberta_em)} por ${esc(c.aberta_por_nome)}</div>${c.status === 'conta' ? `<span class="badge b-warn" style="margin-top:4px">${ic('cash')}Pediu a conta</span>` : ''}</div>
+        <b>${brl(c.total)}</b></button>`).join('') : '<div class="cx-vazio">Nenhuma mesa aberta agora.</div>')
+      + `<a class="btn btn-ghost btn-block" href="garcom.html?loja=${lojaId}" style="margin-top:12px">${ic('list')}Abrir a tela do garçom (lançar pedidos)</a>`;
+    w.querySelector('.sheet-body').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) receberComanda(b.dataset.c); };
+  }
+  let idemComanda = {};
+  async function receberComanda(id) {
+    if (carrinho.length) return GP.toast('Termine ou limpe a venda do balcão antes de receber uma mesa.', 'err');
+    let c;
+    try { c = await rpc('ff_comanda_ver', { p_comanda: id }); } catch (e) { return GP.toast(erroMsg(e), 'err'); }
+    if (c.status !== 'aberta' && c.status !== 'conta') { GP.toast('Esta comanda já foi fechada.', 'err'); return verMesas(); }
+    const itens = c.itens.filter(i => i.status === 'ativo');
+    if (!itens.length) return GP.toast('Esta comanda não tem itens. Cancele ou lance algo antes.', 'err');
+    if (!idemComanda[id]) idemComanda[id] = GP.uuid();
+    let desc = 0, taxa = Number(c.taxa_servico) > 0, pessoas = c.pessoas || 1;
+    const sub = r2(c.total);
+    const calc = () => { const base = r2(sub - desc); return { base, tx: taxa ? r2(base * Number(c.taxa_servico) / 100) : 0 }; };
+    const tot = () => { const k = calc(); return r2(k.base + k.tx); };
+    const nome = c.mesa || c.identificador || 'Comanda ' + c.numero;
+    telaPagamento({
+      titulo: `${nome} · ${brl(tot())}`, tituloDe: (t) => `${nome} · ${brl(t)}`, total: tot,
+      topo: `<details style="margin-bottom:10px"><summary class="small" style="cursor:pointer"><b>${itens.length} ite${itens.length === 1 ? 'm' : 'ns'}</b> · subtotal ${brl(sub)} · comanda nº ${c.numero}</summary>
+          <div style="margin-top:6px">${itens.map(i => `<div class="r small" style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.qtd > 1 ? i.qtd + '× ' : ''}${esc(i.nome)}${(i.opcoes || []).length ? ' <span class="muted">(' + esc(i.opcoes.map(o => o.nome).join(', ')) + ')</span>' : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div></details>
+        <div class="grid2" style="margin-bottom:8px">
+          <label class="field" style="margin:0"><span>Desconto</span><div class="prefix"><i>R$</i><input class="input" id="rc-desc" inputmode="numeric" placeholder="0,00"></div></label>
+          <label class="field" style="margin:0"><span>Dividir por</span><div class="qstep" style="height:46px"><button type="button" id="rc-pm">−</button><span id="rc-p">${pessoas}</span><button type="button" id="rc-pp">+</button><small class="muted" id="rc-pv" style="margin-left:6px"></small></div></label>
+        </div>
+        ${Number(c.taxa_servico) > 0 ? `<label class="switch" style="margin:0 0 12px"><input type="checkbox" id="rc-tx" checked><i></i>Taxa de serviço (${String(c.taxa_servico).replace('.', ',')}%) <span id="rc-txv" class="muted" style="margin-left:4px"></span></label>` : ''}`,
+      ligarTopo: (atualizar) => {
+        const pv = () => { $('rc-p').textContent = pessoas; $('rc-pv').textContent = pessoas > 1 ? brl(tot() / pessoas) + ' cada' : ''; const k = calc(); if ($('rc-txv')) $('rc-txv').textContent = brl(k.tx); };
+        $('rc-desc').oninput = (e) => { moeda(e.target); desc = Math.min(num(e.target.value), sub); pv(); atualizar(); };
+        $('rc-pm').onclick = () => { pessoas = Math.max(1, pessoas - 1); pv(); };
+        $('rc-pp').onclick = () => { pessoas = Math.min(99, pessoas + 1); pv(); };
+        if ($('rc-tx')) $('rc-tx').onchange = (e) => { taxa = e.target.checked; pv(); atualizar(); };
+        pv();
+      },
+      enviar: async (pags) => {
+        const r = await rpc('ff_comanda_fechar', { p_comanda: id, p_desconto: desc, p_taxa: taxa, p_pagamentos: pags, p_idem: idemComanda[id], p_cliente: '' });
+        delete idemComanda[id];
+        fechar(); vendaOk({ ...r, cliente: nome });
         carregarEstado().catch(() => {});
-      } catch (er) {
-        b.disabled = false; b.innerHTML = 'Tentar de novo';
-        const m = erroMsg(er);
-        GP.toast(m, 'err');
-        if (/sem_estoque|produto_indisponivel|opcoes_invalidas|escolha_variacao/.test(er.message || '')) { idem = null; carregarCatalogo().then(renderGrid); }
-        if (/caixa_fechado/.test(er.message || '')) { fechar(); iniciar(); }
-      }
-    };
+      },
+      erro: (er) => { if (/comanda_fechada|comanda_vazia/.test(er.message || '')) { fechar(); verMesas(); } if (/caixa_fechado/.test(er.message || '')) { fechar(); iniciar(); } }
+    });
   }
   function vendaOk(v) {
     $('v-cart') && $('v-cart').classList.remove('on');
@@ -520,9 +522,9 @@
   function imprimirRecibo(v) {
     const itens = v.itens || [];
     imprimirHTML(`<h1>${esc(loja.nome)}</h1>${loja.endereco ? `<div class="c s">${esc(loja.endereco)}</div>` : ''}
-      <div class="c s">${dataHora(v.criado_em || new Date())} · Venda nº ${v.numero}</div>${v.cliente ? `<div class="c s">Cliente: ${esc(v.cliente)}</div>` : ''}<hr>
+      <div class="c s">${dataHora(v.criado_em || new Date())} · Venda nº ${v.numero}${v.obs ? ' · ' + esc(v.obs) : ''}</div>${v.cliente ? `<div class="c s">Cliente: ${esc(v.cliente)}</div>` : ''}<hr>
       ${itens.map(i => `<div>${esc(i.nome)}</div><div class="r s"><span>${i.qtd} × ${GP.fmtMoeda(i.preco)}</span><span>${GP.fmtMoeda(i.preco * i.qtd)}</span></div>${(i.opcoes || []).length ? `<div class="s">  ${esc(i.opcoes.map(o => o.nome).join(', '))}</div>` : ''}`).join('')}
-      <hr><div class="r"><span>Subtotal</span><span>${GP.fmtMoeda(v.subtotal)}</span></div>${Number(v.desconto) ? `<div class="r"><span>Desconto</span><span>-${GP.fmtMoeda(v.desconto)}</span></div>` : ''}
+      <hr><div class="r"><span>Subtotal</span><span>${GP.fmtMoeda(v.subtotal)}</span></div>${Number(v.desconto) ? `<div class="r"><span>Desconto</span><span>-${GP.fmtMoeda(v.desconto)}</span></div>` : ''}${Number(v.taxa_servico) ? `<div class="r"><span>Taxa de serviço</span><span>${GP.fmtMoeda(v.taxa_servico)}</span></div>` : ''}
       <div class="r b"><span>TOTAL</span><span>${brl(v.total)}</span></div><hr>
       ${(v.pagamentos || []).map(p => `<div class="r"><span>${FORMAS[p.forma] ? FORMAS[p.forma][0] : p.forma}</span><span>${GP.fmtMoeda(p.valor)}</span></div>`).join('')}
       ${Number(v.troco) ? `<div class="r"><span>Troco</span><span>${GP.fmtMoeda(v.troco)}</span></div>` : ''}<hr>
@@ -538,7 +540,7 @@
     const gerente = estado.papel === 'dono' || estado.papel === 'admin';
     const ok = lst.filter(v => v.status === 'concluida');
     w.querySelector('.sheet-body').innerHTML = (lst.length ? `<p class="small" style="margin:0 0 8px"><b>${ok.length}</b> venda${ok.length === 1 ? '' : 's'} · <b>${brl(ok.reduce((t, v) => t + Number(v.total), 0))}</b>${lst.length > ok.length ? ` · ${lst.length - ok.length} cancelada${lst.length - ok.length > 1 ? 's' : ''}` : ''}</p>` +
-      lst.map(v => `<div class="vl ${v.status === 'cancelada' ? 'canc' : ''}"><b>#${v.numero}</b><div><div class="tt">${hora(v.criado_em)} · ${(v.pagamentos || []).map(p => FORMAS[p.forma] ? FORMAS[p.forma][0] : p.forma).join(' + ')}${v.cliente ? ' · ' + esc(v.cliente) : ''}</div>
+      lst.map(v => `<div class="vl ${v.status === 'cancelada' ? 'canc' : ''}"><b>#${v.numero}</b><div><div class="tt">${hora(v.criado_em)} · ${(v.pagamentos || []).map(p => FORMAS[p.forma] ? FORMAS[p.forma][0] : p.forma).join(' + ')}${v.origem === 'mesa' ? ' · ' + esc(v.obs || 'Mesa') : ''}${v.cliente ? ' · ' + esc(v.cliente) : ''}</div>
         <div class="small muted">${esc((v.itens || []).map(i => (i.qtd > 1 ? i.qtd + '× ' : '') + i.nome).join(', ')).slice(0, 140)}${v.status === 'cancelada' ? `<br>Cancelada por ${esc(v.cancelada_por_nome)}: ${esc(v.cancel_motivo)}` : ''}</div></div>
         <div style="text-align:right"><b class="tt">${brl(v.total)}</b><div class="row" style="gap:4px;justify-content:flex-end;margin-top:4px"><button class="btn btn-ghost btn-sm" data-imp="${v.id}">Recibo</button>${gerente && v.status === 'concluida' ? `<button class="btn btn-ghost btn-sm" data-cn="${v.id}" style="color:var(--bad)">Cancelar</button>` : ''}</div></div></div>`).join('')
       : '<div class="cx-vazio">Nenhuma venda ainda.</div>') + (gerente ? '' : '<p class="small muted" style="margin-top:12px">Para cancelar uma venda, chame o responsável (dono ou administrador).</p>');
@@ -600,7 +602,8 @@
     $('fc-ok').onclick = async (e) => {
       const b = e.currentTarget;
       if (!$('fc-din').value.trim()) return GP.toast('Digite quanto dinheiro tem na gaveta (pode ser 0,00).', 'err');
-      if (!(await GP.confirmar('Fechar o caixa agora?', { texto: 'Depois de fechar, as vendas deste caixa não podem mais ser canceladas.', ok: 'Fechar caixa' }))) return;
+      const ab = estado.comandas_abertas || 0;
+      if (!(await GP.confirmar('Fechar o caixa agora?', { texto: (ab ? `Atenção: ainda tem ${ab} mesa${ab > 1 ? 's' : ''}/comanda${ab > 1 ? 's' : ''} aberta${ab > 1 ? 's' : ''}. Elas continuam abertas para o próximo caixa. ` : '') + 'Depois de fechar, as vendas deste caixa não podem mais ser canceladas.', ok: 'Fechar caixa' }))) return;
       const cont = { dinheiro: num($('fc-din').value) };
       document.querySelectorAll('.fc-o').forEach(el => { if (el.value.trim()) cont[el.dataset.k] = num(el.value); });
       b.disabled = true; b.innerHTML = '<span class="spin"></span>';
