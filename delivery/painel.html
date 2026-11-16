@@ -861,7 +861,7 @@
   <div class="sheet-head"><h3 id="eq-tit">Adicionar administrador</h3><button class="icon-btn" id="eq-x" type="button"></button></div>
   <form id="f-eq" style="display:contents">
     <div class="sheet-body">
-      <label class="field"><span>Nome</span><input class="input" id="eq-nome" maxlength="60" required placeholder="Ex.: Ana Souza"></label>
+      <label class="field"><span>Nome da pessoa</span><input class="input" id="eq-nome" maxlength="60" required placeholder="Ex.: Ana Souza" autocomplete="off"><small>Nome e sobrenome. É o que aparece nas vendas, nos pedidos lançados e no caixa. Só você (dono) pode mudar depois.</small></label>
       <label class="field"><span>E-mail de acesso</span><input class="input" type="email" id="eq-email" maxlength="120" required autocomplete="off"></label>
       <div class="grid2">
         <label class="field"><span id="eq-senha-lb">Senha</span><input class="input" type="password" id="eq-senha" minlength="6" autocomplete="new-password"></label>
@@ -1023,7 +1023,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=33919"></script>
+<script src="app.js?v=34210"></script>
 <script src="plano-pagar.js?v=32758"></script>
 <script src="financeiro-painel.js?v=33919"></script>
 <script src="assin-painel.js?v=32758"></script>
@@ -1799,7 +1799,9 @@
     if (senha !== $('eq-senha2').value) { $('eq-senha2').focus(); return GP.toast('As duas senhas não são iguais.', 'err'); }
     const lojasSel = [...document.querySelectorAll('#eq-lojas input:checked')].map(i => i.value);
     if (eqModo === 'algumas' && !lojasSel.length) return GP.toast('Marque pelo menos uma loja.', 'err');
-    const body = { nome: $('eq-nome').value.trim(), email: $('eq-email').value.trim(), todas: eqModo === 'todas', lojas: lojasSel };
+    const nomeP = $('eq-nome').value.trim().replace(/\s+/g, ' ');
+    if (nomeP.includes('@') || nomeP.length < 3 || !/[A-Za-zÀ-ÿ]{2,}/.test(nomeP)) { $('eq-nome').focus(); return GP.toast('Digite o nome da pessoa (não o e-mail). Ex.: Ana Souza.', 'err'); }
+    const body = { nome: nomeP, email: $('eq-email').value.trim(), todas: eqModo === 'todas', lojas: lojasSel };
     if (senha) body.senha = senha;
     if (eqEdit) { body.acao = 'editar'; body.id = eqEdit.id; } else body.acao = 'criar';
     const b = $('eq-save'), t = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>';

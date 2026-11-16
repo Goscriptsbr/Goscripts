@@ -259,6 +259,7 @@
     comanda_vazia: 'A comanda não tem itens.', taxa_invalida: 'A taxa de serviço vai de 0 a 30%.', feche_as_comandas: 'Ainda tem mesas ou comandas abertas. Feche ou cancele antes.',
     mesas_invalidas: 'Confira os nomes das mesas.', mesa_com_comanda: 'Não dá para tirar uma mesa que está com comanda aberta.',
     desligue_as_mesas: 'Desligue as mesas antes: as comandas fecham no caixa.',
+    nome_pessoa: 'Digite o nome da pessoa (não o e-mail). Ex.: Ana Souza.',
     limite_assinantes: 'Você chegou no limite de assinantes do seu plano do GoPedido.',
     sem_vagas: 'Esta loja não está aceitando novos assinantes no momento. Fale com ela pelo WhatsApp.',
     assinante_invalido: 'Assinatura não encontrada. Confira o link do e-mail.', assinante_cancelado: 'Esta assinatura foi cancelada. Fale com a loja.',
