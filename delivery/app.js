@@ -7,9 +7,24 @@
   // modo: true/'loja' = painel do lojista · 'cliente' = conta do cliente · false = sem login
   GP.client = (modo) => {
     const key = modo === 'cliente' ? 'gopedido-cliente' : modo === 'moto' ? 'gopedido-moto' : modo ? 'gopedido-auth' : 'gopedido-pub';
-    return window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
+    const c = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
       auth: modo ? { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: key } : { persistSession: false, storageKey: key }
     });
+    // E-mail de boas-vindas (SQL v40): o servidor manda uma vez só; aqui só avisa que a pessoa entrou
+    if (modo === 'cliente' || modo === 'moto') {
+      const tipo = modo === 'moto' ? 'motoboy' : 'cliente';
+      try {
+        c.auth.onAuthStateChange((ev, s) => {
+          const u = s && s.user; if (!u) return;
+          const k = 'gp_bv_' + tipo + '_' + u.id;
+          try { if (localStorage.getItem(k)) return; } catch (_) { return; }
+          setTimeout(() => c.rpc('ff_boas_vindas', { p_tipo: tipo }).then(r => {
+            if (!r.error) try { localStorage.setItem(k, '1'); } catch (_) {}
+          }, () => {}), 1500);
+        });
+      } catch (_) {}
+    }
+    return c;
   };
   GP.publicUrl = (sb, path) => (path ? sb.storage.from('ff-imagens').getPublicUrl(path).data.publicUrl : '');
 

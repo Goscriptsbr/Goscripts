@@ -637,6 +637,92 @@ export async function pushAgenda(admin, id, rede = fetch) {
   return { enviado: r.enviados > 0, ...r };
 }
 
+// ---------- Boas-vindas (SQL v40) ----------
+const passo = (n, titulo, texto) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px"><tr>
+  <td width="34" valign="top"><div style="width:26px;height:26px;border-radius:9px;background:#FFEDE6;color:${COR};font-weight:800;font-size:14px;line-height:26px;text-align:center">${n}</div></td>
+  <td valign="top" style="font-size:14px;line-height:1.55;color:#4a4a55"><b style="color:#16161B">${titulo}</b><br>${texto}</td></tr></table>`;
+const caixaAviso = (html) => `<div style="margin:6px 0 12px;padding:14px 16px;border-radius:14px;background:#FFF4DC;border:1px solid #F3DFAE;font-size:14px;line-height:1.55;color:#5c4510">${html}</div>`;
+const primeiroNome = (u) => {
+  const md = (u && u.user_metadata) || {};
+  const n = String(md.nome || md.full_name || md.name || '').trim().split(/\s+/)[0];
+  return n && n.length <= 30 ? n : '';
+};
+
+export function montarBoasVindas(tipo, nome, l) {
+  const oi = nome ? `Oi, ${h(nome)}!` : 'Oi!';
+  if (tipo === 'lojista') {
+    const linkLoja = l && l.slug ? SITE + 'loja.html?l=' + encodeURIComponent(l.slug) : SITE;
+    const nomeLoja = (l && l.nome) || 'sua loja';
+    const html = moldura({
+      previa: `${nomeLoja} já está no ar. Veja os primeiros passos para começar a vender.`,
+      titulo: `Bem-vindo ao GoPedido! ${nomeLoja} está criada`,
+      texto: `${oi} Sua loja já tem <a href="${h(linkLoja)}" style="color:${COR};font-weight:700">endereço próprio na internet</a>. Em poucos minutos ela fica pronta para receber pedidos. Veja os primeiros passos:`,
+      corpo: passo(1, 'Cadastre seus produtos', 'Nome, foto, preço e opções (tamanhos, adicionais, venda por quilo).')
+        + passo(2, 'Conecte o Mercado Pago', 'Pix e cartão caem direto na sua conta. A conexão é direta: o GoPedido não vê sua senha nem os dados de cartão.')
+        + passo(3, 'Configure a entrega', 'Taxa por distância com seus motoboys, retirada no balcão ou envio para todo o Brasil com frete calculado.')
+        + passo(4, 'Divulgue o link', 'Coloque o link da loja no WhatsApp, no Instagram e no Google.')
+        + `<p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:#4a4a55"><b style="color:#16161B">Quando quiser, ligue também:</b> caixa no balcão com leitor de código de barras, mesas e garçom pelo celular e o financeiro com o lucro do dia. Fica em <b>Minha loja → Caixa e mesas</b>.</p>`
+        + `<p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#4a4a55"><b style="color:#16161B">Motoboys:</b> eles entram na área do entregador com a conta deles e o código da loja, que aparece no seu painel.</p>`
+        + `<p style="margin:14px 0 0;font-size:13px;color:#7a7a85">Quer ver tudo funcionando? <a href="${SITE}lojistas.html#video" style="color:${COR};font-weight:700">Assista ao vídeo de 1 minuto</a>.</p>`,
+      botao: { texto: 'Abrir meu painel', url: SITE + 'painel.html' + (l && l.id ? '?loja=' + l.id : '') },
+      botao2: { texto: 'Ver minha loja', url: linkLoja },
+      aviso: 'Você recebeu este e-mail porque criou uma loja no GoPedido.'
+    });
+    return { assunto: `Bem-vindo ao GoPedido: ${nomeLoja} está criada`, html };
+  }
+  if (tipo === 'motoboy') {
+    const html = moldura({
+      previa: 'Como pegar e entregar pedidos pela área do entregador do GoPedido.',
+      titulo: 'Bem-vindo à área do entregador',
+      texto: `${oi} Agora você faz entregas pelo GoPedido. Veja como funciona:`,
+      corpo: caixaAviso(`<b>Importante:</b> para ver e coletar os pedidos, você precisa <b>entrar na sua conta</b> na área do entregador (a mesma conta Google que você usou agora). Só abrir o link não basta: sem entrar, nenhuma entrega aparece.`)
+        + passo(1, 'Entre com o código da loja', 'A loja te passa um código. Ele troca a cada 8 horas: quando vencer, peça o novo para a loja.')
+        + passo(2, 'Ligue os avisos', 'Permita as notificações para o celular tocar quando tiver entrega nova. Dica: adicione a página à tela inicial.')
+        + passo(3, 'Retire e entregue', 'Marque quando sair com o pedido e quando entregar. Endereço, mapa e o valor a cobrar aparecem no pedido.')
+        + `<p style="margin:10px 0 0;font-size:13px;color:#7a7a85">Dúvidas sobre as entregas, pagamento ou horários são combinadas direto com a loja.</p>`,
+      botao: { texto: 'Abrir a área do entregador', url: SITE + 'entregador.html' },
+      aviso: 'Você recebeu este e-mail porque entrou na área do entregador do GoPedido.<br>O GoPedido é a plataforma; as entregas são combinadas com cada loja.'
+    });
+    return { assunto: 'Bem-vindo à área do entregador do GoPedido', html };
+  }
+  const html = moldura({
+    previa: 'Sua conta está pronta. Peça nas lojas da sua cidade e acompanhe tudo pelo celular.',
+    titulo: 'Bem-vindo ao GoPedido!',
+    texto: `${oi} Sua conta está pronta. Com ela fica mais fácil pedir:`,
+    corpo: passo(1, 'Endereços salvos', 'Cadastre uma vez e peça com poucos toques.')
+      + passo(2, 'Acompanhe seus pedidos', 'Veja cada etapa, do preparo até a entrega.')
+      + passo(3, 'Pague como preferir', 'Pix ou cartão. No pagamento online, os dados do cartão vão direto para o Mercado Pago.')
+      + `<p style="margin:14px 0 0;font-size:13px;color:#7a7a85">Tem uma loja? <a href="${SITE}lojistas.html" style="color:${COR};font-weight:700">Venda pelo GoPedido sem comissão por pedido</a>.</p>`,
+    botao: { texto: 'Ver as lojas', url: SITE },
+    botao2: { texto: 'Minha conta', url: SITE + 'conta.html' },
+    aviso: 'Você recebeu este e-mail porque criou uma conta no GoPedido.'
+  });
+  return { assunto: 'Bem-vindo ao GoPedido!', html };
+}
+
+export async function boasVindas(admin, enviar, id) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(id || ''))) throw new Falha('boasvindas_invalido');
+  const { data: b } = ok(await admin.from('ff_boasvindas').update({ enviado_em: new Date().toISOString() })
+    .eq('id', id).is('enviado_em', null).select('*').maybeSingle(), 'boasvindas');
+  if (!b) return { enviado: false, motivo: 'ja_enviado' };
+  let u = null;
+  try { const r = await admin.auth.admin.getUserById(b.usuario); u = r && r.data && r.data.user; } catch (_) {}
+  if (!u || !u.email) return { enviado: false, motivo: 'sem_email' };
+  let l = null;
+  if (b.tipo === 'lojista' && b.loja_id) {
+    const { data } = ok(await admin.from('ff_lojas').select('id, nome, slug').eq('id', b.loja_id).maybeSingle(), 'loja');
+    l = data;
+  }
+  const { assunto, html } = montarBoasVindas(b.tipo, primeiroNome(u), l);
+  try {
+    await enviar({ para: u.email, assunto, html, texto: textoSimples(html) });
+  } catch (e) {
+    await admin.from('ff_boasvindas').update({ enviado_em: null }).eq('id', b.id);
+    throw new Falha('email_falhou', 502, String(e && e.message || e).slice(0, 300));
+  }
+  return { enviado: true };
+}
+
 export async function tratar(req, admin, enviar, rede = fetch) {
   if (req.method === 'OPTIONS') return { status: 200, corpo: 'ok' };
   if (req.method !== 'POST') throw new Falha('metodo_invalido', 405);
@@ -653,6 +739,7 @@ export async function tratar(req, admin, enviar, rede = fetch) {
   if (b.acao === 'assin_pago') return { status: 200, corpo: await assinPago(admin, enviar, b.id) };
   if (b.acao === 'assin_convite') return { status: 200, corpo: await assinConvite(admin, enviar, b.id, 'convite') };
   if (b.acao === 'assin_link') return { status: 200, corpo: await assinConvite(admin, enviar, b.id, 'link') };
+  if (b.acao === 'boas_vindas') return { status: 200, corpo: await boasVindas(admin, enviar, b.id) };
   if (b.acao === 'codigos_pedido') return { status: 200, corpo: await codigosPedido(admin, enviar, b.id, rede) };
   if (b.acao === 'push_teste') {
     const jwt = String(req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
