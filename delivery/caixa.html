@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Caixa · GoPedido</title>
+<meta name="theme-color" content="#16161B">
+<meta name="robots" content="noindex">
+<link rel="icon" href="img/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/icone-180.png">
+<link rel="manifest" href="manifest-painel.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=31456">
+<style>
+  html,body{height:100%}
+  body{background:var(--bg);overflow:hidden}
+  .cx{display:grid;grid-template-rows:auto 1fr;height:100vh;height:100dvh}
+  .cx-top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--ink);color:#fff;flex-wrap:wrap}
+  .cx-top .lg{width:36px;height:36px;border-radius:11px;background:var(--brand) center/cover;display:grid;place-items:center;font-weight:800;flex:none}
+  .cx-top .nm{min-width:0;flex:1}
+  .cx-top .nm b{display:block;font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cx-top .nm span{font-size:.76rem;color:#bdbdc7}
+  .cx-top .tb{display:flex;gap:6px;flex-wrap:wrap}
+  .cx-top .tb .btn{background:rgba(255,255,255,.1);color:#fff;border:0}
+  .cx-top .tb .btn:hover{background:rgba(255,255,255,.18)}
+  .cx-top .tb .btn svg{width:17px;height:17px}
+  .cx-main{display:grid;grid-template-columns:1fr 400px;min-height:0}
+  .cx-prod{display:flex;flex-direction:column;min-height:0;padding:14px 16px 0}
+  .cx-busca{display:flex;gap:8px;align-items:center}
+  .cx-busca .input{height:52px;font-size:1.05rem;flex:1}
+  .cx-busca .btn{height:52px}
+  .cx-cats{display:flex;gap:6px;overflow-x:auto;padding:10px 0 8px;scrollbar-width:none}
+  .cx-cats::-webkit-scrollbar{display:none}
+  .cx-cats button{flex:none;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:.84rem;color:var(--ink-2)}
+  .cx-cats button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .cx-grid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;align-content:start;padding-bottom:16px}
+  .pc{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:12px;text-align:left;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-height:96px;position:relative}
+  .pc:hover{border-color:var(--brand)}
+  .pc:active{transform:scale(.98)}
+  .pc b{font-size:.9rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pc .pr{margin-top:auto;font-weight:800;color:var(--brand-2)}
+  .pc .pr small{font-weight:600;color:var(--muted)}
+  .pc .es{font-size:.72rem;color:var(--muted)}
+  .pc .es.zero{color:var(--bad);font-weight:700}
+  .pc.semest{opacity:.5}
+  .cx-cart{background:#fff;border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  .cx-cart-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .cx-cart-h b{font-size:1rem}
+  .cx-itens{flex:1;overflow:auto;padding:6px 10px}
+  .li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 6px;border-bottom:1px solid var(--line);align-items:center}
+  .li .n{font-weight:700;font-size:.9rem;line-height:1.25}
+  .li .o{grid-column:1/-1;font-size:.76rem;color:var(--muted);margin-top:-2px}
+  .li .t{font-weight:800;text-align:right}
+  .li .q{display:flex;align-items:center;gap:6px}
+  .li .q button{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800;font-size:1.05rem;display:grid;place-items:center}
+  .li .q button svg{width:16px;height:16px}
+  .li .q span{min-width:28px;text-align:center;font-weight:800}
+  .li .u{font-size:.76rem;color:var(--muted)}
+  .li.novo{animation:pisca .5s}
+  @keyframes pisca{from{background:var(--brand-soft)}to{background:transparent}}
+  .cx-vazio{padding:40px 16px;text-align:center;color:var(--muted)}
+  .cx-vazio svg{width:44px;height:44px;opacity:.4;margin-bottom:8px}
+  .cx-tot{border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+  .cx-tot .r{display:flex;justify-content:space-between;font-size:.88rem;color:var(--ink-2);margin-bottom:4px}
+  .cx-tot .big{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px}
+  .cx-tot .big b{font-size:1.9rem;letter-spacing:-.02em}
+  .cx-tot .acts{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:8px}
+  .cx-tot .acts .btn{min-width:0;padding:0 14px}
+  .cx-tot .acts .btn-primary{height:56px;font-size:1.05rem}
+  .cx-tot .acts .btn-ghost{height:56px}
+  .kbd{font-size:.68rem;font-weight:700;opacity:.65;border:1px solid currentColor;border-radius:5px;padding:0 4px;margin-left:6px}
+  .cx-mob{display:none}
+  @media(max-width:900px){
+    .cx-main{grid-template-columns:1fr}
+    .cx-cart{position:fixed;inset:auto 0 0 0;max-height:82vh;border-left:0;border-radius:22px 22px 0 0;box-shadow:var(--sh-lg);z-index:70;transform:translateY(105%);transition:transform .25s}
+    .cx-cart.on{transform:none}
+    .cx-mob{display:flex;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;height:58px;border-radius:16px;background:var(--brand);color:#fff;align-items:center;justify-content:space-between;padding:0 18px;font-weight:800;box-shadow:var(--sh-lg)}
+    .cx-grid{padding-bottom:90px;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+    .kbd{display:none}
+  }
+  /* telas cheias (abrir caixa / aviso) */
+  .cx-tela{display:grid;place-items:center;padding:24px;overflow:auto}
+  .cx-tela .card{max-width:440px;width:100%;padding:26px}
+  .cx-tela h2{font-size:1.4rem;letter-spacing:-.02em;margin:0 0 6px}
+  /* pagamento */
+  .fp{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+  .fp button{height:64px;border-radius:14px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:.8rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+  .fp button svg{width:20px;height:20px}
+  .fp button:hover{border-color:var(--brand)}
+  .pgl{display:grid;grid-template-columns:1fr 150px 36px;gap:8px;align-items:center;margin-bottom:8px}
+  .pgl b{font-size:.92rem}
+  .pgres{background:var(--bg);border-radius:14px;padding:12px 14px;margin-top:8px}
+  .pgres .r{display:flex;justify-content:space-between;margin:2px 0}
+  .pgres .r.troco b{font-size:1.4rem;color:var(--ok)}
+  .pgres .r.falta b{color:var(--bad)}
+  .ok-venda{text-align:center;padding:10px 0}
+  .ok-venda .ic{width:64px;height:64px;border-radius:50%;background:#e7f6ec;color:#166534;display:grid;place-items:center;margin:0 auto 10px}
+  .ok-venda .ic svg{width:32px;height:32px}
+  .ok-venda .troco{font-size:2.2rem;font-weight:800;color:var(--ok);letter-spacing:-.02em}
+  /* opções do produto */
+  .og{margin-bottom:14px}
+  .og h4{display:flex;justify-content:space-between;font-size:.92rem;margin:0 0 6px}
+  .og h4 small{color:var(--muted);font-weight:600}
+  .oo{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:6px;cursor:pointer}
+  .oo input{width:18px;height:18px;accent-color:var(--brand)}
+  .oo.on{border-color:var(--brand);background:#FFF9F6}
+  .oo span{flex:1}
+  .vl{font-size:.82rem;padding:8px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+  .vl.canc{opacity:.55}
+  .vl.canc .tt{text-decoration:line-through}
+  .resumo-cx{display:grid;gap:4px;font-size:.9rem}
+  .resumo-cx .r{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line)}
+  .resumo-cx .r.t{font-weight:800;border-bottom:0;font-size:1rem}
+  .dif{padding:12px 14px;border-radius:14px;font-weight:700;margin-top:10px}
+  .dif.ok{background:#e7f6ec;color:#166534}.dif.mais{background:#e8f0fe;color:#1e40af}.dif.menos{background:#fdecea;color:#8a1c12}
+  #recibo-frame{position:fixed;width:0;height:0;border:0;left:-9999px}
+</style>
+</head>
+<body>
+<div class="cx" id="app">
+  <header class="cx-top">
+    <div class="lg" id="t-lg"></div>
+    <div class="nm"><b id="t-nome">Caixa</b><span id="t-sub"></span></div>
+    <div class="tb" id="t-acts"></div>
+  </header>
+  <div id="corpo" class="cx-tela"><div class="sk" style="width:min(440px,90vw);height:220px;border-radius:20px"></div></div>
+</div>
+<div class="overlay" id="ov"></div>
+<iframe id="recibo-frame" title="Recibo"></iframe>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js?v=31456"></script>
+<script src="app.js?v=31456"></script>
+<script>
+(async () => {
+  const { $, esc, brl, ic } = GP;
+  const sb = GP.client(true);
+  const FORMAS = { dinheiro: ['Dinheiro', 'cash'], pix: ['Pix', 'pix'], credito: ['Crédito', 'card'], debito: ['Débito', 'card'], outro: ['Outro', 'more'] };
+  const icF = (f) => ic(FORMAS[f] ? FORMAS[f][1] : 'more') || ic('card');
+  const r2 = (v) => Math.round((Number(v) || 0) * 100) / 100;
+  const num = (v) => { const n = parseFloat(String(v || '').replace(/\./g, '').replace(',', '.')); return isNaN(n) ? 0 : r2(n); };
+  const moeda = (el) => { const d = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 9); el.value = d ? GP.fmtMoeda(Number(d) / 100) : ''; };
+  const hora = (d) => new Date(d).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  const dataHora = (d) => new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  // Peso da balança: "0,350" = 350 g; "350" (sem vírgula, 30 ou mais) também é entendido como gramas
+  const gramas = (v) => { const t = String(v || '').trim().replace(/\s/g, ''); if (!t) return 0; if (/^\d+$/.test(t) && Number(t) >= 30) return Number(t); const n = parseFloat(t.replace(/\./g, '').replace(',', '.')); return isNaN(n) ? 0 : Math.round(n * 1000); };
+  const fmtG = (g) => g >= 1000 ? (g / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' kg' : g + ' g';
+  const erroMsg = (e) => {
+    const m = (e && e.message) || String(e || '');
+    if (/ff_caixa|ff_pdv|function .* does not exist|schema cache/i.test(m)) return 'Falta rodar o SQL v35 no Supabase.';
+    if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(m)) return 'Sem conexão com a internet. Confira e tente de novo.';
+    return GP.err(e);
+  };
+  async function rpc(nome, args) {
+    const { data, error } = await sb.rpc(nome, args);
+    if (error) throw error;
+    return data;
+  }
+
+  // ----------------- sessão e loja -----------------
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.replace('painel.html?volta=caixa'); return; }
+  let lojas = [];
+  try { lojas = (await rpc('ff_minhas_lojas')) || []; } catch (e) { return tela('Não foi possível abrir', esc(erroMsg(e))); }
+  const qs = new URLSearchParams(location.search);
+  let estado = null, loja = null, catalogo = [], carrinho = [], cat = '', busca = '', vendaAtual = null;
+  const lojaId = [qs.get('loja'), GP.ls.get('gp_loja_sel')].find(id => id && lojas.some(l => l.id === id)) || (lojas[0] && lojas[0].id);
+  if (!lojaId) return tela('Sem acesso', 'Sua conta não tem acesso a nenhuma loja. Fale com o dono da loja.', true);
+
+  function tela(tit, txt, sair) {
+    $('corpo').className = 'cx-tela';
+    $('corpo').innerHTML = `<div class="card center"><div class="big" style="margin-bottom:8px">${ic('lock')}</div><h2>${tit}</h2><p class="small muted">${txt}</p>
+      <div class="row" style="justify-content:center;gap:8px;margin-top:16px">${sair ? '<button class="btn btn-ghost" id="tl-sair">Sair</button>' : ''}<a class="btn btn-primary" href="painel.html">Ir para o painel</a></div></div>`;
+    const s = $('tl-sair'); if (s) s.onclick = sair_;
+  }
+  async function sair_() { await sb.auth.signOut(); location.replace('painel.html'); }
+
+  async function carregarEstado() {
+    estado = await rpc('ff_caixa_estado', { p_loja: lojaId });
+    loja = estado.loja;
+    GP.aplicarCor && GP.aplicarCor(loja.cor);
+    document.title = `Caixa · ${loja.nome} · GoPedido`;
+    $('t-nome').textContent = loja.nome;
+    if (loja.imagem_url) { $('t-lg').style.backgroundImage = `url('${loja.imagem_url}')`; $('t-lg').textContent = ''; } else $('t-lg').textContent = loja.nome.trim()[0].toUpperCase();
+    const c = estado.caixa;
+    $('t-sub').textContent = (c ? `Caixa nº ${c.numero} aberto às ${hora(c.aberto_em)} · ` : '') + 'Operador: ' + (estado.usuario || '');
+    const gerente = estado.papel === 'dono' || estado.papel === 'admin';
+    $('t-acts').innerHTML = `
+      ${loja.pdv_ativo && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-vendas">${ic('list')}<span>Vendas</span></button>` : ''}
+      ${c ? `<button class="btn btn-sm" id="a-ret">${ic('download')}<span>Retirada</span></button><button class="btn btn-sm" id="a-ref">${ic('plus')}<span>Reforço</span></button><button class="btn btn-sm" id="a-fechar">${ic('lock')}<span>Fechar caixa</span></button>` : ''}
+      ${lojas.length > 1 ? `<select class="btn btn-sm" id="a-loja" style="max-width:160px">${lojas.map(l => `<option value="${l.id}" ${l.id === lojaId ? 'selected' : ''}>${esc(l.nome)}</option>`).join('')}</select>` : ''}
+      ${gerente ? `<a class="btn btn-sm" href="painel.html?loja=${lojaId}">${ic('left')}<span>Painel</span></a>` : `<button class="btn btn-sm" id="a-sair">${ic('logout')}<span>Sair</span></button>`}`;
+    const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+    on('a-vendas', verVendas); on('a-ret', () => movimentar('sangria')); on('a-ref', () => movimentar('suprimento')); on('a-fechar', fecharCaixa); on('a-sair', sair_);
+    const sl = $('a-loja'); if (sl) sl.onchange = () => { GP.ls.set('gp_loja_sel', sl.value); location.href = 'caixa.html?loja=' + sl.value; };
+  }
+
+  async function iniciar() {
+    try { await carregarEstado(); }
+    catch (e) { return tela('Não foi possível abrir o caixa', esc(erroMsg(e)), true); }
+    if (!loja.pdv_ativo) {
+      const g = estado.papel === 'dono' || estado.papel === 'admin';
+      return tela('O caixa está desligado', g ? 'Para vender no balcão, ligue o caixa em <b>Painel → Financeiro → Caixa no balcão</b>.' : 'Peça para o dono da loja ligar o caixa no painel.', !g);
+    }
+    if (loja.pdv_gaveta && !estado.caixa) return telaAbrir();
+    await carregarCatalogo();
+    telaVenda();
+  }
+
+  // ----------------- abrir caixa -----------------
+  function telaAbrir() {
+    $('corpo').className = 'cx-tela';
+    $('corpo').innerHTML = `<div class="card"><h2>Abrir o caixa</h2>
+      <p class="small muted" style="margin:0 0 16px">Conte o dinheiro que está na gaveta para troco. Esse valor entra na conferência do fechamento.</p>
+      <label class="field"><span>Dinheiro na gaveta (troco)</span><div class="prefix"><i>R$</i><input class="input" id="ab-v" inputmode="numeric" placeholder="0,00" style="font-size:1.3rem;height:56px"></div></label>
+      <button class="btn btn-primary btn-block" id="ab-ok" style="height:54px">${ic('check')}Abrir caixa</button>
+      <p class="small muted center" style="margin:12px 0 0">Operador: <b>${esc(estado.usuario || '')}</b></p></div>`;
+    $('ab-v').oninput = (e) => moeda(e.target); setTimeout(() => $('ab-v').focus(), 50);
+    $('ab-v').onkeydown = (e) => { if (e.key === 'Enter') $('ab-ok').click(); };
+    $('ab-ok').onclick = async (e) => {
+      const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+      try { await rpc('ff_caixa_abrir', { p_loja: lojaId, p_valor: num($('ab-v').value) }); GP.toast('Caixa aberto. Boas vendas!', 'ok'); await iniciar(); }
+      catch (er) { b.disabled = false; b.innerHTML = ic('check') + 'Abrir caixa'; GP.toast(erroMsg(er), 'err'); if (/caixa_ja_aberto/.test(er.message || '')) iniciar(); }
+    };
+  }
+
+  // ----------------- catálogo -----------------
+  async function carregarCatalogo() {
+    try { catalogo = (await rpc('ff_pdv_catalogo', { p_loja: lojaId })) || []; } catch (e) { GP.toast(erroMsg(e), 'err'); }
+  }
+  const temOpcoes = (p) => (p.variacoes || []).length > 0 || (p.grupos || []).some(g => (g.opcoes || []).length) || p.vende_por === 'kg';
+  const estoqueDe = (p) => p.estoque == null ? null : p.estoque - carrinho.filter(l => l.p.id === p.id && !l.v).reduce((t, l) => t + l.qtd, 0);
+
+  // ----------------- tela de venda -----------------
+  function telaVenda() {
+    $('corpo').className = 'cx-main';
+    $('corpo').innerHTML = `
+      <section class="cx-prod">
+        <div class="cx-busca">
+          <input class="input" id="v-busca" placeholder="Bipe o código de barras ou digite o nome…" autocomplete="off" enterkeyhint="search">
+          ${GP.temCamCodigo() ? `<button class="btn btn-ghost" id="v-cam" title="Ler pela câmera">${ic('camera')}</button>` : ''}
+        </div>
+        <div class="cx-cats" id="v-cats"></div>
+        <div class="cx-grid" id="v-grid"></div>
+      </section>
+      <aside class="cx-cart" id="v-cart">
+        <div class="cx-cart-h"><b>Venda atual</b><button class="btn btn-ghost btn-sm" id="v-limpar">Limpar</button></div>
+        <div class="cx-itens" id="v-itens"></div>
+        <div class="cx-tot" id="v-tot"></div>
+      </aside>
+      <button class="cx-mob" id="v-mob"><span id="v-mob-q">0 itens</span><span id="v-mob-t">${brl(0)}</span></button>`;
+    $('v-busca').oninput = (e) => { busca = e.target.value; renderGrid(); };
+    $('v-busca').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); enterBusca(); } };
+    const cam = $('v-cam'); if (cam) cam.onclick = async () => { const c = await GP.lerCodigo(); if (c) { $('v-busca').value = c; busca = c; enterBusca(); } };
+    $('v-cats').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) { cat = b.dataset.c; renderGrid(); } };
+    $('v-grid').onclick = (e) => { const b = e.target.closest('[data-p]'); if (b) escolher(catalogo.find(p => p.id === b.dataset.p)); };
+    $('v-itens').onclick = cliqueItem;
+    $('v-limpar').onclick = async () => { if (carrinho.length && await GP.confirmar('Limpar a venda?', { texto: 'Todos os itens saem da venda atual.', ok: 'Limpar', perigo: true })) { carrinho = []; desconto = 0; renderCarrinho(); foco(); } };
+    $('v-mob').onclick = () => { $('v-cart').classList.add('on'); $('ov').classList.add('on'); };
+    renderGrid(); renderCarrinho(); foco();
+  }
+  const foco = () => { const b = $('v-busca'); if (b && !document.querySelector('.modal.on') && window.innerWidth > 900) b.focus(); };
+  function renderGrid() {
+    const cats = [...new Set(catalogo.map(p => p.categoria || 'Outros'))];
+    $('v-cats').innerHTML = `<button data-c="" class="${!cat ? 'on' : ''}">Todos</button>` + cats.map(c => `<button data-c="${esc(c)}" class="${cat === c ? 'on' : ''}">${esc(c)}</button>`).join('');
+    const q = busca.trim().toLowerCase();
+    const lst = catalogo.filter(p => (!cat || (p.categoria || 'Outros') === cat) && (!q || p.nome.toLowerCase().includes(q) || (p.codigo_barras && p.codigo_barras.includes(q))));
+    $('v-grid').innerHTML = lst.length ? lst.map(p => {
+      const es = estoqueDe(p);
+      return `<button class="pc ${es !== null && es <= 0 ? 'semest' : ''}" data-p="${p.id}"><b>${esc(p.nome)}</b>
+        ${es !== null ? `<span class="es ${es <= 0 ? 'zero' : ''}">${es <= 0 ? 'Sem estoque' : es + ' em estoque'}</span>` : ''}
+        <span class="pr">${brl(p.preco)}${p.vende_por === 'kg' ? '<small> /kg</small>' : ''}</span></button>`;
+    }).join('') : `<div class="cx-vazio" style="grid-column:1/-1">${catalogo.length ? 'Nenhum produto encontrado.' : 'Nenhum produto ativo. Cadastre produtos no painel.'}</div>`;
+  }
+  function enterBusca() {
+    const q = busca.trim(); if (!q) return;
+    const porCodigo = catalogo.filter(p => p.codigo_barras && p.codigo_barras === q);
+    const lst = porCodigo.length ? porCodigo : catalogo.filter(p => p.nome.toLowerCase().includes(q.toLowerCase()));
+    if (lst.length === 1) { escolher(lst[0]); $('v-busca').value = ''; busca = ''; renderGrid(); return; }
+    if (!lst.length) { if (navigator.vibrate) navigator.vibrate([80, 40, 80]); GP.toast(/^\d{6,}$/.test(q) ? `Código ${q} não cadastrado em nenhum produto.` : 'Nenhum produto encontrado.', 'err'); $('v-busca').select(); }
+  }
+
+  // ----------------- carrinho -----------------
+  let desconto = 0;
+  const subtotal = () => r2(carrinho.reduce((t, l) => t + l.unit * l.qtd, 0));
+  const total = () => r2(Math.max(0, subtotal() - desconto));
+  function chaveLinha(l) { return [l.p.id, l.v || '', l.g || '', JSON.stringify(l.opcoes || []), l.obs || ''].join('|'); }
+  function adicionar(linha) {
+    const es = estoqueDe(linha.p);
+    if (!linha.g && !linha.v && es !== null && es < linha.qtd) { GP.toast(es <= 0 ? `${linha.p.nome}: sem estoque.` : `${linha.p.nome}: só ${es} em estoque.`, 'err'); return false; }
+    if (linha.v) {
+      const vv = (linha.p.variacoes || []).find(x => x.id === linha.v);
+      const usado = carrinho.filter(l => l.p.id === linha.p.id && l.v === linha.v).reduce((t, l) => t + l.qtd, 0);
+      if (vv && vv.estoque != null && vv.estoque !== '' && Number(vv.estoque) - usado < linha.qtd) { GP.toast(`${linha.p.nome} (${vv.nome}): sem estoque suficiente.`, 'err'); return false; }
+    }
+    const k = chaveLinha(linha);
+    const ex = !linha.g && carrinho.find(l => chaveLinha(l) === k);
+    if (ex) { ex.qtd += linha.qtd; ex.novo = true; } else { linha.novo = true; carrinho.push(linha); }
+    renderCarrinho(); renderGrid();
+    return true;
+  }
+  function escolher(p) {
+    if (!p) return;
+    if (p.entrega_codigo) return GP.toast('Produto de código digital é vendido só pelo site.', 'err');
+    if (!temOpcoes(p)) { adicionar({ p, qtd: 1, unit: Number(p.preco), nome: p.nome, opcoes: [] }); foco(); return; }
+    abrirOpcoes(p);
+  }
+  function renderCarrinho() {
+    const it = $('v-itens'); if (!it) return;
+    it.innerHTML = carrinho.length ? carrinho.map((l, i) => `<div class="li ${l.novo ? 'novo' : ''}">
+        <div><div class="n">${esc(l.nome)}</div><div class="u">${l.g ? fmtG(l.g) + ' × ' + brl(l.p.preco) + '/kg' : brl(l.unit) + ' cada'}</div></div>
+        <div class="t">${brl(l.unit * l.qtd)}</div>
+        ${(l.opcoes || []).length || l.obs ? `<div class="o">${esc((l.opcoes || []).map(o => o.nome).join(', '))}${l.obs ? ' · ' + esc(l.obs) : ''}</div>` : ''}
+        <div class="q">${l.g ? `<button data-pe="${i}" title="Mudar o peso">${ic('edit')}</button>` : `<button data-m="${i}">−</button><span>${l.qtd}</span><button data-p="${i}">+</button>`}</div>
+        <button class="icon-btn" data-x="${i}" title="Tirar" style="justify-self:end;color:var(--bad)">${ic('trash')}</button></div>`).join('')
+      : `<div class="cx-vazio">${ic('bag')}<div>Bipe ou toque nos produtos para começar.</div></div>`;
+    carrinho.forEach(l => { l.novo = false; });
+    const qtd = carrinho.reduce((t, l) => t + (l.g ? 1 : l.qtd), 0);
+    if (desconto > subtotal()) desconto = subtotal();
+    $('v-tot').innerHTML = `
+      <div class="r"><span>Subtotal (${qtd} ite${qtd === 1 ? 'm' : 'ns'})</span><span>${brl(subtotal())}</span></div>
+      ${desconto ? `<div class="r" style="color:var(--ok)"><span>Desconto</span><span>− ${brl(desconto)}</span></div>` : ''}
+      <div class="big"><span>Total</span><b>${brl(total())}</b></div>
+      <div class="acts"><button class="btn btn-ghost" id="v-desc" title="Desconto">${ic('tag')}${desconto ? '' : '<span class="small">%</span>'}</button><button class="btn btn-ghost" id="v-cli" title="Cliente">${ic('user')}</button>
+        <button class="btn btn-primary" id="v-cobrar" ${carrinho.length ? '' : 'disabled'}>Cobrar ${brl(total())}<span class="kbd">F2</span></button></div>`;
+    $('v-desc').onclick = pedirDesconto; $('v-cobrar').onclick = cobrar; $('v-cli').onclick = pedirCliente;
+    $('v-mob-q').textContent = qtd + (qtd === 1 ? ' item' : ' itens'); $('v-mob-t').textContent = 'Cobrar ' + brl(total());
+    $('v-mob').style.display = carrinho.length ? '' : 'none';
+  }
+  function cliqueItem(e) {
+    const b = e.target.closest('button'); if (!b) return;
+    const i = +(b.dataset.m ?? b.dataset.p ?? b.dataset.x ?? b.dataset.pe);
+    const l = carrinho[i]; if (!l) return;
+    if (b.dataset.p !== undefined) { const es = l.v ? null : estoqueDe(l.p); if (es !== null && es < 1) return GP.toast('Sem estoque para mais uma unidade.', 'err'); l.qtd = Math.min(999, l.qtd + 1); }
+    if (b.dataset.m !== undefined) { l.qtd--; if (l.qtd < 1) carrinho.splice(i, 1); }
+    if (b.dataset.x !== undefined) carrinho.splice(i, 1);
+    if (b.dataset.pe !== undefined) return abrirOpcoes(l.p, l, i);
+    renderCarrinho(); renderGrid();
+  }
+  let cliente = '';
+  function pedirCliente() {
+    const w = janela('Cliente (opcional)', `<label class="field"><span>Nome do cliente</span><input class="input" id="cl-n" maxlength="80" value="${esc(cliente)}"></label><p class="small muted">Aparece no recibo e na lista de vendas.</p>`,
+      `<button class="btn btn-primary btn-block" id="cl-ok">Salvar</button>`);
+    setTimeout(() => $('cl-n').focus(), 60);
+    $('cl-n').onkeydown = (e) => { if (e.key === 'Enter') $('cl-ok').click(); };
+    $('cl-ok').onclick = () => { cliente = $('cl-n').value.trim(); fechar(); GP.toast(cliente ? 'Cliente: ' + cliente : 'Sem cliente', 'ok'); };
+  }
+  function pedirDesconto() {
+    if (!carrinho.length) return;
+    let modo = 'r';
+    janela('Desconto', `<div class="seg3" id="ds-m" style="grid-template-columns:1fr 1fr;margin-bottom:12px"><button class="on" data-m="r">Em reais</button><button data-m="p">Em %</button></div>
+      <label class="field"><span id="ds-lb">Valor do desconto</span><input class="input" id="ds-v" inputmode="decimal" style="font-size:1.3rem;height:56px" value="${desconto ? GP.fmtMoeda(desconto) : ''}"></label>
+      <p class="small muted" id="ds-res"></p>`,
+      `<div class="row" style="gap:8px"><button class="btn btn-ghost" id="ds-tirar">Tirar desconto</button><button class="btn btn-primary grow" id="ds-ok">Aplicar</button></div>`);
+    const calc = () => { const v = num($('ds-v').value); const d = modo === 'p' ? r2(subtotal() * Math.min(v, 100) / 100) : Math.min(v, subtotal()); $('ds-res').textContent = `Desconto de ${brl(d)} · total fica ${brl(subtotal() - d)}`; return d; };
+    $('ds-m').onclick = (e) => { const b = e.target.closest('[data-m]'); if (!b) return; modo = b.dataset.m; $('ds-m').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); $('ds-lb').textContent = modo === 'p' ? 'Porcentagem (%)' : 'Valor do desconto'; $('ds-v').value = ''; calc(); $('ds-v').focus(); };
+    $('ds-v').oninput = (e) => { if (modo === 'r') moeda(e.target); calc(); };
+    $('ds-v').onkeydown = (e) => { if (e.key === 'Enter') $('ds-ok').click(); };
+    setTimeout(() => $('ds-v').focus(), 60); calc();
+    $('ds-ok').onclick = () => { desconto = calc(); fechar(); renderCarrinho(); foco(); };
+    $('ds-tirar').onclick = () => { desconto = 0; fechar(); renderCarrinho(); foco(); };
+  }
+
+  // ----------------- opções (variação, adicionais, peso) -----------------
+  function abrirOpcoes(p, linhaEdit, idx) {
+    let qtd = linhaEdit ? linhaEdit.qtd : 1, v = linhaEdit ? linhaEdit.v : ((p.variacoes || [])[0] || {}).id || null;
+    const sel = new Set((linhaEdit && linhaEdit.sel) || []);
+    const kg = p.vende_por === 'kg';
+    const grupos = (p.grupos || []).filter(g => (g.opcoes || []).length);
+    janela(p.nome, `
+      ${kg ? `<label class="field"><span>Peso (da balança)</span><div class="row" style="gap:8px"><input class="input" id="op-peso" inputmode="decimal" placeholder="Ex.: 0,350" style="font-size:1.3rem;height:56px;flex:1" value="${linhaEdit && linhaEdit.g ? String(linhaEdit.g / 1000).replace('.', ',') : ''}"><span style="font-weight:800">kg</span></div><small id="op-pv"></small></label>` : ''}
+      ${(p.variacoes || []).length ? `<div class="og"><h4>Escolha <small>obrigatório</small></h4>${p.variacoes.map(x => `<label class="oo ${x.id === v ? 'on' : ''}"><input type="radio" name="op-v" value="${esc(x.id)}" ${x.id === v ? 'checked' : ''}><span>${esc(x.nome)}</span><b>${brl(x.preco != null && x.preco !== '' ? x.preco : p.preco)}</b></label>`).join('')}</div>` : ''}
+      ${grupos.map(g => `<div class="og" data-g="${esc(g.id)}"><h4>${esc(g.nome)} <small>${g.min ? 'escolha ' + (g.min === g.max ? g.min : 'de ' + g.min + ' a ' + g.max) : 'até ' + (g.max || 99)}</small></h4>
+        ${(g.opcoes || []).map(o => `<label class="oo ${sel.has(g.id + ':' + o.id) ? 'on' : ''}"><input type="${g.max === 1 ? 'radio' : 'checkbox'}" name="og-${esc(g.id)}" value="${esc(o.id)}" ${sel.has(g.id + ':' + o.id) ? 'checked' : ''}><span>${esc(o.nome)}</span>${Number(o.preco) ? `<b>+ ${brl(o.preco)}</b>` : ''}</label>`).join('')}</div>`).join('')}
+      <label class="field"><span>Observação <span class="muted">(opcional)</span></span><input class="input" id="op-obs" maxlength="200" value="${esc(linhaEdit ? linhaEdit.obs || '' : '')}"></label>
+      ${!kg ? `<div class="row between" style="margin-top:6px"><b>Quantidade</b><div class="li" style="border:0;padding:0"><div class="q"><button type="button" id="op-m">−</button><span id="op-q">${qtd}</span><button type="button" id="op-p">+</button></div></div></div>` : ''}`,
+      `<button class="btn btn-primary btn-block" id="op-ok" style="height:54px">${linhaEdit ? 'Atualizar' : 'Adicionar'}</button>`);
+    const corpo = $('cx-mod');
+    const preco = () => {
+      const vv = (p.variacoes || []).find(x => x.id === v);
+      let u = vv && vv.preco != null && vv.preco !== '' ? Number(vv.preco) : Number(p.preco);
+      const base = u;
+      const opc = [];
+      grupos.forEach(g => (g.opcoes || []).forEach(o => { if (sel.has(g.id + ':' + o.id)) { u += Number(o.preco) || 0; opc.push({ g: g.id, o: o.id, nome: o.nome, preco: Number(o.preco) || 0 }); } }));
+      let g = null;
+      if (kg) { g = gramas(($('op-peso') || {}).value); u = r2(base * g / 1000) + (u - base); }
+      return { u: r2(u), opc, gramas: g, vv };
+    };
+    const atual = () => { const r = preco(); $('op-ok').textContent = `${linhaEdit ? 'Atualizar' : 'Adicionar'} · ${brl(r.u * (kg ? 1 : qtd))}`; if (kg) $('op-pv').textContent = r.gramas > 0 ? `${fmtG(r.gramas)} × ${brl(p.preco)}/kg` : ''; };
+    corpo.addEventListener('change', (e) => {
+      const t = e.target;
+      if (t.name === 'op-v') v = t.value;
+      const og = t.closest('[data-g]');
+      if (og) {
+        const gid = og.dataset.g, g = grupos.find(x => String(x.id) === gid);
+        if (t.type === 'radio') [...sel].filter(k => k.startsWith(gid + ':')).forEach(k => sel.delete(k));
+        const k = gid + ':' + t.value;
+        if (t.checked) {
+          const n = [...sel].filter(x => x.startsWith(gid + ':')).length;
+          if (t.type === 'checkbox' && g.max && n >= g.max) { t.checked = false; return GP.toast(`Escolha no máximo ${g.max} em "${g.nome}".`, 'err'); }
+          sel.add(k);
+        } else sel.delete(k);
+      }
+      corpo.querySelectorAll('.oo').forEach(lb => lb.classList.toggle('on', lb.querySelector('input').checked));
+      atual();
+    });
+    const pz = $('op-peso'); if (pz) { pz.oninput = atual; pz.onkeydown = (e) => { if (e.key === 'Enter') $('op-ok').click(); }; setTimeout(() => pz.focus(), 60); }
+    const m = $('op-m'); if (m) { m.onclick = () => { qtd = Math.max(1, qtd - 1); $('op-q').textContent = qtd; atual(); }; $('op-p').onclick = () => { qtd = Math.min(999, qtd + 1); $('op-q').textContent = qtd; atual(); }; }
+    atual();
+    $('op-ok').onclick = () => {
+      const r = preco();
+      if (kg && (!r.gramas || r.gramas < 1 || r.gramas > 100000)) return GP.toast('Digite o peso em kg (ex.: 0,350).', 'err');
+      if ((p.variacoes || []).length && !v) return GP.toast('Escolha uma opção.', 'err');
+      for (const g of grupos) {
+        const n = [...sel].filter(x => x.startsWith(g.id + ':')).length;
+        if (n < (g.min || 0)) return GP.toast(`Escolha ${g.min} em "${g.nome}".`, 'err');
+        if (g.max && n > g.max) return GP.toast(`Escolha no máximo ${g.max} em "${g.nome}".`, 'err');
+      }
+      const nome = p.nome + (r.vv ? ` (${r.vv.nome})` : '') + (kg ? ` (${fmtG(r.gramas)})` : '');
+      const linha = { p, qtd: kg ? 1 : qtd, unit: r.u, nome, v, g: kg ? r.gramas : null, opcoes: r.opc, sel: [...sel], obs: $('op-obs').value.trim() };
+      if (linhaEdit) carrinho.splice(idx, 1);
+      if (!adicionar(linha) && linhaEdit) { carrinho.splice(idx, 0, linhaEdit); renderCarrinho(); return; }
+      fechar(); foco();
+    };
+  }
+
+  // ----------------- cobrar -----------------
+  let idem = null;
+  function cobrar() {
+    if (!carrinho.length) return;
+    const tot = total();
+    let pags = [];
+    if (!idem) idem = GP.uuid();     // o mesmo código até a venda dar certo: nunca registra duas vezes
+    janela(`Cobrar ${brl(tot)}`, `
+      <p class="small muted" style="margin:0 0 10px">Toque na forma de pagamento. Dá para dividir (ex.: parte no cartão, parte em dinheiro).</p>
+      <div class="fp" id="pg-f">${Object.entries(FORMAS).map(([k, [n]]) => `<button type="button" data-f="${k}">${icF(k)}${n}</button>`).join('')}</div>
+      <div id="pg-l"></div><div class="pgres" id="pg-r"></div>
+      <p class="small muted" style="margin:10px 0 0">${ic('shield')} Cartão: confirme que a maquininha aprovou <b>antes</b> de finalizar. O sistema não fala com a maquininha.</p>`,
+      `<button class="btn btn-primary btn-block" id="pg-ok" style="height:58px;font-size:1.05rem" disabled>Finalizar venda<span class="kbd">Enter</span></button>`);
+    const falta = () => r2(tot - pags.reduce((t, p) => t + p.valor, 0));
+    const desenhar = () => {
+      $('pg-l').innerHTML = pags.map((p, i) => `<div class="pgl"><b>${icF(p.forma)} ${FORMAS[p.forma][0]}${p.forma === 'dinheiro' ? ' <span class="small muted">(recebido)</span>' : ''}</b>
+        <div class="prefix"><i>R$</i><input class="input" data-i="${i}" inputmode="numeric" value="${GP.fmtMoeda(p.valor)}"></div>
+        <button type="button" class="icon-btn" data-xi="${i}" style="color:var(--bad)">${ic('x')}</button></div>`).join('');
+      resumo();
+    };
+    const resumo = () => {
+      const pago = r2(pags.reduce((t, p) => t + p.valor, 0)), din = r2(pags.filter(p => p.forma === 'dinheiro').reduce((t, p) => t + p.valor, 0));
+      const outros = r2(pago - din), troco = r2(pago - tot);
+      let ok = pago >= tot && outros <= tot && troco <= din;
+      if (tot === 0) ok = true;
+      $('pg-r').innerHTML = `<div class="r"><span>Total</span><b>${brl(tot)}</b></div><div class="r"><span>Pago</span><b>${brl(pago)}</b></div>
+        ${pago < tot ? `<div class="r falta"><span>Falta</span><b>${brl(tot - pago)}</b></div>` : troco > 0 ? (troco <= din ? `<div class="r troco"><span>Troco</span><b>${brl(troco)}</b></div>` : `<div class="r falta"><span>Cartão/Pix passou do total</span><b>${brl(outros - tot)}</b></div>`) : ''}`;
+      $('pg-ok').disabled = !ok;
+      return ok;
+    };
+    $('pg-f').onclick = (e) => {
+      const b = e.target.closest('[data-f]'); if (!b) return;
+      const f = b.dataset.f, resta = Math.max(0, falta());
+      const ex = pags.find(p => p.forma === f);
+      if (ex) { ex.valor = r2(ex.valor + resta); } else pags.push({ forma: f, valor: resta });
+      desenhar();
+      const inp = $('pg-l').querySelector(`[data-i="${pags.findIndex(p => p.forma === f)}"]`); if (inp) { inp.focus(); inp.select(); }
+    };
+    $('pg-l').oninput = (e) => { const i = e.target.dataset.i; if (i === undefined) return; moeda(e.target); pags[+i].valor = num(e.target.value); resumo(); };
+    $('pg-l').onclick = (e) => { const b = e.target.closest('[data-xi]'); if (b) { pags.splice(+b.dataset.xi, 1); desenhar(); } };
+    $('cx-mod').onkeydown = (e) => { if (e.key === 'Enter' && !$('pg-ok').disabled) { e.preventDefault(); $('pg-ok').click(); } };
+    if (tot === 0) pags = [];
+    desenhar();
+    $('pg-ok').onclick = async (e) => {
+      if (!resumo()) return;
+      const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>Registrando…';
+      const itens = carrinho.map(l => {
+        const o = { id: l.p.id, obs: l.obs || '', opcoes: (l.opcoes || []).map(x => ({ g: x.g, o: x.o })) };
+        if (l.g) o.g = l.g; else o.qtd = l.qtd;
+        if (l.v) o.v = l.v;
+        return o;
+      });
+      try {
+        const r = await rpc('ff_pdv_vender', { p_loja: lojaId, p_itens: itens, p_desconto: desconto, p_pagamentos: pags.filter(p => p.valor > 0), p_cliente: cliente, p_idem: idem, p_obs: '' });
+        idem = null; vendaAtual = { ...r, cliente, itensTela: carrinho.slice(), pagsTela: pags.slice() };
+        carrinho = []; desconto = 0; cliente = '';
+        fechar(); vendaOk(vendaAtual);
+        carregarCatalogo().then(renderGrid);
+        carregarEstado().catch(() => {});
+      } catch (er) {
+        b.disabled = false; b.innerHTML = 'Tentar de novo';
+        const m = erroMsg(er);
+        GP.toast(m, 'err');
+        if (/sem_estoque|produto_indisponivel|opcoes_invalidas|escolha_variacao/.test(er.message || '')) { idem = null; carregarCatalogo().then(renderGrid); }
+        if (/caixa_fechado/.test(er.message || '')) { fechar(); iniciar(); }
+      }
+    };
+  }
+  function vendaOk(v) {
+    $('v-cart') && $('v-cart').classList.remove('on');
+    renderCarrinho();
+    janela(`Venda nº ${v.numero}`, `<div class="ok-venda"><div class="ic">${ic('check')}</div>
+      <p style="margin:0 0 4px;font-weight:700">Venda registrada${v.repetida ? ' (já estava salva)' : ''}</p>
+      <p class="small muted" style="margin:0 0 12px">Total ${brl(v.total)}</p>
+      ${Number(v.troco) > 0 ? `<p class="small" style="margin:0">Troco</p><div class="troco">${brl(v.troco)}</div>` : ''}</div>`,
+      `<div class="row" style="gap:8px"><button class="btn btn-ghost" id="ok-imp">${ic('print')}Imprimir recibo</button><button class="btn btn-primary grow" id="ok-nova" style="height:54px">Nova venda<span class="kbd">Enter</span></button></div>`);
+    const nova = () => { fechar(); renderCarrinho(); foco(); };
+    $('ok-nova').onclick = nova; setTimeout(() => $('ok-nova').focus(), 60);
+    $('ok-imp').onclick = () => imprimirRecibo(v);
+  }
+
+  // ----------------- recibo (não fiscal) -----------------
+  function imprimirHTML(corpo) {
+    const f = $('recibo-frame'), d = f.contentWindow.document;
+    d.open(); d.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+      @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Menlo,Consolas,monospace;font-size:12px;width:74mm;margin:0;color:#000}
+      h1{font-size:15px;text-align:center;margin:0 0 2px}.c{text-align:center}.r{display:flex;justify-content:space-between;gap:6px}
+      hr{border:0;border-top:1px dashed #000;margin:6px 0}.b{font-weight:700}.s{font-size:11px}</style></head><body>${corpo}</body></html>`);
+    d.close();
+    setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (_) { GP.toast('Não foi possível imprimir.', 'err'); } }, 250);
+  }
+  function imprimirRecibo(v) {
+    const itens = v.itens || [];
+    imprimirHTML(`<h1>${esc(loja.nome)}</h1>${loja.endereco ? `<div class="c s">${esc(loja.endereco)}</div>` : ''}
+      <div class="c s">${dataHora(v.criado_em || new Date())} · Venda nº ${v.numero}</div>${v.cliente ? `<div class="c s">Cliente: ${esc(v.cliente)}</div>` : ''}<hr>
+      ${itens.map(i => `<div>${esc(i.nome)}</div><div class="r s"><span>${i.qtd} × ${GP.fmtMoeda(i.preco)}</span><span>${GP.fmtMoeda(i.preco * i.qtd)}</span></div>${(i.opcoes || []).length ? `<div class="s">  ${esc(i.opcoes.map(o => o.nome).join(', '))}</div>` : ''}`).join('')}
+      <hr><div class="r"><span>Subtotal</span><span>${GP.fmtMoeda(v.subtotal)}</span></div>${Number(v.desconto) ? `<div class="r"><span>Desconto</span><span>-${GP.fmtMoeda(v.desconto)}</span></div>` : ''}
+      <div class="r b"><span>TOTAL</span><span>${brl(v.total)}</span></div><hr>
+      ${(v.pagamentos || []).map(p => `<div class="r"><span>${FORMAS[p.forma] ? FORMAS[p.forma][0] : p.forma}</span><span>${GP.fmtMoeda(p.valor)}</span></div>`).join('')}
+      ${Number(v.troco) ? `<div class="r"><span>Troco</span><span>${GP.fmtMoeda(v.troco)}</span></div>` : ''}<hr>
+      <div class="c s">Operador: ${esc(v.usuario_nome || estado.usuario || '')}</div><div class="c s b">NÃO É DOCUMENTO FISCAL</div><div class="c s">GoPedido</div>`);
+  }
+
+  // ----------------- vendas do caixa -----------------
+  async function verVendas() {
+    const w = janela('Vendas ' + (estado.caixa ? `do caixa nº ${estado.caixa.numero}` : 'de hoje'), `<p class="small muted"><span class="spin"></span> Carregando…</p>`);
+    let lst = [];
+    try { lst = (await rpc('ff_pdv_vendas', { p_loja: lojaId, p_caixa: estado.caixa ? estado.caixa.id : null })) || []; }
+    catch (e) { w.querySelector('.sheet-body').innerHTML = `<div class="warnline">${esc(erroMsg(e))}</div>`; return; }
+    const gerente = estado.papel === 'dono' || estado.papel === 'admin';
+    const ok = lst.filter(v => v.status === 'concluida');
+    w.querySelector('.sheet-body').innerHTML = (lst.length ? `<p class="small" style="margin:0 0 8px"><b>${ok.length}</b> venda${ok.length === 1 ? '' : 's'} · <b>${brl(ok.reduce((t, v) => t + Number(v.total), 0))}</b>${lst.length > ok.length ? ` · ${lst.length - ok.length} cancelada${lst.length - ok.length > 1 ? 's' : ''}` : ''}</p>` +
+      lst.map(v => `<div class="vl ${v.status === 'cancelada' ? 'canc' : ''}"><b>#${v.numero}</b><div><div class="tt">${hora(v.criado_em)} · ${(v.pagamentos || []).map(p => FORMAS[p.forma] ? FORMAS[p.forma][0] : p.forma).join(' + ')}${v.cliente ? ' · ' + esc(v.cliente) : ''}</div>
+        <div class="small muted">${esc((v.itens || []).map(i => (i.qtd > 1 ? i.qtd + '× ' : '') + i.nome).join(', ')).slice(0, 140)}${v.status === 'cancelada' ? `<br>Cancelada por ${esc(v.cancelada_por_nome)}: ${esc(v.cancel_motivo)}` : ''}</div></div>
+        <div style="text-align:right"><b class="tt">${brl(v.total)}</b><div class="row" style="gap:4px;justify-content:flex-end;margin-top:4px"><button class="btn btn-ghost btn-sm" data-imp="${v.id}">Recibo</button>${gerente && v.status === 'concluida' ? `<button class="btn btn-ghost btn-sm" data-cn="${v.id}" style="color:var(--bad)">Cancelar</button>` : ''}</div></div></div>`).join('')
+      : '<div class="cx-vazio">Nenhuma venda ainda.</div>') + (gerente ? '' : '<p class="small muted" style="margin-top:12px">Para cancelar uma venda, chame o responsável (dono ou administrador).</p>');
+    w.querySelector('.sheet-body').onclick = async (e) => {
+      const im = e.target.closest('[data-imp]'), cn = e.target.closest('[data-cn]');
+      if (im) { const v = lst.find(x => x.id === im.dataset.imp); imprimirRecibo({ ...v }); }
+      if (cn) {
+        const v = lst.find(x => x.id === cn.dataset.cn);
+        const motivo = await perguntar(`Cancelar a venda nº ${v.numero}?`, `O valor (${brl(v.total)}) sai do caixa e o estoque volta. Escreva o motivo:`, 'Ex.: cliente desistiu');
+        if (motivo === null) return;
+        try { await rpc('ff_venda_cancelar', { p_venda: v.id, p_motivo: motivo }); GP.toast('Venda cancelada. O estoque voltou.', 'ok'); await carregarEstado(); carregarCatalogo().then(renderGrid); verVendas(); }
+        catch (er) { GP.toast(erroMsg(er), 'err'); }
+      }
+    };
+  }
+  function perguntar(tit, txt, ph) {
+    return new Promise((res) => {
+      janela(tit, `<p class="small" style="margin:0 0 10px">${txt}</p><input class="input" id="pq-v" maxlength="200" placeholder="${esc(ph || '')}">`,
+        `<div class="row" style="gap:8px"><button class="btn btn-ghost" id="pq-n">Voltar</button><button class="btn grow" id="pq-s" style="background:var(--bad);color:#fff">Confirmar</button></div>`);
+      setTimeout(() => $('pq-v').focus(), 60);
+      $('pq-n').onclick = () => { fechar(); res(null); };
+      $('pq-s').onclick = () => { const v = $('pq-v').value.trim(); if (v.length < 3) return GP.toast('Escreva o motivo.', 'err'); fechar(); res(v); };
+    });
+  }
+
+  // ----------------- retirada / reforço -----------------
+  function movimentar(tipo) {
+    const ret = tipo === 'sangria';
+    janela(ret ? 'Retirada de dinheiro' : 'Reforço de troco', `
+      <p class="small muted" style="margin:0 0 12px">${ret ? 'Dinheiro que sai da gaveta (ex.: levar ao banco, pagar um fornecedor). Fica registrado com o seu nome.' : 'Dinheiro que entra na gaveta para ter troco.'}</p>
+      <label class="field"><span>Valor</span><div class="prefix"><i>R$</i><input class="input" id="mv-v" inputmode="numeric" style="font-size:1.3rem;height:56px"></div></label>
+      <label class="field"><span>Motivo</span><input class="input" id="mv-d" maxlength="200" placeholder="${ret ? 'Ex.: depósito no banco' : 'Ex.: troco do cofre'}"></label>`,
+      `<button class="btn btn-primary btn-block" id="mv-ok">${ret ? 'Registrar retirada' : 'Registrar reforço'}</button>`);
+    $('mv-v').oninput = (e) => moeda(e.target); setTimeout(() => $('mv-v').focus(), 60);
+    $('mv-ok').onclick = async (e) => {
+      const v = num($('mv-v').value); if (v <= 0) return GP.toast('Digite o valor.', 'err');
+      const b = e.currentTarget; b.disabled = true;
+      try { await rpc('ff_caixa_movimentar', { p_loja: lojaId, p_tipo: tipo, p_valor: v, p_desc: $('mv-d').value }); GP.toast(ret ? 'Retirada registrada.' : 'Reforço registrado.', 'ok'); fechar(); await carregarEstado(); foco(); }
+      catch (er) { b.disabled = false; GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+
+  // ----------------- fechar caixa (conferência às cegas) -----------------
+  function fecharCaixa() {
+    if (carrinho.length) return GP.toast('Termine ou limpe a venda atual antes de fechar o caixa.', 'err');
+    janela(`Fechar o caixa nº ${estado.caixa.numero}`, `
+      <p class="small muted" style="margin:0 0 12px">Conte o dinheiro da gaveta e digite abaixo. Se quiser, confira também os totais da maquininha e do Pix. Depois o sistema mostra se bateu.</p>
+      <label class="field"><span><b>Dinheiro na gaveta</b> (contado)</span><div class="prefix"><i>R$</i><input class="input" id="fc-din" inputmode="numeric" style="font-size:1.3rem;height:56px"></div></label>
+      <div class="grid2">
+        <label class="field"><span>Crédito <span class="muted">(maquininha, opcional)</span></span><div class="prefix"><i>R$</i><input class="input fc-o" data-k="credito" inputmode="numeric"></div></label>
+        <label class="field"><span>Débito <span class="muted">(opcional)</span></span><div class="prefix"><i>R$</i><input class="input fc-o" data-k="debito" inputmode="numeric"></div></label>
+        <label class="field"><span>Pix <span class="muted">(opcional)</span></span><div class="prefix"><i>R$</i><input class="input fc-o" data-k="pix" inputmode="numeric"></div></label>
+        <label class="field"><span>Outro <span class="muted">(opcional)</span></span><div class="prefix"><i>R$</i><input class="input fc-o" data-k="outro" inputmode="numeric"></div></label>
+      </div>
+      <label class="field"><span>Observação <span class="muted">(opcional)</span></span><input class="input" id="fc-obs" maxlength="300"></label>`,
+      `<button class="btn btn-primary btn-block" id="fc-ok" style="height:54px">${ic('lock')}Fechar caixa</button>`);
+    document.querySelectorAll('#fc-din,.fc-o').forEach(el => { el.oninput = () => moeda(el); });
+    setTimeout(() => $('fc-din').focus(), 60);
+    $('fc-ok').onclick = async (e) => {
+      const b = e.currentTarget;
+      if (!$('fc-din').value.trim()) return GP.toast('Digite quanto dinheiro tem na gaveta (pode ser 0,00).', 'err');
+      if (!(await GP.confirmar('Fechar o caixa agora?', { texto: 'Depois de fechar, as vendas deste caixa não podem mais ser canceladas.', ok: 'Fechar caixa' }))) return;
+      const cont = { dinheiro: num($('fc-din').value) };
+      document.querySelectorAll('.fc-o').forEach(el => { if (el.value.trim()) cont[el.dataset.k] = num(el.value); });
+      b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+      try { const r = await rpc('ff_caixa_fechar', { p_loja: lojaId, p_contado: cont, p_obs: $('fc-obs').value }); fechar(); resultadoFechamento(r); }
+      catch (er) { b.disabled = false; b.innerHTML = ic('lock') + 'Fechar caixa'; GP.toast(erroMsg(er), 'err'); }
+    };
+  }
+  function linhasResumo(es, ct) {
+    const L = (n, a, b) => `<div class="r"><span>${n}</span><span>${brl(a)}${b != null ? ` <span class="small muted">· contado ${brl(b)}</span>` : ''}</span></div>`;
+    return `<div class="resumo-cx">
+      ${L('Troco inicial', es.inicial)}${L('Vendas em dinheiro (já tirado o troco)', es.dinheiro_vendas)}${Number(es.suprimentos) ? L('Reforços', es.suprimentos) : ''}${Number(es.sangrias) ? L('Retiradas', -es.sangrias) : ''}
+      <div class="r t"><span>Dinheiro que deveria ter</span><span>${brl(es.dinheiro)}</span></div>
+      ${L('Crédito', es.credito, ct && ct.credito)}${L('Débito', es.debito, ct && ct.debito)}${L('Pix', es.pix, ct && ct.pix)}${Number(es.outro) ? L('Outro', es.outro, ct && ct.outro) : ''}
+      <div class="r t"><span>${es.vendas_qtd} venda${es.vendas_qtd === 1 ? '' : 's'}${es.canceladas ? ` (${es.canceladas} cancelada${es.canceladas > 1 ? 's' : ''})` : ''}</span><span>${brl(es.vendas_total)}</span></div></div>`;
+  }
+  function resultadoFechamento(r) {
+    const d = Number(r.diferenca);
+    janela(`Caixa nº ${r.numero} fechado`, `
+      <div class="dif ${Math.abs(d) < 0.005 ? 'ok' : d > 0 ? 'mais' : 'menos'}">${Math.abs(d) < 0.005 ? 'O dinheiro bateu certinho.' : d > 0 ? `Sobrou ${brl(d)} na gaveta.` : `Faltou ${brl(-d)} na gaveta.`}
+        <div class="small" style="font-weight:600;margin-top:2px">Contado ${brl(r.contado.dinheiro)} · deveria ter ${brl(r.esperado.dinheiro)}</div></div>
+      <div style="margin-top:14px">${linhasResumo(r.esperado, r.contado)}</div>`,
+      `<div class="row" style="gap:8px"><button class="btn btn-ghost" id="rf-imp">Imprimir</button><button class="btn btn-primary grow" id="rf-ok">Concluir</button></div>`);
+    $('rf-imp').onclick = () => imprimirHTML(`<h1>${esc(loja.nome)}</h1><div class="c">Fechamento do caixa nº ${r.numero}</div><div class="c s">${dataHora(new Date())} · ${esc(estado.usuario || '')}</div><hr>
+      ${['inicial', 'dinheiro_vendas', 'suprimentos', 'sangrias'].map(k => `<div class="r"><span>${{ inicial: 'Troco inicial', dinheiro_vendas: 'Vendas dinheiro', suprimentos: 'Reforços', sangrias: 'Retiradas' }[k]}</span><span>${GP.fmtMoeda(r.esperado[k])}</span></div>`).join('')}
+      <div class="r b"><span>Dinheiro esperado</span><span>${GP.fmtMoeda(r.esperado.dinheiro)}</span></div><div class="r b"><span>Dinheiro contado</span><span>${GP.fmtMoeda(r.contado.dinheiro)}</span></div>
+      <div class="r b"><span>Diferença</span><span>${GP.fmtMoeda(d)}</span></div><hr>
+      ${['credito', 'debito', 'pix', 'outro'].map(k => `<div class="r"><span>${FORMAS[k][0]}</span><span>${GP.fmtMoeda(r.esperado[k])}${r.contado[k] != null ? ' / ' + GP.fmtMoeda(r.contado[k]) : ''}</span></div>`).join('')}
+      <hr><div class="r b"><span>${r.esperado.vendas_qtd} vendas</span><span>${brl(r.esperado.vendas_total)}</span></div><div class="c s">GoPedido · não é documento fiscal</div>`);
+    $('rf-ok').onclick = () => { fechar(); iniciar(); };
+  }
+
+  // ----------------- janela (modal) -----------------
+  function janela(titulo, corpo, rodape) {
+    fechar();
+    const w = document.createElement('div');
+    w.className = 'sheet modal on'; w.id = 'cx-mod'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-modal', 'true');
+    w.innerHTML = `<div class="sheet-head"><h3>${esc(titulo)}</h3><button class="icon-btn" type="button" data-fx>${ic('x')}</button></div>
+      <div class="sheet-body">${corpo}</div>${rodape ? `<div class="sheet-foot">${rodape}</div>` : ''}`;
+    document.body.appendChild(w); $('ov').classList.add('on');
+    w.querySelector('[data-fx]').onclick = () => { fechar(); foco(); };
+    return w;
+  }
+  function fechar() { const w = $('cx-mod'); if (w) w.remove(); $('ov').classList.remove('on'); }
+  $('ov').onclick = () => { fechar(); const c = $('v-cart'); if (c) c.classList.remove('on'); foco(); };
+
+  // Atalhos: F2 cobra, Esc fecha, Enter na tela "venda ok" já é tratado pelo foco no botão
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'F2') { e.preventDefault(); if (!$('cx-mod') && carrinho.length) cobrar(); }
+    if (e.key === 'Escape' && $('cx-mod')) { fechar(); foco(); }
+  });
+  // Leitor de código de barras com o foco fora da busca: junta as teclas rápidas e trata como bipe
+  let buf = '', bufT = 0;
+  document.addEventListener('keydown', (e) => {
+    if ($('cx-mod') || !$('v-busca')) return;
+    const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+    const agora = Date.now(); if (agora - bufT > 60) buf = ''; bufT = agora;
+    if (e.key === 'Enter' && buf.length >= 4) { $('v-busca').value = buf; busca = buf; buf = ''; enterBusca(); e.preventDefault(); return; }
+    if (e.key.length === 1) buf += e.key;
+  });
+  // Atualiza o catálogo (preço, estoque) ao voltar para a aba e a cada 5 minutos
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && $('v-grid')) carregarCatalogo().then(renderGrid); });
+  setInterval(() => { if (!document.hidden && $('v-grid') && !$('cx-mod')) carregarCatalogo().then(renderGrid); }, 300000);
+  window.addEventListener('beforeunload', (e) => { if (carrinho.length) { e.preventDefault(); e.returnValue = ''; } });
+
+  iniciar();
+})();
+</script>
+</body>
+</html>

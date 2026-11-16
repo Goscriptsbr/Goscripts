@@ -28,6 +28,12 @@
     copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
     upload: '<path d="M12 15V4m0 0-4 4m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
     check: '<path d="m5 12 5 5 9-10"/>',
+    more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+    camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
+    print: '<path d="M7 9V4h10v5"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v6H7z"/>',
+    barcode: '<path d="M4 5v14M7 5v14M10 5v14M14 5v14M16 5v14M20 5v14"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    wallet: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h2M3 9h15a3 3 0 0 0 3-3"/>',
     mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
     users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2"/>',
     download: '<path d="M12 4v11m0 0-4-4m4 4 4-4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
@@ -143,9 +149,9 @@
   // ---------- Planos ----------
   GP.WHATS = '5519988283178';
   GP.PLANOS = [
-    { id: 'gratis', nome: 'Grátis', desc: 'Para começar a vender', preco: 0, lojas: 1, produtos: 30, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 administrador além de você', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções', 'Loja de assinaturas: até 10 assinantes'] },
-    { id: 'profissional', nome: 'Profissional', desc: 'Para quem tem mais produtos ou uma segunda loja', preco: 50, lojas: 2, produtos: 150, destaque: true, ex: 'Ex.: 100 produtos numa loja e 50 na outra', itens: ['Tudo do plano Grátis', '4 administradores além de você', 'Loja de assinaturas: até 50 assinantes', 'Suporte pelo WhatsApp'] },
-    { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 350, ex: 'Ex.: 5 lojas com 70 produtos cada', itens: ['Tudo do Profissional', '8 administradores além de você', 'Produtos extras quando precisar: R$ 0,20 por produto/mês', 'Loja de assinaturas: até 150 assinantes (+ extras a R$ 1,00 por assinante/mês)', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
+    { id: 'gratis', nome: 'Grátis', desc: 'Para começar a vender', preco: 0, lojas: 1, produtos: 30, ex: '', itens: ['Pedidos ilimitados, sem comissão', '1 pessoa na equipe além de você (administrador ou caixa)', 'Pix, cartão e dinheiro', 'Motoboys e impressão', 'Cupons e promoções', 'Loja de assinaturas: até 10 assinantes'] },
+    { id: 'profissional', nome: 'Profissional', desc: 'Para quem tem mais produtos ou uma segunda loja', preco: 50, lojas: 2, produtos: 150, destaque: true, ex: 'Ex.: 100 produtos numa loja e 50 na outra', itens: ['Tudo do plano Grátis', '4 pessoas na equipe além de você (administradores ou caixa)', 'Loja de assinaturas: até 50 assinantes', 'Suporte pelo WhatsApp'] },
+    { id: 'premium', nome: 'Premium', desc: 'Para redes com várias lojas', preco: 100, lojas: 5, produtos: 350, ex: 'Ex.: 5 lojas com 70 produtos cada', itens: ['Tudo do Profissional', '8 pessoas na equipe além de você (administradores ou caixa)', 'Produtos extras quando precisar: R$ 0,20 por produto/mês', 'Loja de assinaturas: até 150 assinantes (+ extras a R$ 1,00 por assinante/mês)', 'Ideal para redes e franquias', 'Atendimento prioritário'] }
   ];
   GP.planoNome = (id) => (GP.PLANOS.find(p => p.id === id) || GP.PLANOS[0]).nome;
   GP.NOTA_PLANOS = 'Como contam as quantidades: o número de lojas é quantas lojas você pode criar na sua conta. O número de produtos é o total da conta, somando todas as suas lojas. Pedidos não têm limite em nenhum plano. Só no Premium dá para comprar produtos a mais quando precisar (R$ 0,20 por produto por mês). Nas lojas de assinaturas, o limite é de assinantes ativos (10, 50 ou 150), somando todas as lojas; no Premium dá para comprar assinantes a mais (R$ 1,00 por assinante por mês).';
@@ -234,6 +240,18 @@
     confirmacao_errada: 'O nome digitado não confere com o nome da loja.', so_dono_exclui: 'Só o dono da conta pode excluir a loja.',
     loja_com_pedidos_abertos: 'A loja tem pedidos em andamento. Entregue ou cancele antes de excluir.', loja_com_agendamentos: 'A loja tem horários marcados. Cancele antes de excluir.',
     loja_com_assinantes: 'A loja tem assinantes com assinatura paga. Cancele antes de excluir.', loja_excluida: 'Esta loja foi excluída.', loja_nao_encontrada: 'Loja não encontrada.',
+    sem_permissao: 'Você não tem permissão para isso.', pdv_desligado: 'O caixa desta loja está desligado. Ligue em Painel → Financeiro.',
+    gaveta_desligada: 'O controle de abrir e fechar o caixa está desligado.', caixa_ja_aberto: 'Já existe um caixa aberto nesta loja.',
+    caixa_fechado: 'Abra o caixa antes de vender.', sangria_maior: 'A retirada é maior que o dinheiro que deveria ter na gaveta.',
+    carrinho_vazio: 'Adicione pelo menos um produto.', venda_grande: 'Venda com itens demais. Divida em duas.', quantidade_invalida: 'Quantidade inválida.',
+    produto_codigo_digital: 'Produto de código digital é vendido só pelo site.', desconto_invalido: 'O desconto não pode ser maior que o total.',
+    pagamento_menor: 'O valor pago é menor que o total.', pagamento_maior: 'Cartão, Pix e outros não podem passar do total. O troco sai só do dinheiro.',
+    venda_invalida: 'Venda inválida. Tente de novo.', venda_nao_encontrada: 'Venda não encontrada.', venda_ja_cancelada: 'Esta venda já foi cancelada.',
+    motivo_obrigatorio: 'Escreva o motivo.', caixa_ja_fechado: 'Esta venda é de um caixa já fechado e não pode mais ser cancelada.',
+    conte_o_dinheiro: 'Informe quanto dinheiro tem na gaveta.', valor_invalido: 'Valor inválido.', tipo_invalido: 'Tipo inválido.',
+    descricao_obrigatoria: 'Escreva uma descrição.', data_invalida: 'Data inválida.', lancamento_invalido: 'Lançamento inválido.',
+    periodo_longo: 'Escolha um período de até 400 dias.', feche_o_caixa: 'Feche o caixa aberto antes de desligar.', funcao_invalida: 'Função inválida.',
+    membro_invalido: 'Pessoa não encontrada na equipe.',
     limite_assinantes: 'Você chegou no limite de assinantes do seu plano do GoPedido.',
     sem_vagas: 'Esta loja não está aceitando novos assinantes no momento. Fale com ela pelo WhatsApp.',
     assinante_invalido: 'Assinatura não encontrada. Confira o link do e-mail.', assinante_cancelado: 'Esta assinatura foi cancelada. Fale com a loja.',
@@ -270,7 +288,7 @@
     so_dono: 'Só o dono da conta pode gerenciar a equipe.', nao_logado: 'Sua sessão expirou. Entre de novo.',
     nome_invalido: 'Digite o nome da pessoa.', email_invalido: 'Digite um e-mail válido.', senha_curta: 'A senha precisa ter pelo menos 6 caracteres.',
     senha_fraca: 'Escolha uma senha mais forte.', email_existe: 'Este e-mail já tem uma conta no GoPedido. Use outro e-mail.',
-    escolha_lojas: 'Marque pelo menos uma das suas lojas.', limite_equipe: 'Você atingiu o limite de administradores do seu plano.',
+    escolha_lojas: 'Marque pelo menos uma das suas lojas.', limite_equipe: 'Você atingiu o limite de pessoas na equipe do seu plano.',
     membro_invalido: 'Essa pessoa não está mais na sua equipe.', erro_conta: 'Não foi possível salvar a conta. Tente de novo.',
     ja_e_lojista: 'Essa pessoa já é dona de uma loja.', acao_invalida: 'Ação inválida.',
     ja_pegou: 'Outro motoboy já pegou este pedido.', pedido_de_outro: 'Esta entrega está com outro motoboy.',
@@ -443,6 +461,38 @@
     img.src = url;
   });
   GP.ext = (f) => (f.type === 'application/pdf' ? 'pdf' : f.type === 'image/png' ? 'png' : f.type === 'image/webp' ? 'webp' : 'jpg');
+  // UUID v4 de verdade (o banco exige esse formato), mesmo em navegador antigo
+  GP.uuid = () => {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+    const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+  };
+  // Ler código de barras pela câmera (Chrome/Android). Devolve o código ou '' se cancelar. Leitor USB não precisa disto.
+  GP.temCamCodigo = () => 'BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  GP.lerCodigo = () => new Promise(async (resolve) => {
+    let stream = null, parar = false;
+    const w = document.createElement('div');
+    w.style.cssText = 'position:fixed;inset:0;z-index:200;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center';
+    w.innerHTML = `<video playsinline muted style="width:100%;max-width:640px;max-height:70vh;object-fit:cover"></video>
+      <div style="position:absolute;left:12%;right:12%;top:calc(50% - 60px);height:120px;border:3px solid #F2451C;border-radius:16px;pointer-events:none"></div>
+      <p style="color:#fff;margin:14px 0 10px;font-weight:600">Aponte para o código de barras</p>
+      <button type="button" class="btn btn-ghost" style="background:#fff">Cancelar</button>`;
+    document.body.appendChild(w);
+    const fim = (v) => { parar = true; try { stream && stream.getTracks().forEach(t => t.stop()); } catch (_) {} w.remove(); resolve(v || ''); };
+    w.querySelector('button').onclick = () => fim('');
+    try {
+      const det = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code'] });
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      const v = w.querySelector('video'); v.srcObject = stream; await v.play();
+      const passo = async () => {
+        if (parar) return;
+        try { const r = await det.detect(v); if (r && r[0] && r[0].rawValue) { if (navigator.vibrate) navigator.vibrate(60); return fim(String(r[0].rawValue).trim()); } } catch (_) {}
+        setTimeout(passo, 180);
+      };
+      passo();
+    } catch (_) { GP.toast('Não foi possível abrir a câmera. Confira a permissão do navegador.', 'err'); fim(''); }
+  });
   GP.uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
 
   // ---------- Pix "copia e cola" (padrão BR Code do Banco Central) ----------
