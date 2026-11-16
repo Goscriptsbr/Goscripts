@@ -1023,7 +1023,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=48334"></script>
+<script src="app.js?v=48530"></script>
 <script src="plano-pagar.js?v=32758"></script>
 <script src="financeiro-painel.js?v=43772"></script>
 <script src="assin-painel.js?v=34641"></script>
@@ -2185,7 +2185,7 @@
         <a class="mb wa" id="m-wa" target="_blank" rel="noopener" title="Enviar no WhatsApp">${ic('chat')}</a>
       </div>`;
     const link = cfg.siteUrl + 'entregador.html?c=' + codigo.codigo;
-    const msg = `Entregas da ${loja.nome} 🛵\nAcesse: ${link}\nCódigo: ${fmtCod(codigo.codigo)} (vale até ${GP.hora(exp)})`;
+    const msg = `Entregas da ${loja.nome} 🛵\nAcesse: ${link}\nEntre com a sua conta Google e use o código: ${fmtCod(codigo.codigo)} (vale até ${GP.hora(exp)})`;
     $('m-wa').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
     $('m-copy').onclick = () => GP.copy(msg, 'Código e link copiados!');
     $('m-novo').onclick = async () => {

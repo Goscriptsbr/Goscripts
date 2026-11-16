@@ -78,3 +78,119 @@ end;
 $$;
 revoke all on function public.ff_boas_vindas(text) from public, anon;
 grant execute on function public.ff_boas_vindas(text) to authenticated;
+
+-- =====================================================================
+-- Motoboy: entrar com a conta (Google) passa a ser obrigatório
+-- Só o código da loja não basta mais: sem estar conectado, nenhuma entrega aparece.
+-- =====================================================================
+
+create or replace function public.ff_entregador_entrar(p_codigo text)
+returns json language plpgsql stable security definer set search_path = public as $$
+declare
+  v_loja uuid;
+  l public.ff_lojas;
+begin
+  if auth.uid() is null then raise exception 'moto_login'; end if;
+  v_loja := public.ff_loja_do_codigo(p_codigo);
+  if v_loja is null then raise exception 'codigo_invalido'; end if;
+  select * into l from public.ff_lojas where id = v_loja;
+  return json_build_object(
+    'loja', json_build_object('nome', l.nome, 'imagem_url', l.imagem_url, 'telefone', l.telefone,
+                              'endereco', l.endereco, 'lat', l.lat, 'lng', l.lng, 'cnpj', l.cnpj),
+    'expira', (select expira from public.ff_entregador_acesso where loja_id = v_loja));
+end;
+$$;
+
+create or replace function public.ff_entregador_pedidos(p_codigo text)
+returns json language plpgsql stable security definer set search_path = public as $$
+declare
+  v_loja uuid;
+begin
+  if auth.uid() is null then raise exception 'moto_login'; end if;
+  v_loja := public.ff_loja_do_codigo(p_codigo);
+  if v_loja is null then raise exception 'codigo_invalido'; end if;
+  return coalesce((
+    select json_agg(json_build_object(
+      'id', p.id, 'numero', p.numero, 'status', p.status,
+      'cliente_nome', p.cliente_nome, 'cliente_telefone', p.cliente_telefone,
+      'endereco', p.endereco, 'complemento', p.complemento, 'lat', p.lat, 'lng', p.lng,
+      'distancia_km', p.distancia_km, 'subtotal', p.subtotal, 'taxa_entrega', p.taxa_entrega,
+      'desconto', p.desconto, 'cupom', p.cupom,
+      'total', p.total, 'pagamento', p.pagamento, 'troco_para', p.troco_para,
+      'observacao', p.observacao, 'entregador_nome', p.entregador_nome,
+      'entregador_id', p.entregador_id, 'coletado_em', p.coletado_em, 'entregue_em', p.entregue_em,
+      'criado_em', p.criado_em, 'atualizado_em', p.atualizado_em,
+      'itens', coalesce((select json_agg(json_build_object('nome', i.nome, 'qtd', i.qtd, 'preco', i.preco, 'obs', i.obs, 'opcoes', i.opcoes))
+                         from public.ff_pedido_itens i where i.pedido_id = p.id), '[]'::json))
+      order by p.criado_em)
+    from public.ff_pedidos p
+    where p.loja_id = v_loja and p.tipo_entrega = 'entrega'
+      and (p.status in ('preparando', 'saiu')
+           or (p.status = 'entregue' and p.atualizado_em > now() - interval '12 hours'))
+  ), '[]'::json);
+end;
+$$;
+
+create or replace function public.ff_entregador_status(p_codigo text, p_pedido uuid, p_status text, p_nome text default '', p_ent text default '')
+returns json language plpgsql volatile security definer set search_path = public as $$
+declare
+  v_loja uuid;
+  v_nome text := left(trim(coalesce(p_nome, '')), 60);
+  v_ent  text := auth.uid()::text;   -- quem é o motoboy vem sempre da conta, nunca do aparelho
+  p public.ff_pedidos;
+begin
+  if v_ent is null then raise exception 'moto_login'; end if;
+  v_loja := public.ff_loja_do_codigo(p_codigo);
+  if v_loja is null then raise exception 'codigo_invalido'; end if;
+  select * into p from public.ff_pedidos where id = p_pedido and loja_id = v_loja for update;
+  if not found then raise exception 'pedido_invalido'; end if;
+
+  if p_status = 'saiu' then
+    if p.status = 'saiu' then raise exception 'ja_pegou'; end if;
+    if p.status <> 'preparando' then raise exception 'status_invalido'; end if;
+    update public.ff_pedidos set status = 'saiu', entregador_nome = v_nome, entregador_id = v_ent, coletado_em = now() where id = p.id;
+  elsif p_status = 'entregue' then
+    if p.status <> 'saiu' then raise exception 'status_invalido'; end if;
+    -- só quem coletou confirma a entrega
+    if coalesce(p.entregador_id, '') <> '' and p.entregador_id not like 'd-%' then
+      if p.entregador_id <> v_ent then raise exception 'pedido_de_outro'; end if;
+    elsif coalesce(p.entregador_nome, '') <> '' and lower(p.entregador_nome) <> lower(v_nome) then
+      -- pedido coletado antes desta versão (sem conta): confere pelo nome
+      raise exception 'pedido_de_outro';
+    end if;
+    update public.ff_pedidos set status = 'entregue', entregue_em = now() where id = p.id;
+  else
+    raise exception 'status_invalido';
+  end if;
+  return json_build_object('ok', true);
+end;
+$$;
+
+create or replace function public.ff_moto_push_salvar(p_codigo text, p_ent text, p_nome text, p_endpoint text, p_p256dh text, p_auth text)
+returns void language plpgsql volatile security definer set search_path = public as $$
+declare v_loja uuid; v_cod text;
+begin
+  if auth.uid() is null then raise exception 'moto_login'; end if;
+  v_loja := public.ff_loja_do_codigo(p_codigo);
+  if v_loja is null then raise exception 'codigo_invalido'; end if;
+  if p_endpoint !~ '^https://' or length(p_endpoint) > 1000
+     or coalesce(p_p256dh, '') !~ '^[A-Za-z0-9_-]{80,100}$' or coalesce(p_auth, '') !~ '^[A-Za-z0-9_-]{16,30}$' then
+    raise exception 'aparelho_invalido';
+  end if;
+  select codigo into v_cod from public.ff_entregador_acesso where loja_id = v_loja;
+  insert into public.ff_push_moto (loja_id, codigo, ent_id, nome, endpoint, p256dh, auth)
+  values (v_loja, v_cod, auth.uid()::text, left(trim(coalesce(p_nome, '')), 60), p_endpoint, p_p256dh, p_auth)
+  on conflict (endpoint) do update set loja_id = excluded.loja_id, codigo = excluded.codigo, ent_id = excluded.ent_id,
+    nome = excluded.nome, p256dh = excluded.p256dh, auth = excluded.auth, criado_em = now();
+end;
+$$;
+
+-- Sem conta não tem acesso: tira a permissão de quem não está logado
+revoke all on function public.ff_entregador_entrar(text) from public, anon;
+revoke all on function public.ff_entregador_pedidos(text) from public, anon;
+revoke all on function public.ff_entregador_status(text, uuid, text, text, text) from public, anon;
+revoke all on function public.ff_moto_push_salvar(text, text, text, text, text, text) from public, anon;
+grant execute on function public.ff_entregador_entrar(text) to authenticated;
+grant execute on function public.ff_entregador_pedidos(text) to authenticated;
+grant execute on function public.ff_entregador_status(text, uuid, text, text, text) to authenticated;
+grant execute on function public.ff_moto_push_salvar(text, text, text, text, text, text) to authenticated;

@@ -65,7 +65,7 @@
   <div class="box">
     <div class="big" id="e-ic"></div>
     <h1>Área do entregador</h1>
-    <p>Digite o código que a loja te enviou.</p>
+    <p id="e-txt">Entre com a sua conta e digite o código que a loja te enviou.</p>
     <div id="g-moto"></div>
     <form id="f-entry">
       <label class="field"><span>Código da loja</span><input class="input" id="e-cod" maxlength="9" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX" required></label>
@@ -100,7 +100,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=48334"></script>
+<script src="app.js?v=48530"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -122,9 +122,14 @@
     const el = $('g-moto'); if (!el) return;
     if (gUser) {
       el.innerHTML = `<div class="gconta">${ic('user')}<div class="grow"><b>${esc(gNome() || gUser.email)}</b><span style="opacity:.7">Conectado com Google</span></div><button type="button" id="g-sair">Trocar</button></div>`;
-      $('g-sair').onclick = async () => { await sb.auth.signOut(); gUser = null; renderG(); };
+      $('g-sair').onclick = async () => { await sb.auth.signOut(); gUser = null; nome = ''; GP.ls.del('gp_moto_nome'); $('e-nome').value = ''; renderG(); };
+      $('f-entry').classList.remove('hide');
+      $('e-txt').textContent = 'Agora digite o código que a loja te enviou.';
     } else {
-      el.innerHTML = GP.botaoGoogle('Entrar com Google') + '<div class="ou-sep">ou só com o seu nome</div>';
+      // Sem conta não entra: o motoboy precisa estar conectado para ver e coletar os pedidos
+      $('f-entry').classList.add('hide');
+      $('e-txt').textContent = 'Para ver e coletar as entregas, entre com a sua conta Google. Depois é só digitar o código da loja.';
+      el.innerHTML = GP.botaoGoogle('Entrar com Google');
       el.querySelector('[data-google]').onclick = () => {
         const c = $('e-cod').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (c.length === 8) GP.ls.set('gp_moto_cod', c);
@@ -180,7 +185,10 @@
 
   async function entrar(c) {
     const { data, error } = await sb.rpc('ff_entregador_entrar', { p_codigo: c });
-    if (error) return GP.err(error);
+    if (error) {
+      if (/moto_login/.test(error.message || '')) { gUser = null; $('v-app').classList.add('hide'); $('v-entry').classList.remove('hide'); renderG(); }
+      return GP.err(error);
+    }
     info = data; cod = c; GP.ls.set('gp_moto_cod', c);
     $('v-entry').classList.add('hide'); $('v-app').classList.remove('hide');
     const l = info.loja;
@@ -196,6 +204,7 @@
   }
   $('f-entry').onsubmit = async (e) => {
     e.preventDefault();
+    if (!gUser) { renderG(); return GP.toast('Entre com a sua conta Google primeiro.', 'err'); }
     const c = $('e-cod').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     nome = $('e-nome').value.trim();
     if (c.length !== 8) return GP.toast('O código tem 8 letras/números.', 'err');
@@ -215,6 +224,7 @@
     const { data, error } = await sb.rpc('ff_entregador_pedidos', { p_codigo: cod });
     if (error) {
       if (/codigo_invalido/.test(error.message)) return sair('Seu código venceu ou foi trocado pela loja. Peça o novo código.');
+      if (/moto_login/.test(error.message)) { gUser = null; clearInterval(timer); $('v-app').classList.add('hide'); $('v-entry').classList.remove('hide'); renderG(); return GP.toast('Entre de novo com a sua conta Google.', 'err'); }
       $('upd').textContent = 'Sem conexão. Tentando de novo…'; return;
     }
     const novos = data.filter(p => p.status === 'preparando').map(p => p.id);
@@ -295,10 +305,10 @@
   };
   document.addEventListener('visibilitychange', () => { if (!document.hidden && cod && info) carregar(); });
 
-  if (cod && nome) { const err = await entrar(cod); if (err) sair(err === GP.err({ message: 'codigo_invalido' }) ? 'Código vencido ou trocado. Peça o novo para a loja.' : err); }
+  if (cod && nome && gUser) { const err = await entrar(cod); if (err) sair(err === GP.err({ message: 'codigo_invalido' }) ? 'Código vencido ou trocado. Peça o novo para a loja.' : err); }
   else {
     $('v-entry').classList.remove('hide');
-    if (cod) { $('e-cod').value = cod.slice(0, 4) + (cod.length > 4 ? '-' + cod.slice(4) : ''); $('e-nome').focus(); }
+    if (cod) { $('e-cod').value = cod.slice(0, 4) + (cod.length > 4 ? '-' + cod.slice(4) : ''); if (gUser) $('e-nome').focus(); }
   }
 })();
 </script>

@@ -304,6 +304,7 @@
     cupom_minimo: 'O pedido não atingiu o valor mínimo para este cupom.',
     troco_invalido: 'O valor do troco precisa ser maior que o total do pedido.',
     codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
+    moto_login: 'Entre com a sua conta Google para ver e coletar as entregas.',
     status_invalido: 'Este pedido já mudou de situação. Atualize a lista.',
     pedido_invalido: 'Pedido não encontrado.',
     sem_estoque: 'Um dos produtos acabou ou não tem essa quantidade em estoque. Ajuste a sacola e tente de novo.',
