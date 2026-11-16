@@ -315,7 +315,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=34210"></script>
+<script src="app.js?v=34641"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -418,7 +418,7 @@
       if (l.tipo === 'agenda') fora = false;
       return { ...l, _st: st, _ab: l.tipo === 'agenda' ? true : st.aberta, _d: d, _t: d != null ? GP.taxa(l, d) : null, _fora: fora && !envia(l), _envio: fora && envia(l) };
     });
-    if (busca) arr = arr.filter(l => l._busca.includes(busca));
+    if (busca) arr = arr.filter(l => GP.acha(l._busca, busca));
     if (tipoF) arr = arr.filter(l => (l.tipo || 'restaurante') === tipoF);
     if (filtro === 'abertas') arr = arr.filter(l => l._ab);
     arr.sort((a, b) => {

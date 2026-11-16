@@ -342,7 +342,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=34210"></script>
+<script src="app.js?v=34641"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -505,7 +505,7 @@
   const temMin = (p) => GP.grupos(p).some(g => Number(g.min) > 0 && (g.opcoes || []).some(o => Number(o.preco) > Math.min(...g.opcoes.map(x => Number(x.preco) || 0))));
   function renderMenu() {
     const q = semAcento(busca);
-    const lst = (prods || []).filter(p => !q || semAcento([p.nome, p.descricao, p.categoria].join(' ')).includes(q));
+    const lst = (prods || []).filter(p => !q || GP.acha([p.nome, p.descricao, p.categoria].join(' '), busca));
     if (!lst.length) {
       $('menu').innerHTML = prods && prods.length
         ? `<div class="empty"><div class="big">${ic('search')}</div><h4>Nada encontrado para “${esc(busca)}”</h4><p>Confira a escrita ou tente outra palavra.</p><button class="btn btn-ghost btn-sm" id="m-limpar" style="margin-top:12px">Limpar busca</button></div>`

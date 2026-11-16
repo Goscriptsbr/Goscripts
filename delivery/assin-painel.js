@@ -79,7 +79,7 @@
     const lst = assin.filter(a => {
       const s = situacao(a)[0];
       const ok = filtro === 'ativos' ? (s === 'ativo' || s === 'vencendo') : filtro === 'vencendo' ? s === 'vencendo' : filtro === 'vencidos' ? s === 'vencido' : filtro === 'pendentes' ? s === 'pendente' : s === 'cancelado';
-      return ok && (!q || (a.nome + ' ' + a.email + ' ' + a.telefone).toLowerCase().includes(q));
+      return ok && (!q || GP.acha(a.nome + ' ' + a.email + ' ' + a.telefone, q));
     }).sort((x, y) => String(x.valido_ate || '9999').localeCompare(String(y.valido_ate || '9999')));
     if (!planos.length) { $('as-lista').innerHTML = `<div class="card empty"><div class="big">${ic('star')}</div><h4>Crie seu primeiro plano</h4><p>Antes de ter assinantes, cadastre o que você vende na aba <b>Planos</b> (nome e preço por período).</p><button type="button" class="btn btn-primary" id="as-irplanos" style="margin-top:12px">Criar plano</button></div>`; $('as-irplanos').onclick = () => window.__goTab('planos'); return; }
     if (!lst.length) { $('as-lista').innerHTML = `<div class="card empty"><div class="big">${ic('users')}</div><h4>${q ? 'Ninguém encontrado' : 'Nenhum assinante aqui'}</h4><p>${filtro === 'ativos' && !q ? 'Divulgue o link da sua página de assinaturas ou cadastre um assinante.' : ''}</p></div>`; return; }

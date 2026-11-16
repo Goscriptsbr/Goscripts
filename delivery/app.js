@@ -1052,6 +1052,14 @@
   GP.tipo = (id) => GP.TIPOS.find(t => t.id === id) || GP.TIPOS[0];
   GP.ehAgenda = (l) => !!l && l.tipo === 'agenda';
   GP.ehAssin = (l) => !!l && l.tipo === 'assinatura';
+  // Busca de todo o sistema: ignora acento, maiúscula, hífen e ordem das palavras ("bacon" acha "X-Bacon"; "acai" acha "Açaí")
+  GP.semAcento = (t) => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  GP.acha = (texto, q) => {
+    const pal = GP.semAcento(q).replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+    if (!pal.length) return true;
+    const t = GP.semAcento(texto).replace(/[^a-z0-9]+/g, ' '), junto = t.replace(/ /g, '');
+    return pal.every(w => t.includes(w) || junto.includes(w));
+  };
   // Situação de um pagamento (planos e assinaturas): Pix não pago em 30 min aparece como expirado, igual ao Mercado Pago
   GP.statusPag = (h) => {
     if (h.status === 'pendente' && h.metodo === 'pix' && Date.now() - new Date(h.criado_em).getTime() > 31 * 60e3) return ['expirado', 'Expirado'];

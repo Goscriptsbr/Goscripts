@@ -90,7 +90,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=34210"></script>
+<script src="app.js?v=34641"></script>
 <script src="pdv-ui.js?v=32758"></script>
 <script>
 (async () => {
@@ -263,11 +263,11 @@
       const cats = [...new Set(catalogo.map(p => p.categoria || 'Outros'))];
       $('ct-c').innerHTML = `<button data-c="" class="${!cat ? 'on' : ''}">Todos</button>` + cats.map(c => `<button data-c="${esc(c)}" class="${cat === c ? 'on' : ''}">${esc(c)}</button>`).join('');
       const q = busca.trim().toLowerCase();
-      const lst = catalogo.filter(p => !p.entrega_codigo && (!cat || (p.categoria || 'Outros') === cat) && (!q || p.nome.toLowerCase().includes(q)));
+      const lst = catalogo.filter(p => !p.entrega_codigo && (!cat || (p.categoria || 'Outros') === cat) && (!q || GP.acha(p.nome + ' ' + (p.categoria || ''), q)));
       $('ct-l').innerHTML = lst.length ? lst.map(p => {
         const n = P.filter(l => l.pid === p.id).reduce((t, l) => t + (l.g ? 1 : l.qtd), 0);
         const sem = p.estoque != null && p.estoque <= 0;
-        return `<button class="pl ${sem ? 'sem' : ''}" data-p="${p.id}"><span class="n">${esc(p.nome)}${sem ? '<small>Sem estoque</small>' : p.estoque != null ? `<small>${p.estoque} em estoque</small>` : ''}</span><span class="pr">${brl(p.preco)}${p.vende_por === 'kg' ? '/kg' : ''}</span>${n ? `<span class="qn">${n}</span>` : ''}</button>`;
+        return `<button class="pl ${sem ? 'sem' : ''}" data-p="${p.id}"><span class="n">${esc(p.nome)}${sem ? '<small>Sem estoque</small>' : p.estoque != null ? `<small>${p.estoque} em estoque</small>` : ''}</span><span class="pr">${!Number(p.preco) && (p.grupos || []).length ? 'Montar' : brl(p.preco) + (p.vende_por === 'kg' ? '/kg' : '')}</span>${n ? `<span class="qn">${n}</span>` : ''}</button>`;
       }).join('') : '<p class="small muted center" style="padding:20px 0">Nenhum produto.</p>';
       $('ct-ok').textContent = P.length ? `Pronto · ${P.length} para enviar` : 'Pronto';
     };

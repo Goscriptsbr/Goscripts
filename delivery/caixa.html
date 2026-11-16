@@ -74,7 +74,7 @@
   .cx-mob{display:none}
   @media(max-width:900px){
     .cx-main{grid-template-columns:1fr}
-    .cx-cart{position:fixed;inset:auto 0 0 0;max-height:82vh;border-left:0;border-radius:22px 22px 0 0;box-shadow:var(--sh-lg);z-index:70;transform:translateY(105%);transition:transform .25s}
+    .cx-cart{position:fixed;inset:auto 0 0 0;max-height:82vh;border-left:0;border-radius:22px 22px 0 0;box-shadow:var(--sh-lg);z-index:85;transform:translateY(105%);transition:transform .25s}
     .cx-cart.on{transform:none}
     .cx-mob{display:flex;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;height:58px;border-radius:16px;background:var(--brand);color:#fff;align-items:center;justify-content:space-between;padding:0 18px;font-weight:800;box-shadow:var(--sh-lg)}
     .cx-grid{padding-bottom:90px;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
@@ -125,7 +125,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=34210"></script>
+<script src="app.js?v=34641"></script>
 <script src="pdv-ui.js?v=32758"></script>
 <script>
 (async () => {
@@ -261,18 +261,18 @@
     const cats = [...new Set(catalogo.map(p => p.categoria || 'Outros'))];
     $('v-cats').innerHTML = `<button data-c="" class="${!cat ? 'on' : ''}">Todos</button>` + cats.map(c => `<button data-c="${esc(c)}" class="${cat === c ? 'on' : ''}">${esc(c)}</button>`).join('');
     const q = busca.trim().toLowerCase();
-    const lst = catalogo.filter(p => (!cat || (p.categoria || 'Outros') === cat) && (!q || p.nome.toLowerCase().includes(q) || (p.codigo_barras && p.codigo_barras.includes(q))));
+    const lst = catalogo.filter(p => (!cat || (p.categoria || 'Outros') === cat) && (!q || GP.acha(p.nome + ' ' + (p.categoria || ''), q) || (p.codigo_barras && p.codigo_barras.includes(q))));
     $('v-grid').innerHTML = lst.length ? lst.map(p => {
       const es = estoqueDe(p);
       return `<button class="pc ${es !== null && es <= 0 ? 'semest' : ''}" data-p="${p.id}"><b>${esc(p.nome)}</b>
         ${es !== null ? `<span class="es ${es <= 0 ? 'zero' : ''}">${es <= 0 ? 'Sem estoque' : es + ' em estoque'}</span>` : ''}
-        <span class="pr">${brl(p.preco)}${p.vende_por === 'kg' ? '<small> /kg</small>' : ''}</span></button>`;
+        <span class="pr">${!Number(p.preco) && (p.grupos || []).length ? '<small>Montar</small>' : brl(p.preco) + (p.vende_por === 'kg' ? '<small> /kg</small>' : '')}</span></button>`;
     }).join('') : `<div class="cx-vazio" style="grid-column:1/-1">${catalogo.length ? 'Nenhum produto encontrado.' : 'Nenhum produto ativo. Cadastre produtos no painel.'}</div>`;
   }
   function enterBusca() {
     const q = busca.trim(); if (!q) return;
     const porCodigo = catalogo.filter(p => p.codigo_barras && p.codigo_barras === q);
-    const lst = porCodigo.length ? porCodigo : catalogo.filter(p => p.nome.toLowerCase().includes(q.toLowerCase()));
+    const lst = porCodigo.length ? porCodigo : catalogo.filter(p => GP.acha(p.nome, q));
     if (lst.length === 1) { escolher(lst[0]); $('v-busca').value = ''; busca = ''; renderGrid(); return; }
     if (!lst.length) { if (navigator.vibrate) navigator.vibrate([80, 40, 80]); GP.toast(/^\d{6,}$/.test(q) ? `Código ${q} não cadastrado em nenhum produto.` : 'Nenhum produto encontrado.', 'err'); $('v-busca').select(); }
   }
@@ -422,6 +422,7 @@
   }
   function cobrar() {
     if (!carrinho.length) return;
+    $('v-cart').classList.remove('on');
     if (!idem) idem = GP.uuid();     // o mesmo código até a venda dar certo: nunca registra duas vezes
     telaPagamento({ titulo: `Cobrar ${brl(total())}`, total, enviar: async (pags) => {
       const itens = carrinho.map(l => {

@@ -164,7 +164,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=34210"></script>
+<script src="app.js?v=34641"></script>
 <script>
 (async () => {
   const { $, esc, brl, ic } = GP;
@@ -218,7 +218,7 @@
   function renderLojas() {
     const q = busca.toLowerCase();
     const lst = lojas.filter(l => (filtro === 'excluida' ? !!l.excluida_em : filtro === 'todas' || (!l.excluida_em && (filtro === 'bloq' ? !l.ativa : l.verificacao === filtro && (filtro !== 'verificada' || l.ativa))))
-      && (!q || [l.nome, l.dono_email, l.cnpj, l.responsavel_nome, l.telefone].join(' ').toLowerCase().includes(q)));
+      && (!q || GP.acha([l.nome, l.dono_email, l.cnpj, l.responsavel_nome, l.telefone].join(' '), q)));
     if (!lst.length) { $('lojas').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">${ic('store')}</div><h4>Nada aqui</h4><p>${filtro === 'pendente' ? 'Nenhuma loja esperando aprovação.' : 'Nenhuma loja neste filtro.'}</p></div>`; return; }
     const fmtTel = (t) => { const d = GP.digits(t).replace(/^55(?=\d{10,11}$)/, ''); return d.length === 11 ? d.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3') : d.length === 10 ? d.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3') : t; };
     const campo = (r, v, cls) => `<div class="${cls || ''}"><small>${r}</small><span${v ? '' : ' class="vazio"'}>${v || 'Não informado'}</span></div>`;

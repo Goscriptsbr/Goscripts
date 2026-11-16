@@ -1023,10 +1023,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=34210"></script>
+<script src="app.js?v=34641"></script>
 <script src="plano-pagar.js?v=32758"></script>
 <script src="financeiro-painel.js?v=33919"></script>
-<script src="assin-painel.js?v=32758"></script>
+<script src="assin-painel.js?v=34641"></script>
 <script src="agenda-painel.js?v=32758"></script>
 <script>
 (async () => {
@@ -2586,7 +2586,7 @@
     renderPromoProds();
     if (!prods.length) { $('plist').innerHTML = `<div class="card empty"><div class="big">${ic('menu')}</div><h4>${ehComida() ? 'Seu cardápio está vazio' : 'Você ainda não tem produtos'}</h4><p>Adicione os produtos com foto, descrição e preço.</p><button class="btn btn-primary" style="margin-top:16px" onclick="document.getElementById('b-novo').click()">${ic('plus')}Adicionar primeiro produto</button></div>`; return; }
     const q = norm(pBusca);
-    const lst = prods.filter(p => (!q || norm(p.nome + ' ' + p.descricao + ' ' + p.categoria).includes(q))
+    const lst = prods.filter(p => (!q || GP.acha(p.nome + ' ' + p.descricao + ' ' + p.categoria + ' ' + (p.codigo_barras || ''), pBusca))
       && (!pCat || (pCat === '__promo' ? GP.emPromo(p) : p.categoria === pCat))
       && (pFiltro === 'todos' || (pFiltro === 'disp' && p.disponivel) || (pFiltro === 'indisp' && !p.disponivel) || (pFiltro === 'promo' && GP.emPromo(p))));
     if (!lst.length) { $('plist').innerHTML = `<div class="empty" style="padding:30px"><div class="big">${ic('search')}</div><h4>Nada encontrado</h4><p>Tente outra busca ou limpe os filtros.</p></div>`; return; }
