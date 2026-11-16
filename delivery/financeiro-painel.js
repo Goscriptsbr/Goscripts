@@ -195,7 +195,9 @@
             <small>${new Date(c.aberto_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · ${esc(c.aberto_por_nome)}${c.fechado_em ? ' → ' + new Date(c.fechado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ' · ' + esc(c.fechado_por_nome) : ''}${c.obs ? ' · ' + esc(c.obs) : ''}</small></span>
             ${df == null ? '' : `<b style="color:${Math.abs(df) < 0.005 ? 'var(--ok)' : df > 0 ? '#1e40af' : 'var(--bad)'}">${Math.abs(df) < 0.005 ? 'bateu' : (df > 0 ? 'sobrou ' : 'faltou ') + brl(Math.abs(df))}</b>`}</div>`;
         }).join('')}</div></div>` : ''}
+      <div class="card pad" style="margin-top:12px" id="fin-vendas"></div>
       <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn btn-ghost btn-sm" id="fin-csv">${ic('download')}Baixar planilha (CSV)</button></div>`;
+    vendas(true);
     $('fin-desp').onclick = () => lancar('despesa');
     $('fin-rec').onclick = () => lancar('receita');
     $('fin-csv').onclick = csv;
@@ -206,6 +208,100 @@
       GP.toast('Lançamento cancelado.', 'ok'); carregar();
     }; });
   }
+  // ---------- Vendas e recibos (site + caixa) ----------
+  let vOrig = 'todas', vBusca = '', vLista = [], vQtd = 0, vValor = 0, vTimer = null;
+  const ORIG = { site: ['Site', 'b-ok'], balcao: ['Balcão', 'b-warn'], mesa: ['Conta/mesa', 'b-warn'] };
+  const ST = { entregue: 'Entregue', cancelado: 'Cancelado', novo: 'Novo', preparando: 'Preparando', saiu: 'Saiu', concluida: 'Paga', cancelada: 'Cancelada' };
+  const hm = (d) => new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  async function vendas(reset) {
+    const box = $('fin-vendas'); if (!box) return;
+    if (reset) {
+      vLista = [];
+      box.innerHTML = `<div class="row between" style="gap:8px;flex-wrap:wrap"><b>Vendas e recibos</b><span class="small muted" id="fv-res"></span></div>
+        <div class="cx-chips" id="fv-o" style="margin-top:10px">${[['todas', 'Todas'], ['site', 'Site (delivery e retirada)'], ['balcao', 'Balcão'], ['mesa', 'Contas e mesas']].map(([k, t]) => `<button data-o="${k}" class="${vOrig === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+        <input class="input" id="fv-b" placeholder="Buscar por cliente, número ou quem vendeu…" value="${esc(vBusca)}" style="margin-top:8px">
+        <div id="fv-l" class="fv-l"><p class="small muted"><span class="spin"></span> Carregando…</p></div>
+        <button class="btn btn-ghost btn-block btn-sm hide" id="fv-mais" style="margin-top:8px">Carregar mais</button>`;
+      $('fv-o').onclick = (e) => { const b = e.target.closest('[data-o]'); if (!b) return; vOrig = b.dataset.o; vendas(true); };
+      $('fv-b').oninput = (e) => { vBusca = e.target.value; clearTimeout(vTimer); vTimer = setTimeout(() => vendas(true).then(() => { const i = $('fv-b'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }), 400); };
+      $('fv-mais').onclick = () => vendas(false);
+      $('fv-l').onclick = (e) => { const r = e.target.closest('[data-v]'); if (r) detalhe(r.dataset.o, r.dataset.v); };
+    }
+    const { data, error } = await sb.rpc('ff_fin_vendas', { p_loja: loja.id, p_de: de, p_ate: ate, p_origem: vOrig, p_busca: vBusca, p_limite: 50, p_offset: vLista.length });
+    if (!$('fv-l')) return;
+    if (error) { $('fv-l').innerHTML = `<p class="small muted">${/ff_fin_vendas|function|schema cache/i.test(error.message || '') ? 'Para ver o histórico de vendas, falta rodar o SQL v39 no Supabase.' : esc(GP.err(error))}</p>`; return; }
+    vQtd = data.qtd; vValor = data.valor; vLista = vLista.concat(data.itens || []);
+    $('fv-res').textContent = `${vQtd} venda${vQtd == 1 ? '' : 's'} · ${brl(vValor)} pagos/entregues`;
+    $('fv-l').innerHTML = vLista.length ? vLista.map(v => {
+      const canc = v.status === 'cancelado' || v.status === 'cancelada';
+      return `<button type="button" class="fv-it ${canc ? 'canc' : ''}" data-v="${v.id}" data-o="${v.origem}">
+        <span class="dt">${hm(v.quando)}</span>
+        <span class="grow" style="min-width:0"><b>nº ${v.numero}${v.cliente ? ' · ' + esc(v.cliente) : ''}</b>
+          <small><span class="badge ${ORIG[v.origem][1]}" style="font-size:.66rem;padding:1px 6px">${ORIG[v.origem][0]}</span> ${(v.pagamentos || []).map(p => esc(FORMA[p.forma] || p.forma)).join(' + ')}${v.usuario ? ' · ' + esc(v.usuario) : ''}${v.tem_nf ? ' · NF anexada' : ''}</small></span>
+        <span style="text-align:right"><b>${brl(v.total)}</b><small style="display:block;color:${canc ? 'var(--bad)' : 'var(--muted)'}">${ST[v.status] || v.status}</small></span></button>`;
+    }).join('') : '<p class="small muted" style="margin:10px 0 0">Nenhuma venda nesse período.</p>';
+    $('fv-mais').classList.toggle('hide', vLista.length >= vQtd);
+  }
+  async function detalhe(origem, id) {
+    const w = janela('Venda', '<p class="small muted"><span class="spin"></span> Carregando…</p>');
+    const { data: v, error } = await sb.rpc('ff_fin_venda', { p_origem: origem === 'site' ? 'site' : 'caixa', p_id: id });
+    if (error) { w.querySelector('.sheet-body').innerHTML = `<div class="warnline">${esc(GP.err(error))}</div>`; return; }
+    const canc = v.status === 'cancelado' || v.status === 'cancelada';
+    const pags = v.origem === 'site' ? [{ forma: v.pagamento, valor: v.total }] : (v.pagamentos || []);
+    w.querySelector('.sheet-head h3').textContent = `${ORIG[v.origem][0]} · venda nº ${v.numero}`;
+    w.querySelector('.sheet-body').innerHTML = `
+      <p class="small muted" style="margin:0 0 10px">${hm(v.criado_em)}${v.cliente ? ' · ' + esc(v.cliente) : ''}${v.telefone ? ' · ' + esc(v.telefone) : ''}${v.usuario_nome ? ' · vendido por ' + esc(v.usuario_nome) : ''}${v.caixa ? ' · caixa nº ' + v.caixa : ''}${v.obs ? ' · ' + esc(v.obs) : ''}</p>
+      ${canc ? `<div class="warnline" style="margin-bottom:10px">Cancelada${v.cancelada_por_nome ? ' por ' + esc(v.cancelada_por_nome) : ''}${v.cancel_motivo ? ': ' + esc(v.cancel_motivo) : ''}</div>` : ''}
+      ${v.endereco ? `<p class="small" style="margin:0 0 10px">${v.tipo_entrega === 'retirada' ? 'Retirada na loja' : 'Entrega: ' + esc(v.endereco)}${v.entregador ? ' · motoboy ' + esc(v.entregador) : ''}</p>` : ''}
+      <div class="fin-lst">${(v.itens || []).map(i => `<div><span>${i.qtd > 1 ? i.qtd + '× ' : ''}${esc(i.nome)}${(i.opcoes || []).length ? `<small>${esc(i.opcoes.map(o => o.nome).join(', '))}</small>` : ''}${i.obs ? `<small>Obs: ${esc(i.obs)}</small>` : ''}</span><b>${brl(i.preco * i.qtd)}</b></div>`).join('')}</div>
+      <div class="fin-lst" style="margin-top:6px;border-top:2px solid var(--line)">
+        <div><span>Subtotal</span><b>${brl(v.subtotal)}</b></div>
+        ${Number(v.desconto) ? `<div><span>Desconto</span><b>− ${brl(v.desconto)}</b></div>` : ''}
+        ${Number(v.taxa_entrega) ? `<div><span>Entrega</span><b>${brl(v.taxa_entrega)}</b></div>` : ''}
+        ${Number(v.taxa_servico) ? `<div><span>Taxa de serviço</span><b>${brl(v.taxa_servico)}</b></div>` : ''}
+        <div><span><b>Total</b></span><b>${brl(v.total)}</b></div>
+        ${pags.map(p => `<div><span>${esc(FORMA[p.forma] || p.forma)}</span><b>${brl(p.valor)}</b></div>`).join('')}
+        ${Number(v.troco) ? `<div><span>Troco</span><b>${brl(v.troco)}</b></div>` : ''}${v.troco_para ? `<div><span>Troco para</span><b>${brl(v.troco_para)}</b></div>` : ''}
+      </div>
+      ${v.observacao ? `<p class="small" style="margin:10px 0 0">Obs. do cliente: ${esc(v.observacao)}</p>` : ''}`;
+    const pode = v.origem !== 'site' && !canc && v.caixa_status !== 'fechado';
+    w.insertAdjacentHTML('beforeend', `<div class="sheet-foot"><div class="row" style="gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="fv-imp">${ic('print')}Imprimir recibo</button>
+      ${v.origem === 'site' && v.token ? `<a class="btn btn-ghost" target="_blank" rel="noopener" href="pedido.html?t=${encodeURIComponent(v.token)}">${ic('ext')}Ver pedido</a>` : ''}
+      ${pode ? `<button class="btn btn-ghost" id="fv-canc" style="color:var(--bad)">Cancelar venda</button>` : ''}</div></div>`);
+    $('fv-imp').onclick = () => recibo(v, pags);
+    const cn = $('fv-canc'); if (cn) cn.onclick = () => {
+      w.querySelector('.sheet-foot').innerHTML = `<label class="field" style="margin:0 0 8px"><span>Motivo do cancelamento (o estoque volta)</span><input class="input" id="fv-mot" maxlength="200" placeholder="Ex.: cliente desistiu"></label>
+        <div class="row" style="gap:8px"><button class="btn btn-ghost" id="fv-voltar">Voltar</button><button class="btn grow" id="fv-sim" style="background:var(--bad);color:#fff">Cancelar venda</button></div>`;
+      setTimeout(() => $('fv-mot').focus(), 50);
+      $('fv-voltar').onclick = () => detalhe(origem, id);
+      $('fv-sim').onclick = async (e) => {
+        const motivo = $('fv-mot').value.trim(); if (motivo.length < 3) return GP.toast('Escreva o motivo.', 'err');
+        const bt = e.currentTarget; bt.disabled = true;
+        const { error: e2 } = await sb.rpc('ff_venda_cancelar', { p_venda: v.id, p_motivo: motivo });
+        if (e2) { bt.disabled = false; return GP.toast(GP.err(e2), 'err'); }
+        GP.toast('Venda cancelada. O estoque voltou.', 'ok'); fechar(); carregar();
+      };
+    };
+  }
+  function recibo(v, pags) {
+    const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;width:0;height:0;border:0;left:-9999px'; document.body.appendChild(f);
+    const m = (x) => GP.fmtMoeda(x), d = f.contentWindow.document;
+    d.open(); d.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>@page{size:80mm auto;margin:3mm}body{font-family:Menlo,Consolas,monospace;font-size:12px;width:74mm;margin:0}
+      h1{font-size:15px;text-align:center;margin:0}.c{text-align:center}.r{display:flex;justify-content:space-between;gap:6px}hr{border:0;border-top:1px dashed #000;margin:6px 0}.b{font-weight:700}.s{font-size:11px}</style></head><body>
+      <h1>${esc(loja.nome)}</h1>${loja.endereco ? `<div class="c s">${esc(loja.endereco)}</div>` : ''}
+      <div class="c s">${hm(v.criado_em)} · ${ORIG[v.origem][0]} · venda nº ${v.numero}</div>${v.cliente ? `<div class="c s">Cliente: ${esc(v.cliente)}</div>` : ''}<hr>
+      ${(v.itens || []).map(i => `<div>${esc(i.nome)}</div><div class="r s"><span>${i.qtd} x ${m(i.preco)}</span><span>${m(i.preco * i.qtd)}</span></div>${(i.opcoes || []).length ? `<div class="s">  ${esc(i.opcoes.map(o => o.nome).join(', '))}</div>` : ''}`).join('')}
+      <hr><div class="r"><span>Subtotal</span><span>${m(v.subtotal)}</span></div>${Number(v.desconto) ? `<div class="r"><span>Desconto</span><span>-${m(v.desconto)}</span></div>` : ''}
+      ${Number(v.taxa_entrega) ? `<div class="r"><span>Entrega</span><span>${m(v.taxa_entrega)}</span></div>` : ''}${Number(v.taxa_servico) ? `<div class="r"><span>Serviço</span><span>${m(v.taxa_servico)}</span></div>` : ''}
+      <div class="r b"><span>TOTAL</span><span>${brl(v.total)}</span></div><hr>
+      ${pags.map(p => `<div class="r"><span>${esc(FORMA[p.forma] || p.forma)}</span><span>${m(p.valor)}</span></div>`).join('')}${Number(v.troco) ? `<div class="r"><span>Troco</span><span>${m(v.troco)}</span></div>` : ''}
+      ${v.status === 'cancelado' || v.status === 'cancelada' ? '<hr><div class="c b">VENDA CANCELADA</div>' : ''}
+      <hr><div class="c s b">SEGUNDA VIA · NÃO É DOCUMENTO FISCAL</div><div class="c s">GoPedido</div></body></html>`);
+    d.close();
+    setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (_) {} setTimeout(() => f.remove(), 3000); }, 250);
+  }
+
   function lancar(tipo) {
     const desp = tipo === 'despesa';
     janela(desp ? 'Lançar despesa' : 'Lançar receita', `

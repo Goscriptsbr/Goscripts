@@ -526,3 +526,10 @@ body:not(.modo-assin) .as-only{display:none!important}
 .qstep{display:flex;align-items:center;gap:6px}.qstep button{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800;font-size:1.05rem;display:grid;place-items:center}.qstep span{min-width:28px;text-align:center;font-weight:800}
 .ms-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:6px}
 .ms-li{display:flex;gap:4px;align-items:center}.ms-li .input{height:40px}.ms-li .icon-btn{width:34px;height:34px;flex:none}
+
+.fv-l{margin-top:8px}
+.fv-it{display:flex;gap:10px;align-items:center;width:100%;padding:10px 2px;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;font-size:.88rem}
+.fv-it:hover{background:var(--bg)}
+.fv-it .dt{font-size:.74rem;color:var(--muted);width:78px;flex:none}
+.fv-it small{display:block;color:var(--muted);font-size:.74rem;margin-top:2px}
+.fv-it.canc{opacity:.6}

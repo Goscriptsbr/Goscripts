@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=32758">
+<link rel="stylesheet" href="app.css?v=43772">
 <style>
   html,body{height:100%}
   body{background:var(--bg);overflow:hidden}
@@ -137,7 +137,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=43549"></script>
+<script src="app.js?v=43772"></script>
 <script src="pdv-ui.js?v=35439"></script>
 <script>
 (async () => {
@@ -749,7 +749,7 @@
       lst.map(v => `<div class="vl ${v.status === 'cancelada' ? 'canc' : ''}"><b>#${v.numero}</b><div><div class="tt">${hora(v.criado_em)} · ${(v.pagamentos || []).map(p => FORMAS[p.forma] ? FORMAS[p.forma][0] : p.forma).join(' + ')}${v.origem === 'mesa' ? ' · ' + esc(v.obs || 'Mesa') : ''}${v.cliente ? ' · ' + esc(v.cliente) : ''}</div>
         <div class="small muted">${esc((v.itens || []).map(i => (i.qtd > 1 ? i.qtd + '× ' : '') + i.nome).join(', ')).slice(0, 140)}${v.status === 'cancelada' ? `<br>Cancelada por ${esc(v.cancelada_por_nome)}: ${esc(v.cancel_motivo)}` : ''}</div></div>
         <div style="text-align:right"><b class="tt">${brl(v.total)}</b><div class="row" style="gap:4px;justify-content:flex-end;margin-top:4px"><button class="btn btn-ghost btn-sm" data-imp="${v.id}">Recibo</button>${gerente && v.status === 'concluida' ? `<button class="btn btn-ghost btn-sm" data-cn="${v.id}" style="color:var(--bad)">Cancelar</button>` : ''}</div></div></div>`).join('')
-      : '<div class="cx-vazio">Nenhuma venda ainda.</div>') + (gerente ? '' : '<p class="small muted" style="margin-top:12px">Para cancelar uma venda, chame o responsável (dono ou administrador).</p>');
+      : '<div class="cx-vazio">Nenhuma venda ainda.</div>') + (gerente ? `<a class="btn btn-ghost btn-block" href="painel.html?loja=${lojaId}&aba=fin" style="margin-top:12px">${ic('chart')}Ver vendas de outros dias (Financeiro)</a>` : '<p class="small muted" style="margin-top:12px">Para cancelar uma venda, chame o responsável (dono ou administrador).</p>');
     w.querySelector('.sheet-body').onclick = async (e) => {
       const im = e.target.closest('[data-imp]'), cn = e.target.closest('[data-cn]');
       if (im) { const v = lst.find(x => x.id === im.dataset.imp); imprimirRecibo({ ...v }); }
