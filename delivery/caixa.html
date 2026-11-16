@@ -425,6 +425,17 @@
     carrinho.forEach(l => { l.novo = false; });
     const qtd = carrinho.reduce((t, l) => t + (l.g ? 1 : l.qtd), 0);
     if (desconto > subtotal()) desconto = subtotal();
+    const tc = $('v-cart').querySelector('.cx-cart-h b'); if (tc) tc.textContent = contaAlvo ? 'Itens para ' + contaAlvo.nome : 'Venda atual';
+    if (contaAlvo) {
+      $('v-tot').innerHTML = `<div class="alert" style="background:var(--brand-soft);margin-bottom:10px">${ic('plus')}<span>Adicionando na conta de <b>${esc(contaAlvo.nome)}</b></span></div>
+        <div class="big"><span>Itens novos</span><b>${brl(subtotal())}</b></div>
+        <div class="row" style="gap:8px"><button class="btn btn-ghost" id="v-ca-x">Cancelar</button><button class="btn btn-primary grow" id="v-ca-ok" style="height:56px" ${carrinho.length ? '' : 'disabled'}>Lançar na conta</button></div>`;
+      $('v-ca-x').onclick = () => { const id = contaAlvo.id; contaAlvo = null; carrinho = []; renderCarrinho(); renderGrid(); receberComanda(id); };
+      $('v-ca-ok').onclick = lancarNaConta;
+      $('v-mob-q').textContent = qtd + (qtd === 1 ? ' item' : ' itens'); $('v-mob-t').textContent = 'Lançar ' + brl(subtotal());
+      $('v-mob').style.display = carrinho.length ? '' : 'none';
+      return;
+    }
     $('v-tot').innerHTML = `
       <div class="r"><span>Subtotal (${qtd} ite${qtd === 1 ? 'm' : 'ns'})</span><span>${brl(subtotal())}</span></div>
       ${desconto ? `<div class="r" style="color:var(--ok)"><span>Desconto</span><span>− ${brl(desconto)}</span></div>` : ''}
@@ -562,6 +573,31 @@
     } });
   }
 
+  // Caixa adicionando produtos numa mesa/conta já aberta
+  let contaAlvo = null;
+  function adicionarNaConta(c) {
+    if (carrinho.length) return GP.toast('Termine ou limpe a venda do balcão antes.', 'err');
+    contaAlvo = { id: c.id, nome: c.mesa || c.identificador || 'Comanda ' + c.numero };
+    fechar(); renderCarrinho(); foco();
+    GP.toast('Toque nos produtos e depois em "Lançar na conta".');
+  }
+  async function lancarNaConta(e) {
+    if (!carrinho.length || !contaAlvo || !online()) return;
+    const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+    carrinho.forEach(l => { if (!l.idem) l.idem = GP.uuid(); });     // código de cada item: reenviar não duplica
+    const itens = carrinho.map(l => { const o = { idem: l.idem, id: l.p.id, obs: l.obs || '', opcoes: (l.opcoes || []).map(x => ({ g: x.g, o: x.o })) }; if (l.g) o.g = l.g; else o.qtd = l.qtd; if (l.v) o.v = l.v; return o; });
+    try {
+      let c = await rpc('ff_comanda_ver', { p_comanda: contaAlvo.id });
+      if (c.status === 'conta') c = await rpc('ff_comanda_conta', { p_comanda: c.id, p_pedir: false });
+      c = await rpc('ff_comanda_lancar', { p_comanda: c.id, p_itens: itens });
+      if (temCozinha() && cozCfg().balcao && !cozCfg().mesas) imprimirCozinha({ onde: contaAlvo.nome, quem: estado.usuario, itens: carrinho.map(l => ({ nome: l.nome, qtd: l.qtd, opcoes: l.opcoes, obs: l.obs })) });
+      const id = contaAlvo.id; contaAlvo = null; carrinho = [];
+      renderCarrinho(); renderGrid(); carregarCatalogo().then(renderGrid);
+      GP.toast('Itens lançados na conta.', 'ok');
+      receberComanda(id);
+    } catch (er) { b.disabled = false; b.textContent = 'Tentar de novo'; GP.toast(erroMsg(er), 'err'); if (/comanda_fechada/.test(er.message || '')) { contaAlvo = null; carrinho = []; renderCarrinho(); } }
+  }
+
   // Pagar depois: os itens vão para uma conta no nome do cliente (sem mesa), saem na cozinha e ficam em "Contas"
   function pagarDepois() {
     if (!carrinho.length || !online()) return;
@@ -600,9 +636,14 @@
     catch (e) { w.querySelector('.sheet-body').innerHTML = `<div class="warnline">${esc(erroMsg(e))}</div>`; return; }
     const nomeMesa = (c) => c.mesa_id ? ((st.mesas.find(m => m.id === c.mesa_id) || {}).nome || 'Mesa') : (c.identificador || 'Comanda ' + c.numero);
     const lst = st.comandas.slice().sort((a, b) => (a.status === 'conta' ? 0 : 1) - (b.status === 'conta' ? 0 : 1) || a.numero - b.numero);
-    w.querySelector('.sheet-body').innerHTML = (lst.length ? lst.map(c => `<button type="button" class="vl mesa-it" data-c="${c.id}" style="width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0;font:inherit;cursor:pointer">
+    const linha = (c) => `<button type="button" class="vl mesa-it" data-c="${c.id}" style="width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0;font:inherit;cursor:pointer">
         <b>${esc(nomeMesa(c))}</b><div><div>${c.itens} ite${c.itens == 1 ? 'm' : 'ns'} · aberta às ${hora(c.aberta_em)} por ${esc(c.aberta_por_nome)}</div>${c.status === 'conta' ? `<span class="badge b-warn" style="margin-top:4px">${ic('cash')}Pediu a conta</span>` : ''}</div>
-        <b>${brl(c.total)}</b></button>`).join('') : '<div class="cx-vazio">Nenhuma mesa aberta agora.</div>')
+        <b>${brl(c.total)}</b></button>`;
+    const ms = lst.filter(c => c.mesa_id), av = lst.filter(c => !c.mesa_id);
+    w.querySelector('.sheet-body').innerHTML = (lst.length
+        ? (ms.length ? `<div class="fsec" style="margin:0 0 4px">Mesas</div>${ms.map(linha).join('')}` : '')
+          + (av.length ? `<div class="fsec" style="margin:${ms.length ? '14px' : '0'} 0 4px">Contas avulsas (sem mesa / pagar depois)</div>${av.map(linha).join('')}` : '')
+        : '<div class="cx-vazio">Nenhuma conta aberta agora.</div>')
       + (loja.mesas_ativo ? `<a class="btn btn-ghost btn-block" href="garcom.html?loja=${lojaId}" style="margin-top:12px">${ic('list')}Abrir a tela do garçom (lançar pedidos)</a>` : '');
     w.querySelector('.sheet-body').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) receberComanda(b.dataset.c); };
   }
@@ -622,7 +663,8 @@
     const nome = c.mesa || c.identificador || 'Comanda ' + c.numero;
     telaPagamento({
       titulo: `${nome} · ${brl(tot())}`, tituloDe: (t) => `${nome} · ${brl(t)}`, total: tot,
-      topo: `<details style="margin-bottom:10px"><summary class="small" style="cursor:pointer"><b>${itens.length} ite${itens.length === 1 ? 'm' : 'ns'}</b> · subtotal ${brl(sub)} · comanda nº ${c.numero}</summary>
+      topo: `<button type="button" class="btn btn-soft btn-block btn-sm" id="rc-add" style="margin-bottom:10px">${ic('plus')}Adicionar mais produtos nesta conta</button>
+        <details style="margin-bottom:10px"><summary class="small" style="cursor:pointer"><b>${itens.length} ite${itens.length === 1 ? 'm' : 'ns'}</b> · subtotal ${brl(sub)} · ${c.mesa ? esc(c.mesa) : 'conta avulsa'} · nº ${c.numero}</summary>
           <div style="margin-top:6px">${itens.map(i => `<div class="r small" style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.qtd > 1 ? i.qtd + '× ' : ''}${esc(i.nome)}${(i.opcoes || []).length ? ' <span class="muted">(' + esc(i.opcoes.map(o => o.nome).join(', ')) + ')</span>' : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div></details>
         <div class="grid2" style="margin-bottom:8px">
           <label class="field" style="margin:0"><span>Desconto</span><div class="prefix"><i>R$</i><input class="input" id="rc-desc" inputmode="numeric" placeholder="0,00"></div></label>
@@ -630,6 +672,7 @@
         </div>
         ${Number(c.taxa_servico) > 0 ? `<label class="switch" style="margin:0 0 12px"><input type="checkbox" id="rc-tx" checked><i></i>Taxa de serviço (${String(c.taxa_servico).replace('.', ',')}%) <span id="rc-txv" class="muted" style="margin-left:4px"></span></label>` : ''}`,
       ligarTopo: (atualizar) => {
+        $('rc-add').onclick = () => adicionarNaConta(c);
         const pv = () => { $('rc-p').textContent = pessoas; $('rc-pv').textContent = pessoas > 1 ? brl(tot() / pessoas) + ' cada' : ''; const k = calc(); if ($('rc-txv')) $('rc-txv').textContent = brl(k.tx); };
         $('rc-desc').oninput = (e) => { moeda(e.target); desc = Math.min(num(e.target.value), sub); pv(); atualizar(); };
         $('rc-pm').onclick = () => { pessoas = Math.max(1, pessoas - 1); pv(); };
@@ -804,7 +847,7 @@
 
   // Atalhos: F2 cobra, Esc fecha, Enter na tela "venda ok" já é tratado pelo foco no botão
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'F2') { e.preventDefault(); if (!$('cx-mod') && carrinho.length) cobrar(); }
+    if (e.key === 'F2') { e.preventDefault(); if (!$('cx-mod') && carrinho.length) { if (contaAlvo) $('v-ca-ok') && $('v-ca-ok').click(); else cobrar(); } }
     if (e.key === 'Escape' && $('cx-mod')) { fechar(); foco(); }
   });
   // Leitor de código de barras com o foco fora da busca: junta as teclas rápidas e trata como bipe
