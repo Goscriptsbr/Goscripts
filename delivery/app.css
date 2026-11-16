@@ -478,7 +478,7 @@ body:not(.modo-assin) .as-only{display:none!important}
 .mp-priv{margin-top:12px;padding:14px 16px;border-radius:14px;background:#F2F8F4;border:1px solid #CFE7D8;font-size:.84rem;color:#24433a}
 .mp-priv>b{display:flex;align-items:center;gap:6px;font-size:.9rem;color:#14532d;margin-bottom:6px}.mp-priv>b svg{width:16px;height:16px}
 .mp-priv ul{margin:0;padding-left:18px;display:grid;gap:4px;line-height:1.45}
-.mp-priv-l{margin-top:16px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.7);border:1px solid var(--line);font-size:.9rem;line-height:1.5}
+.mp-priv-l{margin-top:16px;padding:14px 16px;border-radius:14px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:.9rem;line-height:1.55}.mp-priv-l b{color:#fff}
 /* Financeiro e caixa (v35) */
 .cx-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .cx-chips::-webkit-scrollbar{display:none}

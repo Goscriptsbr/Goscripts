@@ -21,8 +21,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=43772">
-<link rel="stylesheet" href="site.css?v=31456">
+<link rel="stylesheet" href="app.css?v=46863">
+<link rel="stylesheet" href="site.css?v=46863">
 <style>
 .nv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 @media(max-width:900px){.nv-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.nv-grid{grid-template-columns:1fr}}
@@ -116,6 +116,13 @@
       <h2>Agora o GoPedido cuida da loja inteira</h2>
       <p>Além do delivery, o balcão, as mesas e o dinheiro do caixa no mesmo sistema. Tudo opcional: você liga só o que usa.</p>
     </div>
+    <div class="vd" id="video">
+      <video controls playsinline preload="none" poster="video/gopedido-capa.jpg" width="1280" height="720">
+        <source src="video/gopedido.mp4" type="video/mp4">
+      </video>
+      <p class="vd-leg">Conheça o GoPedido em 1 minuto. Telas ilustrativas, com dados de exemplo.</p>
+    </div>
+    <style>.vd{max-width:960px;margin:0 auto 34px}.vd video{display:block;width:100%;height:auto;aspect-ratio:16/9;border-radius:20px;background:#16161B;box-shadow:0 18px 50px rgba(22,22,27,.16)}.vd-leg{text-align:center;color:var(--muted);font-size:.88rem;margin-top:10px}</style>
     <div class="nv-grid">
       <div class="nv"><span class="nv-tag">Novo</span><i data-ic="cash"></i><h3>Caixa no balcão</h3><p>Bipe o código de barras (leitor USB ou câmera do celular), venda por quilo, dê desconto e receba em várias formas com troco calculado. Abre e fecha o caixa conferindo o dinheiro.</p></div>
       <div class="nv"><span class="nv-tag">Novo</span><i data-ic="users"></i><h3>Mesas e garçom pelo celular</h3><p>O garçom abre a mesa e lança os pedidos no celular. Sai na impressora da cozinha, a mesa pede a conta e o caixa recebe com taxa de serviço e divisão por pessoa.</p></div>
@@ -180,7 +187,7 @@
       </div>
       <div class="me-vis" aria-hidden="true">
         <div class="frete-card">
-          <div class="me-row"><b>Pedido #1042 · R$ 70,80</b><small>Pagar online</small></div>
+          <div class="me-row"><b>Pedido #1042 · <span style="white-space:nowrap">R$ 70,80</span></b><small style="white-space:nowrap">Pagar online</small></div>
           <div class="me-op on"><i data-ic="pix"></i><div><b>Pix</b><small>QR Code ou copia e cola</small></div><b>Na hora</b></div>
           <div class="me-op"><i data-ic="card"></i><div><b>Cartão de crédito</b><small>Visa, Master, Elo, Amex</small></div><b>Até 12x</b></div>
         </div>
