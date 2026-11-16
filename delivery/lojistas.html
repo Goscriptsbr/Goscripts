@@ -23,6 +23,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css?v=43772">
 <link rel="stylesheet" href="site.css?v=31456">
+<style>
+.nv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.nv-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.nv-grid{grid-template-columns:1fr}}
+.nv{position:relative;background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px 20px 20px;box-shadow:0 8px 24px rgba(242,69,28,.05)}
+.nv>i{width:46px;height:46px;border-radius:14px;background:var(--brand-soft);color:var(--brand-2);display:grid;place-items:center;margin-bottom:12px}
+.nv>i svg{width:23px;height:23px}
+.nv h3{font-size:1.05rem;margin:0 0 6px;letter-spacing:-.01em}
+.nv p{font-size:.9rem;color:var(--ink-2);line-height:1.5;margin:0}
+.nv-tag{position:absolute;top:16px;right:16px;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--brand);border-radius:999px;padding:3px 9px}
+</style>
 </head>
 <body data-sem-rodape>
 <a class="pular" href="#recursos">Pular para o conteúdo</a>
@@ -66,7 +76,7 @@
       <div>
         <span class="kicker">Plataforma de vendas e pedidos online</span>
         <h1>Sua loja online, <em>sem comissão por pedido.</em></h1>
-        <p class="lead">Crie sua loja virtual, receba e gerencie pedidos, aceite Pix e cartão online pelo Mercado Pago, entregue com seus motoboys, ofereça retirada no local e envie para todo o Brasil com etiqueta do Melhor Envio.</p>
+        <p class="lead">Crie sua loja virtual, receba pedidos com Pix e cartão pelo Mercado Pago, entregue com seus motoboys e envie para todo o Brasil. E agora também: <b>caixa no balcão</b> com leitor de código de barras, <b>mesas com garçom</b> pelo celular e <b>financeiro</b> completo.</p>
         <div class="lj-acts">
           <a class="btn btn-primary" href="painel.html?criar=1">Criar minha loja grátis</a>
           <a class="btn btn-ghost" href="#planos">Conhecer os planos</a>
@@ -95,6 +105,24 @@
       <div><b>R$ 0</b><span>para começar, no plano Grátis</span></div>
       <div><b id="n-tipos">8</b><span>tipos de loja atendidos</span></div>
       <div><b>Brasil</b><span>inteiro, com envio por transportadora</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="novidades">
+  <div class="wrap">
+    <div class="sh">
+      <span class="kicker">Novidades</span>
+      <h2>Agora o GoPedido cuida da loja inteira</h2>
+      <p>Além do delivery, o balcão, as mesas e o dinheiro do caixa no mesmo sistema. Tudo opcional: você liga só o que usa.</p>
+    </div>
+    <div class="nv-grid">
+      <div class="nv"><span class="nv-tag">Novo</span><i data-ic="cash"></i><h3>Caixa no balcão</h3><p>Bipe o código de barras (leitor USB ou câmera do celular), venda por quilo, dê desconto e receba em várias formas com troco calculado. Abre e fecha o caixa conferindo o dinheiro.</p></div>
+      <div class="nv"><span class="nv-tag">Novo</span><i data-ic="users"></i><h3>Mesas e garçom pelo celular</h3><p>O garçom abre a mesa e lança os pedidos no celular. Sai na impressora da cozinha, a mesa pede a conta e o caixa recebe com taxa de serviço e divisão por pessoa.</p></div>
+      <div class="nv"><span class="nv-tag">Novo</span><i data-ic="clock"></i><h3>Pagar depois</h3><p>Lance no nome do cliente e receba quando ele voltar. As contas ficam em "Contas abertas" até serem pagas.</p></div>
+      <div class="nv"><span class="nv-tag">Novo</span><i data-ic="chart"></i><h3>Financeiro completo</h3><p>Quanto entrou e saiu por dia, mês ou período: delivery, balcão, mesas e assinaturas juntos. Lance despesas, veja o lucro e reimprima qualquer recibo.</p></div>
+      <div class="nv"><span class="nv-tag">Novo</span><i data-ic="shield"></i><h3>Funciona até sem internet</h3><p>Caiu a internet? O caixa continua vendendo e envia tudo sozinho quando a conexão volta, sem duplicar nenhuma venda.</p></div>
+      <div class="nv"><span class="nv-tag">Novo</span><i data-ic="star"></i><h3>Assinaturas e códigos digitais</h3><p>Venda planos mensais com aviso de vencimento por e-mail e entregue gift cards e chaves de jogos automaticamente.</p></div>
     </div>
   </div>
 </section>
@@ -410,7 +438,7 @@
     } catch (_) { /* sem rede: o botão continua funcionando */ }
   })();
 
-  setTimeout(() => GP.revelar('.sh, .tour, .feat, .start li, .plano, .resp-c, .tc, .faq details, .vitrine, .me-band, .cta'), 0);
+  setTimeout(() => GP.revelar('.sh, .nv, .tour, .feat, .start li, .plano, .resp-c, .tc, .faq details, .vitrine, .me-band, .cta'), 0);
 
   $('feats').innerHTML = [
     ['bell', 'Pedidos em tempo real', 'Chegam na hora, com aviso sonoro e impressão automática na impressora térmica.'],
