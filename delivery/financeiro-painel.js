@@ -49,7 +49,7 @@
       ${on ? `<a class="btn btn-primary" style="margin-top:12px" href="caixa.html?loja=${loja.id}">${ic('cash')}Abrir a tela do caixa</a>` : ''}`;
     const salvar = async () => {
       const a = $('fin-on').checked, g = a && $('fin-gav').checked;
-      if (!a && loja.mesas_ativo) { GP.toast('Desligue as mesas antes: as comandas fecham no caixa.', 'err'); return renderPdv(); }
+      if (!a && loja.mesas_ativo) { GP.toast('Desligue as mesas antes: as contas das mesas fecham no caixa.', 'err'); return renderPdv(); }
       try {
         const { data, error } = await sb.rpc('ff_pdv_config', { p_loja: loja.id, p_ativo: a, p_gaveta: g });
         if (error) throw error;
@@ -62,19 +62,19 @@
     $('fin-on').onchange = salvar; $('fin-gav').onchange = salvar;
   }
 
-  // ---------- Mesas e comandas ----------
+  // ---------- Mesas ----------
   let mesas = null, configurando = false;
   async function renderMesas() {
     const box = $('fin-mesas'); if (!box) return;
     if (mesas === null) {
       const { data, error } = await sb.from('ff_mesas').select('id, nome, ordem').eq('loja_id', loja.id).eq('ativa', true).order('ordem');
-      if (error) { box.innerHTML = /ff_mesas|relation|schema/i.test(error.message || '') ? '<div class="small muted">Mesas e comandas: falta rodar o SQL v36 no Supabase.</div>' : ''; return; }
+      if (error) { box.innerHTML = /ff_mesas|relation|schema/i.test(error.message || '') ? '<div class="small muted">Mesas: falta rodar o SQL v36 no Supabase.</div>' : ''; return; }
       mesas = data || [];
     }
     const on = !!loja.mesas_ativo || configurando;
-    box.innerHTML = `<div class="fin-pdv-h"><div class="fic">${ic('users')}</div><div class="grow" style="min-width:0"><b>Mesas e comandas</b>
-        <div class="small muted">Opcional. O garçom lança os pedidos pelo celular e o caixa recebe e fecha a conta.</div></div></div>
-      <div style="margin-top:12px"><label class="switch"><input type="checkbox" id="ms-on" ${on ? 'checked' : ''}><i></i>Usar mesas e comandas</label></div>
+    box.innerHTML = `<div class="fin-pdv-h"><div class="fic">${ic('users')}</div><div class="grow" style="min-width:0"><b>Mesas (restaurante, bar, lanchonete)</b>
+        <div class="small muted">Opcional. O garçom abre a mesa e lança os pedidos pelo celular; a conta da mesa aparece em <b>Contas abertas</b> no caixa.</div></div></div>
+      <div style="margin-top:12px"><label class="switch"><input type="checkbox" id="ms-on" ${on ? 'checked' : ''}><i></i>Usar mesas</label></div>
       <div class="${on ? '' : 'hide'}" id="ms-cfg">
         <div class="grid2" style="margin-top:12px">
           <label class="field" style="margin:0"><span>Taxa de serviço (%)</span><input class="input" id="ms-tx" inputmode="decimal" value="${String(Number(loja.taxa_servico || 0)).replace('.', ',')}" placeholder="0 = sem taxa"><small>O caixa pode tirar na hora, se o cliente pedir.</small></label>

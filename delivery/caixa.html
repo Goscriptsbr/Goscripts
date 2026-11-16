@@ -63,6 +63,12 @@
   @keyframes pisca{from{background:var(--brand-soft)}to{background:transparent}}
   .cx-vazio{padding:40px 16px;text-align:center;color:var(--muted)}
   .cx-vazio svg{width:44px;height:44px;opacity:.4;margin-bottom:8px}
+  .grp-t{display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .grp-t svg{width:14px;height:14px}
+  .cx-guia{padding:18px 16px;display:grid;gap:10px;font-size:.86rem;color:var(--ink-2)}
+  .cx-guia>b{font-size:.92rem;color:var(--ink)}
+  .cx-guia div{display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+  .cx-guia i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--brand-soft);color:var(--brand-2);font-weight:800;font-size:.76rem;display:grid;place-items:center;flex:none}
   .cx-tot{border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
   .cx-tot .r{display:flex;justify-content:space-between;font-size:.88rem;color:var(--ink-2);margin-bottom:4px}
   .cx-tot .big{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px}
@@ -131,7 +137,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=35439"></script>
+<script src="app.js?v=43549"></script>
 <script src="pdv-ui.js?v=35439"></script>
 <script>
 (async () => {
@@ -202,10 +208,10 @@
     const c = estado.caixa;
     $('t-sub').textContent = (c ? `Caixa nº ${c.numero} aberto às ${hora(c.aberto_em)} · ` : '') + 'Operador: ' + (estado.usuario || '');
     const gerente = estado.papel === 'dono' || estado.papel === 'admin';
-    const contas = loja.mesas_ativo || estado.comandas_abertas;
+    const contas = loja.pdv_ativo;
     $('t-acts').innerHTML = `
       ${temCozinha() ? `<button class="btn btn-sm" id="a-coz" title="Impressão da cozinha">${ic('print')}<span>Cozinha</span></button>` : ''}
-      ${contas && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-mesas" style="${estado.comandas_conta ? 'background:var(--brand)' : ''}">${ic('users')}<span>${loja.mesas_ativo ? 'Mesas' : 'Contas'}${estado.comandas_abertas ? ' (' + estado.comandas_abertas + ')' : ''}</span></button>` : ''}
+      ${contas && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-mesas" style="${estado.comandas_conta ? 'background:var(--brand)' : ''}">${ic('users')}<span>Contas abertas${estado.comandas_abertas ? ' (' + estado.comandas_abertas + ')' : ''}</span></button>` : ''}
       ${loja.pdv_ativo && (!loja.pdv_gaveta || c) ? `<button class="btn btn-sm" id="a-vendas">${ic('list')}<span>Vendas</span></button>` : ''}
       ${c ? `<button class="btn btn-sm" id="a-ret">${ic('download')}<span>Retirada</span></button><button class="btn btn-sm" id="a-ref">${ic('plus')}<span>Reforço</span></button><button class="btn btn-sm" id="a-fechar">${ic('lock')}<span>Fechar caixa</span></button>` : ''}
       ${lojas.length > 1 ? `<select class="btn btn-sm" id="a-loja" style="max-width:160px">${lojas.map(l => `<option value="${l.id}" ${l.id === lojaId ? 'selected' : ''}>${esc(l.nome)}</option>`).join('')}</select>` : ''}
@@ -313,7 +319,7 @@
       <p class="small muted" style="margin:0 0 12px">Vale só para <b>este aparelho</b>. Ligue no computador que está com a impressora da cozinha.</p>
       <div style="display:grid;gap:10px">
         <label class="switch"><input type="checkbox" id="cz-b" ${c.balcao ? 'checked' : ''}><i></i>Imprimir o pedido da cozinha ao finalizar uma venda do balcão</label>
-        <label class="switch"><input type="checkbox" id="cz-m" ${c.mesas ? 'checked' : ''}><i></i>Imprimir sozinho o que os garçons lançam nas mesas e as contas "pagar depois"</label>
+        <label class="switch"><input type="checkbox" id="cz-m" ${c.mesas ? 'checked' : ''}><i></i>Imprimir sozinho o que é lançado nas contas abertas (mesas e no nome do cliente)</label>
       </div>
       <p class="small muted" style="margin:12px 0 0">Para imprimir sem a janela de confirmação, abra o caixa pelo Chrome com a opção de impressão direta (atalho com <code>--kiosk-printing</code>). Cada pedido sai uma vez só, mesmo com dois aparelhos ligados.</p>`,
       `<button class="btn btn-primary btn-block" id="cz-ok">Salvar</button>`);
@@ -421,7 +427,12 @@
         ${(l.opcoes || []).length || l.obs ? `<div class="o">${esc((l.opcoes || []).map(o => o.nome).join(', '))}${l.obs ? ' · ' + esc(l.obs) : ''}</div>` : ''}
         <div class="q">${l.g ? `<button data-pe="${i}" title="Mudar o peso">${ic('edit')}</button>` : `<button data-m="${i}">−</button><span>${l.qtd}</span><button data-p="${i}">+</button>`}</div>
         <button class="icon-btn" data-x="${i}" title="Tirar" style="justify-self:end;color:var(--bad)">${ic('trash')}</button></div>`).join('')
-      : `<div class="cx-vazio">${ic('bag')}<div>Bipe ou toque nos produtos para começar.</div></div>`;
+      : contaAlvo ? `<div class="cx-vazio">${ic('bag')}<div>Toque ou bipe os produtos para adicionar na conta de <b>${esc(contaAlvo.nome)}</b>.</div></div>`
+      : `<div class="cx-guia"><b>Como vender</b>
+          <div><i>1</i><span><b>Bipe</b> o código de barras ou <b>toque</b> no produto</span></div>
+          <div><i>2</i><span><b>Cobrar</b>: recebe na hora (dinheiro, Pix, cartão)</span></div>
+          <div><i>3</i><span><b>Pagar depois</b>: lança no nome do cliente</span></div>
+          <div><i>4</i><span><b>Contas abertas</b> (no topo): mesas e quem vai pagar depois</span></div></div>`;
     carrinho.forEach(l => { l.novo = false; });
     const qtd = carrinho.reduce((t, l) => t + (l.g ? 1 : l.qtd), 0);
     if (desconto > subtotal()) desconto = subtotal();
@@ -577,7 +588,7 @@
   let contaAlvo = null;
   function adicionarNaConta(c) {
     if (carrinho.length) return GP.toast('Termine ou limpe a venda do balcão antes.', 'err');
-    contaAlvo = { id: c.id, nome: c.mesa || c.identificador || 'Comanda ' + c.numero };
+    contaAlvo = { id: c.id, nome: c.mesa || c.identificador || 'Conta ' + c.numero };
     fechar(); renderCarrinho(); foco();
     GP.toast('Toque nos produtos e depois em "Lançar na conta".');
   }
@@ -602,7 +613,7 @@
   function pagarDepois() {
     if (!carrinho.length || !online()) return;
     $('v-cart').classList.remove('on');
-    janela('Pagar depois', `<p class="small muted" style="margin:0 0 10px">Os itens vão para uma conta no nome do cliente. Ela fica em <b>${loja.mesas_ativo ? 'Mesas' : 'Contas'}</b> até ele pagar. Se já existir conta aberta com esse nome, os itens entram nela.</p>
+    janela('Pagar depois', `<p class="small muted" style="margin:0 0 10px">Os itens vão para uma conta no nome do cliente. Ela fica em <b>Contas abertas</b> até ele pagar. Se já existir conta aberta com esse nome, os itens entram nela.</p>
       <label class="field"><span>Nome do cliente</span><input class="input" id="pd-n" maxlength="40" value="${esc(cliente)}" placeholder="Ex.: João da oficina"></label>
       <div class="row between small"><span>${carrinho.length} ite${carrinho.length === 1 ? 'm' : 'ns'}</span><b>${brl(subtotal())}</b></div>
       ${desconto ? '<p class="small" style="color:#92400e;margin:8px 0 0">O desconto não vai junto: dê o desconto na hora de receber a conta.</p>' : ''}`,
@@ -628,22 +639,22 @@
     };
   }
 
-  // ----------------- mesas e comandas (receber no caixa) -----------------
+  // ----------------- contas abertas: mesas e contas no nome do cliente (receber no caixa) -----------------
   async function verMesas() {
-    const w = janela(loja.mesas_ativo ? 'Mesas e contas abertas' : 'Contas abertas (pagar depois)', `<p class="small muted"><span class="spin"></span> Carregando…</p>`);
+    const w = janela('Contas abertas', `<p class="small muted"><span class="spin"></span> Carregando…</p>`);
     let st;
     try { st = await rpc('ff_mesas_estado', { p_loja: lojaId }); }
     catch (e) { w.querySelector('.sheet-body').innerHTML = `<div class="warnline">${esc(erroMsg(e))}</div>`; return; }
-    const nomeMesa = (c) => c.mesa_id ? ((st.mesas.find(m => m.id === c.mesa_id) || {}).nome || 'Mesa') : (c.identificador || 'Comanda ' + c.numero);
+    const nomeMesa = (c) => c.mesa_id ? ((st.mesas.find(m => m.id === c.mesa_id) || {}).nome || 'Mesa') : (c.identificador || 'Conta ' + c.numero);
     const lst = st.comandas.slice().sort((a, b) => (a.status === 'conta' ? 0 : 1) - (b.status === 'conta' ? 0 : 1) || a.numero - b.numero);
     const linha = (c) => `<button type="button" class="vl mesa-it" data-c="${c.id}" style="width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0;font:inherit;cursor:pointer">
         <b>${esc(nomeMesa(c))}</b><div><div>${c.itens} ite${c.itens == 1 ? 'm' : 'ns'} · aberta às ${hora(c.aberta_em)} por ${esc(c.aberta_por_nome)}</div>${c.status === 'conta' ? `<span class="badge b-warn" style="margin-top:4px">${ic('cash')}Pediu a conta</span>` : ''}</div>
         <b>${brl(c.total)}</b></button>`;
     const ms = lst.filter(c => c.mesa_id), av = lst.filter(c => !c.mesa_id);
     w.querySelector('.sheet-body').innerHTML = (lst.length
-        ? (ms.length ? `<div class="fsec" style="margin:0 0 4px">Mesas</div>${ms.map(linha).join('')}` : '')
-          + (av.length ? `<div class="fsec" style="margin:${ms.length ? '14px' : '0'} 0 4px">Contas avulsas (sem mesa / pagar depois)</div>${av.map(linha).join('')}` : '')
-        : '<div class="cx-vazio">Nenhuma conta aberta agora.</div>')
+        ? (ms.length ? `<div class="grp-t" style="margin:0 0 2px">${ic('users')}Mesas</div>${ms.map(linha).join('')}` : '')
+          + (av.length ? `<div class="grp-t" style="margin:${ms.length ? '18px' : '0'} 0 2px">${ic('user')}No nome do cliente (pagar depois)</div>${av.map(linha).join('')}` : '')
+        : `<div class="cx-vazio">Nenhuma conta aberta agora.<br><span class="small">Use <b>Pagar depois</b> na venda${loja.mesas_ativo ? ' ou abra uma mesa na tela do garçom' : ''}.</span></div>`)
       + (loja.mesas_ativo ? `<a class="btn btn-ghost btn-block" href="garcom.html?loja=${lojaId}" style="margin-top:12px">${ic('list')}Abrir a tela do garçom (lançar pedidos)</a>` : '');
     w.querySelector('.sheet-body').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) receberComanda(b.dataset.c); };
   }
@@ -652,19 +663,19 @@
     if (carrinho.length) return GP.toast('Termine ou limpe a venda do balcão antes de receber uma mesa.', 'err');
     let c;
     try { c = await rpc('ff_comanda_ver', { p_comanda: id }); } catch (e) { return GP.toast(erroMsg(e), 'err'); }
-    if (c.status !== 'aberta' && c.status !== 'conta') { GP.toast('Esta comanda já foi fechada.', 'err'); return verMesas(); }
+    if (c.status !== 'aberta' && c.status !== 'conta') { GP.toast('Esta conta já foi fechada.', 'err'); return verMesas(); }
     const itens = c.itens.filter(i => i.status === 'ativo');
-    if (!itens.length) return GP.toast('Esta comanda não tem itens. Cancele ou lance algo antes.', 'err');
+    if (!itens.length) return GP.toast('Esta conta não tem itens. Adicione produtos ou cancele a conta.', 'err');
     if (!idemComanda[id]) idemComanda[id] = GP.uuid();
     let desc = 0, taxa = Number(c.taxa_servico) > 0, pessoas = c.pessoas || 1;
     const sub = r2(c.total);
     const calc = () => { const base = r2(sub - desc); return { base, tx: taxa ? r2(base * Number(c.taxa_servico) / 100) : 0 }; };
     const tot = () => { const k = calc(); return r2(k.base + k.tx); };
-    const nome = c.mesa || c.identificador || 'Comanda ' + c.numero;
+    const nome = c.mesa || c.identificador || 'Conta ' + c.numero;
     telaPagamento({
       titulo: `${nome} · ${brl(tot())}`, tituloDe: (t) => `${nome} · ${brl(t)}`, total: tot,
       topo: `<button type="button" class="btn btn-soft btn-block btn-sm" id="rc-add" style="margin-bottom:10px">${ic('plus')}Adicionar mais produtos nesta conta</button>
-        <details style="margin-bottom:10px"><summary class="small" style="cursor:pointer"><b>${itens.length} ite${itens.length === 1 ? 'm' : 'ns'}</b> · subtotal ${brl(sub)} · ${c.mesa ? esc(c.mesa) : 'conta avulsa'} · nº ${c.numero}</summary>
+        <details style="margin-bottom:10px"><summary class="small" style="cursor:pointer"><b>${itens.length} ite${itens.length === 1 ? 'm' : 'ns'}</b> · subtotal ${brl(sub)} · ${c.mesa ? esc(c.mesa) : 'no nome do cliente'} · conta nº ${c.numero}</summary>
           <div style="margin-top:6px">${itens.map(i => `<div class="r small" style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.qtd > 1 ? i.qtd + '× ' : ''}${esc(i.nome)}${(i.opcoes || []).length ? ' <span class="muted">(' + esc(i.opcoes.map(o => o.nome).join(', ')) + ')</span>' : ''}</span><span>${brl(i.preco * i.qtd)}</span></div>`).join('')}</div></details>
         <div class="grid2" style="margin-bottom:8px">
           <label class="field" style="margin:0"><span>Desconto</span><div class="prefix"><i>R$</i><input class="input" id="rc-desc" inputmode="numeric" placeholder="0,00"></div></label>
@@ -799,7 +810,7 @@
       const b = e.currentTarget;
       if (!$('fc-din').value.trim()) return GP.toast('Digite quanto dinheiro tem na gaveta (pode ser 0,00).', 'err');
       const ab = estado.comandas_abertas || 0;
-      if (!(await GP.confirmar('Fechar o caixa agora?', { texto: (ab ? `Atenção: ainda tem ${ab} mesa${ab > 1 ? 's' : ''}/comanda${ab > 1 ? 's' : ''} aberta${ab > 1 ? 's' : ''}. Elas continuam abertas para o próximo caixa. ` : '') + 'Depois de fechar, as vendas deste caixa não podem mais ser canceladas.', ok: 'Fechar caixa' }))) return;
+      if (!(await GP.confirmar('Fechar o caixa agora?', { texto: (ab ? `Atenção: ainda tem ${ab} conta${ab > 1 ? 's' : ''} aberta${ab > 1 ? 's' : ''} (mesas ou no nome do cliente). Elas continuam abertas para o próximo caixa. ` : '') + 'Depois de fechar, as vendas deste caixa não podem mais ser canceladas.', ok: 'Fechar caixa' }))) return;
       const cont = { dinheiro: num($('fc-din').value) };
       document.querySelectorAll('.fc-o').forEach(el => { if (el.value.trim()) cont[el.dataset.k] = num(el.value); });
       b.disabled = true; b.innerHTML = '<span class="spin"></span>';

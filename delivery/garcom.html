@@ -90,7 +90,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=35439"></script>
+<script src="app.js?v=43549"></script>
 <script src="pdv-ui.js?v=35439"></script>
 <script>
 (async () => {
@@ -159,17 +159,17 @@
     const avulsas = st.comandas.filter(c => !c.mesa_id);
     const pend = (id) => pendentes(id).length;
     $('corpo').innerHTML = `
-      <div class="sec-t"><h2>Mesas</h2><span class="small muted">${st.comandas.length} aberta${st.comandas.length === 1 ? '' : 's'}</span></div>
+      <div class="sec-t"><h2>Mesas</h2><span class="small muted">${st.comandas.length} conta${st.comandas.length === 1 ? '' : 's'} aberta${st.comandas.length === 1 ? '' : 's'}</span></div>
       ${st.mesas.length ? `<div class="mapa">${st.mesas.map(m => {
         const c = comandaDaMesa(m), cls = !c ? '' : c.status === 'conta' ? 'conta' : 'ocupada';
         return `<button class="ms ${cls}" data-m="${m.id}"><i class="dot"></i><b>${esc(m.nome)}</b>
           <span class="st">${!c ? 'Livre' : c.status === 'conta' ? 'Pediu a conta' : `Aberta há ${ha(c.aberta_em)}`}${c && pend(c.id) ? ' · ' + pend(c.id) + ' não enviado' + (pend(c.id) > 1 ? 's' : '') : ''}</span>
           ${c ? `<span class="tt">${brl(c.total)}</span>` : ''}</button>`;
       }).join('')}</div>` : '<div class="card pad small muted">Nenhuma mesa cadastrada. O responsável cadastra em Minha loja → Caixa e mesas.</div>'}
-      <div class="sec-t" style="margin-top:20px"><h2>Comandas avulsas</h2><button class="btn btn-soft btn-sm" id="g-nova">${ic('plus')}Nova comanda</button></div>
+      <div class="sec-t" style="margin-top:20px"><h2>No nome do cliente</h2><button class="btn btn-soft btn-sm" id="g-nova">${ic('plus')}Nova conta</button></div>
       <div class="avs">${avulsas.length ? avulsas.map(c => `<button class="ms ${c.status === 'conta' ? 'conta' : 'ocupada'}" data-c="${c.id}" style="min-height:0;flex-direction:row;align-items:center;gap:10px">
-          <b style="flex:1">${esc(c.identificador || 'Comanda ' + c.numero)}</b><span class="st">${c.status === 'conta' ? 'Pediu a conta' : 'há ' + ha(c.aberta_em)}</span><span class="tt" style="margin:0">${brl(c.total)}</span></button>`).join('')
-        : '<p class="small muted" style="margin:0">Para balcão, cartão numerado ou cliente sem mesa.</p>'}</div>`;
+          <b style="flex:1">${esc(c.identificador || 'Conta ' + c.numero)}</b><span class="st">${c.status === 'conta' ? 'Pediu a conta' : 'há ' + ha(c.aberta_em)}</span><span class="tt" style="margin:0">${brl(c.total)}</span></button>`).join('')
+        : '<p class="small muted" style="margin:0">Para quem não está numa mesa: balcão, cartão numerado ou quem vai pagar depois.</p>'}</div>`;
     $('corpo').onclick = (e) => {
       const m = e.target.closest('[data-m]'), c = e.target.closest('[data-c]');
       if (m) { const mesa = st.mesas.find(x => x.id === m.dataset.m), cm = comandaDaMesa(mesa); cm ? abrirComanda(cm.id) : abrirMesa(mesa); }
@@ -190,8 +190,8 @@
     };
   }
   function novaAvulsa() {
-    janela('Nova comanda', `<label class="field"><span>Número do cartão ou nome do cliente</span><input class="input" id="na-id" maxlength="40" placeholder="Ex.: 15 ou João"></label>`,
-      `<button class="btn btn-primary btn-block" id="na-ok" style="height:54px">Abrir comanda</button>`);
+    janela('Nova conta no nome do cliente', `<p class="small muted" style="margin:0 0 10px">Para quem não está numa mesa: balcão, cartão numerado ou quem vai pagar depois.</p><label class="field"><span>Nome do cliente ou número do cartão</span><input class="input" id="na-id" maxlength="40" placeholder="Ex.: 15 ou João"></label>`,
+      `<button class="btn btn-primary btn-block" id="na-ok" style="height:54px">Abrir conta</button>`);
     setTimeout(() => $('na-id').focus(), 60);
     $('na-id').onkeydown = (e) => { if (e.key === 'Enter') $('na-ok').click(); };
     $('na-ok').onclick = async (e) => {
@@ -206,17 +206,17 @@
   async function abrirComanda(id) {
     try { mostrarComanda(await rpc('ff_comanda_ver', { p_comanda: id })); } catch (e) { GP.toast(erroMsg(e), 'err'); }
   }
-  const nomeComanda = (c) => c.mesa || c.identificador || 'Comanda ' + c.numero;
+  const nomeComanda = (c) => c.mesa || c.identificador || 'Conta ' + c.numero;
   function mostrarComanda(c) {
     vista = 'comanda'; comanda = c;
-    if (c.status !== 'aberta' && c.status !== 'conta') { GP.toast(c.status === 'fechada' ? 'Esta comanda já foi fechada no caixa.' : 'Esta comanda foi cancelada.', 'err'); salvarPend(c.id, []); return voltarMapa(); }
+    if (c.status !== 'aberta' && c.status !== 'conta') { GP.toast(c.status === 'fechada' ? 'Esta conta já foi fechada no caixa.' : 'Esta conta foi cancelada.', 'err'); salvarPend(c.id, []); return voltarMapa(); }
     const pend = pendentes(c.id);
     const gerente = st.papel !== 'garcom';
     const totPend = pend.reduce((t, l) => t + l.unit * l.qtd, 0);
     const ativos = c.itens.filter(i => i.status === 'ativo');
     $('corpo').innerHTML = `
       <div class="ch"><button class="icon-btn" id="c-volta">${ic('left')}</button>
-        <div class="grow" style="min-width:0"><h2>${esc(nomeComanda(c))}</h2><div class="sub">Comanda nº ${c.numero} · ${c.pessoas} pessoa${c.pessoas > 1 ? 's' : ''} · aberta às ${hora(c.aberta_em)} por ${esc(c.aberta_por_nome)}${c.obs ? ' · ' + esc(c.obs) : ''}</div></div>
+        <div class="grow" style="min-width:0"><h2>${esc(nomeComanda(c))}</h2><div class="sub">${c.mesa ? 'Mesa' : 'No nome do cliente'} · conta nº ${c.numero} · ${c.pessoas} pessoa${c.pessoas > 1 ? 's' : ''} · aberta às ${hora(c.aberta_em)} por ${esc(c.aberta_por_nome)}${c.obs ? ' · ' + esc(c.obs) : ''}</div></div>
         <button class="icon-btn" id="c-menu" title="Mais opções">${ic('more')}</button></div>
       ${c.status === 'conta' ? `<div class="alert" style="background:#EFF6FF;color:#1e3a8a;margin-bottom:12px">${ic('cash')}<span>Conta pedida às ${hora(c.conta_em)}. O caixa vai receber. Para lançar mais itens, reabra a mesa.</span></div>` : ''}
       ${pend.length ? `<div class="sec-t"><h2 style="font-size:.95rem">Não enviados (${pend.length})</h2><button class="btn btn-ghost btn-sm" id="c-limpa">Descartar</button></div>
@@ -350,7 +350,7 @@
         <button class="btn btn-ghost btn-block" data-a="trans">${ic('refresh')}Trocar de mesa / juntar mesas</button>
         <button class="btn btn-ghost btn-block" data-a="dados">${ic('users')}Pessoas e observação</button>
         <button class="btn btn-ghost btn-block" data-a="imp">${ic('print')}Imprimir conferência</button>
-        ${gerente ? `<button class="btn btn-ghost btn-block" data-a="canc" style="color:var(--bad)">${ic('x')}Cancelar comanda inteira</button>` : ''}</div>`);
+        ${gerente ? `<button class="btn btn-ghost btn-block" data-a="canc" style="color:var(--bad)">${ic('x')}Cancelar a conta inteira</button>` : ''}</div>`);
     $('gm-mod').querySelector('.sheet-body').onclick = (e) => {
       const b = e.target.closest('[data-a]'); if (!b) return;
       if (b.dataset.a === 'trans') return transferir();
@@ -361,12 +361,12 @@
   }
   function transferir() {
     const livres = st.mesas.filter(m => m.id !== comanda.mesa_id);
-    janela('Trocar de mesa', `<p class="small muted" style="margin:0 0 10px">Mesa livre: a comanda só muda de lugar. Mesa ocupada: tudo é juntado na comanda dela.</p>
+    janela('Trocar de mesa', `<p class="small muted" style="margin:0 0 10px">Mesa livre: a conta só muda de lugar. Mesa ocupada: tudo é juntado na conta dela.</p>
       <div class="mapa">${livres.map(m => { const c = comandaDaMesa(m); return `<button class="ms ${c ? 'ocupada' : ''}" data-m="${m.id}" style="min-height:70px"><b>${esc(m.nome)}</b><span class="st">${c ? 'Ocupada · juntar' : 'Livre'}</span></button>`; }).join('')}</div>`);
     $('gm-mod').querySelector('.sheet-body').onclick = async (e) => {
       const b = e.target.closest('[data-m]'); if (!b) return;
       const m = st.mesas.find(x => x.id === b.dataset.m), oc = comandaDaMesa(m);
-      if (oc && !(await GP.confirmar(`Juntar com a ${m.nome}?`, { texto: `Todos os itens desta comanda vão para a ${m.nome}.`, ok: 'Juntar' }))) return;
+      if (oc && !(await GP.confirmar(`Juntar com a ${m.nome}?`, { texto: `Todos os itens desta conta vão para a ${m.nome}.`, ok: 'Juntar' }))) return;
       try { const c = await rpc('ff_comanda_transferir', { p_comanda: comanda.id, p_mesa: m.id }); fechar(); GP.toast(oc ? 'Mesas juntadas.' : 'Mesa trocada.', 'ok'); await carregarEstado(); mostrarComanda(c); }
       catch (er) { GP.toast(erroMsg(er), 'err'); }
     };
@@ -381,13 +381,13 @@
     $('dd-ok').onclick = async () => { try { const c = await rpc('ff_comanda_dados', { p_comanda: comanda.id, p_pessoas: p, p_obs: $('dd-o').value }); fechar(); mostrarComanda(c); } catch (er) { GP.toast(erroMsg(er), 'err'); } };
   }
   function cancelarComanda() {
-    janela('Cancelar comanda inteira', `<p class="small" style="margin:0 0 10px">Todos os itens são cancelados e o estoque volta. Use só se a mesa foi aberta por engano ou o cliente foi embora sem consumir.</p>
+    janela('Cancelar a conta inteira', `<p class="small" style="margin:0 0 10px">Todos os itens são cancelados e o estoque volta. Use só se a mesa foi aberta por engano ou o cliente foi embora sem consumir.</p>
       <label class="field"><span>Motivo</span><input class="input" id="cc-m" maxlength="200"></label>`,
-      `<button class="btn btn-block" id="cc-ok" style="background:var(--bad);color:#fff;height:50px">Cancelar comanda</button>`);
+      `<button class="btn btn-block" id="cc-ok" style="background:var(--bad);color:#fff;height:50px">Cancelar conta</button>`);
     $('cc-ok').onclick = async (e) => {
       const m = $('cc-m').value.trim(); if (m.length < 3) return GP.toast('Escreva o motivo.', 'err');
       const b = e.currentTarget; b.disabled = true;
-      try { await rpc('ff_comanda_cancelar', { p_comanda: comanda.id, p_motivo: m }); salvarPend(comanda.id, []); fechar(); GP.toast('Comanda cancelada.', 'ok'); voltarMapa(); }
+      try { await rpc('ff_comanda_cancelar', { p_comanda: comanda.id, p_motivo: m }); salvarPend(comanda.id, []); fechar(); GP.toast('Conta cancelada.', 'ok'); voltarMapa(); }
       catch (er) { b.disabled = false; GP.toast(erroMsg(er), 'err'); }
     };
   }
