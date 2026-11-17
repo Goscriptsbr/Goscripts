@@ -1,5 +1,5 @@
 {
-  "versao": 80,
-  "notas": "Toque no nome de alguém no lobby para ver o perfil e pedir amizade. Quem perde agora vê o efeito de vitória de quem ganhou.",
-  "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/b6cf80a5b06cda3136a9888c0ead50b2f5946652/Sinucou.apk"
+  "versao": 81,
+  "notas": "Corrigido: bolas mudando de lugar (teleportando) depois da tacada no online. Agora as duas telas ficam iguais.",
+  "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/7d7ce65f9462fd8f1c5338015de316c21c3a292f/Sinucou.apk"
 }

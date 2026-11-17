@@ -33,7 +33,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 80  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 81  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -164,6 +164,7 @@ var shot_by := 0
 var cue_ids: Array = ["", ""]
 var felt_override := ""
 var net_peer_cue := "classico"
+var launch_pre := {}
 var net_peer_name := "Adversário"
 var net_game := "sinuca"
 var net_team := false            # online 2x2
@@ -1443,9 +1444,11 @@ func begin_turn() -> void:
 
 
 func shoot(pw: float, remote: bool = false) -> void:
-	if mode == Mode.ONLINE and not remote:
-		var c0 := get_ball(0)
-		net.send_shot({"a": aim_angle, "pw": pw, "p": power, "sp": spin, "cp": c0.pos, "h": ball_in_hand, "sps": int(cue_def().pow), "sss": int(cue_def().spin)})
+	if mode == Mode.ONLINE and not remote and not net.is_host and turn_left <= 0.02:
+		# o tempo já acabou aqui: a tacada não vale (o anfitrião já passou a vez)
+		power = 0.0
+		return
+	var h0 := ball_in_hand
 	if not remote:
 		shot_pow = int(cue_def().pow)
 		shot_spin = int(cue_def().spin)
@@ -1465,37 +1468,57 @@ func shoot(pw: float, remote: bool = false) -> void:
 	strike_t = 0.0
 	strike_dur = 0.13 - 0.06 * pw
 	power = 0.0
+	launch_pre = {}
+	if mode == Mode.ONLINE and not remote:
+		# quem taca calcula a velocidade exata da branca e manda pronta: assim os outros celulares
+		# não recalculam seno/cosseno (que muda no último dígito de um Android para outro e
+		# fazia as bolas pararem em lugares diferentes — e depois "teleportarem")
+		launch_pre = launch_params()
+		var c0 := get_ball(0)
+		net.send_shot({"a": shot_ang, "pw": pw, "p": strike_pull / 130.0, "sp": shot_spv, "cp": c0.pos, "h": h0, "sps": shot_pow, "sss": shot_spin,
+			"lv": launch_pre.v, "lt": launch_pre.t, "ls": launch_pre.s, "la": launch_pre.ang})
 	if bot:
 		launch()
 	else:
 		st = St.STRIKE
 
 
-func launch() -> void:
-	var cue := get_ball(0)
+# velocidade e efeito da branca no momento da tacada
+func launch_params() -> Dictionary:
 	# no 2x2 online todos os celulares precisam saber que a tacada é da IA (senão a força/efeito
 	# muda só no anfitrião e as bolas andam diferente em cada aparelho)
 	var is_bot: bool = bot_seats.has(shooter()) if net4 else cur_ai()
 	var human: bool = mode == Mode.TRAIN or not is_bot
 	var ang := shot_ang
-	aim_angle = shot_ang
-	spin = shot_spv
 	var maxv := MAXV
-	cue.top = 0.0
-	cue.side = 0.0
+	var top := 0.0
+	var side := 0.0
 	if human and not bot:
 		maxv = MAXV * (0.92 + 0.05 * float(shot_pow))
 		var sm := 0.55 + 0.15 * float(shot_spin)
-		cue.top = -spin.y * sm
-		cue.side = spin.x * sm
+		top = -shot_spv.y * sm
+		side = shot_spv.x * sm
 		# PRECISÃO: taco bom acerta mesmo na tacada forte; taco fraco desvia um pouquinho quando bate com força
-		# (lado do desvio vem do próprio ângulo da tacada, então todo celular calcula igual no online)
 		var prc := int(turn_cue_def().get("prec", 3))
 		var dev := deg_to_rad(0.3 * float(maxi(0, 5 - prc))) * pow(strike_pw, 3.0)
 		ang += dev if fposmod(ang * 997.0, 2.0) < 1.0 else -dev
-	cue.vel = Vector2.from_angle(ang) * (150.0 + pow(strike_pw, 1.5) * (maxv - 150.0))
+	var v := Vector2.from_angle(ang) * (150.0 + pow(strike_pw, 1.5) * (maxv - 150.0))
+	return {"v": v, "t": top, "s": side, "ang": ang}
+
+
+func launch() -> void:
+	var cue := get_ball(0)
+	aim_angle = shot_ang
+	spin = shot_spv
+	var lp: Dictionary = launch_pre if not launch_pre.is_empty() else launch_params()
+	launch_pre = {}
+	cue.top = float(lp.t)
+	cue.side = float(lp.s)
+	cue.vel = lp.v
+	if net_auto:
+		print("LAUNCH shooter=", shooter(), " seat=", net_seat, " sum=", net_checksum(), " cp=", cue.pos, " v=", cue.vel, " t=", cue.top, " s=", cue.side, " pre=", not lp.has("x"))
 	if str(turn_cue_def().get("impact", "")) == "math" and not bot:
-		spawn_math(cue.pos, ang, strike_pw)
+		spawn_math(cue.pos, float(lp.ang), strike_pw)
 	st = St.ROLL
 	play("shot", 0.4 + strike_pw * 0.6)
 	vibrate(15)
@@ -1533,6 +1556,9 @@ func timer_update() -> void:
 	if turn_left <= 0.0:
 		if mode == Mode.ONLINE and not net.is_host:
 			turn_left = 0.01
+			return
+		# tacada do outro celular pode estar a caminho: dá uma folguinha antes de passar a vez
+		if mode == Mode.ONLINE and shooter() != net_seat and not (net4 and bot_seats.has(shooter())) and turn_left > -1.5:
 			return
 		touches.clear()
 		power = 0.0
@@ -1675,6 +1701,8 @@ func move_balls() -> void:
 					net_pending = {}
 					net_apply(sn)
 			return
+		if net_auto:
+			print("HOST endsim sum=", net_checksum())
 		resolve_shot()
 
 
@@ -2217,6 +2245,7 @@ func net_apply(s: Dictionary) -> void:
 		if b.is_empty():
 			continue
 		var on: bool = e[1]
+		var was_on: bool = b.on
 		if on:
 			if not b.on:
 				b.drop = -1.0
@@ -2226,6 +2255,11 @@ func net_apply(s: Dictionary) -> void:
 				b.drop = 0.0
 				b.dpos = e[4]
 			b.on = false
+		# se a bola estava em outro lugar aqui, desliza até a posição certa em vez de "teleportar"
+		if on and was_on:
+			var off: Vector2 = (b.pos as Vector2) - (e[2] as Vector2)
+			if off.length() > 0.5 and off.length() < 900.0:
+				b["voff"] = off
 		b.pos = e[2]
 		b.vel = Vector2.ZERO
 		b.top = 0.0
@@ -2409,9 +2443,11 @@ func net_remote_shot(d: Dictionary) -> void:
 	# a posição da branca vem sempre de quem tacou (bola na mão, saída etc.)
 	cue.pos = d.cp
 	touches.clear()
-	shoot(float(d.pw), true)
 	shot_pow = int(d.sps)
 	shot_spin = int(d.sss)
+	shoot(float(d.pw), true)
+	if d.has("lv"):
+		launch_pre = {"v": d.lv, "t": float(d.lt), "s": float(d.ls), "ang": float(d.get("la", d.a))}
 
 
 func net_remote_aim(d: Dictionary) -> void:
@@ -2970,6 +3006,14 @@ func update_visuals(delta: float) -> void:
 			var ex: Vector2 = Vector2.ZERO
 			if (st == St.ROLL or st == St.MENU) and not paused:
 				ex = (b.vel as Vector2) * acc
+			if b.has("voff"):
+				var vo: Vector2 = b.voff
+				vo *= exp(-delta * 7.0)
+				if vo.length() < 0.3:
+					b.erase("voff")
+				else:
+					b.voff = vo
+					ex += vo
 			spr.position = (b.pos as Vector2) + ex
 			spr.scale = Vector2.ONE * (2.0 * R * PAD / 64.0)
 			spr.modulate = Color.WHITE
@@ -4023,7 +4067,7 @@ func _draw_player_panel(i: int) -> void:
 			lab = ("SUA VEZ" if shooter() == net_seat else ("PARCEIRO" if net4 else "JOGANDO")) if i == net_seat % 2 else ("JOGANDO" if not net4 else str(seat_names[shooter()]).left(10))
 		elif mode == Mode.TWO:
 			lab = "SUA VEZ"
-		var secs := ("  %ds" % int(ceil(turn_left))) if timer_active() else ""
+		var secs := ("  %ds" % maxi(0, int(ceil(turn_left)))) if timer_active() else ""
 		var lw: float = font.get_string_size(lab + secs, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 18.0
 		var lp := Vector2(x + w - lw - 10, -2) if not right else Vector2(x + 10, -2)
 		hud.draw_style_box(ui.sbox(Color("f4c542"), 9), Rect2(lp, Vector2(lw, 18)))
