@@ -33,7 +33,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 79  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 80  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -2040,6 +2040,8 @@ func end_game(win_idx: int) -> void:
 		net.world_send({"t": "mresult", "team": win_idx})
 	if (mode == Mode.AI or mode == Mode.ONLINE) and me_won:
 		play_victory()
+	elif mode == Mode.ONLINE:
+		play_loser_fx()
 	if mode == Mode.AI or mode == Mode.ONLINE:
 		var bt := bet_settle("win" if me_won else "lose")
 		if bt != "":
@@ -3804,6 +3806,43 @@ func play_victory() -> void:
 	var fx: CanvasLayer = load("res://victory_fx.gd").new()
 	add_child(fx)
 	fx.play(k)
+
+
+# tipo do efeito de vitória que eu equipei (vai para o servidor para os outros verem)
+func my_wfx() -> String:
+	var id := str(save.get("wfx", "wf_confete"))
+	for w in WFX:
+		if str(w.id) == id:
+			return str(w.wfx)
+	return "confete"
+
+
+# perdi online: mostra na minha tela o efeito de vitória de quem ganhou
+func play_loser_fx() -> void:
+	if bot or net_auto or net == null or not net.active:
+		return
+	var my_team: int = (int(net.my_peer) - 1) % 2
+	var k := ""
+	var who := ""
+	for p in net.room_players:
+		var pr := int(p.get("peer", 0))
+		if pr <= 0 or pr == int(net.my_peer) or (pr - 1) % 2 == my_team:
+			continue
+		var w := str(p.get("wfx", ""))
+		var ok := false
+		for e in WFX:
+			if str(e.wfx) == w:
+				ok = true
+		if ok and (k == "" or k == "confete"):
+			k = w
+			who = str(p.get("name", ""))
+	if k == "":
+		return
+	var fx: CanvasLayer = load("res://victory_fx.gd").new()
+	add_child(fx)
+	fx.play(k)
+	if who != "" and k != "confete" and ui != null:
+		ui.say("Efeito de vitória de %s!" % who)
 
 
 # itens que podem sair num pacote (só os que estão à venda e você ainda não tem)

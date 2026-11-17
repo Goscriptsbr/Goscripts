@@ -1647,17 +1647,25 @@ func _lobby_paint() -> void:
 		var same: bool = int(o.get("team", 0)) == my_t
 		var ccol: Color = (Color("1d5c9e") if same else Color("a83232")) if four_l else Color("16897f")
 		var txt: String = ("♛ " if lead else "") + (nm + " (você)" if me else nm)
-		if lobby_leader() and four_l and not lead:
-			# o dono toca no nome para mudar o amigo de time
-			var cb := mk_btn(txt + "  ⇄", 0, 36, ccol, 15)
-			var oc := str(o.code)
-			cb.pressed.connect(func(): game.net.world_send({"t": "lteam", "code": oc}))
-			lobby_row.add_child(cb)
-		else:
+		var oc := str(o.code)
+		var onm := str(o.name)
+		var fr_mark: String = "" if me or _has("friends", oc) or mx < 12 else "  +"
+		if me:
 			var chip := PanelContainer.new()
 			chip.add_theme_stylebox_override("panel", sbox(ccol, 14, Color("ffe066") if lead else Color(1, 1, 1, 0.3), 2, 0))
 			chip.add_child(margin(mk_lbl(txt, 15, Color.WHITE, 2), 6))
 			lobby_row.add_child(chip)
+		else:
+			# tocar no nome abre o perfil (estatísticas) e dá para pedir amizade
+			var nb := mk_btn(txt + fr_mark, 0, 36, ccol, 15)
+			nb.add_theme_stylebox_override("normal", sbox(ccol, 14, Color("ffe066") if lead else Color(1, 1, 1, 0.3), 2, 6))
+			nb.pressed.connect(func(): open_player(oc, onm))
+			lobby_row.add_child(nb)
+		if lobby_leader() and four_l and not lead:
+			# o dono toca no ⇄ para mudar o amigo de time
+			var cb := mk_btn("⇄", 44, 36, ccol.darkened(0.25), 17)
+			cb.pressed.connect(func(): game.net.world_send({"t": "lteam", "code": oc}))
+			lobby_row.add_child(cb)
 	if lobby_leader():
 		var lv := mk_btn("SAIR", 90, 36, Color("7a2a2a"), 15)
 		lv.pressed.connect(_lobby_leave)
@@ -4869,10 +4877,49 @@ func _pick_tile(it: Dictionary, key: String) -> Control:
 
 
 # perfil de um amigo (chega do servidor)
+var prof_hint := {}
+
+
+# abre o perfil de qualquer jogador (lobby, ranking...) pelo código
+func open_player(code: String, nm: String) -> void:
+	prof_hint[code.to_upper()] = nm
+	game.net.connect_server()
+	game.net.world_send({"t": "prof", "code": code})
+	say("Abrindo perfil...")
+
+
+# botão de amizade do perfil (some se já forem amigos)
+func _prof_friend_btn(code: String, nm: String) -> Button:
+	if code == "" or code == game.my_code().to_upper() or _has("friends", code):
+		return null
+	var b: Button
+	if _has("f_in", code):
+		b = mk_btn("ACEITAR AMIZADE", 260, 58, GREEN, 20)
+	elif _has("f_out", code):
+		b = mk_btn("PEDIDO ENVIADO", 260, 58, GRAY, 20)
+		b.disabled = true
+		return b
+	else:
+		b = mk_btn("+ PEDIR AMIZADE", 260, 58, GREEN, 20)
+	b.pressed.connect(func():
+		_friend_request(code, nm)
+		close_modal())
+	return b
+
+
 func profile_remote(m: Dictionary) -> void:
 	var d = m.get("data", null)
+	var pcode := str(m.get("code", "")).to_upper()
+	var pnm := str(m.get("name", "?"))
+	if (pnm == "?" or pnm == "") and prof_hint.has(pcode):
+		pnm = str(prof_hint[pcode])
+		m["name"] = pnm
 	if not (d is Dictionary):
-		say("%s ainda não tem perfil (precisa atualizar o jogo)." % str(m.get("name", "Esse jogador")))
+		var fb0 := _prof_friend_btn(pcode, pnm)
+		if fb0 != null and not fb0.disabled:
+			confirm(pnm, "Esse jogador ainda não tem perfil (precisa atualizar o jogo).\nQuer pedir amizade?", "PEDIR AMIZADE", func(): _friend_request(pcode, pnm), "FECHAR", func(): pass)
+		else:
+			say("%s ainda não tem perfil (precisa atualizar o jogo)." % pnm)
 		return
 	close_modal()
 	modal_layer = Control.new()
@@ -4913,10 +4960,16 @@ func profile_remote(m: Dictionary) -> void:
 		cv.draw_string(f, Vector2(300, 254), "Vitórias: %d (%d%%)" % [int(d.get("wins", 0)), int(round(100.0 * int(d.get("wins", 0)) / pl))], HORIZONTAL_ALIGNMENT_LEFT, 220, 16, Color.WHITE)
 		cv.draw_string(f, Vector2(300, 276), "Maior sequência: %d" % int(d.get("best", 0)), HORIZONTAL_ALIGNMENT_LEFT, 220, 16, Color.WHITE)
 		cv.draw_string(f, Vector2(300, 298), "Conquistas: %d / %d" % [int(d.get("achs", 0)), game.ACHS.size()], HORIZONTAL_ALIGNMENT_LEFT, 220, 16, Color.WHITE))
+	var brow := HBoxContainer.new()
+	brow.add_theme_constant_override("separation", 14)
+	brow.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_child(brow)
+	var fb := _prof_friend_btn(pcode, nm)
+	if fb != null:
+		brow.add_child(fb)
 	var ok := mk_btn("FECHAR", 220, 58, GRAY, 22)
-	ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	ok.pressed.connect(close_modal)
-	vb.add_child(ok)
+	brow.add_child(ok)
 
 
 # conquista nova: aviso que desce do topo

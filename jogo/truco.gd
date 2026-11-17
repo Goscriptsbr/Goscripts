@@ -660,6 +660,8 @@ func _show_over() -> void:
 		game.record_match("truco", won, netmode != "")
 		if won:
 			game.play_victory()
+		elif netmode != "":
+			game.play_loser_fx()
 	game.mission_event("play", 1)
 	game.mission_event("truco_play", 1)
 	if won:

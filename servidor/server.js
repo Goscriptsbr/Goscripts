@@ -129,6 +129,7 @@ function onMsg(c, op, payload) {
       c.name = String(m.name || "Jogador").slice(0, 15);
       c.coins = Math.max(0, Number(m.coins) || 0);
       c.felt = String(m.felt || "").slice(0, 24);
+      c.wfx = String(m.wfx || "").slice(0, 16);
       clients.set(code, c);
       remember(c);
       sendJ(c, { t: "welcome", code, online: clients.size, app: appVersion() });
@@ -250,7 +251,11 @@ function onMsg(c, op, payload) {
       sendLobby(p);
       break;
     }
-    case "coins": c.coins = Math.max(0, Number(m.n) || 0); break;
+    case "coins":
+      c.coins = Math.max(0, Number(m.n) || 0);
+      if (typeof m.felt === "string") c.felt = m.felt.slice(0, 24);
+      if (typeof m.wfx === "string") c.wfx = m.wfx.slice(0, 16);
+      break;
     case "tcreate": { // cria um lobby de TORNEIO (3 a 8 amigos, mata-mata 1x1)
       if (!c.code || c.room) return;
       unqueue(c); setStatus(c, "online");
@@ -495,7 +500,7 @@ function matchSeats(seats, game, stake, ownerSeat) {
   else if (party) { party.rot = ((party.rot ?? -1) + 1) % humans.length; owner = humans[party.rot]; }
   room.ownerCode = seats[owner] ? seats[owner].code : "";
   const players = [];
-  seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; const e = playersDir.get(p.code); players.push({ peer: i + 1, name: p.name, code: p.code, felt: p.felt || "", av: e && e.prof ? e.prof.av : "b8", fr: e && e.prof ? e.prof.fr : "" }); } });
+  seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; const e = playersDir.get(p.code); players.push({ peer: i + 1, name: p.name, code: p.code, felt: p.felt || "", wfx: p.wfx || "", av: e && e.prof ? e.prof.av : "b8", fr: e && e.prof ? e.prof.fr : "" }); } });
   for (const p of list) {
     const opp = list.find((o) => o !== p) || p;
     sendJ(p, { t: "match", role: p.peer === 1 ? "host" : "guest", peer: p.peer, game, seats: room.seats, players, opp: { name: opp.name, code: opp.code }, stake, owner });
