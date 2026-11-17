@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=47255">
+<link rel="stylesheet" href="app.css?v=47409">
 <style>
   body{padding-bottom:100px}
   @media(max-width:380px){.topbar .logo span{display:none}#b-bag{padding:0 12px}}
@@ -263,7 +263,7 @@
       <button class="btn btn-soft btn-block btn-sm" id="b-mais" style="margin-top:10px"></button>
       <div class="divider"></div>
       <div class="sum-row"><span>Subtotal</span><b id="s1-sub"></b></div>
-      <div class="sum-row muted small"><span>Taxa de entrega</span><span>calculada no próximo passo</span></div>
+      <div class="sum-row muted small" id="sum-taxa"><span>Taxa de entrega</span><span>calculada no próximo passo</span></div>
       <p class="small muted" id="s1-min" style="margin-top:8px"></p>
     </section>
 
@@ -342,7 +342,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=47255"></script>
+<script src="app.js?v=47409"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -400,7 +400,7 @@
     ['Entrega', GP.regraEntrega(loja)],
     ['Pedido mínimo', Number(loja.pedido_minimo) ? brl(loja.pedido_minimo) : 'Sem mínimo'],
     ['Pagamento', [loja.aceita_mp && loja.mp_conectado && 'Online (cartão ou Pix)', loja.aceita_pix && 'Pix', (loja.aceita_debito || loja.aceita_credito) && 'Cartão', loja.aceita_dinheiro && 'Dinheiro'].filter(Boolean).join(' · ') || '—'],
-    ['Retirada', loja.aceita_retirada ? 'Grátis na loja' : 'Só entrega']
+    ['Retirada', loja.faz_entrega === false || loja.aceita_retirada ? 'Grátis na loja' : 'Só entrega']
   ].map(([l, v]) => `<div class="inf"><span>${l}</span><b>${esc(v)}</b></div>`).join('');
   const hojeDow = GP.agoraSP().dow, linH = GP.resumoHorarios(loja.horarios || {});
   $('s-stbar').innerHTML = `<details class="horas2 stwrap"><summary><span class="badge ${ST().cls}" id="s-status"><i class="dot"></i>${ST().texto}</span>${loja.horario_auto ? `<span>Horários</span><span class="chv"></span>` : ''}</summary>
@@ -727,7 +727,9 @@
     rotaKm = r; rotaCalc = false;
     renderFee(); updNext(); if (step === 3) renderPag();
   }
-  let modoEnt = 'entrega';
+  const soRetirada = loja.faz_entrega === false;   // loja que não entrega: só retirada no local
+  let modoEnt = soRetirada ? 'retirada' : 'entrega';
+  if (soRetirada && $('sum-taxa')) $('sum-taxa').innerHTML = '<span>Retirada no local</span><span>sem taxa de entrega</span>';
   // Envio para outras cidades (Melhor Envio): só lojas de Variedades com a conta conectada e Pix ligado
   const podeEnvio = () => loja.tipo === 'variedades' && loja.envio_externo && loja.me_conectado && loja.aceita_pix;
   const RAIO_ENVIO = 30;
@@ -735,7 +737,7 @@
   // Avisa logo na entrada se a loja não entrega onde o cliente está (endereço salvo ou localização).
   // Loja com envio pelo Melhor Envio: fora do raio vira "envio para a sua cidade", não "não entrega".
   (function avisoArea() {
-    if (loja.lat == null) return;
+    if (loja.lat == null || soRetirada) return;
     const princ = enderecos.find(x => x.lat != null);
     const gp = GP.ls.get('gp_pos');
     const ref = princ ? { lat: princ.lat, lng: princ.lng, de: 'Pelo seu endereço salvo' }
@@ -879,7 +881,7 @@
 
   let addr = null;
   function modoUI() {
-    $('c-modo').classList.toggle('hide', !loja.aceita_retirada);
+    $('c-modo').classList.toggle('hide', !loja.aceita_retirada || soRetirada);
     document.querySelectorAll('#c-modo button').forEach(b => b.classList.toggle('on', b.dataset.m === modoEnt));
     $('c-entrega').classList.toggle('hide', modoEnt === 'retirada');
     $('c-ret').classList.toggle('hide', modoEnt !== 'retirada');

@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=47255">
+<link rel="stylesheet" href="app.css?v=47409">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -752,7 +752,10 @@
             <div id="l-addr"></div>
             <p class="hide" id="l-coord"></p><div style="height:12px"></div>
             <div class="dl-only">
+            <label class="paytile rettile"><span class="pi" data-ic="bike"></span><span style="min-width:0"><b>Fazer entregas</b><small>Desligue se a sua loja trabalha só com retirada no local</small></span><span class="switch"><input type="checkbox" id="l-ent" checked><i></i></span></label>
             <label class="paytile rettile"><span class="pi" data-ic="store"></span><span style="min-width:0"><b>Aceitar retirada no local</b><small>O cliente busca na loja, sem taxa de entrega</small></span><span class="switch"><input type="checkbox" id="l-ret"><i></i></span></label>
+            <div class="warnline hide" id="ent-off" style="margin:4px 0 12px">Sua loja aparece como <b>só retirada no local</b>. O cliente faz o pedido e vem buscar, sem taxa de entrega.</div>
+            <div id="ent-cfg">
             <div class="sub-t">Como cobrar a entrega</div>
             <div class="modos" id="l-modo">
               <label class="opt"><input type="radio" name="taxa_modo" value="km"><span class="grow"><b>Valor por km</b><div class="small muted">Ex.: R$ 2,00 por km rodado</div></span></label>
@@ -778,6 +781,7 @@
               <div class="row between"><b class="small">Teste a taxa: arraste a distância</b><span class="small muted">exemplo</span></div>
               <input type="range" id="sim-km" min="0.1" max="20" step="0.1" value="4.6">
               <div class="simres" id="l-sim"></div>
+            </div>
             </div>
             </div>
           </div>
@@ -1023,7 +1027,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=47255"></script>
+<script src="app.js?v=47409"></script>
 <script src="plano-pagar.js?v=32758"></script>
 <script src="financeiro-painel.js?v=43772"></script>
 <script src="assin-painel.js?v=34641"></script>
@@ -1056,6 +1060,14 @@
   document.querySelectorAll('#ml-nav [data-mi]').forEach(el => { el.innerHTML = ic(el.dataset.mi); });
   let modAtual = GP.ls.get('gp_ml_mod') || 'dados';
   const MOD_SALVAR = ['dados', 'entrega', 'horario', 'pag'];
+  // Só retirada: esconde a configuração de taxa e mantém a retirada ligada
+  function entSync() {
+    const on = $('l-ent').checked;
+    $('ent-cfg').classList.toggle('hide', !on); $('ent-off').classList.toggle('hide', on);
+    if (!on) $('l-ret').checked = true;
+  }
+  $('l-ent').addEventListener('change', entSync);
+  $('l-ret').addEventListener('change', () => { if (!$('l-ret').checked && !$('l-ent').checked) { $('l-ret').checked = true; GP.toast('Sua loja não faz entrega, então a retirada precisa ficar ligada.', 'err'); } });
   function setMod(m, rolar) {
     const btn = document.querySelector(`#ml-nav [data-m="${m}"]`);
     if (!btn || btn.classList.contains('hide')) m = 'dados';
@@ -3251,7 +3263,7 @@
     document.querySelectorAll('input[name=taxa_modo]').forEach(r => r.checked = r.value === (l.taxa_modo || 'km'));
     modoUI();
     $('l-raio').value = Number(l.raio_km) ? String(l.raio_km).replace('.', ',') : ''; $('l-min').value = money(l.pedido_minimo);
-    $('l-pix').checked = loja ? l.aceita_pix : true; $('l-deb').checked = loja ? l.aceita_debito : true; $('l-cred').checked = loja ? l.aceita_credito : true; $('l-din').checked = loja ? l.aceita_dinheiro !== false : true; $('l-ret').checked = loja ? l.aceita_retirada !== false : true;
+    $('l-pix').checked = loja ? l.aceita_pix : true; $('l-deb').checked = loja ? l.aceita_debito : true; $('l-cred').checked = loja ? l.aceita_credito : true; $('l-din').checked = loja ? l.aceita_dinheiro !== false : true; $('l-ret').checked = loja ? l.aceita_retirada !== false : true; $('l-ent').checked = loja ? l.faz_entrega !== false : true; entSync();
     $('l-pixtipo').value = l.pix_tipo || 'cpf'; $('l-pixchave').value = l.pix_chave || '';
     $('l-pixnome').value = l.pix_nome || ''; $('l-pixcidade').value = l.pix_cidade || '';
     $('b-salvar').textContent = loja ? 'Salvar alterações' : 'Criar minha loja';
@@ -3408,7 +3420,7 @@
     const pix = $('l-pix').checked && !assinT;
     if (pix && !$('l-pixchave').value.trim()) { $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Informe a chave Pix (ou desative o Pix).', 'err'); }
     if (pix) { const v = GP.pixValida($('l-pixtipo').value, $('l-pixchave').value); if (!v.ok) { pixPrev(); $('l-pixchave').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Chave Pix: ' + v.msg, 'err'); } }
-    if (!assinT && modoAtual() === 'tabela' && !cfgTaxa().taxa_tabela.length) { $('faixas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Coloque pelo menos uma faixa na tabela de entrega.', 'err'); }
+    if (!assinT && $('l-ent').checked && modoAtual() === 'tabela' && !cfgTaxa().taxa_tabela.length) { $('faixas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Coloque pelo menos uma faixa na tabela de entrega.', 'err'); }
     if (!assinT && $('l-auto').checked && !Object.values(lerHoras()).some(x => x.aberto)) { $('horas').scrollIntoView({ behavior: 'smooth', block: 'center' }); return GP.toast('Marque pelo menos um dia aberto no horário de funcionamento.', 'err'); }
     if (!assinT && !pix && !$('l-deb').checked && !$('l-cred').checked && !$('l-din').checked) return GP.toast('Ative pelo menos uma forma de pagamento.', 'err');
     const row = {
@@ -3416,7 +3428,7 @@
       nome, cnpj: GP.digits($('l-cnpj').value), descricao: $('l-desc').value.trim(), telefone: $('l-tel').value.trim(), tempo_entrega: $('l-tempo').value.trim() || '30–50 min',
       endereco: assinT && !(ende.rua && ende.cidade) ? '' : lojaAddr ? lojaAddr.texto() : lojaEnd, lat: lojaPos ? lojaPos.lat : null, lng: lojaPos ? lojaPos.lng : null, imagem_url: lojaImg, capa_url: lojaCapa,
       ...cfgTaxa(), pedido_minimo: num($('l-min').value),
-      aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked, aceita_retirada: $('l-ret').checked,
+      aceita_pix: pix, aceita_debito: $('l-deb').checked, aceita_credito: $('l-cred').checked, aceita_dinheiro: $('l-din').checked, aceita_retirada: $('l-ret').checked || !$('l-ent').checked, ...(($('l-ent').checked && !(loja && 'faz_entrega' in loja)) ? {} : { faz_entrega: $('l-ent').checked }),
       horarios: lerHoras(), horario_auto: assinT ? false : $('l-auto').checked,
       ...((loja && 'cor' in loja) || lojas.some(x => 'cor' in x) || $('l-cor').value ? { cor: $('l-cor').value } : {}),
       pix_tipo: $('l-pixtipo').value, pix_chave: $('l-pixchave').value.trim(), pix_nome: $('l-pixnome').value.trim(), pix_cidade: $('l-pixcidade').value.trim()
@@ -3432,6 +3444,7 @@
     b.disabled = false; b.textContent = t;
     if (res.error) {
       if (/limite_lojas/.test(res.error.message)) { await loadPlano(); return verPlanos('Limite de lojas atingido', 'Para cadastrar mais lojas, escolha um plano maior.'); }
+      if (/faz_entrega/.test(res.error.message)) return GP.toast('Falta rodar o SQL v41 no Supabase para usar "só retirada".', 'err');
       if (/column .*(tipo|envio_externo)|(tipo|envio_externo).*column|schema cache/i.test(res.error.message)) return GP.toast('Falta rodar o SQL v17 no Supabase para salvar o tipo de loja.', 'err');
       return GP.toast(GP.err(res.error), 'err');
     }

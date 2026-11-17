@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=47255">
+<link rel="stylesheet" href="app.css?v=47409">
 <link rel="stylesheet" href="site.css?v=46863">
 <style>
   .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(242,69,28,.18),transparent 60%),linear-gradient(180deg,#fff, var(--bg));border-bottom:1px solid var(--line)}
@@ -318,7 +318,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=47255"></script>
+<script src="app.js?v=47409"></script>
 <script>
 (async () => {
   const { $, esc, brl, km, ic } = GP;
@@ -387,9 +387,10 @@
 
   const colsLoja = 'id,slug,nome,descricao,imagem_url,capa_url,lat,lng,taxa_km,taxa_minima,raio_km,taxa_modo,km_arredonda,taxa_tabela,tempo_entrega,aberta,horario_auto,horarios,nota_media,nota_qtd';
   let [{ data, error }, { data: prods }] = await Promise.all([
-    sb.from('ff_lojas').select(colsLoja + ',tipo,envio_externo,me_conectado,aceita_pix,aceita_retirada,cor').eq('ativa', true),
+    sb.from('ff_lojas').select(colsLoja + ',tipo,envio_externo,me_conectado,aceita_pix,aceita_retirada,cor,faz_entrega').eq('ativa', true),
     sb.from('ff_produtos').select('loja_id,nome,categoria').eq('disponivel', true)
   ]);
+  if (error) ({ data, error } = await sb.from('ff_lojas').select(colsLoja + ',tipo,envio_externo,me_conectado,aceita_pix,aceita_retirada,cor').eq('ativa', true));   // sem o SQL v41
   if (error) ({ data, error } = await sb.from('ff_lojas').select(colsLoja + ',tipo,envio_externo,me_conectado,aceita_pix,aceita_retirada').eq('ativa', true));   // sem o SQL v26
   if (error) ({ data, error } = await sb.from('ff_lojas').select(colsLoja + ',tipo').eq('ativa', true));
   if (error && /tipo/.test(error.message || '')) ({ data, error } = await sb.from('ff_lojas').select(colsLoja).eq('ativa', true));
@@ -439,10 +440,10 @@
     $('lista').innerHTML = arr.map(l => {
       const ini = esc((l.nome || '?').trim()[0].toUpperCase());
       const capa = l.capa_url || l.imagem_url;
-      const taxa = l._d == null ? GP.regraEntrega(l).replace(/ · mín\..*/, '')
+      const taxa = l.faz_entrega === false ? 'Só retirada no local' : l._d == null ? GP.regraEntrega(l).replace(/ · mín\..*/, '')
         : l._envio ? 'Envio para sua cidade' : l._fora ? (l.aceita_retirada ? 'Não entrega aqui · só retirada' : 'Não entrega na sua região') : (l._t > 0 ? brl(l._t) : 'Grátis');
       const ag = l.tipo === 'agenda';
-      return ` <a class="card store ${l._ab || ag ? '' : 'closed'} ${l._fora && !ag ? 'fora' : ''}" href="${ag ? 'agenda' : 'loja'}.html?l=${encodeURIComponent(l.slug)}">
+      return ` <a class="card store ${l._ab || ag ? '' : 'closed'} ${l._fora && !ag && l.faz_entrega !== false ? 'fora' : ''}" href="${ag ? 'agenda' : 'loja'}.html?l=${encodeURIComponent(l.slug)}">
         <div class="cover" style="${capa ? `background-image:url('${esc(capa)}')` : `background:linear-gradient(135deg,${l.cor ? GP.paletaCor(l.cor).suave : '#FFB199'},${l.cor ? GP.paletaCor(l.cor).cor : '#F2451C'})`}">
           ${ag ? `<span class="badge st ok"><i class="dot"></i>Agenda aberta</span>` : `<span class="badge st ${l._st.cls}"><i class="dot"></i>${l._st.curto}</span>`}
           ${cupLoja[l.id] ? `<span class="badge cupom-tag">${ic('tag')}${GP.descCupom(cupLoja[l.id])}</span>` : ''}

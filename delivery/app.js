@@ -304,6 +304,8 @@
     cupom_minimo: 'O pedido não atingiu o valor mínimo para este cupom.',
     troco_invalido: 'O valor do troco precisa ser maior que o total do pedido.',
     codigo_invalido: 'Código inválido ou vencido. Peça o código atual para a loja.',
+    entrega_indisponivel: 'Esta loja não faz entrega. Escolha retirar no local.',
+    ff_lojas_algum_modo: 'Deixe ligada a entrega ou a retirada no local: a loja precisa de pelo menos uma.',
     moto_login: 'Entre com a sua conta Google para ver e coletar as entregas.',
     status_invalido: 'Este pedido já mudou de situação. Atualize a lista.',
     pedido_invalido: 'Pedido não encontrado.',
@@ -371,6 +373,7 @@
   GP.foraArea = (loja, dist) => GP.taxaOuNada(loja, dist) == null;
   // texto curto da regra de entrega da loja
   GP.regraEntrega = (loja) => {
+    if (loja.faz_entrega === false) return 'Só retirada no local';
     if (loja.taxa_modo === 'tabela') { const f = GP.faixas(loja); if (!f.length) return 'Entrega a combinar'; const mn = Math.min(...f.map(x => Number(x.valor))); return mn ? `Entrega a partir de ${GP.brl(mn)}` : 'Entrega grátis perto'; }
     return Number(loja.taxa_km) ? `${GP.brl(loja.taxa_km)}/km${Number(loja.taxa_minima) ? ' · mín. ' + GP.brl(loja.taxa_minima) : ''}` : 'Entrega grátis';
   };
