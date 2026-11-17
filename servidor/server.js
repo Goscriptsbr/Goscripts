@@ -220,7 +220,13 @@ function onMsg(c, op, payload) {
       if (!p || p.leader !== c || c.room) break;
       if (p.members.some((o) => o.room)) return sendLobby(p, "Espere todos voltarem da partida.");
       const lbroke = poor(p.members, stakeOf(p.stake));
-      if (lbroke) return sendLobby(p, lbroke.name + " não tem moedas para apostar " + p.stake + ".");
+      if (lbroke) return sendLobby(p, lbroke.name + " não tem moedas para " + (p.tour ? "a inscrição de " : "apostar ") + p.stake + ".");
+      if (p.tour) {
+        if (p.tourRun && !p.tourRun.done) return sendLobby(p, "O torneio já está acontecendo.");
+        if (p.members.length < 3) return sendLobby(p, "O torneio precisa de pelo menos 3 jogadores.");
+        startTour(p);
+        break;
+      }
       unqueue(c);
       if (!p.four) {
         if (p.members.length !== 2) return sendLobby(p, "Para o 1 contra 1 precisa ter 2 no lobby.");
@@ -236,13 +242,40 @@ function onMsg(c, op, payload) {
       const p = c.party;
       if (!p || p.leader !== c) break;
       unqueue(c); setStatus(c, "online");
+      if (p.tourRun && !p.tourRun.done) break;
       p.game = m.game === "truco" ? "truco" : "sinuca";
-      p.four = !!m.four;
+      p.four = p.tour ? false : !!m.four;
       if (m.stake != null) p.stake = stakeOf(m.stake);
       sendLobby(p);
       break;
     }
     case "coins": c.coins = Math.max(0, Number(m.n) || 0); break;
+    case "tcreate": { // cria um lobby de TORNEIO (3 a 8 amigos, mata-mata 1x1)
+      if (!c.code || c.room) return;
+      unqueue(c); setStatus(c, "online");
+      leaveParty(c);
+      const game = m.game === "truco" ? "truco" : "sinuca";
+      const p = { id: nextParty++, leader: c, members: [c], game, four: false, stake: stakeOf(m.stake), tour: true };
+      c.party = p;
+      sendLobby(p, "Torneio criado! Chame de 3 a 8 amigos.");
+      break;
+    }
+    case "mresult": { // o anfitrião avisa quem ganhou (usado no torneio)
+      const r = c.room;
+      if (!r || !r.tour || c.peer !== 1 || r.tour.done) break;
+      const team = Number(m.team) === 1 ? 1 : 0;
+      const w = r.members.find((x) => (x.peer - 1) % 2 === team);
+      tourResult(r, w ? w.code : null);
+      break;
+    }
+    case "tleave": { // sai do torneio (se tinha jogo marcado, o adversário passa)
+      const T = c.party && c.party.tourRun;
+      if (!T || T.done) break;
+      T.out.add(c.code);
+      tourWalkovers(T);
+      sendTour(T);
+      break;
+    }
     case "score": { // liga semanal: o celular manda os pontos da semana
       if (!c.code) break;
       const e = players.get(c.code) || { name: c.name, seen: Date.now() };
@@ -375,10 +408,10 @@ function onMsg(c, op, payload) {
       const f = clients.get(String(m.code || "").toUpperCase());
       if (!f || f === c) return sendJ(c, { t: "invite_fail", msg: "Amigo offline" });
       if (f.room) return sendJ(c, { t: "invite_fail", msg: "Amigo está jogando" });
-      if (m.lobby && c.party && c.party.members.length >= (c.party.four ? 4 : 2)) return sendJ(c, { t: "invite_fail", msg: "O lobby já está cheio" });
+      if (m.lobby && c.party && c.party.members.length >= partyMax(c.party)) return sendJ(c, { t: "invite_fail", msg: "O lobby já está cheio" });
       const ist = m.lobby ? 0 : stakeOf(m.stake);
       if (ist && (c.coins || 0) < ist) return sendJ(c, { t: "invite_fail", msg: "Você não tem moedas para apostar " + ist + "." });
-      sendJ(f, { t: "invited", from: c.code, name: c.name, game: m.game === "truco" ? "truco" : "sinuca", lobby: !!m.lobby, stake: ist });
+      sendJ(f, { t: "invited", from: c.code, name: c.name, game: m.lobby && c.party ? c.party.game : (m.game === "truco" ? "truco" : "sinuca"), lobby: !!m.lobby, stake: m.lobby && c.party ? stakeOf(c.party.stake) : ist, tour: !!(m.lobby && c.party && c.party.tour) });
       sendJ(c, { t: "invite_ok", name: f.name, lobby: !!m.lobby });
       break;
     }
@@ -395,7 +428,7 @@ function onMsg(c, op, payload) {
           p = { id: nextParty++, leader: f, members: [f], game: m.game === "truco" ? "truco" : "sinuca", four: true };
           f.party = p;
         }
-        if (p.members.length >= (p.four ? 4 : 2)) return sendJ(c, { t: "invite_fail", msg: "O lobby já está cheio" });
+        if (p.members.length >= partyMax(p)) return sendJ(c, { t: "invite_fail", msg: "O lobby já está cheio" });
         if (!p.team) p.team = new Map();
         p.team.set(c.code, teamCount(p, 0) < 2 ? 0 : 1);
         p.members.push(c);
@@ -474,7 +507,7 @@ function queueOf(c) {
 function sendLobby(p, msg) {
   const q = queueOf(p.leader);
   const d = {
-    t: "lobby", leader: p.leader.code, game: p.game, four: p.four, searching: !!q, stake: stakeOf(p.stake),
+    t: "lobby", leader: p.leader.code, game: p.game, four: p.four, searching: !!q, stake: stakeOf(p.stake), tour: !!p.tour, touring: !!(p.tourRun && !p.tourRun.done),
     members: p.members.map((o) => ({ code: o.code, name: o.name, team: teamOf(p, o) })), msg: msg || "",
   };
   for (const o of p.members) sendJ(o, d);
@@ -585,6 +618,12 @@ function relay(c, payload) {
 function leaveRoom(c) {
   const r = c.room;
   if (!r) return;
+  if (r.tour && !r.tour.done) {
+    // saiu no meio de uma partida do torneio: o outro passa de fase
+    const o = r.members.find((x) => x !== c);
+    tourResult(r, o ? o.code : null);
+    return;
+  }
   const wasHost = c.peer === 1;
   r.members = r.members.filter((p) => p !== c);
   const left = c.peer;
@@ -732,3 +771,99 @@ const server = http.createServer((req, res) => {
 });
 server.on("upgrade", (req, socket) => accept(req, socket));
 server.listen(PORT, () => console.log("ouvindo na porta " + PORT));
+
+
+// ------------------------------------------------------------ torneio (mata-mata 1x1 entre amigos)
+function partyMax(p) { return p.tour ? 8 : (p.four ? 4 : 2); }
+
+function startTour(p) {
+  const codes = p.members.map((o) => o.code);
+  for (let i = codes.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [codes[i], codes[j]] = [codes[j], codes[i]]; }
+  let size = 2;
+  while (size < codes.length) size *= 2;
+  const names = {};
+  for (const o of p.members) names[o.code] = o.name;
+  // chaves com "bye" espalhados: quem fica sem adversário passa direto
+  const slots = new Array(size).fill(null);
+  const byes = size - codes.length;
+  let k = 0;
+  for (let i = 0; i < size / 2; i++) {
+    slots[i * 2] = codes[k++] || null;
+    slots[i * 2 + 1] = i < byes ? null : (codes[k++] || null);
+  }
+  const first = [];
+  for (let i = 0; i < size; i += 2) first.push({ a: slots[i], b: slots[i + 1], w: null, live: false });
+  const T = { id: Date.now() % 1000000, party: p, game: p.game, fee: stakeOf(p.stake), players: codes.slice(), names, rounds: [first], round: 0, out: new Set(), done: false, champ: null };
+  p.tourRun = T;
+  for (const o of p.members) { unqueue(o); }
+  sendTour(T, "start");
+  setTimeout(() => tourPlay(T), 2500);
+}
+
+function tourWalkovers(T) {
+  const rd = T.rounds[T.round];
+  for (const mt of rd) {
+    if (mt.w || mt.live) continue;
+    const aOk = mt.a && !T.out.has(mt.a) && clients.get(mt.a);
+    const bOk = mt.b && !T.out.has(mt.b) && clients.get(mt.b);
+    if (!aOk && !bOk) mt.w = mt.a || mt.b || "-";
+    else if (!bOk) mt.w = mt.a;
+    else if (!aOk) mt.w = mt.b;
+  }
+  tourNext(T);
+}
+
+function tourPlay(T) {
+  if (T.done) return;
+  tourWalkovers(T);
+  if (T.done) return;
+  const rd = T.rounds[T.round];
+  for (const mt of rd) {
+    if (mt.w || mt.live) continue;
+    const a = clients.get(mt.a), b = clients.get(mt.b);
+    if (!a || !b || a.room || b.room) continue;
+    mt.live = true;
+    matchSeats([a, b], T.game, 0);
+    a.room.tour = { T, mt };
+  }
+  sendTour(T);
+}
+
+function tourResult(r, winCode) {
+  const info = r.tour;
+  const T = info.T, mt = info.mt;
+  info.done = true;
+  mt.live = false;
+  if (!mt.w) mt.w = winCode || mt.a || mt.b;
+  if (mt.w === mt.a && mt.b) T.out.add(mt.b);
+  else if (mt.w === mt.b && mt.a) T.out.add(mt.a);
+  // fecha a sala sem avisar "adversário saiu" (cada um volta para a chave do torneio)
+  for (const x of r.members) { x.room = null; x.peer = 0; x.status = "online"; }
+  r.members = [];
+  tourNext(T);
+  sendTour(T);
+}
+
+function tourNext(T) {
+  if (T.done) return;
+  const rd = T.rounds[T.round];
+  if (rd.some((mt) => !mt.w)) return;
+  const winners = rd.map((mt) => mt.w).filter((w) => w && w !== "-");
+  if (winners.length <= 1) {
+    T.done = true;
+    T.champ = winners[0] || null;
+    sendTour(T, "end");
+    return;
+  }
+  const next = [];
+  for (let i = 0; i < winners.length; i += 2) next.push({ a: winners[i], b: winners[i + 1] || null, w: null, live: false });
+  T.rounds.push(next);
+  T.round++;
+  setTimeout(() => tourPlay(T), 4000);
+}
+
+function sendTour(T, phase) {
+  const d = { t: "tour", id: T.id, game: T.game, fee: T.fee, pot: T.fee * T.players.length, n: T.players.length, names: T.names,
+    rounds: T.rounds.map((rd) => rd.map((mt) => ({ a: mt.a, b: mt.b, w: mt.w, live: mt.live }))), round: T.round, done: T.done, champ: T.champ, out: [...T.out], phase: phase || "" };
+  for (const code of T.players) { const o = clients.get(code); if (o) sendJ(o, d); }
+}

@@ -196,6 +196,7 @@ func build() -> void:
 	_build_missoes()
 	_build_perfil()
 	_build_ranking()
+	_build_torneio()
 	_build_shop()
 	_build_stats()
 	_build_settings()
@@ -1073,10 +1074,17 @@ func _build_online() -> void:
 		mb.pressed.connect(_online_mode.bind(k[0]))
 		online_mode_btns[k[0]] = mb
 		cs.add_child(mb)
-	lobby_btn = icon_btn("CRIAR LOBBY DE AMIGOS", "people", Color("8e44ad"), 390)
+	var lbr := HBoxContainer.new()
+	lbr.add_theme_constant_override("separation", 10)
+	lv.add_child(lbr)
+	lobby_btn = mk_btn("CRIAR LOBBY", 190, 52, Color("8e44ad"), 19)
 	lobby_btn.pressed.connect(func(): lobby_create_ask(""))
-	lv.add_child(lobby_btn)
+	lbr.add_child(lobby_btn)
+	tour_btn = mk_btn("CRIAR TORNEIO", 190, 52, Color("c0392b"), 19)
+	tour_btn.pressed.connect(tour_create_ask)
+	lbr.add_child(tour_btn)
 	var fb := icon_btn("AMIGOS  •  CONVIDAR", "people", Color("16897f"), 390)
+	fb.custom_minimum_size = Vector2(390, 52)
 	fb.pressed.connect(show_screen.bind("amigos"))
 	lv.add_child(fb)
 	lv.add_child(_section("APOSTA (MOEDAS)"))
@@ -1116,7 +1124,7 @@ func _build_online() -> void:
 	start_btn = mk_btn("JOGAR AGORA", 300, 58, Color("e67e22"), 22)
 	start_btn.pressed.connect(func():
 		game.net.world_send({"t": "lstart"})
-		online_status("Montando a mesa com seu lobby..."))
+		online_status("Sorteando a chave do torneio..." if bool(lobby.get("tour", false)) else "Montando a mesa com seu lobby..."))
 	start_btn.visible = false
 	sbr.add_child(start_btn)
 	# ---- código de sala (só no Wi-Fi)
@@ -1156,6 +1164,10 @@ var lobby := {}
 var lobby_row: HBoxContainer
 var start_btn: Button
 var lobby_btn: Button
+var tour_btn: Button
+var tour_canvas: Control
+var tour_info: Label
+var tour_leave_btn: Button
 var lobby_invite_after := ""
 
 
@@ -1264,6 +1276,8 @@ func lobby_update(m: Dictionary) -> void:
 		_lobby_paint()
 		_online_btn_refresh()
 		return
+	if game.tour_active() or cur == "torneio":
+		return
 	# no meio de uma partida: só guarda o lobby (volta para ele quando a partida acabar)
 	if game.net.active or (truco_node != null and is_instance_valid(truco_node)) or (game.mode == game.Mode.ONLINE and game.st != game.St.MENU):
 		return
@@ -1291,6 +1305,16 @@ func lobby_update(m: Dictionary) -> void:
 		var code := lobby_invite_after
 		lobby_invite_after = ""
 		game.net.world_send({"t": "invite", "code": code, "game": game.net_game, "lobby": true})
+	if bool(m.get("tour", false)):
+		var nm: int = (m.members as Array).size()
+		var fee := int(m.get("stake", 0))
+		var ft := "sem inscrição" if fee <= 0 else "inscrição %d  •  o campeão leva %d + bônus" % [fee, fee * nm]
+		if lobby_leader():
+			online_status("TORNEIO de %s: %d de 8 jogadores (mínimo 3)  •  %s. Chame em AMIGOS • LOBBY +." % ["TRUCO" if game.net_game == "truco" else "SINUCA", nm, ft])
+		else:
+			online_status("Você está no TORNEIO de %s (%d jogadores)  •  %s. Esperando o dono começar." % [_lobby_name(str(m.leader)), nm, ft])
+		_online_btn_refresh()
+		return
 	if lobby_leader():
 		if bool(m.get("searching", false)):
 			online_status("Lobby pronto! Procurando adversários... a IA completa se demorar.")
@@ -1464,14 +1488,16 @@ func _lobby_paint() -> void:
 		var h := mk_lbl("Chame amigos para a sua mesa em  AMIGOS • LOBBY", 15, Color(1, 1, 1, 0.55), 2)
 		lobby_row.add_child(h)
 		return
-	lobby_row.add_child(mk_lbl("LOBBY %s %s:" % ["TRUCO" if str(lobby.get("game", "")) == "truco" else "SINUCA", "2x2" if bool(lobby.get("four", true)) else "1x1"], 16, Color("ffe066"), 2))
+	var is_t: bool = bool(lobby.get("tour", false))
+	lobby_row.add_child(mk_lbl(("TORNEIO %s:" % ("TRUCO" if str(lobby.get("game", "")) == "truco" else "SINUCA")) if is_t else ("LOBBY %s %s:" % ["TRUCO" if str(lobby.get("game", "")) == "truco" else "SINUCA", "2x2" if bool(lobby.get("four", true)) else "1x1"]), 16, Color("ffe066"), 2))
 	for o in lobby.members:
 		var lead: bool = str(o.code) == str(lobby.leader)
 		var me: bool = str(o.code) == game.my_code()
 		var nm := str(o.name)
-		if nm.length() > 12:
-			nm = nm.substr(0, 11) + "…"
-		var four_l: bool = bool(lobby.get("four", true))
+		var mx := 6 if is_t and (lobby.members as Array).size() > 4 else 12
+		if nm.length() > mx:
+			nm = nm.substr(0, mx - 1) + "…"
+		var four_l: bool = bool(lobby.get("four", true)) and not is_t
 		var my_t := 0
 		for o2 in lobby.members:
 			if str(o2.code) == game.my_code():
@@ -1717,6 +1743,9 @@ func _online_busy() -> bool:
 
 
 func _online_toggle_search() -> void:
+	if in_lobby() and bool(lobby.get("tour", false)):
+		_lobby_leave()
+		return
 	if in_lobby() and not lobby_leader():
 		_lobby_leave()
 		return
@@ -1742,6 +1771,19 @@ func _online_toggle_search() -> void:
 
 func _online_btn_refresh() -> void:
 	if search_btn == null:
+		return
+	var tourl: bool = in_lobby() and bool(lobby.get("tour", false))
+	if tour_btn != null:
+		tour_btn.visible = not in_lobby()
+	if tourl and start_btn != null:
+		var nt: int = (lobby.get("members", []) as Array).size()
+		start_btn.visible = lobby_leader()
+		start_btn.disabled = nt < 3
+		start_btn.text = ("COMEÇAR TORNEIO (%d)" % nt) if nt >= 3 else "CHAME MAIS AMIGOS (%d/3)" % nt
+		if lobby_btn != null:
+			lobby_btn.visible = false
+		search_btn.text = "CANCELAR TORNEIO" if lobby_leader() else "SAIR DO TORNEIO"
+		search_btn.add_theme_stylebox_override("normal", sbox(GRAY, 20, GRAY.lightened(0.35), 3, 8))
 		return
 	if start_btn != null:
 		var lead4: bool = lobby_leader() and game.net_team
@@ -2476,11 +2518,14 @@ func _invite(code: String, g: String, to_lobby: bool) -> void:
 	say("Enviando convite..." if stk <= 0 else "Enviando convite (valendo %d moedas)..." % stk)
 
 
-func show_invite(from: String, nm: String, g: String, to_lobby := false, stake := 0) -> void:
+func show_invite(from: String, nm: String, g: String, to_lobby := false, stake := 0, is_tour := false) -> void:
 	for c in invite_box.get_children():
 		c.queue_free()
 	invite_box.add_child(mk_lbl("CONVITE!", 34, Color("f4c542"), 6))
-	if to_lobby:
+	if to_lobby and is_tour:
+		invite_box.add_child(mk_lbl("%s te chamou para um TORNEIO de %s" % [nm, "TRUCO" if g == "truco" else "SINUCA"], 22, Color.WHITE, 3))
+		invite_box.add_child(mk_lbl("Mata-mata 1x1 até sair o campeão." + ("" if stake <= 0 else "  Inscrição: %d moedas." % stake), 17, Color("ffe066"), 2))
+	elif to_lobby:
 		invite_box.add_child(mk_lbl("%s te chamou para o LOBBY de %s" % [nm, "TRUCO" if g == "truco" else "SINUCA"], 22, Color.WHITE, 3))
 		invite_box.add_child(mk_lbl("Vocês procuram mesa juntos, no mesmo time (2 contra 2).", 17, Color(1, 1, 1, 0.75), 2))
 	else:
@@ -2893,13 +2938,13 @@ func _build_shop() -> void:
 	tabs.add_theme_constant_override("separation", 14)
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(tabs)
-	for k in [["felt", "MESAS"], ["cue", "TACOS"], ["deck", "BARALHOS"]]:
-		var b := mk_btn(k[1], 220, 54, GRAY, 26)
+	for k in [["felt", "MESAS"], ["cue", "TACOS"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"], ["pack", "PACOTES"]]:
+		var b := mk_btn(k[1], 200, 54, GRAY, 24)
 		b.pressed.connect(_shop_tab.bind(k[0]))
 		tab_btns[k[0]] = b
 		tabs.add_child(b)
-	for k in [["cue", "TACOS"], ["felt", "MESAS"], ["deck", "BARALHOS"]]:
-		var sb := mk_btn(k[1], 220, 54, GRAY, 26)
+	for k in [["cue", "TACOS"], ["felt", "MESAS"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"]]:
+		var sb := mk_btn(k[1], 200, 54, GRAY, 24)
 		sb.pressed.connect(_inv_sub.bind(k[0]))
 		inv_btns[k[0]] = sb
 		tabs.add_child(sb)
@@ -3232,15 +3277,19 @@ func _shop_refresh() -> void:
 		c.queue_free()
 	var items: Array = []
 	var owned_l: Array = game.save.owned
+	if shop_tab == "pack":
+		_packs_render()
+		return
+	var srcmap := {"cue": game.CUES + game.MONTHLY, "deck": game.DECKS, "felt": game.FELTS, "wfx": game.WFX}
 	if shop_tab == "inv":
-		var src: Array = game.CUES + game.MONTHLY if inv_sub == "cue" else (game.DECKS if inv_sub == "deck" else game.FELTS)
+		var src: Array = srcmap.get(inv_sub, game.FELTS)
 		for it in src:
-			if owned_l.has(it.id) or it.id == "dk_classico":
+			if owned_l.has(it.id) or int(it.get("price", 1)) == 0 and (str(it.id).begins_with("dk_") or str(it.id).begins_with("wf_")):
 				items.append(it)
 	else:
-		var src2: Array = game.FELTS if shop_tab == "felt" else (game.DECKS if shop_tab == "deck" else game.CUES)
+		var src2: Array = game.CUES if shop_tab == "cue" else srcmap.get(shop_tab, game.FELTS)
 		for it in src2:
-			if not owned_l.has(it.id) and it.id != "dk_classico":
+			if not owned_l.has(it.id) and it.id != "dk_classico" and it.id != "wf_confete":
 				items.append(it)
 	if items.is_empty():
 		var el := mk_lbl("Você já tem todos os itens desta aba!\nVeja tudo em INVENTÁRIO.", 26, Color(1, 1, 1, 0.8), 4)
@@ -3251,7 +3300,8 @@ func _shop_refresh() -> void:
 	for it in items:
 		var is_cue: bool = it.has("shaft")
 		var is_deck: bool = it.has("deck")
-		var equipped: String = game.save.cue if is_cue else ("dk_" + str(game.save.get("deck", "classico")) if is_deck else game.save.felt)
+		var is_wfx: bool = it.has("wfx")
+		var equipped: String = game.save.cue if is_cue else ("dk_" + str(game.save.get("deck", "classico")) if is_deck else (str(game.save.get("wfx", "wf_confete")) if is_wfx else game.save.felt))
 		var card := PanelContainer.new()
 		card.custom_minimum_size = Vector2(212, 404)
 		card.add_theme_stylebox_override("panel", sbox(NAVY, 22, Color(1, 1, 1, 0.22) if it.id != equipped else GOLD, 3 if it.id != equipped else 5, 10))
@@ -3266,6 +3316,8 @@ func _shop_refresh() -> void:
 			_cue_preview(pv, it, Vector2(60, 100), 140.0, -40.0, 22.0, 0.85, fx_nodes)
 		elif is_deck:
 			_deck_preview(pv, str(it.deck))
+		elif is_wfx:
+			_wfx_preview(pv, str(it.wfx))
 		else:
 			var wood := ColorRect.new()
 			wood.color = Color("5b3a1e")
@@ -3308,7 +3360,7 @@ func _shop_refresh() -> void:
 			tg.custom_minimum_size = Vector2(184, 0)
 			tg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vb.add_child(tg)
-		var owned: bool = game.save.owned.has(it.id) or it.id == "dk_classico"
+		var owned: bool = game.save.owned.has(it.id) or it.id == "dk_classico" or it.id == "wf_confete"
 		var btn: Button
 		if it.id == equipped:
 			btn = mk_btn("EM USO", 184, 56, GREEN, 24)
@@ -3353,6 +3405,12 @@ func _deck_preview(pv: Control, style_id: String) -> void:
 
 
 func _equip(id: String) -> void:
+	if id.begins_with("wf_"):
+		game.save["wfx"] = id
+		game.write_save()
+		_shop_refresh()
+		game.play_victory()
+		return
 	if id.begins_with("dk_"):
 		game.save.deck = id.substr(3)
 		game.write_save()
@@ -3616,11 +3674,18 @@ func close_modal() -> void:
 func reward_icon(r: Dictionary, sz: float) -> Control:
 	if r.has("item"):
 		var item: Dictionary = {}
-		for it in game.FELTS + game.CUES:
+		for it in game.FELTS + game.CUES + game.DECKS + game.WFX:
 			if it.id == r.item:
 				item = it
 		var ic := Control.new()
 		ic.custom_minimum_size = Vector2(sz * 2.2, sz * 1.3)
+		if item.has("deck") or item.has("wfx"):
+			ic.custom_minimum_size = Vector2(184, 150)
+			if item.has("deck"):
+				_deck_preview(ic, str(item.deck))
+			else:
+				_wfx_preview(ic, str(item.wfx))
+			return ic
 		if item.has("shaft"):
 			_cue_preview(ic, item, Vector2(sz * 1.1, sz * 0.65), sz * 2.0, -24.0, sz * 0.22, 1.0, fx_nodes)
 		elif not item.is_empty():
@@ -3866,7 +3931,7 @@ func show_over() -> void:
 		over_title.add_theme_color_override("font_color", Color("f4c542"))
 		over_sub.text = "%s venceu!" % game.players[w]
 	over_reward.text = game.reward_txt
-	over_rematch.visible = game.mode != game.Mode.ONLINE or (not game.net4 and not in_lobby())
+	over_rematch.visible = game.mode != game.Mode.ONLINE or (not game.net4 and not in_lobby() and not game.tour_active())
 	over_rematch.disabled = false
 	over_rematch.text = "REVANCHE"
 	refresh_top()
@@ -3906,6 +3971,8 @@ func show_screen(sname: String) -> void:
 		_perfil_refresh()
 	elif sname == "ranking":
 		_ranking_refresh()
+	elif sname == "torneio":
+		_tour_paint()
 	if sname == "online" or sname == "play" or sname == "truco":
 		for k in ["bet_on", "bet_ai", "bet_tr"]:
 			_stake_paint(k)
@@ -4584,7 +4651,7 @@ func _rank_render() -> void:
 		_rank_msg("Ninguém pontuou ainda nesta semana. Jogue online e seja o primeiro!" if rk_tab == "todos" else "Nenhum amigo pontuou ainda nesta semana.")
 		return
 	for e in list:
-		var mine: bool = str(e.code) == game.my_code()
+		var mine: bool = str(e.code) == game.my_code().to_upper()
 		var pos := int(e.pos)
 		var row := PanelContainer.new()
 		row.add_theme_stylebox_override("panel", sbox(Color(0.12, 0.2, 0.32, 0.95) if mine else Color(0.04, 0.07, 0.11, 0.92), 14, GOLD if mine else Color(1, 1, 1, 0.08), 2, 2))
@@ -4609,3 +4676,353 @@ func _rank_render() -> void:
 			_div_badge(dc, Vector2(452, 27), 17, dv)
 			dc.draw_string(f, Vector2(476, 33), str(game.DIVS[dv].name).left(4), HORIZONTAL_ALIGNMENT_LEFT, 60, 13, game.DIVS[dv].col)
 			dc.draw_string(f, Vector2(500, 35), str(int(e.pts)), HORIZONTAL_ALIGNMENT_RIGHT, 100, 22, Color("ffe066")))
+
+
+
+# prévia animada do efeito de vitória na loja
+func _wfx_preview(pv: Control, kind: String) -> void:
+	var VF = load("res://victory_fx.gd")
+	var st := {"ps": [], "t": 0.0}
+	var rng := RandomNumberGenerator.new()
+	var dc := Control.new()
+	dc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dc.clip_contents = true
+	dc.draw.connect(func():
+		dc.draw_style_box(sbox(Color(0.02, 0.04, 0.08), 14), Rect2(Vector2.ZERO, Vector2(184, 150)))
+		VF.draw_fx(dc, Vector2(184, 150), st.ps, st.t, kind)
+		dc.draw_string(ThemeDB.fallback_font, Vector2(0, 84), "VITÓRIA!", HORIZONTAL_ALIGNMENT_CENTER, 184, 26, Color("f4c542")))
+	pv.add_child(dc)
+	var tw := dc.create_tween().set_loops()
+	tw.tween_callback(func():
+		st.t = float(st.t) + 0.033
+		VF.spawn(st.ps, Vector2(184, 150), kind, 0.033 * 0.35, rng)
+		VF.step(st.ps, 0.033, kind)
+		dc.queue_redraw()).set_delay(0.033)
+
+
+func _packs_render() -> void:
+	for pk in game.PACKS:
+		var card := PanelContainer.new()
+		card.custom_minimum_size = Vector2(300, 404)
+		var col: Color = pk.col
+		card.add_theme_stylebox_override("panel", sbox(NAVY, 22, col, 3, 10))
+		shop_row.add_child(card)
+		var vb := VBoxContainer.new()
+		vb.add_theme_constant_override("separation", 10)
+		card.add_child(margin(vb, 16))
+		var pv := Control.new()
+		pv.custom_minimum_size = Vector2(268, 190)
+		pv.draw.connect(func(): _draw_pack(pv, Vector2(134, 100), 1.0, col, 0.0))
+		vb.add_child(pv)
+		vb.add_child(mk_lbl(str(pk.name), 28, Color.WHITE, 4))
+		var tg := mk_lbl(str(pk.tag), 17, Color(1, 1, 1, 0.7))
+		tg.custom_minimum_size = Vector2(268, 0)
+		tg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vb.add_child(tg)
+		var pid := str(pk.id)
+		var b: Button
+		if int(pk.grana) > 0:
+			b = mk_btn("ABRIR  ◆ %d" % int(pk.grana), 268, 60, PURPLE if int(game.save.grana) >= int(pk.grana) else GRAY, 24)
+		else:
+			b = mk_btn("ABRIR  %d" % int(pk.price), 268, 60, GOLD if int(game.save.coins) >= int(pk.price) else RED, 24)
+		b.pressed.connect(_pack_buy.bind(pid))
+		vb.add_child(b)
+
+
+func _draw_pack(c: Control, ctr: Vector2, sc: float, col: Color, shake: float) -> void:
+	c.draw_set_transform(ctr, sin(shake * 40.0) * 0.08 * minf(shake, 1.0), Vector2(sc, sc))
+	var r := Rect2(-70, -50, 140, 110)
+	c.draw_style_box(sbox(Color(0, 0, 0, 0.35), 14), Rect2(r.position + Vector2(5, 8), r.size))
+	c.draw_style_box(sbox(col.darkened(0.25), 14, col.lightened(0.3), 3), r)
+	c.draw_style_box(sbox(col, 10, col.lightened(0.4), 3), Rect2(-78, -70, 156, 34))
+	c.draw_rect(Rect2(-12, -70, 24, 130), Color("c0303a"))
+	c.draw_rect(Rect2(-78, -58, 156, 12), Color("c0303a"))
+	c.draw_circle(Vector2(-16, -76), 14, Color("e0404a"))
+	c.draw_circle(Vector2(16, -76), 14, Color("e0404a"))
+	c.draw_string(ThemeDB.fallback_font, Vector2(-70, 34), "?", HORIZONTAL_ALIGNMENT_CENTER, 140, 54, Color(1, 1, 1, 0.85))
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _pack_buy(id: String) -> void:
+	var pk: Dictionary = {}
+	for p in game.PACKS:
+		if str(p.id) == id:
+			pk = p
+	if int(pk.grana) > 0:
+		if int(game.save.grana) < int(pk.grana):
+			say("Grana insuficiente! Ganhe Grana no Passe, na Roleta e no prêmio do 7º dia.")
+			return
+		game.save.grana = int(game.save.grana) - int(pk.grana)
+	else:
+		if int(game.save.coins) < int(pk.price):
+			say("Moedas insuficientes!")
+			return
+		game.save.coins -= int(pk.price)
+	game.write_save()
+	refresh_top()
+	var res: Dictionary = game.open_pack(id)
+	# animação: o pacote treme e abre
+	close_modal()
+	modal_layer = Control.new()
+	modal_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(modal_layer)
+	var dimr := ColorRect.new()
+	dimr.color = Color(0, 0, 0, 0.75)
+	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(dimr)
+	var box := Control.new()
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	modal_layer.add_child(box)
+	var st := {"t": 0.0}
+	var col: Color = pk.col
+	box.draw.connect(func():
+		var sc := 1.6 + float(st.t) * 0.3
+		_draw_pack(box, box.size / 2.0, sc, col, float(st.t)))
+	game.play("click", 0.8)
+	var tw := box.create_tween()
+	tw.tween_method(func(v: float):
+		st.t = v
+		box.queue_redraw(), 0.0, 1.4, 1.4)
+	tw.tween_callback(func():
+		game.play("pocket")
+		var r := {"coins": int(res.coins)} if res.has("coins") else {"item": str(res.item)}
+		show_reward(str(pk.name) + " aberto!", str(res.txt), r)
+		_shop_refresh())
+
+
+
+# ---------------------------------------------------------------- torneio
+func tour_create_ask() -> void:
+	close_modal()
+	var sel := {"g": game.net_game, "fee": 0}
+	modal_layer = Control.new()
+	modal_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(modal_layer)
+	var dimr := ColorRect.new()
+	dimr.color = Color(0, 0, 0, 0.65)
+	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(dimr)
+	var cc := CenterContainer.new()
+	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(cc)
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.05, 0.1, 0.97), 28, Color("ff7a6a"), 3, 24))
+	cc.add_child(p)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 12)
+	p.add_child(margin(vb, 26))
+	vb.add_child(mk_lbl("CRIAR TORNEIO", 34, Color("f4c542"), 6))
+	vb.add_child(mk_lbl("De 3 a 8 amigos, mata-mata 1 contra 1. O campeão leva tudo!", 18, Color(1, 1, 1, 0.75), 2))
+	vb.add_child(_section("QUAL JOGO?"))
+	var gr := HBoxContainer.new()
+	gr.add_theme_constant_override("separation", 12)
+	gr.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_child(gr)
+	var gb := []
+	for k in [["sinuca", "SINUCA"], ["truco", "TRUCO"]]:
+		var b := mk_btn(k[1], 220, 60, GRAY, 26)
+		gr.add_child(b)
+		gb.append(b)
+	vb.add_child(_section("INSCRIÇÃO (cada jogador paga; o campeão leva tudo + bônus)"))
+	var fr := HBoxContainer.new()
+	fr.add_theme_constant_override("separation", 10)
+	fr.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_child(fr)
+	var fb := []
+	var fees := [0, 50, 100, 500]
+	for v in fees:
+		var b2 := mk_btn("GRÁTIS" if v == 0 else str(v), 106, 54, GRAY, 20)
+		fr.add_child(b2)
+		fb.append(b2)
+	var paint := func():
+		_seg_paint(gb, 0 if sel.g == "sinuca" else 1, [GREEN, Color("b8323a")])
+		_seg_paint(fb, fees.find(int(sel.fee)), [GOLD])
+	for i in 2:
+		gb[i].pressed.connect(func():
+			sel.g = "sinuca" if i == 0 else "truco"
+			paint.call())
+	for i in fees.size():
+		fb[i].pressed.connect(func():
+			if int(fees[i]) > int(game.save.coins):
+				say("Você não tem moedas para essa inscrição.")
+				return
+			sel.fee = fees[i]
+			paint.call())
+	paint.call()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_child(row)
+	var ok := mk_btn("CRIAR TORNEIO", 260, 64, Color("c0392b"), 24)
+	ok.pressed.connect(func():
+		close_modal()
+		if not game.net.server_ok:
+			game.net.connect_server()
+			say("Conectando ao servidor... tente de novo em alguns segundos.")
+			return
+		game.net.stop_search()
+		game.net.world_cancel()
+		game.net_game = str(sel.g)
+		game.net_team = false
+		online_mode = "world"
+		game.save["bet_on"] = int(sel.fee)
+		game.net.world_send({"t": "tcreate", "game": sel.g, "stake": int(sel.fee)}))
+	row.add_child(ok)
+	var no := mk_btn("CANCELAR", 200, 64, GRAY, 22)
+	no.pressed.connect(close_modal)
+	row.add_child(no)
+
+
+func _build_torneio() -> void:
+	var v := mk_screen("torneio", 8)
+	add_bg("torneio", "res://assets/menu_bg.jpg", 0.25)
+	v.add_child(mk_lbl("TORNEIO", 44, Color("f4c542"), 8))
+	tour_canvas = Control.new()
+	tour_canvas.custom_minimum_size = Vector2(1180, 470)
+	tour_canvas.draw.connect(_tour_draw)
+	v.add_child(tour_canvas)
+	tour_info = mk_lbl("", 19, Color.WHITE, 3)
+	tour_info.custom_minimum_size = Vector2(1100, 0)
+	tour_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(tour_info)
+	tour_leave_btn = mk_btn("SAIR DO TORNEIO", 300, 54, GRAY, 22)
+	tour_leave_btn.pressed.connect(func():
+		if game.tour_active():
+			confirm("SAIR DO TORNEIO?", "Se sair agora, você é eliminado e perde a inscrição.", "SAIR", func():
+				game.net.world_send({"t": "tleave"})
+				game.tour = {}
+				back_to_lobby() if in_lobby() else show_screen("online"), "CONTINUAR", close_modal)
+		else:
+			game.tour = {}
+			back_to_lobby() if in_lobby() else show_screen("online"))
+	v.add_child(tour_leave_btn)
+
+
+func _tname(code) -> String:
+	if code == null or str(code) == "" or str(code) == "<null>":
+		return ""
+	var nm: Dictionary = game.tour.get("names", {})
+	return str(nm.get(str(code), "?"))
+
+
+func _tour_draw() -> void:
+	var t: Dictionary = game.tour
+	if t.is_empty():
+		return
+	var c := tour_canvas
+	var f: Font = ThemeDB.fallback_font
+	var rounds: Array = t.rounds
+	var size0: int = (rounds[0] as Array).size() * 2
+	var nr := 1
+	while (1 << nr) < size0:
+		nr += 1
+	var W := c.size.x
+	var H := c.size.y
+	var colw := (W - 200.0) / float(nr)
+	var bw := minf(colw - 40.0, 230.0)
+	var me: String = game.my_code().to_upper()
+	var names_r := ["FINAL", "SEMIFINAL", "QUARTAS"]
+	for r in nr:
+		var cnt: int = size0 >> (r + 1)
+		var x := 10.0 + r * colw
+		var lbl: String = names_r[nr - 1 - r] if nr - 1 - r < names_r.size() else "RODADA %d" % (r + 1)
+		c.draw_string(f, Vector2(x, 18), lbl, HORIZONTAL_ALIGNMENT_CENTER, bw, 15, Color("f4c542"))
+		for i in cnt:
+			var mt: Dictionary = {}
+			if r < rounds.size() and i < (rounds[r] as Array).size():
+				mt = rounds[r][i]
+			var slot_h := (H - 30.0) / float(cnt)
+			var cy := 30.0 + slot_h * (i + 0.5)
+			var bh := 58.0
+			var rr := Rect2(x, cy - bh / 2.0, bw, bh)
+			var live: bool = bool(mt.get("live", false))
+			var mine: bool = str(mt.get("a", "")) == me or str(mt.get("b", "")) == me
+			c.draw_style_box(sbox(Color(0.03, 0.06, 0.1, 0.95), 12, Color("ff5a5a") if live else (GOLD if mine else Color(1, 1, 1, 0.18)), 3 if live or mine else 1, 4), rr)
+			var w = mt.get("w", null)
+			for k in 2:
+				var code = mt.get("a" if k == 0 else "b", null)
+				var nm := _tname(code)
+				var y := rr.position.y + 22.0 + k * 26.0
+				var won: bool = w != null and str(w) == str(code) and nm != ""
+				var lost: bool = w != null and str(w) != str(code) and nm != ""
+				var col := Color("3ddc84") if won else (Color(1, 1, 1, 0.35) if lost else Color.WHITE)
+				var shown: String = nm if nm != "" else ("—" if mt.is_empty() else "(passa direto)")
+				if str(code) == me:
+					shown += " (você)"
+				c.draw_string(f, Vector2(rr.position.x + 10, y), shown.left(22), HORIZONTAL_ALIGNMENT_LEFT, bw - 20, 17, col)
+				if won:
+					c.draw_string(f, Vector2(rr.position.x, y), "✓", HORIZONTAL_ALIGNMENT_RIGHT, bw - 10, 17, col)
+			if live:
+				c.draw_style_box(sbox(Color("e53935"), 6), Rect2(rr.position + Vector2(bw - 70, -10), Vector2(64, 18)))
+				c.draw_string(f, rr.position + Vector2(bw - 70, 4), "AO VIVO", HORIZONTAL_ALIGNMENT_CENTER, 64, 12, Color.WHITE)
+			# linha até a próxima rodada
+			var nx := x + colw
+			var ny := 30.0 + ((H - 30.0) / float(maxi(1, cnt >> 1))) * (i / 2 + 0.5) if cnt > 1 else cy
+			c.draw_line(Vector2(rr.end.x, cy), Vector2(rr.end.x + 18, cy), Color(1, 1, 1, 0.3), 2.0)
+			c.draw_line(Vector2(rr.end.x + 18, cy), Vector2(rr.end.x + 18, ny), Color(1, 1, 1, 0.3), 2.0)
+			c.draw_line(Vector2(rr.end.x + 18, ny), Vector2(nx if r < nr - 1 else W - 180.0, ny), Color(1, 1, 1, 0.3), 2.0)
+	# campeão
+	var ch := Rect2(W - 180.0, H / 2.0 - 70.0, 170.0, 140.0)
+	var champ = t.get("champ", null)
+	c.draw_style_box(sbox(Color(0.12, 0.09, 0.02, 0.95), 18, GOLD, 3, 10), ch)
+	var crown := ch.position + Vector2(85, 40)
+	c.draw_colored_polygon(PackedVector2Array([crown + Vector2(-30, 14), crown + Vector2(-30, -10), crown + Vector2(-15, 2), crown + Vector2(0, -20), crown + Vector2(15, 2), crown + Vector2(30, -10), crown + Vector2(30, 14)]), Color("ffd34a"))
+	c.draw_string(f, ch.position + Vector2(0, 84), "CAMPEÃO", HORIZONTAL_ALIGNMENT_CENTER, 170, 16, Color("f4c542"))
+	c.draw_string(f, ch.position + Vector2(0, 114), _tname(champ) if champ != null else "?", HORIZONTAL_ALIGNMENT_CENTER, 170, 22, Color.WHITE)
+
+
+func _tour_paint() -> void:
+	if tour_canvas == null:
+		return
+	tour_canvas.queue_redraw()
+	var t: Dictionary = game.tour
+	if t.is_empty():
+		tour_info.text = "Nenhum torneio agora."
+		return
+	var me: String = game.my_code().to_upper()
+	var out: Array = t.get("out", [])
+	var fee := int(t.fee)
+	var prize := int(t.pot) + 50 * int(t.n)
+	var head := "%s  •  %d jogadores  •  %s  •  prêmio do campeão: %d moedas" % ["TRUCO" if str(t.game) == "truco" else "SINUCA", int(t.n), "grátis" if fee <= 0 else "inscrição %d" % fee, prize]
+	var st := ""
+	if bool(t.done):
+		st = "VOCÊ É O CAMPEÃO! 🏆" if str(t.get("champ", "")) == me else "Torneio encerrado. Campeão: %s" % _tname(t.get("champ", ""))
+		st = st.replace(" 🏆", "")
+		tour_leave_btn.text = "VOLTAR AO LOBBY"
+	elif out.has(me):
+		st = "Você foi eliminado. Acompanhe a chave até o fim."
+		tour_leave_btn.text = "SAIR"
+	else:
+		st = "Você está na disputa! Sua próxima partida começa assim que a rodada estiver pronta."
+		tour_leave_btn.text = "SAIR DO TORNEIO"
+	tour_info.text = head + "\n" + st
+
+
+func tour_refresh() -> void:
+	var t: Dictionary = game.tour
+	if cur == "torneio":
+		_tour_paint()
+	var playing: bool = (game.mode == game.Mode.ONLINE and game.st != game.St.MENU and game.st != game.St.OVER) or (truco_node != null and is_instance_valid(truco_node) and truco_node.phase != "over")
+	if playing:
+		return
+	var in_over: bool = cur == "over" or (truco_node != null and is_instance_valid(truco_node))
+	if in_over:
+		# deixa ver o resultado da partida e depois volta para a chave
+		get_tree().create_timer(3.5).timeout.connect(func():
+			var still_over: bool = cur == "over" or (truco_node != null and is_instance_valid(truco_node) and truco_node.phase == "over")
+			if not still_over or game.tour.is_empty():
+				return
+			if truco_node != null and is_instance_valid(truco_node):
+				truco_node.queue_free()
+				truco_node = null
+				game.paused = false
+			if game.mode == game.Mode.ONLINE and game.st == game.St.OVER:
+				game.go_menu()
+			show_screen("torneio"))
+		return
+	if cur in ["online", "main", "torneio", "amigos", "play", "truco"] or str(t.get("phase", "")) == "start":
+		show_screen("torneio")

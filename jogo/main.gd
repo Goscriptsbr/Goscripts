@@ -18,7 +18,22 @@ const DECKS := [
 	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
 	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
 ]
-const APP_VERSION := 73  # sobe a cada APK novo (igual ao versao.json do servidor)
+# efeitos de vitória (aparecem para quem ganha a partida)
+const WFX := [
+	{"id": "wf_confete", "wfx": "confete", "name": "Confete", "price": 0, "tag": "Chuva de confete colorido"},
+	{"id": "wf_coracoes", "wfx": "coracoes", "name": "Corações", "price": 700, "tag": "Corações subindo pela tela"},
+	{"id": "wf_fogos", "wfx": "fogos", "name": "Fogos de Artifício", "price": 900, "tag": "Fogos estourando no céu"},
+	{"id": "wf_estrelas", "wfx": "estrelas", "name": "Estrelas", "price": 900, "tag": "Brilhos piscando por toda a tela"},
+	{"id": "wf_moedas", "wfx": "moedas", "name": "Chuva de Moedas", "price": 1100, "tag": "Moedas de ouro caindo"},
+	{"id": "wf_raios", "wfx": "raios", "name": "Tempestade", "price": 1300, "tag": "Raios e clarões na tela"},
+]
+# pacotes surpresa
+const PACKS := [
+	{"id": "pk_bronze", "name": "Pacote Bronze", "price": 400, "grana": 0, "tier": 0, "tag": "Moedas ou um item comum", "col": Color("c27c3a")},
+	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
+	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
+]
+const APP_VERSION := 74  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -328,7 +343,11 @@ func _ready() -> void:
 			if a2.begins_with("--coins="):
 				save.coins = int(a2.substr(8))
 		ui.show_screen("")
-		if args.has("--lobbycreate"):
+		if args.has("--tourcreate"):
+			net.connect_server()
+			get_tree().create_timer(2.0).timeout.connect(func(): net.world_send({"t": "tcreate", "game": net_game, "stake": int(save.get("bet_on", 0))}))
+			get_tree().create_timer(10.0).timeout.connect(func(): net.world_send({"t": "lstart"}))
+		elif args.has("--lobbycreate"):
 			net.connect_server()
 			get_tree().create_timer(2.0).timeout.connect(func(): net.world_send({"t": "lcreate", "game": net_game, "four": net_team}))
 			if not args.has("--nostart"):
@@ -340,7 +359,9 @@ func _ready() -> void:
 		for a3 in args:
 			if a3.begins_with("--lobbyinvite="):
 				var lt := a3.substr(14)
-				get_tree().create_timer(3.0).timeout.connect(func(): ui._invite(lt, "", true))
+				for lt1 in lt.split(","):
+					var lt2: String = lt1
+					get_tree().create_timer(3.0 + 0.5 * lt.split(",").find(lt1)).timeout.connect(func(): game_invite_lobby(lt2))
 	elif args.has("--tnethost") or args.has("--tnetjoin"):
 		net_game = "truco"
 		net_auto = true
@@ -2010,6 +2031,11 @@ func end_game(win_idx: int) -> void:
 			save.coins += 15
 			reward_txt = "+15 moedas"
 	var me_won: bool = (win_idx == 0) if mode == Mode.AI else (win_idx == net_seat % 2)
+	# o anfitrião avisa o servidor quem ganhou (o torneio usa isso para avançar a chave)
+	if mode == Mode.ONLINE and net != null and net.is_host and not net4:
+		net.world_send({"t": "mresult", "team": win_idx})
+	if (mode == Mode.AI or mode == Mode.ONLINE) and me_won:
+		play_victory()
 	if mode == Mode.AI or mode == Mode.ONLINE:
 		var bt := bet_settle("win" if me_won else "lose")
 		if bt != "":
@@ -2419,6 +2445,11 @@ func net_tick(delta: float) -> void:
 					aim_angle = (t.pos - cue.pos).angle() + randf_range(-0.08, 0.08)
 				power = 0.55
 				shoot(0.6)
+	if net_auto and OS.get_cmdline_user_args().has("--tourquick"):
+		if net.is_host and net.snaps >= 2 and st == St.AIM and not net4:
+			print("TOURQUICK end seat=", net_seat)
+			end_game(randi() % 2)
+			net_send_state()
 	if net_auto and OS.get_cmdline_user_args().has("--rematchtest"):
 		rm_t += delta
 		if net.is_host and net.snaps >= 3 and st == St.AIM and rm_n == 0:
@@ -3771,3 +3802,110 @@ func profile_data() -> Dictionary:
 	return {"av": str(save.get("av", "b8")), "fr": str(save.get("frame", "simples")), "ti": str(save.get("title", "novato")),
 		"lvl": player_level(), "wins": int(save.wins) + int(save.get("truco_wins", 0)), "played": int(save.played) + int(save.get("truco_wins", 0)) + int(save.get("truco_losses", 0)),
 		"best": stat("best_streak"), "div": div_of(int(lg.pts)), "pts": int(lg.pts), "cue": str(save.cue), "achs": (save.get("achs", []) as Array).size()}
+
+
+
+# ---------------------------------------------------------------- efeitos de vitória e pacotes surpresa
+func play_victory() -> void:
+	if bot or net_auto:
+		return
+	var id := str(save.get("wfx", "wf_confete"))
+	var k := "confete"
+	for w in WFX:
+		if str(w.id) == id:
+			k = str(w.wfx)
+	var fx: CanvasLayer = load("res://victory_fx.gd").new()
+	add_child(fx)
+	fx.play(k)
+
+
+# itens que podem sair num pacote (só os que estão à venda e você ainda não tem)
+func pack_pool(max_price: int, min_price: int) -> Array:
+	var out := []
+	var owned: Array = save.owned
+	for it in CUES + FELTS + DECKS + WFX:
+		var pr := int(it.get("price", 0))
+		if pr <= 0 or it.has("pass") or owned.has(str(it.id)):
+			continue
+		if pr <= max_price and pr >= min_price:
+			out.append(it)
+	return out
+
+
+func open_pack(id: String) -> Dictionary:
+	var pk: Dictionary = {}
+	for p in PACKS:
+		if str(p.id) == id:
+			pk = p
+	if pk.is_empty():
+		return {}
+	var tier := int(pk.tier)
+	var roll := randf()
+	var pool: Array = []
+	var coins := 0
+	if tier == 0:
+		if roll < 0.6:
+			coins = [150, 200, 250, 300, 400, 500, 700][randi() % 7]
+		else:
+			pool = pack_pool(1000, 1)
+	elif tier == 1:
+		if roll < 0.35:
+			coins = [600, 800, 1000, 1300, 1600, 2000][randi() % 6]
+		else:
+			pool = pack_pool(2600, 600)
+	else:
+		pool = pack_pool(99999, 1000)
+		if pool.is_empty():
+			pool = pack_pool(99999, 1)
+	if coins == 0 and pool.is_empty():
+		coins = [500, 1500, 4000][tier]
+	if coins > 0:
+		save.coins += coins
+		write_save()
+		return {"coins": coins, "txt": "+%d MOEDAS" % coins}
+	var it: Dictionary = pool[randi() % pool.size()]
+	save.owned.append(str(it.id))
+	write_save()
+	check_achs()
+	return {"item": str(it.id), "txt": str(it.name).to_upper()}
+
+
+
+# ---------------------------------------------------------------- torneio
+var tour := {}
+
+
+func tour_active() -> bool:
+	return not tour.is_empty() and not bool(tour.get("done", false))
+
+
+func tour_update(m: Dictionary) -> void:
+	if net_auto:
+		print("TOUR round=", m.round, " done=", m.done, " champ=", m.get("champ", ""), " me=", my_code(), " coins=", save.coins)
+	var first: bool = tour.is_empty() or int(tour.get("id", -1)) != int(m.id)
+	tour = m
+	var tid := str(m.id)
+	# inscrição: paga uma vez quando o torneio começa
+	if first and str(save.get("tour_paid", "")) != tid:
+		save["tour_paid"] = tid
+		var fee := mini(int(m.fee), int(save.coins))
+		if fee > 0:
+			save.coins -= fee
+			write_save()
+	if bool(m.done) and str(m.get("champ", "")) == my_code().to_upper() and str(save.get("tour_won", "")) != tid:
+		save["tour_won"] = tid
+		var bonus := 50 * int(m.n)
+		var prize := int(m.pot) + bonus
+		save.coins += prize
+		stat_add("tour_wins", 1)
+		write_save()
+		play_victory()
+		if ui != null:
+			get_tree().create_timer(1.5).timeout.connect(func(): ui.show_reward("CAMPEÃO DO TORNEIO!", "+%d MOEDAS" % prize, {"coins": prize}))
+	if ui != null:
+		ui.tour_refresh()
+
+
+
+func game_invite_lobby(code: String) -> void:
+	net.world_send({"t": "invite", "code": code, "game": net_game, "lobby": true})

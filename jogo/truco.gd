@@ -658,11 +658,15 @@ func _show_over() -> void:
 	var btl: String = ("\n" + bt) if bt != "" else ""
 	if not sim:
 		game.record_match("truco", won, netmode != "")
+		if won:
+			game.play_victory()
 	game.mission_event("play", 1)
 	game.mission_event("truco_play", 1)
 	if won:
 		game.mission_event("win", 1)
 		game.mission_event("truco_win", 1)
+	if netmode == "host" and n == 2:
+		game.net.world_send({"t": "mresult", "team": winner})
 	if netmode != "":
 		game.mission_event("online", 1)
 		r = 60 if won else 15
@@ -674,7 +678,7 @@ func _show_over() -> void:
 		game.write_save()
 		game.play("win")
 		var bts: Array = [["MENU", Color("3b4556"), _quit]]
-		if n == 2 and not game.ui.in_lobby():
+		if n == 2 and not game.ui.in_lobby() and not game.tour_active():
 			bts.push_front(["REVANCHE", Color("1fa85a"), func():
 				game.net.ask_rematch()
 				say("Revanche pedida! Esperando o adversário aceitar...")])

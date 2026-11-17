@@ -374,7 +374,7 @@ func _world_msg(m: Dictionary) -> void:
 				game.ui.friends_update(m.get("list", []))
 		"invited":
 			if game.ui != null:
-				game.ui.show_invite(str(m.get("from", "")), str(m.get("name", "")), str(m.get("game", "sinuca")), bool(m.get("lobby", false)), int(m.get("stake", 0)))
+				game.ui.show_invite(str(m.get("from", "")), str(m.get("name", "")), str(m.get("game", "sinuca")), bool(m.get("lobby", false)), int(m.get("stake", 0)), bool(m.get("tour", false)))
 		"invite_ok":
 			if game.ui != null:
 				if bool(m.get("lobby", false)):
@@ -397,6 +397,8 @@ func _world_msg(m: Dictionary) -> void:
 				game.ui.say(str(m.get("msg", "")))
 				game.ui.online_status(str(m.get("msg", "")))
 				game.ui._online_btn_refresh()
+		"tour":
+			game.tour_update(m)
 		"rank":
 			if game.ui != null:
 				game.ui.rank_update(m)
