@@ -49,6 +49,7 @@ var rk_tab := "todos"
 var rk_data := {}
 var friend_av := {}
 var fr_head: Control
+var page_scroll: ScrollContainer
 var mis_btn: Button
 var mis_box: VBoxContainer
 var mis_head: Label
@@ -3504,6 +3505,9 @@ func _input(e: InputEvent) -> void:
 	if cur == "amigos" and not has_modal():
 		sv = friends_scroll
 		vert = true
+	elif (cur == "perfil" or cur == "ranking") and not has_modal() and page_scroll != null and is_instance_valid(page_scroll) and page_scroll.is_visible_in_tree():
+		sv = page_scroll
+		vert = true
 	if sv == null:
 		return
 	if e is InputEventScreenTouch:
@@ -4736,7 +4740,7 @@ func _perfil_conq() -> void:
 	g.add_theme_constant_override("h_separation", 12)
 	g.add_theme_constant_override("v_separation", 12)
 	sc.add_child(g)
-	friends_scroll = sc
+	page_scroll = sc
 	var got: Array = game.save.get("achs", [])
 	for a in game.ACHS:
 		var done := got.has(str(a.id))
@@ -4778,7 +4782,7 @@ func _perfil_visual() -> void:
 	sc.custom_minimum_size = Vector2(1100, 470)
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	pf_box.add_child(sc)
-	friends_scroll = sc
+	page_scroll = sc
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 10)
 	sc.add_child(vb)
@@ -5033,7 +5037,7 @@ func _rank_head_draw() -> void:
 
 
 func _ranking_refresh() -> void:
-	friends_scroll = screens["ranking"].find_child("RkScroll", true, false)
+	page_scroll = screens["ranking"].find_child("RkScroll", true, false)
 	rk_head.queue_redraw()
 	if not game.net.server_ok:
 		game.net.connect_server()
