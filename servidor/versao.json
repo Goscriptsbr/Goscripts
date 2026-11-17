@@ -1,5 +1,5 @@
 {
- "versao": 75,
- "notas": "Online: a mesa da partida reveza entre os jogadores e o dono da mesa quebra o triângulo.",
- "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/aeb8f45096ee32a896a7428c7298fa4ca048dc07/Sinucou.apk"
+ "versao": 76,
+ "notas": "Corrige prêmio diário e conquistas que apareciam de novo toda vez que abria o jogo. A mesa do online reveza e o dono da mesa quebra.",
+ "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/d3201e0ae601ab4b79973d693ee207ac076eede2/Sinucou.apk"
 }

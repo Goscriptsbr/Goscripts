@@ -33,7 +33,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 75  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 76  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -878,9 +878,11 @@ func _ready() -> void:
 # ---------------------------------------------------------------- save
 func load_save() -> void:
 	var cf := ConfigFile.new()
-	if cf.load("user://save.cfg") == OK:
-		for k in save.keys():
-			save[k] = cf.get_value("s", k, save[k])
+	if cf.load("user://save.cfg") == OK and cf.has_section("s"):
+		# carrega TODAS as chaves salvas (antes só as que já existiam no padrão, e as novas
+		# como prêmio diário, conquistas, missões e liga se perdiam toda vez que abria o jogo)
+		for k in cf.get_section_keys("s"):
+			save[k] = cf.get_value("s", k, save.get(k))
 	# presente: Taco do Pedro para todo mundo
 	# antes taco e mesa Galáxia tinham o mesmo código: quem tinha um fica com os dois
 	if save.owned.has("galaxia") and not save.owned.has("galaxia_taco"):
