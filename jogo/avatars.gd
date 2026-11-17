@@ -60,7 +60,7 @@ static func draw(c: CanvasItem, ctr: Vector2, r: float, av: String, fr: String =
 	var fc: Color = fd.col
 	c.draw_circle(ctr, r, Color("0b1220"))
 	var ir := r * 0.86
-	if av.begins_with("b"):
+	if av.begins_with("b") and av.substr(1).is_valid_int():
 		var n := int(av.substr(1))
 		var bc: Color = BALL_COLS.get(n if n <= 8 else n - 8, Color.WHITE)
 		if n > 8:

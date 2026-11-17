@@ -33,7 +33,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 77  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 78  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -3310,59 +3310,20 @@ func _draw_hud() -> void:
 	if st == St.MENU:
 		return
 	var cx := (vw - 110.0) / 2.0
-	hud.draw_rect(pause_rect(), Color(0, 0, 0, 0.5), true)
-	hud.draw_rect(pause_rect(), Color(1, 1, 1, 0.45), false, 2.0)
-	hud.draw_rect(Rect2(26, 24, 8, 28), Color.WHITE, true)
-	hud.draw_rect(Rect2(42, 24, 8, 28), Color.WHITE, true)
+	var prr := pause_rect()
+	hud.draw_style_box(ui.sbox(Color(0.04, 0.07, 0.12, 0.88), 16, Color(1, 1, 1, 0.18), 1, 4), prr)
+	var pc := prr.get_center()
+	hud.draw_style_box(ui.sbox(Color.WHITE, 3), Rect2(pc + Vector2(-11, -13), Vector2(8, 26)))
+	hud.draw_style_box(ui.sbox(Color.WHITE, 3), Rect2(pc + Vector2(3, -13), Vector2(8, 26)))
 	if mode != Mode.TRAIN:
 		for i in 2:
-			var x := 90.0 + i * 430.0
-			var active := i == turn and st != St.OVER
-			var g: int = groups[i]
-			hud.draw_rect(Rect2(x, 8, 410, 62), Color("ffe066") if active else Color(0, 0, 0, 0.5), true)
-			hud.draw_rect(Rect2(x, 8, 410, 62), Color(1, 1, 1, 0.35), false, 2.0)
-			var tc := Color("222222") if active else Color.WHITE
-			if active:
-				var pl := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 160.0)
-				hud.draw_rect(Rect2(x - 3, 5, 416, 68), Color(1, 0.55 + 0.3 * pl, 0.1, 0.9), false, 4.0)
-				var lab := "PENSANDO..." if (mode == Mode.AI and ai[i]) else "◀ JOGANDO"
-				if mode == Mode.ONLINE:
-					lab = ("SUA VEZ" if shooter() == net_seat else ("PARCEIRO" if net4 else "")) if i == net_seat % 2 else ("ADVERSÁRIO" if not net4 else str(seat_names[shooter()]).left(10))
-				elif mode != Mode.AI:
-					lab = "SUA VEZ"
-				hud.draw_string(font, Vector2(x + 210, 32), lab, HORIZONTAL_ALIGNMENT_RIGHT, 120, 13, Color("7a1a00"))
-			else:
-				hud.draw_rect(Rect2(x, 8, 410, 62), Color(0, 0, 0, 0.35), true)
-			var pname: String = players[i]
-			if mode == Mode.ONLINE and i == net_seat % 2:
-				pname += "  (você)"
-			hud.draw_string(font, Vector2(x + 12, 32), pname, HORIZONTAL_ALIGNMENT_LEFT, 380, 22, tc)
-			if active and timer_active():
-				var fr := clampf(turn_left / float(TURN_TIME), 0.0, 1.0)
-				var tcol := Color("3ddc84") if fr > 0.5 else (Color("ffb020") if fr > 0.25 else Color("ff4040"))
-				hud.draw_rect(Rect2(x, 70, 410, 8), Color(0, 0, 0, 0.55), true)
-				hud.draw_rect(Rect2(x, 70, 410 * fr, 8), tcol, true)
-				hud.draw_string(font, Vector2(x + 340, 32), "%ds" % int(ceil(turn_left)), HORIZONTAL_ALIGNMENT_RIGHT, 60, 26, Color("b00000") if fr <= 0.25 else tc)
-			if g != -1:
-				var gtxt := "LISAS (1-7)" if g == 0 else "LISTRADAS (9-15)"
-				if remaining(g) == 0:
-					gtxt = "AGORA É A 8!"
-				var gcol := Color("1a4fb4") if g == 0 else Color("b8323a")
-				if remaining(g) == 0:
-					gcol = Color("111111")
-				var gw := 150.0
-				hud.draw_rect(Rect2(x + 410 - gw - 8, 40, gw, 24), gcol, true)
-				hud.draw_rect(Rect2(x + 410 - gw - 8, 40, gw, 24), Color(1, 1, 1, 0.7), false, 1.5)
-				hud.draw_string(font, Vector2(x + 410 - gw - 8, 58), gtxt, HORIZONTAL_ALIGNMENT_CENTER, gw, 15, Color.WHITE)
-			if g == -1:
-				hud.draw_string(font, Vector2(x + 12, 58), "mesa aberta • qualquer bola menos a 8", HORIZONTAL_ALIGNMENT_LEFT, 380, 16, tc)
-			else:
-				var lst: Array = [1, 2, 3, 4, 5, 6, 7] if g == 0 else [9, 10, 11, 12, 13, 14, 15]
-				for k in lst.size():
-					var bb := get_ball(lst[k])
-					mini_ball(Vector2(x + 22 + k * 25, 52), lst[k], 1.0 if bb.on else 0.22)
-				if remaining(g) == 0:
-					mini_ball(Vector2(x + 22 + 7 * 25 + 8, 52), BLACK, 1.0)
+			_draw_player_panel(i)
+		# selo VS entre as duas placas
+		var vc := Vector2(510, 39)
+		hud.draw_circle(vc + Vector2(0, 2), 19, Color(0, 0, 0, 0.45))
+		hud.draw_circle(vc, 18, Color("141a26"))
+		hud.draw_arc(vc, 18, 0, TAU, 32, Color("f4c542"), 2.5)
+		hud.draw_string(font, vc + Vector2(-18, 6), "VS", HORIZONTAL_ALIGNMENT_CENTER, 36, 15, Color("f4c542"))
 	else:
 		ctext("Treino livre", cx, 44, 28, Color.WHITE)
 	if mode != Mode.TRAIN and st != St.OVER:
@@ -3949,3 +3910,116 @@ func _table_felt(seat: int) -> String:
 		if str(f.id) == fid:
 			return fid
 	return str(save.felt)
+
+
+
+# avatar e moldura de quem está em cada lado da mesa
+func _side_av(i: int) -> Array:
+	if mode == Mode.AI:
+		return [str(save.get("av", "b8")), str(save.get("frame", "simples"))] if i == 0 else ["bolt", "prata"]
+	if mode == Mode.TWO:
+		return ["b1", "simples"] if i == 0 else ["b3", "simples"]
+	if mode == Mode.ONLINE:
+		if i == net_seat:
+			return [str(save.get("av", "b8")), str(save.get("frame", "simples"))]
+		if net != null:
+			for p in net.room_players:
+				if int(p.get("peer", 0)) - 1 == i:
+					return [str(p.get("av", "b8")), str(p.get("fr", "simples"))]
+	return ["b8", "simples"]
+
+
+const AVS = preload("res://avatars.gd")
+
+
+func _draw_player_panel(i: int) -> void:
+	var x := 90.0 + i * 430.0
+	var w := 410.0
+	var h := 66.0
+	var active := i == turn and st != St.OVER
+	var g: int = groups[i]
+	var right := i == 1  # a placa da direita fica espelhada (avatar do lado de fora)
+	var t := Time.get_ticks_msec() / 1000.0
+	var r := Rect2(x, 6, w, h)
+	# fundo de vidro escuro; na vez do jogador ganha borda dourada e brilho
+	var bg: StyleBoxFlat = ui.sbox(Color(0.04, 0.07, 0.12, 0.88), 18, Color(1, 0.8, 0.25, 0.85 + 0.15 * sin(t * 5.0)) if active else Color(1, 1, 1, 0.14), 3 if active else 1)
+	bg.shadow_color = Color(1.0, 0.7, 0.15, 0.35) if active else Color(0, 0, 0, 0.35)
+	bg.shadow_size = 10 if active else 4
+	hud.draw_style_box(bg, r)
+	if active:
+		hud.draw_style_box(ui.sbox(Color(1.0, 0.8, 0.25, 0.10), 16), Rect2(x + 3, 9, w - 6, h * 0.45))
+	# avatar com o anel do tempo em volta
+	var ac := Vector2(x + w - 36, 39) if right else Vector2(x + 36, 39)
+	if net4:
+		var s0 := i
+		var s1 := i + 2
+		for k in 2:
+			var seat := s0 if k == 0 else s1
+			var off := Vector2(-11 + k * 22, 0) * (-1.0 if right else 1.0)
+			var pa: Array = _seat_av4(seat)
+			AVS.draw(hud, ac + off, 17, str(pa[0]), str(pa[1]), t)
+			if shooter() == seat and active:
+				hud.draw_arc(ac + off, 20, 0, TAU, 24, Color("ffe066"), 2.5)
+	else:
+		var av: Array = _side_av(i)
+		AVS.draw(hud, ac, 24, str(av[0]), str(av[1]), t)
+	if active and timer_active() and not net4:
+		var fr := clampf(turn_left / float(TURN_TIME), 0.0, 1.0)
+		var tcol := Color("3ddc84") if fr > 0.5 else (Color("ffb020") if fr > 0.25 else Color("ff4040"))
+		hud.draw_arc(ac, 29, 0, TAU, 40, Color(0, 0, 0, 0.5), 4.0)
+		hud.draw_arc(ac, 29, -PI / 2.0, -PI / 2.0 + TAU * fr, 40, tcol, 4.0)
+	# nome e etiqueta
+	var pname: String = players[i]
+	if mode == Mode.ONLINE and i == net_seat % 2:
+		pname += "  (você)"
+	var tx := x + 74.0 if not right else x + 14.0
+	var tw := w - 92.0
+	var al := HORIZONTAL_ALIGNMENT_LEFT if not right else HORIZONTAL_ALIGNMENT_RIGHT
+	if right:
+		tx = x + 18.0
+	hud.draw_string(font, Vector2(tx, 31), pname, al, tw - 4.0, 19, Color.WHITE)
+	if active:
+		var lab := "PENSANDO..." if (mode == Mode.AI and ai[i]) else "SUA VEZ"
+		if mode == Mode.ONLINE:
+			lab = ("SUA VEZ" if shooter() == net_seat else ("PARCEIRO" if net4 else "JOGANDO")) if i == net_seat % 2 else ("JOGANDO" if not net4 else str(seat_names[shooter()]).left(10))
+		elif mode == Mode.TWO:
+			lab = "SUA VEZ"
+		var secs := ("  %ds" % int(ceil(turn_left))) if timer_active() else ""
+		var lw: float = font.get_string_size(lab + secs, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 18.0
+		var lp := Vector2(x + w - lw - 10, -2) if not right else Vector2(x + 10, -2)
+		hud.draw_style_box(ui.sbox(Color("f4c542"), 9), Rect2(lp, Vector2(lw, 18)))
+		hud.draw_string(font, lp + Vector2(0, 13), lab + secs, HORIZONTAL_ALIGNMENT_CENTER, lw, 12, Color("2a1a00"))
+	# grupo e bolas que faltam
+	if g == -1:
+		hud.draw_string(font, Vector2(tx, 55), "mesa aberta  •  qualquer bola menos a 8", al, tw - 4.0, 14, Color(1, 1, 1, 0.6))
+	else:
+		var lst: Array = [1, 2, 3, 4, 5, 6, 7] if g == 0 else [9, 10, 11, 12, 13, 14, 15]
+		var tray_w := 7 * 23.0 + 10.0
+		var tray := Rect2(tx if not right else x + w - 74.0 - tray_w, 41, tray_w, 24)
+		hud.draw_style_box(ui.sbox(Color(0, 0, 0, 0.45), 12, Color(1, 1, 1, 0.08), 1), tray)
+		for k in lst.size():
+			var bb := get_ball(lst[k])
+			mini_ball(Vector2(tray.position.x + 16 + k * 23, 53), lst[k], 1.0 if bb.on else 0.18)
+		var gtxt := "LISAS" if g == 0 else "LISTRADAS"
+		var gcol := Color("2f6fd8") if g == 0 else Color("c9343e")
+		if remaining(g) == 0:
+			gtxt = "VALENDO A 8!"
+			gcol = Color("111111")
+		var gw: float = font.get_string_size(gtxt, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 18.0
+		var gp := Vector2(tray.end.x + 8, 44) if not right else Vector2(tray.position.x - gw - 8, 44)
+		hud.draw_style_box(ui.sbox(gcol, 9, Color(1, 1, 1, 0.5), 1), Rect2(gp, Vector2(gw, 19)))
+		hud.draw_string(font, gp + Vector2(0, 14), gtxt, HORIZONTAL_ALIGNMENT_CENTER, gw, 12, Color.WHITE)
+		if remaining(g) == 0:
+			mini_ball(gp + Vector2(gw + 14, 9.5) if not right else gp + Vector2(-14, 9.5), BLACK, 1.0)
+
+
+func _seat_av4(seat: int) -> Array:
+	if bot_seats.has(seat):
+		return ["bolt", "prata"]
+	if seat == net_seat:
+		return [str(save.get("av", "b8")), str(save.get("frame", "simples"))]
+	if net != null:
+		for p in net.room_players:
+			if int(p.get("peer", 0)) - 1 == seat:
+				return [str(p.get("av", "b8")), str(p.get("fr", "simples"))]
+	return ["b8", "simples"]

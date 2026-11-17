@@ -48,6 +48,7 @@ var rk_head: Control
 var rk_tab := "todos"
 var rk_data := {}
 var friend_av := {}
+var fr_head: Control
 var mis_btn: Button
 var mis_box: VBoxContainer
 var mis_head: Label
@@ -57,6 +58,10 @@ var bet_hint_ai: Label
 var bet_hint_tr: Label
 var pass_top_btn: Button
 var wheel: Control
+var wheel_rim: Control
+var wheel_rays: Control
+var wheel_tick := 0.0
+var wheel_last_seg := -1
 var spin_btn: Button
 var spin_lbl: Label
 var spinning := false
@@ -223,15 +228,40 @@ func say(t: String) -> void:
 func coin_icon(sz: float) -> Control:
 	var c := Control.new()
 	c.custom_minimum_size = Vector2(sz, sz)
-	var f := func():
-		var ctr := Vector2(sz / 2, sz / 2)
-		c.draw_circle(ctr + Vector2(0, 2), sz / 2 - 1, Color(0, 0, 0, 0.35))
-		c.draw_circle(ctr, sz / 2 - 2, Color("f2c230"))
-		c.draw_arc(ctr, sz / 2 - 2, 0, TAU, 28, Color("b07a10"), 2.5)
-		c.draw_arc(ctr, sz / 2 - 8, 0, TAU, 28, Color("c9951a"), 2.0)
-		c.draw_circle(ctr + Vector2(-sz * 0.12, -sz * 0.14), sz * 0.1, Color(1, 1, 1, 0.55))
-	c.draw.connect(f)
+	c.draw.connect(func(): draw_coin(c, Vector2(sz / 2, sz / 2), sz / 2 - 1))
 	return c
+
+
+# moeda de ouro: borda serrilhada, face com degradê, estrela em relevo e brilho
+func draw_coin(c: CanvasItem, ctr: Vector2, r: float) -> void:
+	c.draw_circle(ctr + Vector2(0, r * 0.1), r, Color(0, 0, 0, 0.3))
+	c.draw_circle(ctr + Vector2(0, r * 0.06), r, Color("8a5208"))
+	c.draw_circle(ctr, r, Color("d18f12"))
+	# serrilhado da borda
+	if r > 9.0:
+		for i in 28:
+			var a := float(i) / 28.0 * TAU
+			c.draw_line(ctr + Vector2.from_angle(a) * r * 0.86, ctr + Vector2.from_angle(a) * r * 0.98, Color("a86d0c"), maxf(1.0, r * 0.06))
+	# face: do centro claro até a borda mais escura
+	var steps := 6
+	for k in steps:
+		var t := float(k) / float(steps - 1)
+		c.draw_circle(ctr, r * (0.84 - 0.5 * t), Color("f0b324").lerp(Color("ffe27a"), t))
+	c.draw_arc(ctr, r * 0.66, 0, TAU, 32, Color("c98a12"), maxf(1.0, r * 0.07))
+	c.draw_arc(ctr, r * 0.72, PI * 1.05, PI * 1.6, 16, Color(1, 1, 1, 0.55), maxf(1.0, r * 0.06))
+	# estrela em relevo
+	var st := PackedVector2Array()
+	var st2 := PackedVector2Array()
+	for i in 10:
+		var rr := r * (0.42 if i % 2 == 0 else 0.18)
+		var a2 := -PI / 2.0 + float(i) * PI / 5.0
+		st.append(ctr + Vector2.from_angle(a2) * rr + Vector2(0, r * 0.05))
+		st2.append(ctr + Vector2.from_angle(a2) * rr)
+	c.draw_colored_polygon(st, Color("b0700a"))
+	c.draw_colored_polygon(st2, Color("fff1b0"))
+	# brilho
+	c.draw_circle(ctr + Vector2(-r * 0.42, -r * 0.42), r * 0.13, Color(1, 1, 1, 0.7))
+	c.draw_circle(ctr + Vector2(-r * 0.42, -r * 0.42), r * 0.25, Color(1, 1, 1, 0.12))
 
 
 func grana_icon(sz: float) -> Control:
@@ -683,18 +713,31 @@ func _build_main() -> void:
 	mc.offset_top -= 10
 	mc.offset_bottom -= 10
 	# barra de baixo
+	# faixa escura suave atrás da doca
+	var shade := Control.new()
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	s.add_child(shade)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	shade.offset_top = -96
+	shade.draw.connect(func():
+		var w := shade.size.x
+		for k in 12:
+			shade.draw_rect(Rect2(0, k * 8, w, 8), Color(0, 0, 0, 0.05 * k)))
+	# doca flutuante com os botões
 	var nav := PanelContainer.new()
-	var nsb := sbox(Color(0.01, 0.03, 0.05, 0.9), 0)
-	nsb.border_width_top = 2
-	nsb.border_color = Color(0.96, 0.77, 0.26, 0.7)
-	nav.add_theme_stylebox_override("panel", nsb)
+	nav.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.06, 0.1, 0.92), 26, Color(1, 1, 1, 0.14), 2, 14))
 	s.add_child(nav)
-	nav.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE, Control.PRESET_MODE_MINSIZE)
-	nav.offset_top = -86
+	nav.anchor_left = 0.5
+	nav.anchor_right = 0.5
+	nav.anchor_top = 1.0
+	nav.anchor_bottom = 1.0
+	nav.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	nav.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	nav.offset_bottom = -8
 	var nh := HBoxContainer.new()
-	nh.add_theme_constant_override("separation", 10)
+	nh.add_theme_constant_override("separation", 4)
 	nh.alignment = BoxContainer.ALIGNMENT_CENTER
-	nav.add_child(nh)
+	nav.add_child(margin(nh, 4))
 	for it in [["LOJA", "shop", "shop"], ["INVENTÁRIO", "inv", "inv"], ["PERFIL", "person", "perfil"], ["RANKING", "stats", "ranking"], ["AJUSTES", "gear", "settings"]]:
 		var nb := nav_btn(it[0], it[1])
 		nb.pressed.connect(show_screen.bind(it[2]))
@@ -812,23 +855,119 @@ func rail_btn(text: String, kind: String, col: Color) -> Button:
 
 
 func nav_btn(text: String, kind: String) -> Button:
+	var cols := {"shop": [Color("f6c945"), Color("c98a12")], "inv": [Color("ff9a4a"), Color("c2541a")], "person": [Color("5aa9ff"), Color("1f5fc0")], "stats": [Color("c084ff"), Color("7a2fc0")], "gear": [Color("9aa8bc"), Color("4f5d72")]}
+	var cc: Array = cols.get(kind, [GRAY, GRAY])
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(128, 80)
+	b.custom_minimum_size = Vector2(112, 74)
 	b.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	b.add_theme_stylebox_override("hover", sbox(Color(1, 1, 1, 0.08), 16))
-	b.add_theme_stylebox_override("pressed", sbox(Color(1, 1, 1, 0.14), 16))
+	b.add_theme_stylebox_override("hover", sbox(Color(1, 1, 1, 0.06), 18))
+	b.add_theme_stylebox_override("pressed", sbox(Color(1, 1, 1, 0.12), 18))
 	var ic := Control.new()
 	ic.set_anchors_preset(Control.PRESET_FULL_RECT)
 	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ic.draw.connect(func():
-		ic.draw_set_transform(Vector2(64 - 55.5 * 0.78, 6), 0.0, Vector2(0.78, 0.78))
-		_tile_icon(ic, kind, 111.0)
-		ic.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		ic.draw_string(ThemeDB.fallback_font, Vector2(0, 72), text, HORIZONTAL_ALIGNMENT_CENTER, 128, 14, Color(1, 1, 1, 0.9)))
+		var c := Vector2(56, 28)
+		# bloco colorido com brilho em cima e o desenho branco
+		ic.draw_style_box(sbox(Color(0, 0, 0, 0.35), 14), Rect2(c - Vector2(22, 19), Vector2(44, 44)))
+		ic.draw_style_box(sbox(cc[1], 14), Rect2(c - Vector2(22, 22), Vector2(44, 44)))
+		ic.draw_style_box(sbox(cc[0], 14), Rect2(c - Vector2(22, 22), Vector2(44, 34)))
+		ic.draw_style_box(sbox(Color(1, 1, 1, 0.22), 10), Rect2(c - Vector2(18, 19), Vector2(36, 10)))
+		_glyph(ic, kind, c)
+		ic.draw_string(ThemeDB.fallback_font, Vector2(0, 68), text, HORIZONTAL_ALIGNMENT_CENTER, 112, 13, Color(1, 1, 1, 0.92)))
 	b.add_child(ic)
 	b.pressed.connect(game.play.bind("click", 0.6))
+	return b
+
+
+# desenhos brancos simples (barra de baixo e botões redondos)
+func _glyph(c: Control, kind: String, p: Vector2, col: Color = Color.WHITE, k: float = 1.0) -> void:
+	var sh := Color(0, 0, 0, 0.25)
+	match kind:
+		"shop":
+			c.draw_style_box(sbox(col, 4), Rect2(p + Vector2(-12, -6) * k, Vector2(24, 18) * k))
+			c.draw_arc(p + Vector2(0, -6) * k, 7 * k, PI, TAU, 14, col, 3.0 * k)
+			c.draw_circle(p + Vector2(0, 3) * k, 4 * k, sh)
+		"inv":
+			c.draw_style_box(sbox(col, 3), Rect2(p + Vector2(-13, -2) * k, Vector2(26, 14) * k))
+			c.draw_style_box(sbox(col, 8), Rect2(p + Vector2(-13, -12) * k, Vector2(26, 9) * k))
+			c.draw_rect(Rect2(p + Vector2(-3, -5) * k, Vector2(6, 7) * k), sh)
+		"person":
+			c.draw_circle(p + Vector2(0, -6) * k, 6.5 * k, col)
+			c.draw_colored_polygon(_arcpoly(p + Vector2(0, 13) * k, 12 * k), col)
+		"stats":
+			c.draw_colored_polygon(PackedVector2Array([p + Vector2(-10, -12) * k, p + Vector2(10, -12) * k, p + Vector2(7, 0) * k, p + Vector2(0, 4) * k, p + Vector2(-7, 0) * k]), col)
+			c.draw_arc(p + Vector2(-10, -6) * k, 5 * k, PI * 0.5, PI * 1.5, 10, col, 2.5 * k)
+			c.draw_arc(p + Vector2(10, -6) * k, 5 * k, -PI * 0.5, PI * 0.5, 10, col, 2.5 * k)
+			c.draw_rect(Rect2(p + Vector2(-2, 3) * k, Vector2(4, 6) * k), col)
+			c.draw_style_box(sbox(col, 2), Rect2(p + Vector2(-8, 9) * k, Vector2(16, 4) * k))
+		"gear":
+			var teeth := PackedVector2Array()
+			for i in 32:
+				var a := float(i) / 32.0 * TAU
+				teeth.append(p + Vector2.from_angle(a) * (13.0 if (i / 2) % 2 == 0 else 9.5) * k)
+			c.draw_colored_polygon(teeth, col)
+			c.draw_circle(p, 4.5 * k, sh.lightened(0.0) if col == Color.WHITE else Color(0, 0, 0, 0.4))
+		"ball":
+			c.draw_circle(p, 13 * k, Color("141414"))
+			c.draw_circle(p, 6.5 * k, Color.WHITE)
+			c.draw_string(ThemeDB.fallback_font, p + Vector2(-6, 4.5) * k, "8", HORIZONTAL_ALIGNMENT_CENTER, 12 * k, int(12 * k), Color("141414"))
+		"cards":
+			for j in 2:
+				c.draw_set_transform(p + Vector2(-4 + j * 8, 1) * k, -0.25 + j * 0.5, Vector2.ONE)
+				c.draw_style_box(sbox(Color.WHITE, 3, Color(0, 0, 0, 0.3), 1), Rect2(Vector2(-7, -10) * k, Vector2(14, 20) * k))
+				c.draw_string(ThemeDB.fallback_font, Vector2(-6, 2) * k, "A" if j == 1 else "7", HORIZONTAL_ALIGNMENT_CENTER, 12 * k, int(11 * k), Color("c0303a") if j == 1 else Color("141414"))
+			c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		"lobby":
+			c.draw_circle(p + Vector2(-4, -5) * k, 5.5 * k, col)
+			c.draw_colored_polygon(_arcpoly(p + Vector2(-4, 11) * k, 10 * k), col)
+			c.draw_rect(Rect2(p + Vector2(7, -4) * k, Vector2(3, 12) * k), col)
+			c.draw_rect(Rect2(p + Vector2(2.5, 0.5) * k, Vector2(12, 3) * k), col)
+		"chat":
+			c.draw_style_box(sbox(col, 8), Rect2(p + Vector2(-12, -10) * k, Vector2(24, 17) * k))
+			c.draw_colored_polygon(PackedVector2Array([p + Vector2(-6, 6) * k, p + Vector2(0, 6) * k, p + Vector2(-8, 13) * k]), col)
+			for j in 3:
+				c.draw_circle(p + Vector2(-6 + j * 6, -1.5) * k, 1.8 * k, Color(0, 0, 0, 0.35))
+		"x":
+			c.draw_line(p + Vector2(-6, -6) * k, p + Vector2(6, 6) * k, col, 3.0 * k)
+			c.draw_line(p + Vector2(6, -6) * k, p + Vector2(-6, 6) * k, col, 3.0 * k)
+		"check":
+			c.draw_polyline(PackedVector2Array([p + Vector2(-8, 0) * k, p + Vector2(-2, 6) * k, p + Vector2(9, -7) * k]), col, 3.5 * k)
+		"copy":
+			c.draw_style_box(sbox(Color(0, 0, 0, 0), 3, col, 2), Rect2(p + Vector2(-8, -6) * k, Vector2(12, 14) * k))
+			c.draw_style_box(sbox(Color(0, 0, 0, 0), 3, col, 2), Rect2(p + Vector2(-3, -10) * k, Vector2(12, 14) * k))
+		"search":
+			c.draw_arc(p + Vector2(-2, -2) * k, 7 * k, 0, TAU, 20, col, 2.5 * k)
+			c.draw_line(p + Vector2(3, 3) * k, p + Vector2(9, 9) * k, col, 3.0 * k)
+
+
+# botão redondo com desenho e legenda (lista de amigos)
+func round_btn(kind: String, col: Color, caption: String, badge: int = 0, w: float = 66.0) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(w, 64)
+	b.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	b.add_theme_stylebox_override("hover", sbox(Color(1, 1, 1, 0.06), 16))
+	b.add_theme_stylebox_override("pressed", sbox(Color(1, 1, 1, 0.12), 16))
+	var ic := Control.new()
+	ic.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ic.draw.connect(func():
+		var c := Vector2(w / 2.0, 23)
+		ic.draw_circle(c + Vector2(0, 3), 21, Color(0, 0, 0, 0.35))
+		ic.draw_circle(c, 21, col.darkened(0.25))
+		ic.draw_circle(c + Vector2(0, -2), 19, col)
+		ic.draw_arc(c, 21, PI * 1.15, PI * 1.85, 12, Color(1, 1, 1, 0.35), 2.0)
+		_glyph(ic, kind, c + Vector2(0, -1), Color.WHITE, 0.9)
+		if badge > 0:
+			ic.draw_circle(c + Vector2(16, -15), 10, Color("e53935"))
+			ic.draw_string(ThemeDB.fallback_font, c + Vector2(6, -10), str(badge), HORIZONTAL_ALIGNMENT_CENTER, 20, 13, Color.WHITE)
+		if caption != "":
+			ic.draw_string(ThemeDB.fallback_font, Vector2(0, 60), caption, HORIZONTAL_ALIGNMENT_CENTER, w, 12, Color(1, 1, 1, 0.8)))
+	b.add_child(ic)
+	b.pressed.connect(game.play.bind("click", 0.5))
 	return b
 
 
@@ -1901,35 +2040,55 @@ func _build_amigos() -> void:
 	var lv := VBoxContainer.new()
 	lv.add_theme_constant_override("separation", 10)
 	lp.add_child(margin(lv, 18))
-	lv.add_child(_section("SEU CÓDIGO"))
-	var cp := PanelContainer.new()
-	cp.add_theme_stylebox_override("panel", sbox(Color(0.12, 0.09, 0.02, 0.9), 18, Color("f4c542"), 2, 6))
-	lv.add_child(cp)
-	var cl := mk_lbl("", 30, Color("ffe066"), 3)
+	# cartão com o seu avatar, nome e código
+	var me := Control.new()
+	me.custom_minimum_size = Vector2(324, 150)
+	me.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		me.draw_style_box(sbox(Color(0.1, 0.16, 0.28, 0.95), 20, Color(1, 1, 1, 0.12), 1), Rect2(0, 0, 324, 150))
+		me.draw_style_box(sbox(Color(0.18, 0.3, 0.55, 0.55), 20), Rect2(0, 0, 324, 56))
+		AV.draw(me, Vector2(52, 62), 38, str(game.save.get("av", "b8")), str(game.save.get("frame", "simples")), anim_t)
+		me.draw_string(f, Vector2(102, 52), game.my_name(), HORIZONTAL_ALIGNMENT_LEFT, 214, 24, Color.WHITE)
+		var ti: Dictionary = AV.find(AV.TITLES, str(game.save.get("title", "novato")))
+		me.draw_string(f, Vector2(102, 76), str(ti.name), HORIZONTAL_ALIGNMENT_LEFT, 214, 15, Color("f4c542"))
+		me.draw_string(f, Vector2(16, 112), "SEU CÓDIGO", HORIZONTAL_ALIGNMENT_LEFT, 120, 12, Color(1, 1, 1, 0.55))
+		me.draw_string(f, Vector2(16, 138), game.my_code(), HORIZONTAL_ALIGNMENT_LEFT, 200, 22, Color("ffe066")))
+	lv.add_child(me)
+	var cl := Label.new()
 	cl.name = "MyCode"
-	cp.add_child(margin(cl, 10))
-	lv.add_child(mk_lbl("Mande esse código para seus amigos te acharem.", 15, Color(1, 1, 1, 0.6), 2))
+	cl.visible = false
+	lv.add_child(cl)
+	var cpb := round_btn("copy", Color("16897f"), "")
+	cpb.custom_minimum_size = Vector2(56, 48)
+	cpb.position = Vector2(258, 100)
+	cpb.pressed.connect(func():
+		DisplayServer.clipboard_set(game.my_code())
+		say("Código copiado! Mande para seus amigos."))
+	me.add_child(cpb)
 	lv.add_child(_section("ADICIONAR AMIGO"))
 	friend_edit = LineEdit.new()
 	friend_edit.placeholder_text = "nome ou código"
 	friend_edit.max_length = 16
-	friend_edit.custom_minimum_size = Vector2(320, 56)
+	friend_edit.custom_minimum_size = Vector2(320, 52)
 	friend_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	friend_edit.add_theme_font_size_override("font_size", 24)
+	friend_edit.add_theme_font_size_override("font_size", 22)
 	friend_edit.add_theme_stylebox_override("normal", sbox(Color(0.02, 0.05, 0.09, 0.95), 14, Color(1, 1, 1, 0.35), 2, 0))
 	friend_edit.add_theme_stylebox_override("focus", sbox(Color(0.02, 0.05, 0.09, 0.95), 14, Color("5aa9ff"), 3, 0))
 	lv.add_child(friend_edit)
 	friend_edit.text_submitted.connect(func(_t): _friend_search())
-	var sb := mk_btn("BUSCAR PELO NOME", 320, 54, BLUE, 20)
+	var brow := HBoxContainer.new()
+	brow.add_theme_constant_override("separation", 8)
+	lv.add_child(brow)
+	var sb := mk_btn("BUSCAR NOME", 156, 50, BLUE, 17)
 	sb.pressed.connect(_friend_search)
-	lv.add_child(sb)
-	var ab := mk_btn("PEDIR PELO CÓDIGO", 320, 54, GREEN, 20)
+	brow.add_child(sb)
+	var ab := mk_btn("PEDIR CÓDIGO", 156, 50, GREEN, 17)
 	ab.pressed.connect(_friend_add)
-	lv.add_child(ab)
+	brow.add_child(ab)
 	var sp := Control.new()
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	lv.add_child(sp)
-	var back := mk_btn("◀  VOLTAR", 320, 56, GRAY, 24)
+	var back := mk_btn("◀  VOLTAR", 320, 54, GRAY, 22)
 	back.pressed.connect(func(): show_screen("online" if _came_from_online else "main"))
 	lv.add_child(back)
 	# ---- coluna direita: resultados da busca + lista de amigos (rola com o dedo)
@@ -1937,10 +2096,26 @@ func _build_amigos() -> void:
 	rp.custom_minimum_size = Vector2(780, 470)
 	rp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.88), 26, Color(1, 1, 1, 0.18), 2, 12))
 	body.add_child(rp)
+	var rv := VBoxContainer.new()
+	rv.add_theme_constant_override("separation", 6)
+	rp.add_child(margin(rv, 14))
+	fr_head = Control.new()
+	fr_head.custom_minimum_size = Vector2(740, 40)
+	fr_head.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		fr_head.draw_string(f, Vector2(4, 30), "MEUS AMIGOS", HORIZONTAL_ALIGNMENT_LEFT, 300, 24, Color("f4c542"))
+		var tot: int = (game.save.friends as Array).size()
+		var pill := "● %d online" % friends_online
+		fr_head.draw_style_box(sbox(Color(0.12, 0.4, 0.22, 0.9), 14), Rect2(210, 8, 120, 28))
+		fr_head.draw_string(f, Vector2(210, 28), pill, HORIZONTAL_ALIGNMENT_CENTER, 120, 15, Color("b8ffcf"))
+		fr_head.draw_string(f, Vector2(0, 28), "%d amigos" % tot, HORIZONTAL_ALIGNMENT_RIGHT, 736, 15, Color(1, 1, 1, 0.55))
+		fr_head.draw_line(Vector2(0, 39), Vector2(740, 39), Color(1, 1, 1, 0.1), 1.0))
+	rv.add_child(fr_head)
 	var sc := ScrollContainer.new()
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	rp.add_child(margin(sc, 14))
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	rv.add_child(sc)
 	friends_scroll = sc
 	var inner := VBoxContainer.new()
 	inner.add_theme_constant_override("separation", 10)
@@ -2350,6 +2525,8 @@ func friends_update(list: Array) -> void:
 			on += 1
 	friends_online = on
 	_friends_badge()
+	if fr_head != null:
+		fr_head.queue_redraw()
 	if cur == "amigos":
 		_friends_render(list)
 
@@ -2364,7 +2541,7 @@ func _friends_render(list: Array) -> void:
 		st[str(p.code)] = p
 	var fin: Array = game.save.get("f_in", [])
 	if not fin.is_empty():
-		friends_box.add_child(mk_lbl("PEDIDOS DE AMIZADE RECEBIDOS", 17, Color("f4c542"), 2))
+		friends_box.add_child(_flist_head("PEDIDOS DE AMIZADE  •  %d" % fin.size(), Color("f4c542")))
 		for q in fin:
 			var rq := PanelContainer.new()
 			rq.add_theme_stylebox_override("panel", sbox(Color(0.12, 0.09, 0.02, 0.92), 18, Color("f4c542"), 2, 4))
@@ -2372,14 +2549,14 @@ func _friends_render(list: Array) -> void:
 			var qh := HBoxContainer.new()
 			qh.add_theme_constant_override("separation", 12)
 			rq.add_child(margin(qh, 10))
-			var ql := mk_lbl("%s  (%s) quer ser seu amigo" % [str(q.name), str(q.code)], 20, Color.WHITE, 2)
-			ql.custom_minimum_size = Vector2(500, 0)
+			var ql := mk_lbl("%s  quer ser seu amigo" % str(q.name), 20, Color.WHITE, 2)
+			ql.custom_minimum_size = Vector2(520, 0)
 			ql.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 			qh.add_child(ql)
-			var qa := mk_btn("ACEITAR", 150, 46, GREEN, 18)
+			var qa := round_btn("check", GREEN, "ACEITAR", 0, 78)
 			qa.pressed.connect(_friend_accept.bind(str(q.code), str(q.name)))
 			qh.add_child(qa)
-			var qr := mk_btn("RECUSAR", 150, 46, GRAY, 18)
+			var qr := round_btn("x", Color("6a3038"), "RECUSAR", 0, 78)
 			qr.pressed.connect(_friend_decline.bind(str(q.code)))
 			qh.add_child(qr)
 	var fout: Array = game.save.get("f_out", [])
@@ -2411,30 +2588,30 @@ func _friends_render(list: Array) -> void:
 		if status == "jogando":
 			dc = Color("ffb020")
 		var row := PanelContainer.new()
-		row.add_theme_stylebox_override("panel", sbox(Color(0.05, 0.09, 0.15, 0.95) if online else Color(0.03, 0.05, 0.08, 0.85), 18, dc if online else Color(1, 1, 1, 0.1), 2, 4))
+		row.add_theme_stylebox_override("panel", sbox(Color(0.06, 0.1, 0.17, 0.96) if online else Color(0.035, 0.05, 0.08, 0.88), 20, Color(dc.r, dc.g, dc.b, 0.55) if online else Color(1, 1, 1, 0.07), 2, 6))
 		friends_box.add_child(row)
 		var hb := HBoxContainer.new()
-		hb.add_theme_constant_override("separation", 10)
+		hb.add_theme_constant_override("separation", 6)
 		row.add_child(margin(hb, 8))
 		# avatar com a inicial e a bolinha de status
 		var av := Control.new()
-		av.custom_minimum_size = Vector2(52, 52)
+		av.custom_minimum_size = Vector2(58, 58)
 		var nm := str(f.name)
 		var hue := float(hash(str(f.code)) % 360) / 360.0
 		var acol := Color.from_hsv(hue, 0.55, 0.75 if online else 0.4)
 		var avcode := str(f.code)
 		av.draw.connect(func():
 			if friend_av.has(avcode):
-				AV.draw(av, Vector2(26, 26), 25, str(friend_av[avcode][0]), str(friend_av[avcode][1]))
+				AV.draw(av, Vector2(29, 29), 28, str(friend_av[avcode][0]), str(friend_av[avcode][1]))
 				if not online:
-					av.draw_circle(Vector2(26, 26), 25, Color(0, 0, 0, 0.45))
+					av.draw_circle(Vector2(29, 29), 28, Color(0, 0, 0, 0.45))
 			else:
-				av.draw_circle(Vector2(26, 26), 24, acol)
-				av.draw_arc(Vector2(26, 26), 24, 0, TAU, 32, Color(1, 1, 1, 0.5), 2.0)
+				av.draw_circle(Vector2(29, 29), 27, acol)
+				av.draw_arc(Vector2(29, 29), 27, 0, TAU, 32, Color(1, 1, 1, 0.5), 2.0)
 				var fnt: Font = ThemeDB.fallback_font
-				av.draw_string(fnt, Vector2(0, 36), nm.substr(0, 1).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 52, 28, Color.WHITE)
-			av.draw_circle(Vector2(44, 44), 8, Color(0.03, 0.05, 0.08))
-			av.draw_circle(Vector2(44, 44), 6, dc))
+				av.draw_string(fnt, Vector2(0, 40), nm.substr(0, 1).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 58, 30, Color.WHITE)
+			av.draw_circle(Vector2(49, 49), 9, Color(0.03, 0.05, 0.08))
+			av.draw_circle(Vector2(49, 49), 6.5, dc))
 		# tocar no avatar abre o perfil do amigo
 		var avb := Button.new()
 		avb.flat = true
@@ -2455,33 +2632,36 @@ func _friends_render(list: Array) -> void:
 		var nl := mk_lbl(nm, 22, Color.WHITE if online else Color(1, 1, 1, 0.7), 2)
 		nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		nv.add_child(nl)
-		var sl := mk_lbl("%s  •  %s" % [{"online": "ONLINE", "procurando": "PROCURANDO PARTIDA", "jogando": "JOGANDO AGORA"}.get(status, "OFFLINE"), str(f.code)], 14, dc)
-		sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		nv.add_child(sl)
+		# selo de status
+		var stt: String = {"online": "ONLINE", "procurando": "PROCURANDO", "jogando": "JOGANDO"}.get(status, "OFFLINE")
+		var pill := Control.new()
+		pill.custom_minimum_size = Vector2(240, 22)
+		pill.draw.connect(func():
+			var f2: Font = ThemeDB.fallback_font
+			var tw: float = f2.get_string_size(stt, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 26.0
+			pill.draw_style_box(sbox(Color(dc.r, dc.g, dc.b, 0.2), 10, Color(dc.r, dc.g, dc.b, 0.6), 1), Rect2(0, 2, tw, 19))
+			pill.draw_circle(Vector2(10, 11.5), 4, dc)
+			pill.draw_string(f2, Vector2(18, 16), stt, HORIZONTAL_ALIGNMENT_LEFT, 200, 12, dc.lightened(0.3)))
+		nv.add_child(pill)
 		var can := online and status != "jogando"
 		if can:
-			for g in [["sinuca", "x1 SINUCA", GREEN], ["truco", "x1 TRUCO", Color("b8323a")]]:
-				var ib := mk_btn(g[1], 118, 46, g[2], 15)
-				ib.pressed.connect(_invite.bind(str(f.code), g[0], false))
-				hb.add_child(ib)
+			hb.add_child(_fr_btn(round_btn("ball", Color("1b8f4c"), "SINUCA"), _invite.bind(str(f.code), "sinuca", false)))
+			hb.add_child(_fr_btn(round_btn("cards", Color("b8323a"), "TRUCO"), _invite.bind(str(f.code), "truco", false)))
 			var inl := false
 			for o in lobby.get("members", []):
 				if str(o.code) == str(f.code):
 					inl = true
-			var lb := mk_btn("NO LOBBY ✓" if inl else "LOBBY +", 118, 46, GRAY if inl else Color("8e44ad"), 15)
+			var lb := round_btn("check" if inl else "lobby", GRAY if inl else Color("8e44ad"), "NO LOBBY" if inl else "LOBBY")
 			lb.disabled = inl
-			lb.pressed.connect(_invite.bind(str(f.code), "", true))
-			hb.add_child(lb)
+			hb.add_child(_fr_btn(lb, _invite.bind(str(f.code), "", true)))
 		elif status == "jogando":
 			hb.add_child(mk_lbl("em partida...", 15, Color("ffb020"), 2))
 		# conversa (funciona até com o amigo offline: ele recebe quando entrar)
 		var un: int = int(game.save.get("chat_unread", {}).get(str(f.code), 0))
-		var mb := mk_btn("MSG" + (" (%d)" % un if un > 0 else ""), 86 if un == 0 else 104, 46, Color("e67e22") if un > 0 else Color("2f7fd6"), 15)
 		var fc2 := str(f.code)
 		var fn2 := nm
-		mb.pressed.connect(func(): open_pm(fc2, fn2))
-		hb.add_child(mb)
-		var rb := mk_btn("✕", 46, 46, Color("4a2228"), 18)
+		hb.add_child(_fr_btn(round_btn("chat", Color("e67e22") if un > 0 else Color("2f7fd6"), "MSG", un), func(): open_pm(fc2, fn2)))
+		var rb := round_btn("x", Color("3a2a30"), "", 0, 50)
 		var fcode := str(f.code)
 		rb.pressed.connect(func(): confirm("REMOVER AMIGO?", "Tirar %s da sua lista de amigos?" % nm, "REMOVER", _friend_remove.bind(fcode), "CANCELAR", func(): pass))
 		hb.add_child(rb)
@@ -2689,86 +2869,215 @@ func _start(m: int) -> void:
 
 # ---------------------------------------------------------------- roleta diária
 func _build_roleta() -> void:
-	var v := mk_screen("roleta", 10)
-	v.add_child(mk_lbl("ROLETA DIÁRIA", 50, Color("f4c542"), 10))
+	var scr := mk_screen("roleta", 6)
+	add_bg("roleta", "res://assets/menu_bg.jpg", 0.35)
+	var row0 := HBoxContainer.new()
+	row0.add_theme_constant_override("separation", 30)
+	row0.alignment = BoxContainer.ALIGNMENT_CENTER
+	scr.add_child(row0)
 	var holder := Control.new()
-	holder.custom_minimum_size = Vector2(440, 440)
-	holder.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	v.add_child(holder)
+	holder.custom_minimum_size = Vector2(520, 560)
+	row0.add_child(holder)
+	# raios de luz girando atrás da roleta
+	wheel_rays = Control.new()
+	wheel_rays.size = Vector2(700, 700)
+	wheel_rays.position = Vector2(260 - 350, 300 - 350)
+	wheel_rays.pivot_offset = Vector2(350, 350)
+	wheel_rays.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wheel_rays.draw.connect(func():
+		var c := Vector2(350, 350)
+		for k in 18:
+			var a0 := float(k) * TAU / 18.0
+			wheel_rays.draw_colored_polygon(PackedVector2Array([c, c + Vector2.from_angle(a0 - 0.08) * 350.0, c + Vector2.from_angle(a0 + 0.08) * 350.0]), Color(1.0, 0.85, 0.4, 0.05))
+		for k in 5:
+			wheel_rays.draw_circle(c, 120.0 + k * 45.0, Color(1.0, 0.8, 0.3, 0.025)))
+	holder.add_child(wheel_rays)
+	# base (pé) da roleta
+	var base := Control.new()
+	base.set_anchors_preset(Control.PRESET_FULL_RECT)
+	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	base.draw.connect(func():
+		var bc := Vector2(260, 520)
+		base.draw_colored_polygon(PackedVector2Array([bc + Vector2(-70, -60), bc + Vector2(70, -60), bc + Vector2(110, 26), bc + Vector2(-110, 26)]), Color("5a3a12"))
+		base.draw_colored_polygon(PackedVector2Array([bc + Vector2(-60, -60), bc + Vector2(60, -60), bc + Vector2(92, 18), bc + Vector2(-92, 18)]), Color("8a5a1c"))
+		base.draw_style_box(sbox(Color("f4c542"), 8, Color("8a5a10"), 2), Rect2(bc + Vector2(-120, 18), Vector2(240, 18))))
+	holder.add_child(base)
 	wheel = Control.new()
-	wheel.size = Vector2(420, 420)
-	wheel.position = Vector2(10, 18)
-	wheel.pivot_offset = Vector2(210, 210)
+	wheel.size = Vector2(440, 440)
+	wheel.position = Vector2(40, 80)
+	wheel.pivot_offset = Vector2(220, 220)
 	wheel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	wheel.draw.connect(_draw_wheel)
 	holder.add_child(wheel)
-	var ptr := Control.new()
-	ptr.set_anchors_preset(Control.PRESET_FULL_RECT)
-	ptr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var pf := func():
-		var c := Vector2(220, 18)
-		ptr.draw_colored_polygon(PackedVector2Array([c + Vector2(-20, -14), c + Vector2(20, -14), c + Vector2(0, 26)]), Color("c0392b"))
-		ptr.draw_polyline(PackedVector2Array([c + Vector2(-20, -14), c + Vector2(20, -14), c + Vector2(0, 26), c + Vector2(-20, -14)]), Color.WHITE, 3.0)
-		var hc := Vector2(220, 228)
-		ptr.draw_circle(hc, 44, Color("1b1e2b"))
-		ptr.draw_arc(hc, 44, 0, TAU, 40, Color("f4c542"), 4.0)
-		ptr.draw_string(ThemeDB.fallback_font, hc + Vector2(-44, 9), "GIRE", HORIZONTAL_ALIGNMENT_CENTER, 88, 24, Color("f4c542"))
-	ptr.draw.connect(pf)
-	holder.add_child(ptr)
-	spin_lbl = mk_lbl("", 20, Color(1, 1, 1, 0.85), 3)
-	v.add_child(spin_lbl)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 20)
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_child(row)
-	spin_btn = mk_btn("GIRAR", 260, 64, GREEN, 30)
+	# aro dourado com luzes piscando, ponteiro e o botão do meio (não giram)
+	wheel_rim = Control.new()
+	wheel_rim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wheel_rim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wheel_rim.draw.connect(_draw_wheel_rim)
+	holder.add_child(wheel_rim)
+	var hub := Button.new()
+	hub.flat = true
+	hub.focus_mode = Control.FOCUS_NONE
+	for st in ["normal", "hover", "pressed", "focus"]:
+		hub.add_theme_stylebox_override(st, StyleBoxEmpty.new())
+	hub.position = Vector2(260 - 58, 300 - 58)
+	hub.size = Vector2(116, 116)
+	hub.pressed.connect(_spin)
+	holder.add_child(hub)
+	# ---- painel da direita
+	var rp := PanelContainer.new()
+	rp.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.05, 0.1, 0.92), 28, Color(0.96, 0.77, 0.26, 0.6), 2, 16))
+	row0.add_child(rp)
+	var rv := VBoxContainer.new()
+	rv.add_theme_constant_override("separation", 10)
+	rv.custom_minimum_size = Vector2(430, 0)
+	rp.add_child(margin(rv, 22))
+	var tt := Control.new()
+	tt.custom_minimum_size = Vector2(430, 70)
+	tt.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		tt.draw_string_outline(f, Vector2(0, 44), "ROLETA DIÁRIA", HORIZONTAL_ALIGNMENT_CENTER, 430, 40, 8, Color("3a2402"))
+		tt.draw_string(f, Vector2(0, 44), "ROLETA DIÁRIA", HORIZONTAL_ALIGNMENT_CENTER, 430, 40, Color("f7c33a"))
+		tt.draw_string(f, Vector2(0, 66), "1 giro grátis por dia  •  giros extras no Passe", HORIZONTAL_ALIGNMENT_CENTER, 430, 15, Color(1, 1, 1, 0.6)))
+	rv.add_child(tt)
+	rv.add_child(_section("PRÊMIOS POSSÍVEIS"))
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 8)
+	rv.add_child(grid)
+	var tot := 0
+	for w in game.WHEEL:
+		tot += int(w[2])
+	var order := range(game.WHEEL.size())
+	order.sort_custom(func(a, b): return (int(game.WHEEL[a][1]) * (40 if game.WHEEL[a][0] == "g" else 1)) > (int(game.WHEEL[b][1]) * (40 if game.WHEEL[b][0] == "g" else 1)))
+	for i in order:
+		var w: Array = game.WHEEL[i]
+		var chance := float(w[2]) / float(tot)
+		var rar := "LENDÁRIO" if chance <= 0.03 else ("ÉPICO" if chance <= 0.07 else ("RARO" if chance <= 0.13 else "COMUM"))
+		var rc: Color = {"LENDÁRIO": Color("ffd34a"), "ÉPICO": Color("c084ff"), "RARO": Color("5aa9ff"), "COMUM": Color(1, 1, 1, 0.6)}[rar]
+		var cell := Control.new()
+		cell.custom_minimum_size = Vector2(210, 44)
+		var isg: bool = w[0] == "g"
+		var val := int(w[1])
+		cell.draw.connect(func():
+			var f: Font = ThemeDB.fallback_font
+			cell.draw_style_box(sbox(Color(1, 1, 1, 0.05), 12, Color(rc.r, rc.g, rc.b, 0.4), 1), Rect2(0, 0, 210, 44))
+			if isg:
+				_gem(cell, Vector2(24, 22), 12)
+			else:
+				_coin(cell, Vector2(24, 22), 12)
+			cell.draw_string(f, Vector2(44, 21), ("%d GRANA" % val) if isg else ("%d moedas" % val), HORIZONTAL_ALIGNMENT_LEFT, 160, 17, Color.WHITE)
+			cell.draw_string(f, Vector2(44, 38), rar, HORIZONTAL_ALIGNMENT_LEFT, 160, 11, rc))
+		grid.add_child(cell)
+	spin_lbl = mk_lbl("", 17, Color(1, 1, 1, 0.85), 3)
+	spin_lbl.custom_minimum_size = Vector2(430, 48)
+	spin_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rv.add_child(spin_lbl)
+	spin_btn = mk_btn("GIRAR", 430, 66, GREEN, 30)
 	spin_btn.pressed.connect(_spin)
-	row.add_child(spin_btn)
-	var back := mk_btn("◀  VOLTAR", 220, 64, GRAY, 26)
+	rv.add_child(spin_btn)
+	var back := mk_btn("◀  VOLTAR", 430, 54, GRAY, 22)
 	back.pressed.connect(func():
 		if not spinning:
 			show_screen("main"))
-	row.add_child(back)
+	rv.add_child(back)
+
+
+func _coin(c: CanvasItem, p: Vector2, r: float) -> void:
+	draw_coin(c, p, r)
+
+
+func _gem(c: CanvasItem, p: Vector2, r: float) -> void:
+	var pts := PackedVector2Array([p + Vector2(-r, -r * 0.3), p + Vector2(-r * 0.5, -r * 0.85), p + Vector2(r * 0.5, -r * 0.85), p + Vector2(r, -r * 0.3), p + Vector2(0, r)])
+	c.draw_colored_polygon(pts, Color("a463ff"))
+	c.draw_colored_polygon(PackedVector2Array([p + Vector2(-r * 0.5, -r * 0.85), p + Vector2(r * 0.5, -r * 0.85), p + Vector2(r * 0.25, -r * 0.3), p + Vector2(-r * 0.25, -r * 0.3)]), Color("e2c4ff"))
+	c.draw_line(p + Vector2(-r, -r * 0.3), p + Vector2(r, -r * 0.3), Color(1, 1, 1, 0.5), 1.0)
 
 
 func _draw_wheel() -> void:
-	var c := Vector2(210, 210)
+	var c := Vector2(220, 220)
 	var n: int = game.WHEEL.size()
 	var step := TAU / float(n)
 	var f: Font = ThemeDB.fallback_font
-	wheel.draw_circle(c + Vector2(0, 6), 206, Color(0, 0, 0, 0.4))
-	wheel.draw_circle(c, 206, Color("f4c542"))
-	wheel.draw_circle(c, 196, Color("7a4a0c"))
-	var cols := [Color("2f7fd6"), Color("1fa85a"), Color("c94444"), Color("e3a928"), Color("8e44ad"), Color("16897f"), Color("d35400"), Color("f1c40f")]
+	var R := 196.0
+	var pal := [[Color("2f7fd6"), Color("16407a")], [Color("1fa85a"), Color("0d5a30")], [Color("e05050"), Color("7a1c1c")], [Color("f2a91f"), Color("8a5208")], [Color("ff8a3d"), Color("8a3a0a")], [Color("17a3a3"), Color("0a4f55")]]
 	for i in n:
 		var a0 := float(i) * step - PI / 2.0
-		var pts := PackedVector2Array([c])
-		for k in 13:
-			pts.append(c + Vector2.from_angle(a0 + step * float(k) / 12.0) * 190.0)
 		var w: Array = game.WHEEL[i]
-		var col: Color = cols[i % cols.size()]
+		var cc: Array = pal[i % pal.size()]
 		if w[0] == "g":
-			col = Color("6a1fb0")
+			cc = [Color("9b4dff"), Color("3d1478")]
 		elif int(w[1]) >= 1000:
-			col = Color("111111")
-		wheel.draw_colored_polygon(pts, col)
-		wheel.draw_line(c, c + Vector2.from_angle(a0) * 190.0, Color(1, 1, 1, 0.55), 2.0)
+			cc = [Color("2b2b33"), Color("09090c")]
+		# fatia com degradê: escura no meio, clara na borda
+		for ring in 6:
+			var r0 := R * float(ring) / 6.0
+			var r1 := R * float(ring + 1) / 6.0
+			var col: Color = (cc[1] as Color).lerp(cc[0], float(ring) / 5.0)
+			var pts := PackedVector2Array()
+			for k in 11:
+				pts.append(c + Vector2.from_angle(a0 + step * float(k) / 10.0) * r1)
+			for k in 11:
+				pts.append(c + Vector2.from_angle(a0 + step * float(10 - k) / 10.0) * r0)
+			wheel.draw_colored_polygon(pts, col)
+		wheel.draw_line(c, c + Vector2.from_angle(a0) * R, Color(1, 0.9, 0.6, 0.85), 3.0)
 		var mid := a0 + step / 2.0
 		wheel.draw_set_transform(c, mid + PI / 2.0, Vector2.ONE)
-		var txt: String = str(int(w[1]))
-		var tc := Color.WHITE
+		var big: bool = int(w[1]) >= 1000 and w[0] != "g"
 		if w[0] == "g":
-			txt = "%d ◆" % int(w[1])
-			tc = Color("f0dcff")
-		elif int(w[1]) >= 1000:
-			tc = Color("f4c542")
-		wheel.draw_string_outline(f, Vector2(-60, -132), txt, HORIZONTAL_ALIGNMENT_CENTER, 120, 34, 6, Color(0, 0, 0, 0.6))
-		wheel.draw_string(f, Vector2(-60, -132), txt, HORIZONTAL_ALIGNMENT_CENTER, 120, 34, tc)
-		wheel.draw_string(f, Vector2(-60, -102), "GRANA" if w[0] == "g" else "moedas", HORIZONTAL_ALIGNMENT_CENTER, 120, 16, Color(1, 1, 1, 0.8))
+			_gem(wheel, Vector2(0, -150), 17)
+		else:
+			_coin(wheel, Vector2(0, -150), 16 if not big else 19)
+		var txt: String = str(int(w[1])) if not big else "1K"
+		var tc := Color.WHITE if not big else Color("ffd34a")
+		wheel.draw_string_outline(f, Vector2(-60, -100), txt, HORIZONTAL_ALIGNMENT_CENTER, 120, 34, 7, Color(0, 0, 0, 0.55))
+		wheel.draw_string(f, Vector2(-60, -100), txt, HORIZONTAL_ALIGNMENT_CENTER, 120, 34, tc)
+		wheel.draw_string(f, Vector2(-60, -80), "GRANA" if w[0] == "g" else "MOEDAS", HORIZONTAL_ALIGNMENT_CENTER, 120, 13, Color(1, 1, 1, 0.75))
 		wheel.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# brilho de vidro por cima
+	wheel.draw_arc(c, R * 0.82, PI * 1.08, PI * 1.62, 30, Color(1, 1, 1, 0.08), R * 0.3)
+
+
+func _draw_wheel_rim() -> void:
+	var c := Vector2(260, 300)
+	var rc := wheel_rim
+	var t := anim_t
+	rc.draw_arc(c + Vector2(0, 8), 214, 0, TAU, 80, Color(0, 0, 0, 0.35), 26)
+	rc.draw_arc(c, 212, 0, TAU, 80, Color("8a5a10"), 26)
+	rc.draw_arc(c, 214, 0, TAU, 80, Color("f4c542"), 20)
+	rc.draw_arc(c, 223, 0, TAU, 80, Color("fff0b0"), 2)
+	rc.draw_arc(c, 204, 0, TAU, 80, Color("b07d12"), 3)
+	# lâmpadas piscando (mais rápido enquanto gira)
+	var sp := 9.0 if spinning else 3.0
 	for i in 24:
-		var p := c + Vector2.from_angle(float(i) * TAU / 24.0) * 201.0
-		wheel.draw_circle(p, 4.0, Color("fff6c8") if i % 2 == 0 else Color("ffcf4a"))
+		var p := c + Vector2.from_angle(float(i) * TAU / 24.0 - PI / 2.0) * 214.0
+		var on := (int(t * sp) + i) % 2 == 0
+		rc.draw_circle(p, 8.5, Color(0, 0, 0, 0.3))
+		rc.draw_circle(p, 6.5, Color("fff6c8") if on else Color("c98a12"))
+		if on:
+			rc.draw_circle(p, 11, Color(1, 0.95, 0.6, 0.25))
+	# ponteiro
+	var pc := c + Vector2(0, -222)
+	var tilt := wheel_tick * 0.45
+	rc.draw_set_transform(pc, tilt, Vector2.ONE)
+	rc.draw_colored_polygon(PackedVector2Array([Vector2(-24, -22), Vector2(24, -22), Vector2(0, 34)]), Color(0, 0, 0, 0.35))
+	rc.draw_colored_polygon(PackedVector2Array([Vector2(-22, -26), Vector2(22, -26), Vector2(0, 30)]), Color("c0392b"))
+	rc.draw_colored_polygon(PackedVector2Array([Vector2(-22, -26), Vector2(0, -26), Vector2(0, 30)]), Color("e74c3c"))
+	rc.draw_polyline(PackedVector2Array([Vector2(-22, -26), Vector2(22, -26), Vector2(0, 30), Vector2(-22, -26)]), Color("fff0b0"), 3.0)
+	rc.draw_circle(Vector2(0, -14), 7, Color("f4c542"))
+	rc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# botão do meio
+	var can: bool = game.can_spin() and not spinning
+	var pulse := 1.0 + (0.05 * sin(t * 5.0) if can else 0.0)
+	rc.draw_circle(c + Vector2(0, 5), 60 * pulse, Color(0, 0, 0, 0.4))
+	rc.draw_circle(c, 60 * pulse, Color("8a5a10"))
+	rc.draw_circle(c, 55 * pulse, Color("f4c542"))
+	rc.draw_circle(c, 46 * pulse, Color("1fa85a") if can else Color("3b4556"))
+	rc.draw_arc(c, 46 * pulse, PI * 1.1, PI * 1.9, 20, Color(1, 1, 1, 0.3), 4)
+	var f: Font = ThemeDB.fallback_font
+	rc.draw_string_outline(f, c + Vector2(-50, 9), "GIRAR" if can else ("..." if spinning else "AMANHÃ"), HORIZONTAL_ALIGNMENT_CENTER, 100, 22 if can or spinning else 17, 5, Color(0, 0, 0, 0.45))
+	rc.draw_string(f, c + Vector2(-50, 9), "GIRAR" if can else ("..." if spinning else "AMANHÃ"), HORIZONTAL_ALIGNMENT_CENTER, 100, 22 if can or spinning else 17, Color.WHITE)
 
 
 func _roleta_refresh() -> void:
@@ -2779,7 +3088,9 @@ func _roleta_refresh() -> void:
 		spin_btn.disabled = false
 		spin_btn.text = "GIRAR"
 	else:
-		spin_lbl.text = "Você já girou hoje. Volte amanhã para girar de novo!"
+		var tm := Time.get_time_dict_from_system()
+		var left := (23 - int(tm.hour)) * 3600 + (59 - int(tm.minute)) * 60 + (60 - int(tm.second))
+		spin_lbl.text = "Você já girou hoje. Próximo giro grátis em %dh %02dmin." % [left / 3600, (left % 3600) / 60]
 		spin_btn.disabled = true
 		spin_btn.text = "AMANHÃ"
 
@@ -3127,6 +3438,17 @@ func _shop_nudge(dir: int) -> void:
 
 func _process(delta: float) -> void:
 	anim_t += delta
+	if cur == "roleta" and wheel_rim != null:
+		wheel_rays.rotation += delta * 0.15
+		# ponteiro bate em cada divisão da roleta
+		var n: int = game.WHEEL.size()
+		var seg := int(floor(fposmod(-wheel.rotation, TAU) / (TAU / float(n)) + 0.5))
+		if spinning and seg != wheel_last_seg:
+			wheel_tick = 1.0
+			game.play("click", 0.35)
+		wheel_last_seg = seg
+		wheel_tick = maxf(0.0, wheel_tick - delta * 8.0)
+		wheel_rim.queue_redraw()
 	if top_av != null and topbar.visible:
 		var fr := str(game.save.get("frame", ""))
 		if fr == "mestre" or fr == "fogo" or str(game.save.get("av", "")) == "fire":
@@ -3739,74 +4061,176 @@ func show_reward(head: String, big: String, r: Dictionary) -> void:
 	modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.add_child(modal_layer)
 	var dimr := ColorRect.new()
-	dimr.color = Color(0, 0, 0, 0.72)
+	dimr.color = Color(0.0, 0.01, 0.03, 0.82)
 	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	modal_layer.add_child(dimr)
+	# dois feixes de luz girando em sentidos opostos
 	var rays := Control.new()
-	rays.size = Vector2(900, 900)
-	rays.pivot_offset = Vector2(450, 450)
+	rays.size = Vector2(1000, 1000)
+	rays.pivot_offset = Vector2(500, 500)
 	rays.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rays.draw.connect(func():
-		var c := Vector2(450, 450)
-		for k in 16:
-			var a0 := float(k) * TAU / 16.0
-			var pts := PackedVector2Array([c, c + Vector2.from_angle(a0 - 0.09) * 450.0, c + Vector2.from_angle(a0 + 0.09) * 450.0])
-			rays.draw_colored_polygon(pts, Color(1.0, 0.85, 0.35, 0.07))
-		for k in 6:
-			rays.draw_circle(c, 60.0 + k * 34.0, Color(1.0, 0.8, 0.3, 0.035)))
+		var c := Vector2(500, 500)
+		for k in 12:
+			var a0 := float(k) * TAU / 12.0
+			rays.draw_colored_polygon(PackedVector2Array([c, c + Vector2.from_angle(a0 - 0.11) * 500.0, c + Vector2.from_angle(a0 + 0.11) * 500.0]), Color(1.0, 0.82, 0.3, 0.08))
+		for k in 8:
+			rays.draw_circle(c, 40.0 + k * 30.0, Color(1.0, 0.78, 0.25, 0.04)))
 	modal_layer.add_child(rays)
+	var rays2 := Control.new()
+	rays2.size = Vector2(800, 800)
+	rays2.pivot_offset = Vector2(400, 400)
+	rays2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rays2.draw.connect(func():
+		var c := Vector2(400, 400)
+		for k in 16:
+			var a0 := float(k) * TAU / 16.0 + 0.1
+			rays2.draw_colored_polygon(PackedVector2Array([c, c + Vector2.from_angle(a0 - 0.04) * 400.0, c + Vector2.from_angle(a0 + 0.04) * 400.0]), Color(1, 1, 1, 0.05)))
+	modal_layer.add_child(rays2)
 	var cc := CenterContainer.new()
 	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	modal_layer.add_child(cc)
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.05, 0.1, 0.97), 30, Color("f4c542"), 4, 30))
+	var psb := sbox(Color(0.05, 0.07, 0.13, 0.98), 30, Color("f4c542"), 3, 30)
+	psb.shadow_color = Color(1.0, 0.75, 0.2, 0.25)
+	psb.shadow_size = 26
+	p.add_theme_stylebox_override("panel", psb)
 	cc.add_child(p)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 10)
+	vb.add_theme_constant_override("separation", 6)
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	p.add_child(margin(vb, 26))
-	vb.add_child(mk_lbl(head, 20, Color(1, 1, 1, 0.75), 2))
-	vb.add_child(mk_lbl("VOCÊ GANHOU!", 46, Color("f4c542"), 10))
-	var ic := reward_icon(r, 110.0)
-	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vb.add_child(ic)
-	var bl := mk_lbl(big, 30, Color.WHITE, 6)
+	vb.custom_minimum_size = Vector2(480, 0)
+	p.add_child(margin(vb, 22))
+	# faixa vermelha com o título do prêmio
+	var rib := Control.new()
+	rib.custom_minimum_size = Vector2(480, 54)
+	rib.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		var w := 440.0
+		var x0 := 20.0
+		rib.draw_colored_polygon(PackedVector2Array([Vector2(x0 - 18, 14), Vector2(x0 + 10, 14), Vector2(x0 + 10, 48), Vector2(x0 - 18, 48), Vector2(x0 - 6, 31)]), Color("8a1c24"))
+		rib.draw_colored_polygon(PackedVector2Array([Vector2(x0 + w + 18, 14), Vector2(x0 + w - 10, 14), Vector2(x0 + w - 10, 48), Vector2(x0 + w + 18, 48), Vector2(x0 + w + 6, 31)]), Color("8a1c24"))
+		rib.draw_style_box(sbox(Color("d23a44"), 8, Color("ffd34a"), 2), Rect2(x0, 6, w, 38))
+		rib.draw_style_box(sbox(Color(1, 1, 1, 0.12), 6), Rect2(x0 + 6, 9, w - 12, 12))
+		var ht := head.to_upper()
+		var fs := 20 if ht.length() < 34 else 15
+		rib.draw_string(f, Vector2(x0, 32), ht, HORIZONTAL_ALIGNMENT_CENTER, w, fs, Color.WHITE))
+	vb.add_child(rib)
+	var ttl := Control.new()
+	ttl.custom_minimum_size = Vector2(480, 64)
+	ttl.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		ttl.draw_string_outline(f, Vector2(0, 52), "VOCÊ GANHOU!", HORIZONTAL_ALIGNMENT_CENTER, 480, 50, 12, Color("3a2402"))
+		ttl.draw_string_outline(f, Vector2(0, 52), "VOCÊ GANHOU!", HORIZONTAL_ALIGNMENT_CENTER, 480, 50, 4, Color("fff0b0"))
+		ttl.draw_string(f, Vector2(0, 52), "VOCÊ GANHOU!", HORIZONTAL_ALIGNMENT_CENTER, 480, 50, Color("f7c33a")))
+	vb.add_child(ttl)
+	# ícone grande sobre um brilho redondo
+	var glow := Control.new()
+	glow.custom_minimum_size = Vector2(480, 170)
+	glow.draw.connect(func():
+		var c := Vector2(240, 85)
+		for k in 6:
+			glow.draw_circle(c, 80.0 - k * 10.0, Color(1.0, 0.8, 0.3, 0.05 + k * 0.025)))
+	vb.add_child(glow)
+	var ic := reward_icon(r, 120.0)
+	glow.add_child(ic)
+	ic.position = Vector2(240, 85) - ic.custom_minimum_size / 2.0
+	var bl := mk_lbl(big, 34, Color.WHITE, 6)
 	bl.custom_minimum_size = Vector2(460, 0)
 	bl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(bl)
-	var ok := mk_btn("PEGAR!", 260, 66, GREEN, 28)
+	var amount := int(r.get("coins", 0)) if r.has("coins") and not r.has("item") else 0
+	if amount > 0:
+		# número subindo até o valor ganho
+		var nt := bl.create_tween()
+		nt.tween_method(func(v: float): bl.text = big.replace(str(amount), str(int(v))), 0.0, float(amount), 0.9).set_delay(0.35)
+	var ok := mk_btn("PEGAR!", 300, 70, GOLD, 30)
+	for stn in ["normal", "hover", "pressed"]:
+		var sbb := sbox(Color("f4b923") if stn != "pressed" else Color("d99a10"), 22, Color("fff0b0") if stn == "normal" else Color.WHITE, 3, 10 if stn != "pressed" else 2)
+		ok.add_theme_stylebox_override(stn, sbb)
+	ok.add_theme_color_override("font_color", Color("3a2402"))
+	ok.add_theme_color_override("font_hover_color", Color("3a2402"))
 	ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	ok.pressed.connect(close_modal)
+	ok.pressed.connect(func():
+		if amount > 0:
+			_fly_coins(ic.get_global_rect().get_center(), amount)
+		close_modal())
 	vb.add_child(ok)
 	# brilhos subindo
-	for k in 14:
+	for k in 16:
 		var sp := Label.new()
 		sp.text = "✦"
-		sp.add_theme_font_size_override("font_size", randi_range(18, 34))
-		sp.add_theme_color_override("font_color", [Color("ffe066"), Color.WHITE, Color("7fe3ff")][k % 3])
+		sp.add_theme_font_size_override("font_size", randi_range(16, 32))
+		sp.add_theme_color_override("font_color", [Color("ffe066"), Color.WHITE, Color("ffcf6a")][k % 3])
 		sp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		modal_layer.add_child(sp)
 		var vs: Vector2 = root.size
-		var x0 := vs.x * 0.5 + randf_range(-380, 380)
-		sp.position = Vector2(x0, vs.y * 0.5 + randf_range(40, 260))
+		var x0 := vs.x * 0.5 + randf_range(-420, 420)
+		sp.position = Vector2(x0, vs.y * 0.5 + randf_range(40, 280))
 		sp.modulate.a = 0.0
 		var tw := sp.create_tween().set_loops()
-		tw.tween_interval(randf_range(0.0, 1.4))
+		tw.tween_interval(randf_range(0.0, 1.6))
 		tw.tween_property(sp, "modulate:a", 1.0, 0.25)
-		tw.parallel().tween_property(sp, "position:y", sp.position.y - randf_range(160, 300), 1.6).from(sp.position.y)
+		tw.parallel().tween_property(sp, "position:y", sp.position.y - randf_range(180, 320), 1.7).from(sp.position.y)
 		tw.tween_property(sp, "modulate:a", 0.0, 0.4)
 	await get_tree().process_frame
 	if not is_instance_valid(p):
 		return
 	rays.position = root.size / 2.0 - rays.size / 2.0
+	rays2.position = root.size / 2.0 - rays2.size / 2.0
 	var rt := rays.create_tween().set_loops()
-	rt.tween_property(rays, "rotation", TAU, 14.0).from(0.0)
+	rt.tween_property(rays, "rotation", TAU, 18.0).from(0.0)
+	var rt2 := rays2.create_tween().set_loops()
+	rt2.tween_property(rays2, "rotation", -TAU, 26.0).from(0.0)
 	p.pivot_offset = p.size / 2.0
-	p.scale = Vector2(0.5, 0.5)
+	p.scale = Vector2(0.4, 0.4)
 	p.modulate.a = 0.0
 	var pt := p.create_tween().set_parallel()
-	pt.tween_property(p, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	pt.tween_property(p, "scale", Vector2.ONE, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	pt.tween_property(p, "modulate:a", 1.0, 0.2)
+	ic.pivot_offset = ic.custom_minimum_size / 2.0
+	var it := ic.create_tween().set_loops()
+	it.tween_property(ic, "position:y", ic.position.y - 8, 0.9).set_trans(Tween.TRANS_SINE)
+	it.tween_property(ic, "position:y", ic.position.y, 0.9).set_trans(Tween.TRANS_SINE)
+
+
+# ao pegar o prêmio: moedas voam até o contador lá em cima, que vai subindo
+func _fly_coins(from: Vector2, amount: int) -> void:
+	if coin_lbl == null or not topbar.visible:
+		refresh_top()
+		return
+	var to := coin_lbl.get_global_rect().get_center() + Vector2(-40, 0)
+	var final := int(game.save.coins)
+	var start := final - amount
+	coin_lbl.text = str(start)
+	var n := 10
+	for i in n:
+		var cn := Control.new()
+		cn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cn.size = Vector2(36, 36)
+		cn.draw.connect(func(): draw_coin(cn, Vector2(18, 18), 16))
+		root.add_child(cn)
+		cn.position = from - Vector2(18, 18) + Vector2(randf_range(-50, 50), randf_range(-30, 30))
+		var mid := cn.position.lerp(to, 0.5) + Vector2(randf_range(-120, 120), -120)
+		var tw := cn.create_tween()
+		tw.tween_interval(i * 0.06)
+		var p0 := cn.position
+		tw.tween_method(func(t: float):
+			var a := p0.lerp(mid, t)
+			var b := mid.lerp(to - Vector2(18, 18), t)
+			cn.position = a.lerp(b, t)
+			cn.scale = Vector2.ONE * (1.0 - 0.4 * t), 0.0, 1.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		var idx := i
+		tw.tween_callback(func():
+			cn.queue_free()
+			game.play("click", 0.4)
+			coin_lbl.text = str(start + int(float(amount) * float(idx + 1) / float(n)))
+			if idx == n - 1:
+				coin_lbl.text = str(final)
+				var bt := coin_lbl.create_tween()
+				coin_lbl.pivot_offset = coin_lbl.size / 2.0
+				bt.tween_property(coin_lbl, "scale", Vector2(1.25, 1.25), 0.08)
+				bt.tween_property(coin_lbl, "scale", Vector2.ONE, 0.15))
 
 
 func confirm(title: String, msg: String, yes: String, yes_cb: Callable, no: String, no_cb: Callable) -> void:
@@ -5029,3 +5453,9 @@ func tour_refresh() -> void:
 		return
 	if cur in ["online", "main", "torneio", "amigos", "play", "truco"] or str(t.get("phase", "")) == "start":
 		show_screen("torneio")
+
+
+
+func _fr_btn(b: Button, cb: Callable) -> Button:
+	b.pressed.connect(cb)
+	return b

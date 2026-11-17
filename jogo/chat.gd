@@ -173,6 +173,12 @@ func _set_active(on: bool) -> void:
 		panel.visible = false
 		if talking:
 			_talk_stop()
+		# fim da partida: desmonta tudo do áudio para a próxima começar limpa
+		for k in listeners.keys():
+			var pl: AudioStreamPlayer = listeners[k].player
+			if is_instance_valid(pl):
+				pl.queue_free()
+		listeners.clear()
 
 
 func _process(delta: float) -> void:
@@ -209,10 +215,10 @@ func _process(delta: float) -> void:
 		test_rec.append_array(_read_mic())
 		if test_rec.size() > VOICE_RATE * 10:
 			mic_test_stop()
-	elif mic_player != null and mic_player.playing:
-		mic_idle_t += delta
-		if mic_idle_t > 8.0:
-			mic_player.stop()
+	elif capture != null and capture.get_frames_available() > 0:
+		# microfone fica ligado depois da primeira vez (desligar e religar estraga a voz em vários celulares);
+		# quando não está falando, só descarta o que ele captou
+		capture.clear_buffer()
 	if active and game.net_auto and OS.get_cmdline_user_args().has("--chattest"):
 		test_t += delta
 		if test_t > 3.0 and not test_done:
@@ -424,6 +430,8 @@ func _talk_start() -> void:
 		return
 	_ensure_mic()
 	capture.clear_buffer()
+	mic_frac = 0.0
+	voice_send_t = 0.0
 	talking = true
 	talk_t0 = clock
 	hint_t = 0.0
@@ -551,17 +559,29 @@ func got_voice(peer: int, data: PackedByteArray) -> void:
 	if not bool(game.save.get("voice_hear", true)):
 		return
 	add(peer, "", true)
+	if listeners.has(peer):
+		var old: AudioStreamPlayer = listeners[peer].player
+		if not is_instance_valid(old) or not old.playing:
+			if is_instance_valid(old):
+				old.queue_free()
+			listeners.erase(peer)
 	if not listeners.has(peer):
 		var pl := AudioStreamPlayer.new()
 		var gen := AudioStreamGenerator.new()
 		gen.mix_rate = VOICE_RATE
-		gen.buffer_length = 0.6
+		gen.buffer_length = 1.0
 		pl.stream = gen
 		pl.volume_db = 4.0
 		add_child(pl)
 		pl.play()
-		listeners[peer] = {"player": pl, "pb": pl.get_stream_playback()}
-	var pb: AudioStreamGeneratorPlayback = listeners[peer].pb
+		listeners[peer] = {"player": pl, "pb": pl.get_stream_playback(), "last": -10.0}
+	var L: Dictionary = listeners[peer]
+	var pb: AudioStreamGeneratorPlayback = L.pb
+	# começo de uma fala nova (ou atraso acumulado): zera o buffer para a voz não sair atrasada e picotada
+	var queued := int(VOICE_RATE * 1.0) - pb.get_frames_available()
+	if clock - float(L.last) > 0.5 or queued > int(VOICE_RATE * 0.35):
+		pb.clear_buffer()
+	L.last = clock
 	var n := mini(data.size(), pb.get_frames_available())
 	var out := PackedVector2Array()
 	out.resize(n)
