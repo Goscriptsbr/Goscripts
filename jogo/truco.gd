@@ -81,11 +81,17 @@ func setup(g: Node2D, players: int, simulate: bool = false, role: String = "", i
 	score = [0, 0]
 	quedas = [0, 0]
 	dealer = randi() % n
+	# aposta contra a IA (no online já foi descontada quando a partida foi montada)
+	if role == "" and not sim:
+		game.bet_begin(mini(int(game.save.get("bet_tr", 0)), TR_AI_MAX))
 	if netmode == "guest":
 		phase = "wait"
 		say("Conectado! Esperando o anfitrião dar as cartas...")
 		return
 	new_hand()
+
+
+const TR_AI_MAX := 100
 
 
 func is_remote(seat: int) -> bool:
@@ -648,7 +654,15 @@ func _show_over() -> void:
 	over_shown = true
 	var won := winner == 0
 	var r := 0
+	var bt: String = game.bet_settle("win" if won else "lose")
+	var btl: String = ("\n" + bt) if bt != "" else ""
+	game.mission_event("play", 1)
+	game.mission_event("truco_play", 1)
+	if won:
+		game.mission_event("win", 1)
+		game.mission_event("truco_win", 1)
 	if netmode != "":
+		game.mission_event("online", 1)
 		r = 60 if won else 15
 		if won:
 			game.save.truco_wins = int(game.save.get("truco_wins", 0)) + 1
@@ -657,7 +671,12 @@ func _show_over() -> void:
 		game.save.coins += r
 		game.write_save()
 		game.play("win")
-		_modal("VITÓRIA!" if won else "DERROTA", "Quedas %d x %d   •   +%d moedas" % [quedas[0], quedas[1], r], [["MENU", Color("3b4556"), _quit]])
+		var bts: Array = [["MENU", Color("3b4556"), _quit]]
+		if n == 2 and not game.ui.in_lobby():
+			bts.push_front(["REVANCHE", Color("1fa85a"), func():
+				game.net.ask_rematch()
+				say("Revanche pedida! Esperando o adversário aceitar...")])
+		_modal("VITÓRIA!" if won else "DERROTA", "Quedas %d x %d   •   +%d moedas%s" % [quedas[0], quedas[1], r, btl], bts)
 		return
 	if won:
 		r = 70 if n == 4 else 50
@@ -668,8 +687,9 @@ func _show_over() -> void:
 	game.save.coins += r
 	game.write_save()
 	game.play("win")
-	_modal("VITÓRIA!" if won else "DERROTA", "Quedas %d x %d   •   +%d moedas" % [quedas[0], quedas[1], r], [["JOGAR DE NOVO", Color("1fa85a"), func():
+	_modal("VITÓRIA!" if won else "DERROTA", "Quedas %d x %d   •   +%d moedas%s" % [quedas[0], quedas[1], r, btl], [["JOGAR DE NOVO", Color("1fa85a"), func():
 		_close_modal()
+		game.bet_begin(mini(int(game.save.get("bet_tr", 0)), TR_AI_MAX))
 		over_shown = false
 		score = [0, 0]
 		quedas = [0, 0]
@@ -686,6 +706,9 @@ func on_back() -> void:
 
 
 func _quit() -> void:
+	if phase != "over" and game.bet_cur > 0:
+		ui.say("Você saiu da partida e perdeu a aposta de %d moedas." % game.bet_cur)
+		game.bet_cur = 0
 	game.paused = false
 	if netmode != "" and game.net != null:
 		game.net.close()
@@ -702,6 +725,7 @@ func act_play(i: int) -> void:
 
 
 func act_ask() -> void:
+	game.mission_event("truco_call", 1)
 	if netmode == "guest":
 		game.net.send_tact({"a": "ask"})
 		return

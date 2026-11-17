@@ -10,6 +10,13 @@ const PORT = process.env.PORT || 10000;
 const clients = new Map(); // code -> client
 const queues = { sinuca: [], truco: [], sinuca4: [], truco4: [] };
 const GAMES = ["sinuca", "truco", "sinuca4", "truco4"];
+// apostas (moedas do jogo): cada fila é separada pelo valor, para só juntar quem apostou igual
+const STAKES = [0, 50, 100, 500, 1000];
+function stakeOf(v) { v = Number(v) || 0; return STAKES.includes(v) ? v : 0; }
+function qkey(g, stake) { return stake ? g + "$" + stake : g; }
+function gameOf(k) { return String(k).split("$")[0]; }
+function stakeOfKey(k) { return Number(String(k).split("$")[1] || 0); }
+function poor(list, stake) { return stake ? list.find((o) => (o.coins || 0) < stake) : null; }
 const FILL_AFTER = 40000; // 2x2: depois de 40 s completa a mesa com a IA
 let nextRoom = 1;
 let nextParty = 1;
@@ -118,6 +125,7 @@ function onMsg(c, op, payload) {
       if (old && old !== c) drop(old);
       c.code = code;
       c.name = String(m.name || "Jogador").slice(0, 15);
+      c.coins = Math.max(0, Number(m.coins) || 0);
       clients.set(code, c);
       remember(c);
       sendJ(c, { t: "welcome", code, online: clients.size, app: appVersion() });
@@ -137,6 +145,14 @@ function onMsg(c, op, payload) {
       const g = GAMES.includes(m.game) ? m.game : "sinuca";
       const p = c.party;
       if (p && p.leader !== c) return; // no lobby só o líder procura
+      if (m.coins != null) c.coins = Math.max(0, Number(m.coins) || 0);
+      const stake = p ? stakeOf(p.stake) : stakeOf(m.stake);
+      const broke = poor(p ? p.members : [c], stake);
+      if (broke) {
+        const msg = (broke === c ? "Você não tem" : broke.name + " não tem") + " moedas para apostar " + stake + ".";
+        return p ? sendLobby(p, msg) : sendJ(c, { t: "qfail", msg });
+      }
+      const qk = qkey(g, stake);
       if (p && p.members.some((o) => o.room)) return sendLobby(p, "Espere todos voltarem da partida.");
       unqueue(c);
       if (p) {
@@ -144,18 +160,18 @@ function onMsg(c, op, payload) {
         p.four = g.endsWith("4");
         if (!p.four) {
           // 1x1 com a dupla do lobby: joga um contra o outro
-          if (p.members.length === 2) { const ms = p.members.slice(); matchN(ms, g); return; }
+          if (p.members.length === 2) { const ms = p.members.slice(); matchN(ms, g, stake); return; }
           sendLobby(p, "No 1 contra 1 o lobby precisa ter só 2 jogadores.");
           return;
         }
       }
       setStatus(c, "procurando");
       c.qsince = Date.now();
-      queues[g] = queues[g].filter((o) => !o.room && clients.get(o.code) === o);
-      queues[g].push(c);
+      queues[qk] = (queues[qk] || []).filter((o) => !o.room && clients.get(o.code) === o);
+      queues[qk].push(c);
       if (p) sendLobby(p);
-      if (g.endsWith("4")) tryTable(g, false);
-      else if (queues[g].length >= 2) matchN(queues[g].splice(0, 2), g);
+      if (g.endsWith("4")) tryTable(qk, false);
+      else if (queues[qk].length >= 2) matchN(queues[qk].splice(0, 2), g, stake);
       break;
     }
     case "unqueue": {
@@ -188,11 +204,11 @@ function onMsg(c, op, payload) {
       const game = m.game === "truco" ? "truco" : "sinuca";
       if (c.party && c.party.leader === c) {
         if (!m.four && c.party.members.length > 2) return sendLobby(c.party, "1 contra 1 é só com 2 no lobby.");
-        c.party.game = game; c.party.four = !!m.four;
+        c.party.game = game; c.party.four = !!m.four; c.party.stake = stakeOf(m.stake);
         return sendLobby(c.party);
       }
       leaveParty(c);
-      const p = { id: nextParty++, leader: c, members: [c], game, four: !!m.four };
+      const p = { id: nextParty++, leader: c, members: [c], game, four: !!m.four, stake: stakeOf(m.stake) };
       c.party = p;
       sendLobby(p, "Lobby criado! Chame seus amigos.");
       break;
@@ -201,15 +217,17 @@ function onMsg(c, op, payload) {
       const p = c.party;
       if (!p || p.leader !== c || c.room) break;
       if (p.members.some((o) => o.room)) return sendLobby(p, "Espere todos voltarem da partida.");
+      const lbroke = poor(p.members, stakeOf(p.stake));
+      if (lbroke) return sendLobby(p, lbroke.name + " não tem moedas para apostar " + p.stake + ".");
       unqueue(c);
       if (!p.four) {
         if (p.members.length !== 2) return sendLobby(p, "Para o 1 contra 1 precisa ter 2 no lobby.");
         const ms = p.members.slice();
-        matchN(ms, p.game);
+        matchN(ms, p.game, stakeOf(p.stake));
         break;
       }
       if (p.members.length < 2) return sendLobby(p, "Chame pelo menos 1 amigo para jogar junto.");
-      matchSeats(seatUnits([c]), p.game + "4");
+      matchSeats(seatUnits([c]), p.game + "4", stakeOf(p.stake));
       break;
     }
     case "lset": { // líder trocou jogo/mesa no lobby (sem procurar ainda)
@@ -218,7 +236,29 @@ function onMsg(c, op, payload) {
       unqueue(c); setStatus(c, "online");
       p.game = m.game === "truco" ? "truco" : "sinuca";
       p.four = !!m.four;
+      if (m.stake != null) p.stake = stakeOf(m.stake);
       sendLobby(p);
+      break;
+    }
+    case "coins": c.coins = Math.max(0, Number(m.n) || 0); break;
+    case "rematch": { // revanche 1x1: os dois pedem e a mesma dupla joga de novo, com a mesma aposta
+      const r = c.room;
+      if (!r || r.seats !== 2) break;
+      if (m.coins != null) c.coins = Math.max(0, Number(m.coins) || 0);
+      const o = r.members.find((x) => x !== c);
+      if (!o) break;
+      c.rem = r.id;
+      if (o.rem !== r.id) { sendJ(o, { t: "rematch_req", name: c.name }); break; }
+      const rb = poor([c, o], r.stake || 0);
+      if (rb) {
+        c.rem = 0; o.rem = 0;
+        for (const x of [c, o]) sendJ(x, { t: "rematch_fail", msg: rb.name + " não tem moedas para a revanche." });
+        break;
+      }
+      for (const x of r.members) { x.room = null; x.peer = 0; x.rem = 0; }
+      r.members = [];
+      // quem perdeu sai na frente? simples: troca o anfitrião a cada revanche
+      matchSeats([c, o], gameOf(r.game), r.stake || 0);
       break;
     }
     case "friends": {
@@ -293,7 +333,9 @@ function onMsg(c, op, payload) {
       if (!f || f === c) return sendJ(c, { t: "invite_fail", msg: "Amigo offline" });
       if (f.room) return sendJ(c, { t: "invite_fail", msg: "Amigo está jogando" });
       if (m.lobby && c.party && c.party.members.length >= (c.party.four ? 4 : 2)) return sendJ(c, { t: "invite_fail", msg: "O lobby já está cheio" });
-      sendJ(f, { t: "invited", from: c.code, name: c.name, game: m.game === "truco" ? "truco" : "sinuca", lobby: !!m.lobby });
+      const ist = m.lobby ? 0 : stakeOf(m.stake);
+      if (ist && (c.coins || 0) < ist) return sendJ(c, { t: "invite_fail", msg: "Você não tem moedas para apostar " + ist + "." });
+      sendJ(f, { t: "invited", from: c.code, name: c.name, game: m.game === "truco" ? "truco" : "sinuca", lobby: !!m.lobby, stake: ist });
       sendJ(c, { t: "invite_ok", name: f.name, lobby: !!m.lobby });
       break;
     }
@@ -317,16 +359,24 @@ function onMsg(c, op, payload) {
         c.party = p;
         // se o líder estava numa fila 1x1, para a busca (o lobby é para 2x2)
         const lq = queueOf(p.leader);
-        if (lq && !lq.endsWith("4")) { unqueue(p.leader); setStatus(p.leader, "online"); }
+        if (lq && !gameOf(lq).endsWith("4")) { unqueue(p.leader); setStatus(p.leader, "online"); }
         // a contagem da IA começa quando o 2º jogador real chega (aqui, o amigo)
-        if (lq && lq.endsWith("4")) p.leader.qsince = Date.now();
+        if (lq && gameOf(lq).endsWith("4")) p.leader.qsince = Date.now();
         sendLobby(p, c.name + " entrou no lobby!");
-        if (lq && lq.endsWith("4")) tryTable(lq, false);
+        if (lq && gameOf(lq).endsWith("4")) tryTable(lq, false);
+        break;
+      }
+      const ast = stakeOf(m.stake);
+      if (m.coins != null) c.coins = Math.max(0, Number(m.coins) || 0);
+      const ab = poor([f, c], ast);
+      if (ab) {
+        sendJ(c, { t: "invite_fail", msg: (ab === c ? "Você não tem" : ab.name + " não tem") + " moedas para apostar " + ast + "." });
+        if (ab === f) sendJ(f, { t: "invite_fail", msg: "Você não tem moedas para apostar " + ast + "." });
         break;
       }
       leaveParty(f); leaveParty(c);
       unqueue(f); unqueue(c);
-      matchN([f, c], m.game === "truco" ? "truco" : "sinuca");
+      matchN([f, c], m.game === "truco" ? "truco" : "sinuca", ast);
       break;
     }
     case "decline": {
@@ -344,10 +394,11 @@ function norm(t) {
 }
 
 // sala com 2 a 4 jogadores; o primeiro é o anfitrião (peer 1), os outros são 2, 3, 4
-function matchN(list, game) { matchSeats(list, game); }
+function matchN(list, game, stake) { matchSeats(list, game, stake); }
 
 // seats[i] = jogador no lugar i (ou null = IA). Lugar i usa peer i+1; times: 0 e 2 contra 1 e 3
-function matchSeats(seats, game) {
+function matchSeats(seats, game, stake) {
+  stake = stakeOf(stake);
   const list = seats.filter((p) => p);
   if (seats[0] == null) { // o lugar 0 (anfitrião) precisa ser gente
     const i = seats.findIndex((p) => p);
@@ -355,12 +406,12 @@ function matchSeats(seats, game) {
   }
   // o lobby continua existindo durante a partida: no fim todos voltam para ele
   for (const p of list) unqueue(p);
-  const room = { id: nextRoom++, members: list.slice(), game, seats: game.endsWith("4") ? 4 : 2 };
+  const room = { id: nextRoom++, members: list.slice(), game, seats: game.endsWith("4") ? 4 : 2, stake };
   const players = [];
   seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; players.push({ peer: i + 1, name: p.name, code: p.code }); } });
   for (const p of list) {
     const opp = list.find((o) => o !== p) || p;
-    sendJ(p, { t: "match", role: p.peer === 1 ? "host" : "guest", peer: p.peer, game, seats: room.seats, players, opp: { name: opp.name, code: opp.code } });
+    sendJ(p, { t: "match", role: p.peer === 1 ? "host" : "guest", peer: p.peer, game, seats: room.seats, players, opp: { name: opp.name, code: opp.code }, stake });
   }
 }
 
@@ -380,7 +431,7 @@ function queueOf(c) {
 function sendLobby(p, msg) {
   const q = queueOf(p.leader);
   const d = {
-    t: "lobby", leader: p.leader.code, game: p.game, four: p.four, searching: !!q,
+    t: "lobby", leader: p.leader.code, game: p.game, four: p.four, searching: !!q, stake: stakeOf(p.stake),
     members: p.members.map((o) => ({ code: o.code, name: o.name, team: teamOf(p, o) })), msg: msg || "",
   };
   for (const o of p.members) sendJ(o, d);
@@ -426,7 +477,7 @@ function leaveParty(c) {
 function candidate(g) {
   const out = [];
   let total = 0, start = -1;
-  for (const u of queues[g]) {
+  for (const u of queues[g] || []) {
     const n = unitSize(u);
     if (total + n > 4) continue;
     out.push(u);
@@ -465,12 +516,12 @@ function seatUnits(units) {
 }
 
 function tryTable(g, timed) {
-  queues[g] = queues[g].filter((o) => !o.room && clients.get(o.code) === o);
+  queues[g] = (queues[g] || []).filter((o) => !o.room && clients.get(o.code) === o);
   const cand = candidate(g);
   const ready = cand.total === 4 || (timed && cand.total >= 2 && Date.now() - cand.start >= FILL_AFTER);
   if (ready) {
     queues[g] = queues[g].filter((u) => !cand.units.includes(u));
-    matchSeats(seatUnits(cand.units), g);
+    matchSeats(seatUnits(cand.units), gameOf(g), stakeOfKey(g));
     return tryTable(g, timed);
   }
   sendWaiting(g);
@@ -514,7 +565,7 @@ function leaveRoom(c) {
 }
 
 function sendWaiting(g) {
-  const q = queues[g];
+  const q = queues[g] || [];
   if (!q.length) return;
   const cand = candidate(g);
   const left = cand.total >= 2 ? Math.max(0, FILL_AFTER - (Date.now() - cand.start)) : -1;
@@ -526,8 +577,8 @@ function sendWaiting(g) {
 
 // 2x2 com pouca gente: depois de um tempo, completa a mesa com a IA
 setInterval(() => {
-  for (const g of ["sinuca4", "truco4"]) {
-    tryTable(g, true);
+  for (const g of Object.keys(queues)) {
+    if (gameOf(g).endsWith("4")) tryTable(g, true);
   }
 }, 2000);
 

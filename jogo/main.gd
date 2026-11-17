@@ -18,7 +18,7 @@ const DECKS := [
 	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
 	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
 ]
-const APP_VERSION := 71  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 72  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -169,6 +169,8 @@ var net_aim_t := 0.0
 var net_auto := false
 var net_auto_t := 0.0
 var net_dbg_t := 0.0
+var rm_t := 0.0
+var rm_n := 0
 var net_tgt: Dictionary = {}
 var impacts: Array = []
 var shot_pow := 3
@@ -321,6 +323,10 @@ func _ready() -> void:
 			if a2.begins_with("--code="):
 				save.pcode = a2.substr(7)
 				save.name = "J" + a2.substr(7, 1)
+			if a2.begins_with("--stake="):
+				save["bet_on"] = int(a2.substr(8))
+			if a2.begins_with("--coins="):
+				save.coins = int(a2.substr(8))
 		ui.show_screen("")
 		if args.has("--lobbycreate"):
 			net.connect_server()
@@ -695,6 +701,7 @@ func _ready() -> void:
 			add_child(sp)
 			sp.start(self)
 			splash_node = sp
+		get_tree().create_timer(4.6).timeout.connect(_daily_after_splash)
 		if not has_screen and FileAccess.file_exists(MATCH_FILE):
 			get_tree().create_timer(4.4 if not args.has("--nosplash") else 0.3).timeout.connect(_offer_resume)
 		for a in args:
@@ -862,6 +869,8 @@ func load_save() -> void:
 func write_save() -> void:
 	if bot:
 		return
+	if net != null:
+		net.send_coins()
 	var cf := ConfigFile.new()
 	for k in save.keys():
 		cf.set_value("s", k, save[k])
@@ -1238,6 +1247,11 @@ func get_ball(n: int) -> Dictionary:
 func start_game(m: Mode, d: int = 1, names: Array = []) -> void:
 	mode = m
 	diff = d
+	# aposta: contra a IA desconta agora; no online já foi descontada quando a partida foi montada
+	if m == Mode.AI and not bet_resuming:
+		bet_begin(mini(int(save.get("bet_ai", 0)), ai_stake_max(d)))
+	elif m != Mode.ONLINE:
+		bet_cur = 0
 	paused = false
 	net_shot_q = {}
 	ai = [false, m == Mode.AI]
@@ -1267,6 +1281,9 @@ func start_game(m: Mode, d: int = 1, names: Array = []) -> void:
 
 
 func go_menu() -> void:
+	if bet_cur > 0 and st != St.OVER and st != St.MENU and (mode == Mode.AI or mode == Mode.ONLINE):
+		ui.say("Você saiu da partida e perdeu a aposta de %d moedas." % bet_cur)
+		bet_cur = 0
 	clear_match()
 	paused = false
 	net4 = false
@@ -1812,7 +1829,7 @@ func save_match() -> void:
 	for b in balls:
 		bl.append([b.n, b.on, b.pos.x, b.pos.y])
 	var d := {"mode": int(mode), "diff": diff, "players": players, "turn": turn, "groups": groups, "hand": ball_in_hand,
-		"brk": break_shot, "cues": cue_ids, "balls": bl}
+		"brk": break_shot, "cues": cue_ids, "balls": bl, "bet": bet_cur}
 	var f := FileAccess.open(MATCH_FILE, FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(d))
@@ -1841,7 +1858,10 @@ func resume_match() -> void:
 		clear_match()
 		return
 	ui.show_screen("")
+	bet_resuming = true
 	start_game(int(d.mode) as Mode, int(d.diff), d.players if int(d.mode) == Mode.TWO else [])
+	bet_resuming = false
+	bet_cur = int(d.get("bet", 0))
 	players = d.players
 	turn = int(d.turn)
 	groups = [int(d.groups[0]), int(d.groups[1])]
@@ -1948,6 +1968,8 @@ func pocket_ball(b: Dictionary, pk: Vector2) -> void:
 		cue_pocketed = true
 	else:
 		pocketed.append(b.n)
+		if st == St.ROLL and mode != Mode.TRAIN and (mode == Mode.TWO or (mode == Mode.AI and not ai[turn]) or (mode == Mode.ONLINE and shooter() == net_seat)):
+			mission_event("pocket", 1)
 	play("pocket")
 	vibrate(25)
 
@@ -1986,6 +2008,18 @@ func end_game(win_idx: int) -> void:
 			save.losses += 1
 			save.coins += 15
 			reward_txt = "+15 moedas"
+	var me_won: bool = (win_idx == 0) if mode == Mode.AI else (win_idx == net_seat % 2)
+	if mode == Mode.AI or mode == Mode.ONLINE:
+		var bt := bet_settle("win" if me_won else "lose")
+		if bt != "":
+			reward_txt += "\n" + bt
+		mission_event("play", 1)
+		mission_event("sinuca_play", 1)
+		if me_won:
+			mission_event("win", 1)
+			mission_event("sinuca_win", 1)
+		if mode == Mode.ONLINE:
+			mission_event("online", 1)
 	write_save()
 	if not bot:
 		ui.show_over()
@@ -2338,14 +2372,16 @@ func net_lost(why: String = "") -> void:
 	if tn != null and is_instance_valid(tn) and tn.netmode != "":
 		var was_over: bool = tn.phase == "over"
 		if not was_over:
+			var bt := _bet_on_leave()
 			ui.close_truco()
-			ui.say(why if why != "" else "O adversário saiu da partida.")
+			ui.say((why if why != "" else "O adversário saiu da partida.") + bt)
 		return
 	if mode == Mode.ONLINE and st != St.MENU:
 		var was_over := st == St.OVER
+		var bt2 := "" if was_over else _bet_on_leave()
 		go_menu()
 		if not was_over:
-			ui.say(why if why != "" else "O adversário saiu da partida.")
+			ui.say((why if why != "" else "O adversário saiu da partida.") + bt2)
 	elif ui != null:
 		ui.online_status("Conexão encerrada.")
 	if net_auto:
@@ -2381,6 +2417,18 @@ func net_tick(delta: float) -> void:
 					aim_angle = (t.pos - cue.pos).angle() + randf_range(-0.08, 0.08)
 				power = 0.55
 				shoot(0.6)
+	if net_auto and OS.get_cmdline_user_args().has("--rematchtest"):
+		rm_t += delta
+		if net.is_host and net.snaps >= 3 and st == St.AIM and rm_n == 0:
+			rm_n = 1
+			end_game(0)
+			net_send_state()
+		if st == St.OVER and rm_t > 2.0 and ui.cur == "over" and not ui.over_rematch.disabled:
+			rm_t = 0.0
+			print("REMATCH ask seat=", net_seat)
+			ui._rematch()
+		if st != St.OVER:
+			rm_t = 0.0
 	if net_auto and OS.get_cmdline_user_args().has("--long"):
 		net_dbg_t += delta
 		if net_dbg_t > 1.0:
@@ -3324,3 +3372,186 @@ func _draw_hud() -> void:
 			ctext("BOLA NA MÃO: arraste a bola branca para onde quiser", cx, 690, 26, Color("ffe066"))
 		else:
 			hud.draw_string(font, Vector2(20, 706), "Arraste na mesa para mirar  •  EFEITO: toque na bola branca (canto superior)", HORIZONTAL_ALIGNMENT_LEFT, 900, 18, Color(1, 1, 1, 0.6))
+
+
+
+# ---------------------------------------------------------------- apostas (moedas do jogo)
+const STAKES := [0, 50, 100, 500, 1000]
+const AI_STAKES := [0, 50, 100, 200]
+var bet_cur := 0  # moedas apostadas na partida atual (já descontadas)
+var bet_resuming := false
+var match_stake := 0
+
+
+func stake_txt(v: int) -> String:
+	if v <= 0:
+		return "SEM APOSTA"
+	return "1K" if v == 1000 else str(v)
+
+
+# contra a IA: Fácil até 50, Médio até 100, Difícil até 200
+func ai_stake_max(d: int) -> int:
+	return [50, 100, 200][clampi(d, 0, 2)]
+
+
+func bet_begin(v: int) -> void:
+	bet_cur = 0
+	v = mini(v, int(save.coins))
+	if v <= 0:
+		return
+	bet_cur = v
+	save.coins -= v
+	if net_auto:
+		print("BET begin seat=", net_seat, " stake=", v, " coins=", save.coins)
+	write_save()
+	if ui != null:
+		ui.refresh_top()
+
+
+# fim da partida: "win" leva a mesa (o dobro), "lose" perde, "refund" devolve
+func bet_settle(result: String) -> String:
+	if bet_cur <= 0:
+		return ""
+	var v := bet_cur
+	bet_cur = 0
+	var t := ""
+	if result == "win":
+		save.coins += v * 2
+		t = "Aposta: você levou a mesa! +%d moedas" % (v * 2)
+		mission_event("bet_win", 1)
+	elif result == "refund":
+		save.coins += v
+		t = "Aposta devolvida (%d moedas)" % v
+	else:
+		t = "Aposta perdida: -%d moedas" % v
+	if net_auto:
+		print("BET settle ", result, " coins=", save.coins)
+	write_save()
+	if ui != null:
+		ui.refresh_top()
+	return t
+
+
+# o adversário saiu no meio: no 1x1 quem ficou leva a mesa; no 2x2 (quem criou a sala saiu) devolve
+func _bet_on_leave() -> String:
+	if bet_cur <= 0:
+		return ""
+	var four: bool = net != null and net.room_seats == 4
+	var t := bet_settle("refund" if four else "win")
+	return "\n" + t
+
+
+# ---------------------------------------------------------------- missões diárias e prêmio por dias seguidos
+const MISSION_POOL := [
+	{"id": "play3", "ev": "play", "n": 3, "txt": "Jogue 3 partidas", "r": 80},
+	{"id": "win2", "ev": "win", "n": 2, "txt": "Ganhe 2 partidas", "r": 120},
+	{"id": "pocket10", "ev": "pocket", "n": 10, "txt": "Encaçape 10 bolas", "r": 90},
+	{"id": "pocket25", "ev": "pocket", "n": 25, "txt": "Encaçape 25 bolas", "r": 160},
+	{"id": "sinuca_w1", "ev": "sinuca_win", "n": 1, "txt": "Ganhe 1 partida de sinuca", "r": 80},
+	{"id": "truco_w1", "ev": "truco_win", "n": 1, "txt": "Ganhe 1 partida de truco", "r": 80},
+	{"id": "truco_call3", "ev": "truco_call", "n": 3, "txt": "Peça TRUCO 3 vezes", "r": 60},
+	{"id": "online2", "ev": "online", "n": 2, "txt": "Jogue 2 partidas online", "r": 150},
+	{"id": "betwin1", "ev": "bet_win", "n": 1, "txt": "Ganhe 1 partida apostando", "r": 150},
+	{"id": "truco_p2", "ev": "truco_play", "n": 2, "txt": "Jogue 2 partidas de truco", "r": 70},
+	{"id": "sinuca_p2", "ev": "sinuca_play", "n": 2, "txt": "Jogue 2 partidas de sinuca", "r": 70},
+	{"id": "spin1", "ev": "spin", "n": 1, "txt": "Gire a roleta", "r": 40},
+]
+const STREAK_REWARDS := [50, 75, 100, 150, 200, 300, 500]
+
+
+func _day_num(ds: String) -> int:
+	var p := ds.split("-")
+	if p.size() != 3:
+		return -99999
+	return int(Time.get_unix_time_from_datetime_dict({"year": int(p[0]), "month": int(p[1]), "day": int(p[2]), "hour": 12, "minute": 0, "second": 0}) / 86400)
+
+
+# as 3 missões do dia (iguais para o dia todo; trocam à meia-noite)
+func missions() -> Array:
+	var td := today_str()
+	var ms: Dictionary = save.get("missions", {})
+	if str(ms.get("date", "")) != td:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(td + my_code())
+		var pool := MISSION_POOL.duplicate()
+		var pick := []
+		while pick.size() < 3 and pool.size() > 0:
+			var i := rng.randi() % pool.size()
+			var m: Dictionary = pool[i]
+			pool.remove_at(i)
+			var same := false
+			for q in pick:
+				if str(q.ev) == str(m.ev):
+					same = true
+			if same:
+				continue
+			pick.append({"id": m.id, "ev": m.ev, "n": m.n, "txt": m.txt, "r": m.r, "prog": 0, "claimed": false})
+		ms = {"date": td, "list": pick}
+		save["missions"] = ms
+	return ms.list
+
+
+func mission_event(ev: String, amount: int) -> void:
+	if bot or net_auto:
+		return
+	var changed := false
+	for m in missions():
+		if str(m.ev) == ev and int(m.prog) < int(m.n):
+			m.prog = mini(int(m.n), int(m.prog) + amount)
+			changed = true
+	if changed and ui != null:
+		ui.missions_badge()
+
+
+func missions_ready() -> int:
+	var k := 0
+	for m in missions():
+		if int(m.prog) >= int(m.n) and not bool(m.claimed):
+			k += 1
+	return k
+
+
+func mission_claim(id: String) -> void:
+	for m in missions():
+		if str(m.id) == id and int(m.prog) >= int(m.n) and not bool(m.claimed):
+			m.claimed = true
+			save.coins += int(m.r)
+			write_save()
+			if ui != null:
+				ui.show_reward("Missão concluída!", "+%d MOEDAS" % int(m.r), {"coins": int(m.r)})
+				ui.refresh_top()
+				ui.missions_badge()
+
+
+func _daily_after_splash() -> void:
+	if splash_node != null and is_instance_valid(splash_node):
+		get_tree().create_timer(0.5).timeout.connect(_daily_after_splash)
+		return
+	if ui != null and ui.has_modal():
+		get_tree().create_timer(1.5).timeout.connect(_daily_after_splash)
+		return
+	check_daily()
+
+
+# primeira vez que abre o jogo no dia: prêmio por dias seguidos (7 dias, depois recomeça)
+func check_daily() -> void:
+	if bot or net_auto or OS.get_cmdline_user_args().has("--nosplash"):
+		return
+	var td := today_str()
+	var last := str(save.get("daily_last", ""))
+	if last == td:
+		return
+	var streak := int(save.get("daily_streak", 0))
+	streak = (streak + 1) if _day_num(td) - _day_num(last) == 1 else 1
+	if streak > 7:
+		streak = 1
+	save["daily_last"] = td
+	save["daily_streak"] = streak
+	var r: int = STREAK_REWARDS[streak - 1]
+	save.coins += r
+	var gems := 5 if streak == 7 else 0
+	if gems > 0:
+		save["grana"] = int(save.get("grana", 0)) + gems
+	write_save()
+	if ui != null:
+		ui.show_daily(streak, r, gems)

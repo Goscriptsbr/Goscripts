@@ -171,7 +171,7 @@ func connect_server() -> void:
 
 func send_hello() -> void:
 	if ws != null and ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name()}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins)}))
 
 
 func world_send(d: Dictionary) -> void:
@@ -202,9 +202,27 @@ func world_cancel() -> void:
 func _send_queue() -> void:
 	if pending_queue == "":
 		return
-	world_send({"t": "queue", "game": pending_queue})
+	var stk := int(game.save.get("bet_on", 0))
+	world_send({"t": "queue", "game": pending_queue, "stake": stk, "coins": int(game.save.coins)})
 	queued = true
-	_status("Procurando mesa 2x2 (se demorar, a IA completa)..." if game.net_team else "Procurando oponente no mundo todo...")
+	var vt := "" if stk <= 0 else "  •  valendo %d moedas" % stk
+	_status(("Procurando mesa 2x2 (se demorar, a IA completa)..." if game.net_team else "Procurando oponente no mundo todo...") + vt)
+
+
+var coins_sent := -1
+
+
+# o servidor confere se cada um tem moedas para a aposta
+func send_coins() -> void:
+	var c := int(game.save.coins)
+	if c == coins_sent or ws == null or not server_ok:
+		return
+	coins_sent = c
+	world_send({"t": "coins", "n": c})
+
+
+func ask_rematch() -> void:
+	world_send({"t": "rematch", "coins": int(game.save.coins)})
 
 
 func _world_poll(delta: float) -> void:
@@ -224,7 +242,7 @@ func _world_poll(delta: float) -> void:
 	var stt := ws.get_ready_state()
 	if stt == WebSocketPeer.STATE_OPEN and not hello_sent:
 		hello_sent = true
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name()}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins)}))
 	if stt == WebSocketPeer.STATE_CONNECTING:
 		world_t += delta
 	while stt == WebSocketPeer.STATE_OPEN and ws.get_available_packet_count() > 0:
@@ -261,6 +279,7 @@ func _world_msg(m: Dictionary) -> void:
 	match str(m.get("t", "")):
 		"welcome":
 			server_ok = true
+			coins_sent = int(game.save.coins)
 			was_ok = true
 			if game.ui != null and m.has("app"):
 				game.ui.check_update(m.app)
@@ -293,6 +312,9 @@ func _world_msg(m: Dictionary) -> void:
 			game.net_game = str(m.get("game", game.net_game)).trim_suffix("4")
 			var opp: Dictionary = m.get("opp", {})
 			game.net_peer_name = str(opp.get("name", "Adversário"))
+			# aposta: as moedas saem agora; quem sair no meio perde, quem ganhar leva a mesa
+			game.bet_begin(int(m.get("stake", 0)))
+			game.match_stake = game.bet_cur
 			multiplayer.multiplayer_peer = relay
 			_status("Oponente encontrado: %s! Conectando..." % game.net_peer_name)
 			relay.announce()
@@ -332,7 +354,7 @@ func _world_msg(m: Dictionary) -> void:
 				game.ui.friends_update(m.get("list", []))
 		"invited":
 			if game.ui != null:
-				game.ui.show_invite(str(m.get("from", "")), str(m.get("name", "")), str(m.get("game", "sinuca")), bool(m.get("lobby", false)))
+				game.ui.show_invite(str(m.get("from", "")), str(m.get("name", "")), str(m.get("game", "sinuca")), bool(m.get("lobby", false)), int(m.get("stake", 0)))
 		"invite_ok":
 			if game.ui != null:
 				if bool(m.get("lobby", false)):
@@ -348,6 +370,19 @@ func _world_msg(m: Dictionary) -> void:
 		"invite_fail":
 			if game.ui != null:
 				game.ui.say(str(m.get("msg", "Convite não deu certo")))
+		"qfail":
+			pending_queue = ""
+			queued = false
+			if game.ui != null:
+				game.ui.say(str(m.get("msg", "")))
+				game.ui.online_status(str(m.get("msg", "")))
+				game.ui._online_btn_refresh()
+		"rematch_req":
+			if game.ui != null:
+				game.ui.rematch_req(str(m.get("name", "Adversário")))
+		"rematch_fail":
+			if game.ui != null:
+				game.ui.say(str(m.get("msg", "")))
 
 
 func _process(delta: float) -> void:

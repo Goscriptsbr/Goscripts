@@ -38,6 +38,13 @@ var name_edit: LineEdit
 var grana_lbl: Label
 var top_center: HBoxContainer
 var spin_top_btn: Button
+var mis_btn: Button
+var mis_box: VBoxContainer
+var mis_head: Label
+var stake_btns := {}
+var bet_hint_on: Label
+var bet_hint_ai: Label
+var bet_hint_tr: Label
 var pass_top_btn: Button
 var wheel: Control
 var spin_btn: Button
@@ -176,6 +183,7 @@ func build() -> void:
 	_build_amigos()
 	_build_roleta()
 	_build_passe()
+	_build_missoes()
 	_build_shop()
 	_build_stats()
 	_build_settings()
@@ -405,6 +413,13 @@ func _small_icon(c: Control, kind: String, p: Vector2) -> void:
 		c.draw_arc(p, 7, -PI / 2.0, PI / 2.0, 16, Color.WHITE, 1.5)
 		c.draw_arc(p, 7, PI / 2.0, PI * 1.5, 16, Color.WHITE, 1.5)
 		c.draw_line(p + Vector2(0, -15), p + Vector2(0, 15), Color.WHITE, 1.5)
+	elif kind == "target":
+		c.draw_circle(p, 15, Color.WHITE)
+		c.draw_circle(p, 11, Color("e53935"))
+		c.draw_circle(p, 7, Color.WHITE)
+		c.draw_circle(p, 3.5, Color("e53935"))
+		c.draw_line(p + Vector2(16, -16), p + Vector2(2, -2), Color("f4c542"), 3.0)
+		c.draw_colored_polygon(PackedVector2Array([p + Vector2(16, -16), p + Vector2(20, -10), p + Vector2(10, -20)]), Color("f4c542"))
 	elif kind == "people":
 		c.draw_circle(p + Vector2(8, -6), 6, Color(1, 1, 1, 0.65))
 		c.draw_colored_polygon(_arcpoly(p + Vector2(8, 12), 11), Color(1, 1, 1, 0.65))
@@ -610,6 +625,7 @@ func _build_main() -> void:
 	var rail := VBoxContainer.new()
 	rail.add_theme_constant_override("separation", 14)
 	s.add_child(rail)
+	rail.add_theme_constant_override("separation", 10)
 	spin_top_btn = rail_btn("ROLETA", "wheel", PURPLE)
 	spin_top_btn.pressed.connect(show_screen.bind("roleta"))
 	rail.add_child(spin_top_btn)
@@ -619,6 +635,9 @@ func _build_main() -> void:
 	fr_btn = rail_btn("AMIGOS", "people", BLUE)
 	fr_btn.pressed.connect(show_screen.bind("amigos"))
 	rail.add_child(fr_btn)
+	mis_btn = rail_btn("MISSÕES", "target", Color("d35400"))
+	mis_btn.pressed.connect(show_screen.bind("missoes"))
+	rail.add_child(mis_btn)
 	rail.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT, Control.PRESET_MODE_MINSIZE, 22)
 	rail.offset_top -= 10
 	rail.offset_bottom -= 10
@@ -940,6 +959,19 @@ func _build_play() -> void:
 	diff_desc = mk_lbl("", 15, Color(1, 1, 1, 0.8))
 	diff_desc.custom_minimum_size = Vector2(300, 0)
 	dh.add_child(diff_desc)
+	var sp2 := PanelContainer.new()
+	sp2.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	sp2.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.85), 28, Color(0.96, 0.77, 0.26, 0.45), 2, 10))
+	v.add_child(sp2)
+	var shh := HBoxContainer.new()
+	shh.add_theme_constant_override("separation", 10)
+	sp2.add_child(margin(shh, 8))
+	var sl := mk_lbl("APOSTA:", 18, Color("f4c542"), 2)
+	shh.add_child(sl)
+	shh.add_child(stake_row("bet_ai", game.AI_STAKES))
+	bet_hint_ai = mk_lbl("", 15, Color("ffe066"), 2)
+	bet_hint_ai.custom_minimum_size = Vector2(300, 0)
+	shh.add_child(bet_hint_ai)
 	var brow := HBoxContainer.new()
 	brow.add_theme_constant_override("separation", 18)
 	brow.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -993,7 +1025,7 @@ func _build_online() -> void:
 	gs.add_theme_constant_override("separation", 10)
 	lv.add_child(gs)
 	for k in [["sinuca", "SINUCA"], ["truco", "TRUCO"]]:
-		var gb := mk_btn(k[1], 190, 58, GRAY, 22)
+		var gb := mk_btn(k[1], 190, 50, GRAY, 22)
 		gb.pressed.connect(_online_game.bind(k[0]))
 		online_game_btns[k[0]] = gb
 		gs.add_child(gb)
@@ -1002,7 +1034,7 @@ func _build_online() -> void:
 	ts.add_theme_constant_override("separation", 10)
 	lv.add_child(ts)
 	for k in [[false, "1 CONTRA 1"], [true, "2 CONTRA 2"]]:
-		var tb := mk_btn(k[1], 190, 58, GRAY, 20)
+		var tb := mk_btn(k[1], 190, 50, GRAY, 20)
 		tb.pressed.connect(_online_team.bind(k[0]))
 		team_btns[k[0]] = tb
 		ts.add_child(tb)
@@ -1011,7 +1043,7 @@ func _build_online() -> void:
 	cs.add_theme_constant_override("separation", 10)
 	lv.add_child(cs)
 	for k in [["world", "INTERNET"], ["lan", "MESMO WI-FI"]]:
-		var mb := mk_btn(k[1], 190, 58, GRAY, 19)
+		var mb := mk_btn(k[1], 190, 50, GRAY, 19)
 		mb.pressed.connect(_online_mode.bind(k[0]))
 		online_mode_btns[k[0]] = mb
 		cs.add_child(mb)
@@ -1021,7 +1053,12 @@ func _build_online() -> void:
 	var fb := icon_btn("AMIGOS  •  CONVIDAR", "people", Color("16897f"), 390)
 	fb.pressed.connect(show_screen.bind("amigos"))
 	lv.add_child(fb)
-	lv.add_child(mk_lbl("Vitória +60 moedas  •  Derrota +15", 15, Color("ffe066"), 2))
+	lv.add_child(_section("APOSTA (MOEDAS)"))
+	lv.add_child(stake_row("bet_on", game.STAKES))
+	bet_hint_on = mk_lbl("", 15, Color("ffe066"), 2)
+	bet_hint_on.custom_minimum_size = Vector2(390, 0)
+	bet_hint_on.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lv.add_child(bet_hint_on)
 	# ---- painel de busca
 	var rp := PanelContainer.new()
 	rp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.9), 26, Color("5aa9ff"), 3, 14))
@@ -1167,7 +1204,7 @@ func lobby_create_ask(invite_code: String) -> void:
 		game.net_team = bool(sel.four)
 		online_mode = "world"
 		lobby_invite_after = invite_code
-		game.net.world_send({"t": "lcreate", "game": sel.g, "four": sel.four}))
+		game.net.world_send({"t": "lcreate", "game": sel.g, "four": sel.four, "stake": int(game.save.get("bet_on", 0))}))
 	row.add_child(ok)
 	var no := mk_btn("CANCELAR", 200, 64, GRAY, 22)
 	no.pressed.connect(close_modal)
@@ -1206,6 +1243,7 @@ func lobby_update(m: Dictionary) -> void:
 		return
 	game.net_game = str(m.get("game", "sinuca"))
 	game.net_team = bool(m.get("four", true))
+	_stake_paint("bet_on")
 	if not lobby_leader():
 		game.net.pending_queue = ""
 		game.net.queued = false
@@ -1632,7 +1670,7 @@ func _online_start() -> void:
 		_online_btn_refresh()
 		if not lobby_leader():
 			return
-		game.net.world_send({"t": "lset", "game": game.net_game, "four": game.net_team})
+		game.net.world_send({"t": "lset", "game": game.net_game, "four": game.net_team, "stake": int(game.save.get("bet_on", 0))})
 		return
 	game.net.stop_search()
 	game.net.world_cancel()
@@ -2387,11 +2425,12 @@ func _invite(code: String, g: String, to_lobby: bool) -> void:
 		g = game.net_game
 	else:
 		game.net_game = g
-	game.net.world_send({"t": "invite", "code": code, "game": g, "lobby": to_lobby})
-	say("Enviando convite...")
+	var stk := 0 if to_lobby else int(game.save.get("bet_on", 0))
+	game.net.world_send({"t": "invite", "code": code, "game": g, "lobby": to_lobby, "stake": stk})
+	say("Enviando convite..." if stk <= 0 else "Enviando convite (valendo %d moedas)..." % stk)
 
 
-func show_invite(from: String, nm: String, g: String, to_lobby := false) -> void:
+func show_invite(from: String, nm: String, g: String, to_lobby := false, stake := 0) -> void:
 	for c in invite_box.get_children():
 		c.queue_free()
 	invite_box.add_child(mk_lbl("CONVITE!", 34, Color("f4c542"), 6))
@@ -2400,6 +2439,10 @@ func show_invite(from: String, nm: String, g: String, to_lobby := false) -> void
 		invite_box.add_child(mk_lbl("Vocês procuram mesa juntos, no mesmo time (2 contra 2).", 17, Color(1, 1, 1, 0.75), 2))
 	else:
 		invite_box.add_child(mk_lbl("%s te chamou para um x1 de %s" % [nm, "TRUCO" if g == "truco" else "SINUCA"], 22, Color.WHITE, 3))
+		if stake > 0:
+			invite_box.add_child(mk_lbl("APOSTA: %d moedas cada  •  quem ganhar leva %d" % [stake, stake * 2], 19, Color("ffe066"), 3))
+			if int(game.save.coins) < stake:
+				invite_box.add_child(mk_lbl("Você não tem moedas suficientes para essa aposta.", 16, Color("ff8a80"), 2))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -2411,7 +2454,7 @@ func show_invite(from: String, nm: String, g: String, to_lobby := false) -> void
 			say("Termine a partida atual antes.")
 			return
 		game.net_game = g
-		game.net.world_send({"t": "accept", "from": from, "game": g, "lobby": to_lobby}))
+		game.net.world_send({"t": "accept", "from": from, "game": g, "lobby": to_lobby, "stake": stake, "coins": int(game.save.coins)}))
 	row.add_child(ac)
 	var rc := mk_btn("RECUSAR", 180, 60, GRAY, 24)
 	rc.pressed.connect(func():
@@ -2466,6 +2509,18 @@ func _build_truco_menu() -> void:
 	c2.pressed.connect(open_truco.bind(4))
 	row.add_child(c1)
 	row.add_child(c2)
+	var tsp := PanelContainer.new()
+	tsp.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	tsp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.85), 28, Color(0.96, 0.77, 0.26, 0.45), 2, 10))
+	v.add_child(tsp)
+	var tsh := HBoxContainer.new()
+	tsh.add_theme_constant_override("separation", 10)
+	tsp.add_child(margin(tsh, 8))
+	tsh.add_child(mk_lbl("APOSTA CONTRA A IA:", 17, Color("f4c542"), 2))
+	tsh.add_child(stake_row("bet_tr", [0, 50, 100]))
+	bet_hint_tr = mk_lbl("", 15, Color("ffe066"), 2)
+	bet_hint_tr.custom_minimum_size = Vector2(250, 0)
+	tsh.add_child(bet_hint_tr)
 	var ob := mk_btn("JOGAR ONLINE  •  1x1 OU 2x2", 560, 56, BLUE, 22)
 	ob.pressed.connect(func():
 		game.net_game = "truco"
@@ -2520,6 +2575,7 @@ func close_truco() -> void:
 
 
 func _set_diff(i: int) -> void:
+	call_deferred("_stake_paint", "bet_ai")
 	diff_sel = i
 	var cols := [GREEN, GOLD, RED]
 	var descs := ["Erra mais  •  vitória +50", "Equilibrada  •  vitória +75", "Precisa e com efeito  •  vitória +100"]
@@ -2642,6 +2698,7 @@ func _spin() -> void:
 	spin_btn.disabled = true
 	var i: int = game.spin_pick()
 	var txt: String = game.spin_award(i)
+	game.mission_event("spin", 1)
 	var step := TAU / float(game.WHEEL.size())
 	var jitter := randf_range(-0.32, 0.32) * step
 	wheel.rotation = fposmod(wheel.rotation, TAU)
@@ -3716,8 +3773,24 @@ func _build_over() -> void:
 
 
 func _rematch() -> void:
+	if game.mode == game.Mode.ONLINE:
+		game.net.ask_rematch()
+		over_rematch.disabled = true
+		over_rematch.text = "ESPERANDO..."
+		say("Revanche pedida! Esperando o adversário aceitar...")
+		return
 	show_screen("")
 	game.start_game(game.mode, game.diff)
+
+
+# o adversário pediu revanche (sinuca na tela de fim, ou truco no quadro de fim)
+func rematch_req(nm: String) -> void:
+	if truco_node != null and is_instance_valid(truco_node):
+		truco_node.say("%s quer REVANCHE! Toque em REVANCHE para jogar de novo." % nm)
+		return
+	if cur == "over" and over_rematch != null:
+		over_sub.text = "%s quer REVANCHE!" % nm
+		say("%s quer revanche! Toque em REVANCHE." % nm)
 
 
 func show_over() -> void:
@@ -3740,7 +3813,9 @@ func show_over() -> void:
 		over_title.add_theme_color_override("font_color", Color("f4c542"))
 		over_sub.text = "%s venceu!" % game.players[w]
 	over_reward.text = game.reward_txt
-	over_rematch.visible = game.mode != game.Mode.ONLINE
+	over_rematch.visible = game.mode != game.Mode.ONLINE or (not game.net4 and not in_lobby())
+	over_rematch.disabled = false
+	over_rematch.text = "REVANCHE"
 	refresh_top()
 	show_screen("over")
 
@@ -3757,7 +3832,7 @@ func show_screen(sname: String) -> void:
 			s.modulate.a = 0.0
 			var tw := create_tween()
 			tw.tween_property(s, "modulate:a", 1.0, 0.18)
-	var menus := ["main", "play", "online", "shop", "inv", "stats", "settings", "roleta", "passe", "truco", "amigos"]
+	var menus := ["main", "play", "online", "shop", "inv", "stats", "settings", "roleta", "passe", "truco", "amigos", "missoes"]
 	topbar.visible = menus.has(sname)
 	dim.visible = sname != ""
 	dim.color = Color(0.01, 0.05, 0.04, 0.62 if menus.has(sname) else 0.5)
@@ -3772,10 +3847,16 @@ func show_screen(sname: String) -> void:
 		_roleta_refresh()
 	elif sname == "passe":
 		_pass_refresh()
+	elif sname == "missoes":
+		_missoes_refresh()
+	if sname == "online" or sname == "play" or sname == "truco":
+		for k in ["bet_on", "bet_ai", "bet_tr"]:
+			_stake_paint(k)
 	if sname == "pause":
 		_pause_refresh()
 	if sname == "main":
 		_month_refresh()
+		missions_badge()
 	elif sname == "shop":
 		if shop_tab == "inv":
 			shop_tab = "felt"
@@ -3787,3 +3868,187 @@ func show_screen(sname: String) -> void:
 	elif sname == "settings":
 		_settings_refresh()
 	refresh_top()
+
+
+
+# ---------------------------------------------------------------- apostas: seletor de valor
+func stake_row(key: String, opts: Array) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	var arr := []
+	for v in opts:
+		var b := mk_btn("SEM" if int(v) == 0 else game.stake_txt(int(v)), 74, 44, GRAY, 17)
+		b.pressed.connect(_stake_pick.bind(key, int(v)))
+		b.set_meta("v", int(v))
+		h.add_child(b)
+		arr.append(b)
+	stake_btns[key] = arr
+	return h
+
+
+func _stake_max(key: String) -> int:
+	if key == "bet_ai":
+		return game.ai_stake_max(diff_sel)
+	if key == "bet_tr":
+		return 100
+	return 1000
+
+
+func _stake_pick(key: String, v: int) -> void:
+	if key == "bet_on" and in_lobby() and not lobby_leader():
+		say("Só o dono do lobby escolhe a aposta.")
+		return
+	if v > int(game.save.coins):
+		say("Você não tem moedas suficientes para apostar %d." % v)
+		return
+	if v > _stake_max(key):
+		say("Contra a IA nessa dificuldade a aposta vai até %d moedas." % _stake_max(key))
+		return
+	game.save[key] = v
+	game.write_save()
+	_stake_paint(key)
+	if key == "bet_on":
+		if in_lobby():
+			if lobby_leader():
+				game.net.world_send({"t": "lset", "game": game.net_game, "four": game.net_team, "stake": v})
+		elif _online_busy():
+			_online_start()
+
+
+func _stake_paint(key: String) -> void:
+	if not stake_btns.has(key):
+		return
+	var sel := int(game.save.get(key, 0))
+	if key == "bet_on" and in_lobby():
+		sel = int(lobby.get("stake", 0))
+	var mx := _stake_max(key)
+	if key != "bet_on" or not in_lobby():
+		# valor guardado maior do que dá agora (moedas ou dificuldade): mostra o maior possível
+		while sel > 0 and (sel > int(game.save.coins) or sel > mx):
+			var opts: Array = []
+			for b in stake_btns[key]:
+				opts.append(int(b.get_meta("v")))
+			var i := opts.find(sel)
+			sel = int(opts[i - 1]) if i > 0 else 0
+		if sel != int(game.save.get(key, 0)):
+			game.save[key] = sel
+	for b in stake_btns[key]:
+		var v := int(b.get_meta("v"))
+		var on := v == sel
+		var can := v <= int(game.save.coins) and v <= mx
+		var col: Color = GOLD if on else (Color(0.09, 0.12, 0.17, 0.95) if can else Color(0.22, 0.08, 0.08, 0.9))
+		b.add_theme_stylebox_override("normal", sbox(col, 16, Color.WHITE if on else Color(1, 1, 1, 0.18), 3 if on else 2, 6 if on else 0))
+		b.add_theme_color_override("font_color", Color("2a1a00") if on else (Color.WHITE if can else Color(1, 1, 1, 0.4)))
+	var hint := "Sem aposta: vitória +60  •  derrota +15" if sel == 0 else "Cada um aposta %d  •  quem ganhar leva %d" % [sel, sel * 2]
+	if key == "bet_on" and bet_hint_on != null:
+		bet_hint_on.text = hint
+	elif key == "bet_ai" and bet_hint_ai != null:
+		bet_hint_ai.text = "Sem aposta" if sel == 0 else "Ganhou: +%d  •  Perdeu: -%d" % [sel, sel]
+	elif key == "bet_tr" and bet_hint_tr != null:
+		bet_hint_tr.text = "Sem aposta" if sel == 0 else "Ganhou: +%d  •  Perdeu: -%d" % [sel, sel]
+
+
+# ---------------------------------------------------------------- missões diárias
+func _build_missoes() -> void:
+	var v := mk_screen("missoes", 12)
+	add_bg("missoes", "res://assets/menu_bg.jpg", 0.2)
+	v.add_child(mk_lbl("MISSÕES DO DIA", 50, Color("f4c542"), 10))
+	mis_head = mk_lbl("", 18, Color(1, 1, 1, 0.8), 3)
+	v.add_child(mis_head)
+	mis_box = VBoxContainer.new()
+	mis_box.add_theme_constant_override("separation", 12)
+	mis_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.add_child(mis_box)
+	var back := mk_btn("◀  VOLTAR", 240, 58, GRAY, 26)
+	back.pressed.connect(show_screen.bind("main"))
+	v.add_child(back)
+
+
+func _missoes_refresh() -> void:
+	for c in mis_box.get_children():
+		c.queue_free()
+	var t := Time.get_time_dict_from_system()
+	var left_h := 23 - int(t.hour)
+	var left_m := 59 - int(t.minute)
+	mis_head.text = "Novas missões em %dh %02dmin  •  Dias seguidos jogando: %d" % [left_h, left_m, int(game.save.get("daily_streak", 0))]
+	for m in game.missions():
+		var row := PanelContainer.new()
+		var done: bool = int(m.prog) >= int(m.n)
+		var claimed: bool = bool(m.claimed)
+		row.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.9), 22, GOLD if done and not claimed else Color(1, 1, 1, 0.18), 3 if done and not claimed else 2, 10))
+		mis_box.add_child(row)
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 18)
+		row.add_child(margin(h, 14))
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 6)
+		col.custom_minimum_size = Vector2(560, 0)
+		h.add_child(col)
+		var tl := mk_lbl(str(m.txt), 24, Color.WHITE, 3)
+		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		col.add_child(tl)
+		var pb := ProgressBar.new()
+		pb.custom_minimum_size = Vector2(560, 16)
+		pb.show_percentage = false
+		pb.max_value = int(m.n)
+		pb.value = int(m.prog)
+		pb.add_theme_stylebox_override("background", sbox(Color(0, 0, 0, 0.55), 8))
+		pb.add_theme_stylebox_override("fill", sbox(GREEN if done else BLUE, 8))
+		col.add_child(pb)
+		var pl := mk_lbl("%d / %d" % [int(m.prog), int(m.n)], 16, Color(1, 1, 1, 0.7))
+		pl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		col.add_child(pl)
+		var rw := HBoxContainer.new()
+		rw.add_theme_constant_override("separation", 6)
+		rw.alignment = BoxContainer.ALIGNMENT_CENTER
+		rw.custom_minimum_size = Vector2(130, 0)
+		rw.add_child(coin_icon(30))
+		rw.add_child(mk_lbl("+%d" % int(m.r), 26, Color("ffe066"), 4))
+		h.add_child(rw)
+		var b: Button
+		if claimed:
+			b = mk_btn("FEITO ✓", 190, 60, GRAY, 22)
+			b.disabled = true
+		elif done:
+			b = mk_btn("COLETAR", 190, 60, GREEN, 24)
+			var mid := str(m.id)
+			b.pressed.connect(func():
+				game.mission_claim(mid)
+				_missoes_refresh())
+		else:
+			b = mk_btn("EM ANDAMENTO", 190, 60, Color(0.12, 0.16, 0.22), 18)
+			b.disabled = true
+		h.add_child(b)
+
+
+func missions_badge() -> void:
+	if mis_btn != null:
+		var k: int = game.missions_ready()
+		_set_badge(mis_btn, str(k) if k > 0 else "")
+
+
+# ---------------------------------------------------------------- prêmio por dias seguidos
+func show_daily(streak: int, coins: int, gems: int) -> void:
+	show_reward("DIA %d SEGUIDO JOGANDO!" % streak, ("+%d MOEDAS" % coins) + ("  +%d GRANA" % gems if gems > 0 else ""), {"coins": coins})
+	if modal_layer == null:
+		return
+	# fileira dos 7 dias embaixo do prêmio
+	var strip := Control.new()
+	strip.custom_minimum_size = Vector2(7 * 74, 92)
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	strip.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		for i in 7:
+			var r := Rect2(i * 74 + 3, 4, 66, 84)
+			var got := i < streak
+			var today := i == streak - 1
+			strip.draw_style_box(sbox(GOLD if today else (Color("1fa85a") if got else Color(0.1, 0.13, 0.19)), 12, Color.WHITE if today else Color(1, 1, 1, 0.2), 3 if today else 1), r)
+			var tc := Color("2a1a00") if today else Color.WHITE
+			strip.draw_string(f, Vector2(r.position.x, r.position.y + 24), "DIA %d" % (i + 1), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 15, tc)
+			strip.draw_string(f, Vector2(r.position.x, r.position.y + 54), str(game.STREAK_REWARDS[i]), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 22, tc)
+			strip.draw_string(f, Vector2(r.position.x, r.position.y + 74), "+5 GRANA" if i == 6 else ("✓" if got else ""), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 14, tc))
+	var pc: PanelContainer = modal_layer.find_children("*", "PanelContainer", true, false)[0]
+	var vb: VBoxContainer = pc.get_child(0).get_child(0)
+	vb.add_child(strip)
+	vb.move_child(strip, vb.get_child_count() - 2)
+	strip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
