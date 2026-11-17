@@ -17,7 +17,9 @@ var my_id := 0
 var beacon_t := 0.0
 # internet: servidor de encontro no Render (fila, amigos e repasse)
 # servidores em ordem: o novo (conta GoScripts) primeiro; se não responder, usa o antigo
-const SERVERS := ["wss://sinucou.onrender.com", "wss://sinuca-goscripts.onrender.com"]
+# um servidor só: com o servidor antigo de reserva, quando a Render estava "dormindo" uma pessoa caía num
+# servidor e a outra no outro, e ninguém se encontrava online
+const SERVERS := ["wss://sinucou.onrender.com"]
 var srv_i := 0
 var was_ok := false
 const RelayPeer := preload("res://relay_peer.gd")
@@ -212,7 +214,7 @@ func _world_poll(delta: float) -> void:
 			retry_t += delta
 			if retry_t >= retry_wait:
 				retry_t = 0.0
-				retry_wait = minf(retry_wait * 1.6, 30.0)
+				retry_wait = minf(retry_wait * 1.6, 12.0)
 				connect_server()
 		elif server_ok:
 			retry_wait = 3.0
