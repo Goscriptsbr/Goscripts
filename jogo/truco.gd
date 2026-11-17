@@ -656,6 +656,8 @@ func _show_over() -> void:
 	var r := 0
 	var bt: String = game.bet_settle("win" if won else "lose")
 	var btl: String = ("\n" + bt) if bt != "" else ""
+	if not sim:
+		game.record_match("truco", won, netmode != "")
 	game.mission_event("play", 1)
 	game.mission_event("truco_play", 1)
 	if won:

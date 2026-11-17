@@ -221,6 +221,24 @@ func send_coins() -> void:
 	world_send({"t": "coins", "n": c})
 
 
+func send_score() -> void:
+	if server_ok:
+		var lg: Dictionary = game.league()
+		world_send({"t": "score", "wk": int(lg.week), "pts": int(lg.pts)})
+
+
+func send_profile() -> void:
+	if server_ok:
+		world_send({"t": "prof", "data": game.profile_data()})
+
+
+func ask_rank() -> void:
+	var codes := []
+	for f in game.save.friends:
+		codes.append(str(f.code))
+	world_send({"t": "rank", "wk": game.week_id(), "codes": codes})
+
+
 func ask_rematch() -> void:
 	world_send({"t": "rematch", "coins": int(game.save.coins)})
 
@@ -280,6 +298,8 @@ func _world_msg(m: Dictionary) -> void:
 		"welcome":
 			server_ok = true
 			coins_sent = int(game.save.coins)
+			send_score()
+			send_profile()
 			was_ok = true
 			if game.ui != null and m.has("app"):
 				game.ui.check_update(m.app)
@@ -377,6 +397,12 @@ func _world_msg(m: Dictionary) -> void:
 				game.ui.say(str(m.get("msg", "")))
 				game.ui.online_status(str(m.get("msg", "")))
 				game.ui._online_btn_refresh()
+		"rank":
+			if game.ui != null:
+				game.ui.rank_update(m)
+		"prof":
+			if game.ui != null:
+				game.ui.profile_remote(m)
 		"rematch_req":
 			if game.ui != null:
 				game.ui.rematch_req(str(m.get("name", "Adversário")))

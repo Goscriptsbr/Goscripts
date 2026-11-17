@@ -18,7 +18,7 @@ const DECKS := [
 	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
 	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
 ]
-const APP_VERSION := 72  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 73  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -1970,6 +1970,7 @@ func pocket_ball(b: Dictionary, pk: Vector2) -> void:
 		pocketed.append(b.n)
 		if st == St.ROLL and mode != Mode.TRAIN and (mode == Mode.TWO or (mode == Mode.AI and not ai[turn]) or (mode == Mode.ONLINE and shooter() == net_seat)):
 			mission_event("pocket", 1)
+			stat_add("pockets", 1)
 	play("pocket")
 	vibrate(25)
 
@@ -2013,6 +2014,7 @@ func end_game(win_idx: int) -> void:
 		var bt := bet_settle("win" if me_won else "lose")
 		if bt != "":
 			reward_txt += "\n" + bt
+		record_match("sinuca", me_won, mode == Mode.ONLINE)
 		mission_event("play", 1)
 		mission_event("sinuca_play", 1)
 		if me_won:
@@ -3419,6 +3421,9 @@ func bet_settle(result: String) -> String:
 		save.coins += v * 2
 		t = "Aposta: você levou a mesa! +%d moedas" % (v * 2)
 		mission_event("bet_win", 1)
+		stat_add("bets_won", 1)
+		if v >= 1000:
+			stat_add("bet1k_won", 1)
 	elif result == "refund":
 		save.coins += v
 		t = "Aposta devolvida (%d moedas)" % v
@@ -3531,6 +3536,15 @@ func _daily_after_splash() -> void:
 		get_tree().create_timer(1.5).timeout.connect(_daily_after_splash)
 		return
 	check_daily()
+	get_tree().create_timer(1.0).timeout.connect(_league_after)
+
+
+func _league_after() -> void:
+	if ui != null and ui.has_modal():
+		get_tree().create_timer(1.0).timeout.connect(_league_after)
+		return
+	league_prize_check()
+	check_achs()
 
 
 # primeira vez que abre o jogo no dia: prêmio por dias seguidos (7 dias, depois recomeça)
@@ -3547,6 +3561,7 @@ func check_daily() -> void:
 		streak = 1
 	save["daily_last"] = td
 	save["daily_streak"] = streak
+	stat_max("daily_best", streak)
 	var r: int = STREAK_REWARDS[streak - 1]
 	save.coins += r
 	var gems := 5 if streak == 7 else 0
@@ -3555,3 +3570,204 @@ func check_daily() -> void:
 	write_save()
 	if ui != null:
 		ui.show_daily(streak, r, gems)
+
+
+
+# ---------------------------------------------------------------- estatísticas extras, liga semanal e conquistas
+func stat(k: String) -> int:
+	return int((save.get("st2", {}) as Dictionary).get(k, 0))
+
+
+func stat_add(k: String, v: int) -> void:
+	if bot or net_auto:
+		return
+	var d: Dictionary = save.get("st2", {})
+	d[k] = int(d.get(k, 0)) + v
+	save["st2"] = d
+
+
+func stat_max(k: String, v: int) -> void:
+	if bot or net_auto:
+		return
+	var d: Dictionary = save.get("st2", {})
+	d[k] = maxi(int(d.get(k, 0)), v)
+	save["st2"] = d
+
+
+# chamado no fim de toda partida contra a IA ou online (sinuca e truco)
+func record_match(kind: String, won: bool, online: bool) -> void:
+	if bot or net_auto:
+		return
+	if won:
+		stat_add("wins_all", 1)
+		stat_add(kind + "_wins", 1)
+		stat_add("streak", 1)
+		stat_max("best_streak", stat("streak"))
+	else:
+		var d: Dictionary = save.get("st2", {})
+		d["streak"] = 0
+		save["st2"] = d
+	if online:
+		stat_add("online_played", 1)
+		league_add(won, match_stake)
+	check_achs()
+	if net != null:
+		net.send_profile()
+
+
+# ---- liga semanal: pontos só no online; zera toda segunda-feira
+const DIVS := [
+	{"name": "BRONZE", "min": 0, "col": Color("c27c3a"), "prize": 100},
+	{"name": "PRATA", "min": 100, "col": Color("c9d3dd"), "prize": 250},
+	{"name": "OURO", "min": 250, "col": Color("ffd34a"), "prize": 500},
+	{"name": "DIAMANTE", "min": 500, "col": Color("6fe3ff"), "prize": 1000},
+	{"name": "MESTRE", "min": 900, "col": Color("ff5ad6"), "prize": 2000},
+]
+
+
+func week_id() -> int:
+	# semana começa na segunda (01/01/1970 foi quinta)
+	var days := int(Time.get_unix_time_from_system() + Time.get_time_zone_from_system().bias * 60) / 86400
+	return (days + 3) / 7
+
+
+func week_left_txt() -> String:
+	var now := int(Time.get_unix_time_from_system() + Time.get_time_zone_from_system().bias * 60)
+	var next := (week_id() + 1) * 7 * 86400 - 3 * 86400
+	var left := maxi(0, next - now)
+	return "%dd %dh" % [left / 86400, (left % 86400) / 3600]
+
+
+func league() -> Dictionary:
+	var lg: Dictionary = save.get("league", {})
+	var wk := week_id()
+	if int(lg.get("week", -1)) != wk:
+		# semana nova: guarda o prêmio da semana passada (se jogou) e zera os pontos
+		if int(lg.get("week", -1)) >= 0 and int(lg.get("games", 0)) > 0:
+			var dv := div_of(int(lg.get("pts", 0)))
+			save["league_prize"] = {"div": dv, "coins": int(DIVS[dv].prize), "pts": int(lg.get("pts", 0))}
+		lg = {"week": wk, "pts": 0, "games": 0, "best": int(lg.get("best", 0))}
+		save["league"] = lg
+	return lg
+
+
+func div_of(pts: int) -> int:
+	var d := 0
+	for i in DIVS.size():
+		if pts >= int(DIVS[i].min):
+			d = i
+	return d
+
+
+func league_add(won: bool, stake: int) -> void:
+	var lg := league()
+	var gain := (20 + mini(stake, 1000) / 50) if won else -8
+	lg.pts = maxi(0, int(lg.pts) + gain)
+	lg.games = int(lg.games) + 1
+	lg.best = maxi(int(lg.get("best", 0)), div_of(int(lg.pts)))
+	save["league"] = lg
+	if net != null:
+		net.send_score()
+
+
+func league_prize_check() -> void:
+	league()
+	var pz: Dictionary = save.get("league_prize", {})
+	if pz.is_empty():
+		return
+	save.erase("league_prize")
+	save.coins += int(pz.coins)
+	write_save()
+	if ui != null:
+		ui.show_reward("Fim da liga da semana: você ficou no %s (%d pontos)" % [DIVS[int(pz.div)].name, int(pz.pts)], "+%d MOEDAS" % int(pz.coins), {"coins": int(pz.coins)})
+
+
+# ---- conquistas
+const ACHS := [
+	{"id": "win1", "name": "Primeira Vitória", "desc": "Ganhe 1 partida", "k": "wins_all", "n": 1, "r": 50},
+	{"id": "win10", "name": "Pegando o Jeito", "desc": "Ganhe 10 partidas", "k": "wins_all", "n": 10, "r": 150},
+	{"id": "win100", "name": "Lenda do Bar", "desc": "Ganhe 100 partidas", "k": "wins_all", "n": 100, "r": 1000},
+	{"id": "sinuca50", "name": "Tubarão", "desc": "Ganhe 50 partidas de sinuca", "k": "sinuca_wins", "n": 50, "r": 500},
+	{"id": "truco10", "name": "Trucador", "desc": "Ganhe 10 partidas de truco", "k": "truco_wins", "n": 10, "r": 200},
+	{"id": "truco50", "name": "Mestre do Truco", "desc": "Ganhe 50 partidas de truco", "k": "truco_wins", "n": 50, "r": 600},
+	{"id": "streak3", "name": "Embalado", "desc": "Ganhe 3 seguidas", "k": "best_streak", "n": 3, "r": 100},
+	{"id": "streak5", "name": "Pegando Fogo", "desc": "Ganhe 5 seguidas", "k": "best_streak", "n": 5, "r": 250},
+	{"id": "streak10", "name": "Imparável", "desc": "Ganhe 10 seguidas", "k": "best_streak", "n": 10, "r": 800},
+	{"id": "pocket100", "name": "Mão Certeira", "desc": "Encaçape 100 bolas", "k": "pockets", "n": 100, "r": 100},
+	{"id": "pocket500", "name": "Atirador de Elite", "desc": "Encaçape 500 bolas", "k": "pockets", "n": 500, "r": 400},
+	{"id": "online10", "name": "Conectado", "desc": "Jogue 10 partidas online", "k": "online_played", "n": 10, "r": 200},
+	{"id": "bet10", "name": "Apostador", "desc": "Ganhe 10 apostas", "k": "bets_won", "n": 10, "r": 400},
+	{"id": "bet1k", "name": "Mesa de 1K", "desc": "Ganhe uma aposta de 1K", "k": "bet1k_won", "n": 1, "r": 500},
+	{"id": "daily7", "name": "Fiel", "desc": "Jogue 7 dias seguidos", "k": "daily_best", "n": 7, "r": 300},
+	{"id": "cues5", "name": "Colecionador", "desc": "Tenha 5 tacos", "k": "cues_owned", "n": 5, "r": 200},
+	{"id": "gold", "name": "Ouro na Liga", "desc": "Chegue na divisão OURO", "k": "div_best", "n": 2, "r": 300},
+	{"id": "master", "name": "Mestre da Liga", "desc": "Chegue na divisão MESTRE", "k": "div_best", "n": 4, "r": 1500},
+]
+
+
+func ach_val(k: String) -> int:
+	if k == "cues_owned":
+		var c := 0
+		for it in CUES:
+			if (save.owned as Array).has(str(it.id)):
+				c += 1
+		return c
+	if k == "div_best":
+		return int(league().get("best", 0))
+	if k == "truco_wins":
+		return maxi(stat("truco_wins"), int(save.get("truco_wins", 0)))
+	return stat(k)
+
+
+func check_achs() -> void:
+	if bot or net_auto:
+		return
+	var got: Array = save.get("achs", [])
+	var news := []
+	for a in ACHS:
+		if not got.has(str(a.id)) and ach_val(str(a.k)) >= int(a.n):
+			got.append(str(a.id))
+			save.coins += int(a.r)
+			news.append(a)
+	save["achs"] = got
+	if not news.is_empty():
+		write_save()
+		if ui != null:
+			for a in news:
+				ui.ach_toast(str(a.name), int(a.r))
+
+
+# o que libera avatar/moldura/título: "" livre, "lv:N" nível, "ach:id" conquista, "div:N" divisão da liga
+func unlocked(need: String) -> bool:
+	if need == "":
+		return true
+	var p := need.split(":")
+	if p[0] == "lv":
+		return player_level() >= int(p[1])
+	if p[0] == "ach":
+		return (save.get("achs", []) as Array).has(p[1])
+	if p[0] == "div":
+		return int(league().get("best", 0)) >= int(p[1])
+	return false
+
+
+func need_txt(need: String) -> String:
+	if need == "":
+		return ""
+	var p := need.split(":")
+	if p[0] == "lv":
+		return "Nível %s" % p[1]
+	if p[0] == "div":
+		return "Liga: %s" % DIVS[int(p[1])].name
+	for a in ACHS:
+		if str(a.id) == p[1]:
+			return "Conquista: %s" % a.name
+	return ""
+
+
+# resumo do perfil (vai para o servidor para os amigos verem)
+func profile_data() -> Dictionary:
+	var lg := league()
+	return {"av": str(save.get("av", "b8")), "fr": str(save.get("frame", "simples")), "ti": str(save.get("title", "novato")),
+		"lvl": player_level(), "wins": int(save.wins) + int(save.get("truco_wins", 0)), "played": int(save.played) + int(save.get("truco_wins", 0)) + int(save.get("truco_losses", 0)),
+		"best": stat("best_streak"), "div": div_of(int(lg.pts)), "pts": int(lg.pts), "cue": str(save.cue), "achs": (save.get("achs", []) as Array).size()}

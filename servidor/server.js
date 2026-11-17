@@ -25,7 +25,8 @@ const mailbox = new Map(); // code -> [{kind, from, name}]
 // cadastro de todos os jogadores que já entraram (para achar pelo nome mesmo offline)
 const fs = require("fs");
 const DATA_FILE = process.env.DATA_FILE || __dirname + "/dados.json";
-const players = new Map(); // code -> {name, seen}
+const players = new Map(); // code -> {name, seen, wk, pts, prof}
+const playersDir = players;
 try {
   const d = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
   for (const [k, v] of d.players || []) players.set(k, v);
@@ -43,7 +44,8 @@ function saveSoon() {
 }
 function remember(c) {
   if (!c.code) return;
-  players.set(c.code, { name: c.name, seen: Date.now() });
+  const old = players.get(c.code) || {};
+  players.set(c.code, Object.assign(old, { name: c.name, seen: Date.now() }));
   if (players.size > 100000) { // limpa os mais antigos
     const old = [...players].sort((a, b) => a[1].seen - b[1].seen).slice(0, 10000);
     for (const [k] of old) players.delete(k);
@@ -241,6 +243,45 @@ function onMsg(c, op, payload) {
       break;
     }
     case "coins": c.coins = Math.max(0, Number(m.n) || 0); break;
+    case "score": { // liga semanal: o celular manda os pontos da semana
+      if (!c.code) break;
+      const e = players.get(c.code) || { name: c.name, seen: Date.now() };
+      e.wk = Number(m.wk) || 0;
+      e.pts = Math.max(0, Math.min(100000, Number(m.pts) || 0));
+      players.set(c.code, e);
+      saveSoon();
+      break;
+    }
+    case "prof": { // perfil: guarda o meu resumo ou devolve o de alguém
+      if (!c.code) break;
+      if (m.data && typeof m.data === "object") {
+        const d = m.data, e = players.get(c.code) || { name: c.name, seen: Date.now() };
+        e.prof = { av: String(d.av || "b8").slice(0, 12), fr: String(d.fr || "").slice(0, 12), ti: String(d.ti || "").slice(0, 16),
+          lvl: Number(d.lvl) || 1, wins: Number(d.wins) || 0, played: Number(d.played) || 0, best: Number(d.best) || 0,
+          div: Number(d.div) || 0, pts: Number(d.pts) || 0, cue: String(d.cue || "").slice(0, 20), achs: Number(d.achs) || 0 };
+        players.set(c.code, e);
+        saveSoon();
+      }
+      if (m.code) {
+        const code = String(m.code).toUpperCase();
+        const e = players.get(code);
+        sendJ(c, { t: "prof", code, name: e ? e.name : "?", data: e && e.prof ? e.prof : null, online: clients.has(code) });
+      }
+      break;
+    }
+    case "rank": { // ranking da semana: top 50 + meus amigos + minha posição
+      const wk = Number(m.wk) || 0;
+      const all = [];
+      for (const [code, e] of players) if (e.wk === wk && e.pts > 0) all.push({ code, name: e.name, pts: e.pts, av: e.prof ? e.prof.av : "b8", fr: e.prof ? e.prof.fr : "" });
+      all.sort((a, b) => b.pts - a.pts);
+      const pos = all.findIndex((x) => x.code === c.code);
+      const fr = new Set((m.codes || []).slice(0, 100).map((x) => String(x).toUpperCase()));
+      fr.add(c.code);
+      const friends = [];
+      all.forEach((x, i) => { if (fr.has(x.code)) friends.push(Object.assign({ pos: i + 1 }, x)); });
+      sendJ(c, { t: "rank", wk, total: all.length, me: pos + 1, top: all.slice(0, 50).map((x, i) => Object.assign({ pos: i + 1 }, x)), friends });
+      break;
+    }
     case "rematch": { // revanche 1x1: os dois pedem e a mesma dupla joga de novo, com a mesma aposta
       const r = c.room;
       if (!r || r.seats !== 2) break;
@@ -264,7 +305,9 @@ function onMsg(c, op, payload) {
     case "friends": {
       const list = (m.codes || []).slice(0, 100).map((code) => {
         const f = clients.get(String(code).toUpperCase());
-        return f ? { code: f.code, name: f.name, online: true, status: f.room ? "jogando" : f.status } : { code: String(code).toUpperCase(), online: false };
+        const e = players.get(String(code).toUpperCase());
+        const pa = e && e.prof ? { av: e.prof.av, fr: e.prof.fr } : {};
+        return f ? Object.assign({ code: f.code, name: f.name, online: true, status: f.room ? "jogando" : f.status }, pa) : Object.assign({ code: String(code).toUpperCase(), online: false }, pa);
       });
       sendJ(c, { t: "presence", list });
       break;
@@ -408,7 +451,7 @@ function matchSeats(seats, game, stake) {
   for (const p of list) unqueue(p);
   const room = { id: nextRoom++, members: list.slice(), game, seats: game.endsWith("4") ? 4 : 2, stake };
   const players = [];
-  seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; players.push({ peer: i + 1, name: p.name, code: p.code }); } });
+  seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; const e = playersDir.get(p.code); players.push({ peer: i + 1, name: p.name, code: p.code, av: e && e.prof ? e.prof.av : "b8", fr: e && e.prof ? e.prof.fr : "" }); } });
   for (const p of list) {
     const opp = list.find((o) => o !== p) || p;
     sendJ(p, { t: "match", role: p.peer === 1 ? "host" : "guest", peer: p.peer, game, seats: room.seats, players, opp: { name: opp.name, code: opp.code }, stake });

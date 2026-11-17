@@ -1,4 +1,5 @@
 extends CanvasLayer
+const AV = preload("res://avatars.gd")
 # Menus: principal, modos, loja, estatísticas, ajustes, pausa e fim de jogo.
 
 var game: Node2D
@@ -38,6 +39,15 @@ var name_edit: LineEdit
 var grana_lbl: Label
 var top_center: HBoxContainer
 var spin_top_btn: Button
+var top_av: Control
+var anim_t := 0.0
+var pf_box: VBoxContainer
+var pf_tab := "perfil"
+var rk_box: VBoxContainer
+var rk_head: Control
+var rk_tab := "todos"
+var rk_data := {}
+var friend_av := {}
 var mis_btn: Button
 var mis_box: VBoxContainer
 var mis_head: Label
@@ -184,6 +194,8 @@ func build() -> void:
 	_build_roleta()
 	_build_passe()
 	_build_missoes()
+	_build_perfil()
+	_build_ranking()
 	_build_shop()
 	_build_stats()
 	_build_settings()
@@ -255,12 +267,20 @@ func _build_topbar() -> void:
 	var av := Control.new()
 	av.custom_minimum_size = Vector2(54, 54)
 	var avf := func():
-		av.draw_circle(Vector2(27, 27), 26, Color("141414"))
-		av.draw_circle(Vector2(27, 27), 15, Color("f4f4ee"))
-		av.draw_string(ThemeDB.fallback_font, Vector2(0, 38), "8", HORIZONTAL_ALIGNMENT_CENTER, 54, 28, Color("111111"))
-		av.draw_circle(Vector2(17, 16), 5, Color(1, 1, 1, 0.4))
-		av.draw_arc(Vector2(27, 27), 26, 0, TAU, 32, Color("e3a928"), 3.0)
+		AV.draw(av, Vector2(27, 27), 27, str(game.save.get("av", "b8")), str(game.save.get("frame", "simples")), anim_t)
 	av.draw.connect(avf)
+	top_av = av
+	# tocar no seu nome abre o perfil
+	var pbtn := Button.new()
+	pbtn.flat = true
+	pbtn.focus_mode = Control.FOCUS_NONE
+	for st in ["normal", "hover", "pressed", "focus"]:
+		pbtn.add_theme_stylebox_override(st, StyleBoxEmpty.new())
+	pbtn.set_anchors_preset(Control.PRESET_FULL_RECT)
+	pbtn.pressed.connect(func():
+		if cur != "" and cur != "pause" and cur != "over":
+			show_screen("perfil"))
+	pf.add_child(pbtn)
 	hb.add_child(av)
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 2)
@@ -316,6 +336,8 @@ func _build_topbar() -> void:
 
 func refresh_top() -> void:
 	var s: Dictionary = game.save
+	if top_av != null:
+		top_av.queue_redraw()
 	coin_lbl.text = str(s.coins)
 	if name_lbl != null:
 		name_lbl.text = game.my_name()
@@ -536,6 +558,10 @@ func _tile_icon(c: Control, kind: String, w: float) -> void:
 			c.draw_rect(Rect2(p.x + x, p.y - 22, 4, 46), Color("f4c542"))
 		c.draw_style_box(sbox(Color("f4c542"), 3, Color("8a5a10"), 1), Rect2(p.x - 7, p.y - 9, 14, 16))
 		c.draw_circle(p + Vector2(0, -2), 2.5, Color("3a2008"))
+	elif kind == "person":
+		c.draw_circle(p + Vector2(0, -8), 12, Color("8fd3ff"))
+		c.draw_colored_polygon(_arcpoly(p + Vector2(0, 24), 22), Color("8fd3ff"))
+		c.draw_circle(p + Vector2(-4, -12), 4, Color(1, 1, 1, 0.6))
 	elif kind == "stats":
 		# troféu
 		c.draw_colored_polygon(PackedVector2Array([p + Vector2(-18, -22), p + Vector2(18, -22), p + Vector2(14, -2), p + Vector2(0, 6), p + Vector2(-14, -2)]), Color("f6c945"))
@@ -666,7 +692,7 @@ func _build_main() -> void:
 	nh.add_theme_constant_override("separation", 10)
 	nh.alignment = BoxContainer.ALIGNMENT_CENTER
 	nav.add_child(nh)
-	for it in [["LOJA", "shop", "shop"], ["INVENTÁRIO", "inv", "inv"], ["ESTATÍSTICAS", "stats", "stats"], ["AJUSTES", "gear", "settings"]]:
+	for it in [["LOJA", "shop", "shop"], ["INVENTÁRIO", "inv", "inv"], ["PERFIL", "person", "perfil"], ["RANKING", "stats", "ranking"], ["AJUSTES", "gear", "settings"]]:
 		var nb := nav_btn(it[0], it[1])
 		nb.pressed.connect(show_screen.bind(it[2]))
 		nh.add_child(nb)
@@ -2261,6 +2287,9 @@ func friends_offline() -> void:
 
 
 func friends_update(list: Array) -> void:
+	for p0 in list:
+		if p0.has("av"):
+			friend_av[str(p0.code)] = [str(p0.av), str(p0.get("fr", "simples"))]
 	var fl: Array = game.save.friends
 	var changed := false
 	for p in list:
@@ -2349,13 +2378,30 @@ func _friends_render(list: Array) -> void:
 		var nm := str(f.name)
 		var hue := float(hash(str(f.code)) % 360) / 360.0
 		var acol := Color.from_hsv(hue, 0.55, 0.75 if online else 0.4)
+		var avcode := str(f.code)
 		av.draw.connect(func():
-			av.draw_circle(Vector2(26, 26), 24, acol)
-			av.draw_arc(Vector2(26, 26), 24, 0, TAU, 32, Color(1, 1, 1, 0.5), 2.0)
-			var fnt: Font = ThemeDB.fallback_font
-			av.draw_string(fnt, Vector2(0, 36), nm.substr(0, 1).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 52, 28, Color.WHITE)
+			if friend_av.has(avcode):
+				AV.draw(av, Vector2(26, 26), 25, str(friend_av[avcode][0]), str(friend_av[avcode][1]))
+				if not online:
+					av.draw_circle(Vector2(26, 26), 25, Color(0, 0, 0, 0.45))
+			else:
+				av.draw_circle(Vector2(26, 26), 24, acol)
+				av.draw_arc(Vector2(26, 26), 24, 0, TAU, 32, Color(1, 1, 1, 0.5), 2.0)
+				var fnt: Font = ThemeDB.fallback_font
+				av.draw_string(fnt, Vector2(0, 36), nm.substr(0, 1).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 52, 28, Color.WHITE)
 			av.draw_circle(Vector2(44, 44), 8, Color(0.03, 0.05, 0.08))
 			av.draw_circle(Vector2(44, 44), 6, dc))
+		# tocar no avatar abre o perfil do amigo
+		var avb := Button.new()
+		avb.flat = true
+		avb.focus_mode = Control.FOCUS_NONE
+		for st2 in ["normal", "hover", "pressed", "focus"]:
+			avb.add_theme_stylebox_override(st2, StyleBoxEmpty.new())
+		avb.set_anchors_preset(Control.PRESET_FULL_RECT)
+		avb.pressed.connect(func():
+			game.net.world_send({"t": "prof", "code": avcode})
+			say("Abrindo perfil..."))
+		av.add_child(avb)
 		hb.add_child(av)
 		var nv := VBoxContainer.new()
 		nv.add_theme_constant_override("separation", -2)
@@ -3033,6 +3079,11 @@ func _shop_nudge(dir: int) -> void:
 
 
 func _process(delta: float) -> void:
+	anim_t += delta
+	if top_av != null and topbar.visible:
+		var fr := str(game.save.get("frame", ""))
+		if fr == "mestre" or fr == "fogo" or str(game.save.get("av", "")) == "fire":
+			top_av.queue_redraw()
 	if upd_req != null and upd_bar != null and is_instance_valid(upd_bar):
 		var tot := upd_req.get_body_size()
 		if tot > 0:
@@ -3332,6 +3383,7 @@ func _buy_grana(id: String, gp: int, month: bool) -> void:
 		_month_equip(id)
 	else:
 		_equip(id)
+	game.check_achs()
 	say("Comprado com Grana! Está no seu INVENTÁRIO.")
 
 
@@ -3344,6 +3396,7 @@ func _buy(id: String, price: int) -> void:
 	game.write_save()
 	refresh_top()
 	_equip(id)
+	game.check_achs()
 	say("Comprado! Está no seu INVENTÁRIO.")
 
 
@@ -3849,6 +3902,10 @@ func show_screen(sname: String) -> void:
 		_pass_refresh()
 	elif sname == "missoes":
 		_missoes_refresh()
+	elif sname == "perfil":
+		_perfil_refresh()
+	elif sname == "ranking":
+		_ranking_refresh()
 	if sname == "online" or sname == "play" or sname == "truco":
 		for k in ["bet_on", "bet_ai", "bet_tr"]:
 			_stake_paint(k)
@@ -4052,3 +4109,503 @@ func show_daily(streak: int, coins: int, gems: int) -> void:
 	vb.add_child(strip)
 	vb.move_child(strip, vb.get_child_count() - 2)
 	strip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+
+
+# ---------------------------------------------------------------- perfil do jogador
+func _build_perfil() -> void:
+	var v := mk_screen("perfil", 10)
+	add_bg("perfil", "res://assets/menu_bg.jpg", 0.2)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 10)
+	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_child(tabs)
+	for k in [["perfil", "MEU PERFIL"], ["conq", "CONQUISTAS"], ["visual", "AVATAR E TÍTULO"]]:
+		var b := mk_btn(k[1], 250, 54, GRAY, 20)
+		b.pressed.connect(func():
+			pf_tab = k[0]
+			_perfil_refresh())
+		b.set_meta("tab", k[0])
+		tabs.add_child(b)
+	tabs.name = "Tabs"
+	pf_box = VBoxContainer.new()
+	pf_box.add_theme_constant_override("separation", 10)
+	pf_box.custom_minimum_size = Vector2(1100, 470)
+	v.add_child(pf_box)
+	var back := mk_btn("◀  VOLTAR", 220, 54, GRAY, 24)
+	back.pressed.connect(show_screen.bind("main"))
+	v.add_child(back)
+
+
+func _perfil_refresh() -> void:
+	for c in pf_box.get_children():
+		c.queue_free()
+	var tabs: HBoxContainer = screens["perfil"].find_child("Tabs", true, false)
+	for b in tabs.get_children():
+		var on: bool = str(b.get_meta("tab")) == pf_tab
+		b.add_theme_stylebox_override("normal", sbox(BLUE if on else Color(0.09, 0.12, 0.17, 0.95), 20, Color.WHITE if on else Color(1, 1, 1, 0.18), 3 if on else 2, 6))
+	if pf_tab == "conq":
+		_perfil_conq()
+	elif pf_tab == "visual":
+		_perfil_visual()
+	else:
+		_perfil_main()
+
+
+func _div_badge(c: Control, ctr: Vector2, r: float, dv: int) -> void:
+	var col: Color = game.DIVS[dv].col
+	var pts := PackedVector2Array()
+	for k in 6:
+		pts.append(ctr + Vector2.from_angle(-PI / 2.0 + float(k) * TAU / 6.0) * r)
+	c.draw_colored_polygon(pts, col.darkened(0.45))
+	var pts2 := PackedVector2Array()
+	for k in 6:
+		pts2.append(ctr + Vector2.from_angle(-PI / 2.0 + float(k) * TAU / 6.0) * r * 0.78)
+	c.draw_colored_polygon(pts2, col)
+	c.draw_colored_polygon(_star(ctr, r * 0.42, r * 0.18), Color(1, 1, 1, 0.9))
+	for k in dv:
+		c.draw_circle(ctr + Vector2((k - (dv - 1) / 2.0) * r * 0.32, r * 0.62), r * 0.08, Color.WHITE)
+
+
+func _perfil_main() -> void:
+	var d: Dictionary = game.profile_data()
+	var lg: Dictionary = game.league()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 18)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	pf_box.add_child(row)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.9), 26, Color(1, 1, 1, 0.2), 2, 12))
+	row.add_child(card)
+	var cv := Control.new()
+	cv.custom_minimum_size = Vector2(400, 440)
+	card.add_child(cv)
+	cv.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		AV.draw(cv, Vector2(200, 100), 80, str(d.av), str(d.fr), anim_t)
+		cv.draw_string(f, Vector2(0, 222), game.my_name(), HORIZONTAL_ALIGNMENT_CENTER, 400, 34, Color.WHITE)
+		var ti: Dictionary = AV.find(AV.TITLES, str(d.ti))
+		cv.draw_string(f, Vector2(0, 254), str(ti.name), HORIZONTAL_ALIGNMENT_CENTER, 400, 20, Color("f4c542"))
+		cv.draw_string(f, Vector2(0, 284), "Nível %d   •   código %s" % [int(d.lvl), game.my_code()], HORIZONTAL_ALIGNMENT_CENTER, 400, 17, Color(1, 1, 1, 0.65))
+		var dv := int(d.div)
+		_div_badge(cv, Vector2(110, 360), 42, dv)
+		cv.draw_string(f, Vector2(165, 350), "LIGA DA SEMANA", HORIZONTAL_ALIGNMENT_LEFT, 230, 15, Color(1, 1, 1, 0.6))
+		cv.draw_string(f, Vector2(165, 378), str(game.DIVS[dv].name), HORIZONTAL_ALIGNMENT_LEFT, 230, 26, game.DIVS[dv].col)
+		cv.draw_string(f, Vector2(165, 404), "%d pontos" % int(lg.pts), HORIZONTAL_ALIGNMENT_LEFT, 230, 18, Color.WHITE))
+	var tick := create_tween().set_loops()
+	tick.tween_callback(cv.queue_redraw).set_delay(0.05)
+	cv.tree_exiting.connect(tick.kill)
+	var sp := PanelContainer.new()
+	sp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.9), 26, Color(1, 1, 1, 0.2), 2, 12))
+	row.add_child(sp)
+	var g := GridContainer.new()
+	g.columns = 2
+	g.add_theme_constant_override("h_separation", 14)
+	g.add_theme_constant_override("v_separation", 10)
+	sp.add_child(margin(g, 18))
+	var s: Dictionary = game.save
+	var played: int = int(s.played) + int(s.get("truco_wins", 0)) + int(s.get("truco_losses", 0))
+	var wins: int = int(s.wins) + int(s.get("truco_wins", 0))
+	var rate: int = int(round(100.0 * wins / maxf(1.0, float(played))))
+	var cd: Dictionary = game.cue_by_id(str(s.cue)) if game.has_method("cue_by_id") else {}
+	var items := [
+		["Partidas jogadas", str(played)], ["Vitórias", str(wins)], ["Aproveitamento", "%d%%" % rate],
+		["Vitórias na sinuca", str(s.wins)], ["Vitórias no truco", str(int(s.get("truco_wins", 0)))],
+		["Sequência atual", str(game.stat("streak"))], ["Maior sequência", str(game.stat("best_streak"))],
+		["Bolas encaçapadas", str(game.stat("pockets"))], ["Apostas ganhas", str(game.stat("bets_won"))],
+		["Conquistas", "%d / %d" % [(s.get("achs", []) as Array).size(), game.ACHS.size()]],
+		["Taco favorito", str(cd.get("name", s.cue))], ["Dias seguidos", str(int(s.get("daily_streak", 0)))],
+	]
+	for it in items:
+		var box := PanelContainer.new()
+		box.add_theme_stylebox_override("panel", sbox(Color(1, 1, 1, 0.05), 14))
+		var hv := VBoxContainer.new()
+		hv.add_theme_constant_override("separation", 0)
+		hv.custom_minimum_size = Vector2(270, 0)
+		box.add_child(margin(hv, 8))
+		var l1 := mk_lbl(str(it[0]), 15, Color(1, 1, 1, 0.6))
+		l1.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		hv.add_child(l1)
+		var l2 := mk_lbl(str(it[1]), 24, Color.WHITE, 2)
+		l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		hv.add_child(l2)
+		g.add_child(box)
+
+
+func _perfil_conq() -> void:
+	var sc := ScrollContainer.new()
+	sc.custom_minimum_size = Vector2(1100, 470)
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	pf_box.add_child(sc)
+	var g := GridContainer.new()
+	g.columns = 3
+	g.add_theme_constant_override("h_separation", 12)
+	g.add_theme_constant_override("v_separation", 12)
+	sc.add_child(g)
+	friends_scroll = sc
+	var got: Array = game.save.get("achs", [])
+	for a in game.ACHS:
+		var done := got.has(str(a.id))
+		var val: int = mini(game.ach_val(str(a.k)), int(a.n))
+		var box := PanelContainer.new()
+		box.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.92), 18, GOLD if done else Color(1, 1, 1, 0.14), 3 if done else 2, 6))
+		g.add_child(box)
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 10)
+		h.custom_minimum_size = Vector2(345, 0)
+		box.add_child(margin(h, 10))
+		var md := Control.new()
+		md.custom_minimum_size = Vector2(60, 60)
+		md.draw.connect(func():
+			var col := Color("ffd34a") if done else Color(0.3, 0.33, 0.4)
+			md.draw_colored_polygon(PackedVector2Array([Vector2(18, 0), Vector2(26, 0), Vector2(30, 18), Vector2(22, 22)]), Color("c0303a") if done else Color(0.25, 0.25, 0.3))
+			md.draw_colored_polygon(PackedVector2Array([Vector2(42, 0), Vector2(34, 0), Vector2(30, 18), Vector2(38, 22)]), Color("2f7fd6") if done else Color(0.25, 0.25, 0.3))
+			md.draw_circle(Vector2(30, 38), 21, col.darkened(0.35))
+			md.draw_circle(Vector2(30, 38), 17, col)
+			md.draw_colored_polygon(_star(Vector2(30, 38), 11, 5), Color(1, 1, 1, 0.85) if done else Color(1, 1, 1, 0.25)))
+		h.add_child(md)
+		var tv := VBoxContainer.new()
+		tv.add_theme_constant_override("separation", 0)
+		tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(tv)
+		var n1 := mk_lbl(str(a.name), 19, Color.WHITE if done else Color(1, 1, 1, 0.75), 2)
+		n1.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		tv.add_child(n1)
+		var n2 := mk_lbl(str(a.desc), 14, Color(1, 1, 1, 0.6))
+		n2.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		tv.add_child(n2)
+		var n3 := mk_lbl(("✓ FEITA  •  +%d moedas" % int(a.r)) if done else ("%d / %d  •  prêmio %d" % [val, int(a.n), int(a.r)]), 14, Color("3ddc84") if done else Color("ffe066"))
+		n3.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		tv.add_child(n3)
+
+
+func _perfil_visual() -> void:
+	var sc := ScrollContainer.new()
+	sc.custom_minimum_size = Vector2(1100, 470)
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	pf_box.add_child(sc)
+	friends_scroll = sc
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	sc.add_child(vb)
+	vb.add_child(_section("AVATAR"))
+	var ga := HFlowContainer.new()
+	ga.add_theme_constant_override("h_separation", 10)
+	ga.add_theme_constant_override("v_separation", 10)
+	ga.custom_minimum_size = Vector2(1080, 0)
+	vb.add_child(ga)
+	for it in AV.AVATARS:
+		ga.add_child(_pick_tile(it, "av"))
+	vb.add_child(_section("MOLDURA"))
+	var gf := HFlowContainer.new()
+	gf.add_theme_constant_override("h_separation", 10)
+	gf.add_theme_constant_override("v_separation", 10)
+	gf.custom_minimum_size = Vector2(1080, 0)
+	vb.add_child(gf)
+	for it in AV.FRAMES:
+		gf.add_child(_pick_tile(it, "frame"))
+	vb.add_child(_section("TÍTULO (aparece embaixo do seu nome)"))
+	var gt := HFlowContainer.new()
+	gt.add_theme_constant_override("h_separation", 10)
+	gt.add_theme_constant_override("v_separation", 10)
+	gt.custom_minimum_size = Vector2(1080, 0)
+	vb.add_child(gt)
+	for it in AV.TITLES:
+		var ok: bool = game.unlocked(str(it.need))
+		var on: bool = str(game.save.get("title", "novato")) == str(it.id)
+		var b := mk_btn(str(it.name) if ok else "🔒 " + str(it.name), 250, 50, GOLD if on else (BLUE if ok else Color(0.15, 0.17, 0.22)), 17)
+		if not ok:
+			b.text = str(it.name)
+			b.modulate = Color(1, 1, 1, 0.5)
+		var iid := str(it.id)
+		var need := str(it.need)
+		b.pressed.connect(func():
+			if not game.unlocked(need):
+				say("Bloqueado: " + game.need_txt(need))
+				return
+			game.save["title"] = iid
+			game.write_save()
+			game.net.send_profile()
+			_perfil_refresh())
+		gt.add_child(b)
+
+
+func _pick_tile(it: Dictionary, key: String) -> Control:
+	var ok: bool = game.unlocked(str(it.need))
+	var on: bool = str(game.save.get(key, "b8" if key == "av" else "simples")) == str(it.id)
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(124, 140)
+	b.add_theme_stylebox_override("normal", sbox(Color(0.03, 0.06, 0.1, 0.95), 18, GOLD if on else Color(1, 1, 1, 0.15), 4 if on else 2, 4))
+	b.add_theme_stylebox_override("hover", sbox(Color(0.05, 0.09, 0.15, 0.95), 18, Color.WHITE, 3, 4))
+	b.add_theme_stylebox_override("pressed", sbox(Color(0.02, 0.04, 0.07, 0.95), 18, GOLD, 3, 2))
+	var dc := Control.new()
+	dc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var iid := str(it.id)
+	dc.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		if key == "av":
+			AV.draw(dc, Vector2(62, 56), 42, iid, str(game.save.get("frame", "simples")), anim_t)
+		else:
+			AV.draw(dc, Vector2(62, 56), 42, str(game.save.get("av", "b8")), iid, anim_t)
+		if not ok:
+			dc.draw_circle(Vector2(62, 56), 42, Color(0, 0, 0, 0.6))
+			dc.draw_style_box(sbox(Color(0.85, 0.85, 0.9), 4), Rect2(52, 52, 20, 16))
+			dc.draw_arc(Vector2(62, 52), 7, PI, TAU, 12, Color(0.85, 0.85, 0.9), 3.0)
+		dc.draw_string(f, Vector2(0, 118), str(it.name), HORIZONTAL_ALIGNMENT_CENTER, 124, 14, Color.WHITE if ok else Color(1, 1, 1, 0.5))
+		if not ok:
+			dc.draw_string(f, Vector2(0, 134), game.need_txt(str(it.need)).left(22), HORIZONTAL_ALIGNMENT_CENTER, 124, 10, Color("ffb3a0")))
+	b.add_child(dc)
+	var need := str(it.need)
+	b.pressed.connect(func():
+		if not game.unlocked(need):
+			say("Bloqueado: " + game.need_txt(need))
+			return
+		game.save[key] = iid
+		game.write_save()
+		game.net.send_profile()
+		refresh_top()
+		_perfil_refresh())
+	return b
+
+
+# perfil de um amigo (chega do servidor)
+func profile_remote(m: Dictionary) -> void:
+	var d = m.get("data", null)
+	if not (d is Dictionary):
+		say("%s ainda não tem perfil (precisa atualizar o jogo)." % str(m.get("name", "Esse jogador")))
+		return
+	close_modal()
+	modal_layer = Control.new()
+	modal_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(modal_layer)
+	var dimr := ColorRect.new()
+	dimr.color = Color(0, 0, 0, 0.7)
+	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(dimr)
+	var cc := CenterContainer.new()
+	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(cc)
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.05, 0.1, 0.97), 28, Color("5aa9ff"), 3, 24))
+	cc.add_child(p)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 8)
+	p.add_child(margin(vb, 22))
+	var cv := Control.new()
+	cv.custom_minimum_size = Vector2(520, 300)
+	vb.add_child(cv)
+	var nm := str(m.get("name", "?"))
+	var online := bool(m.get("online", false))
+	cv.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		AV.draw(cv, Vector2(260, 78), 68, str(d.get("av", "b8")), str(d.get("fr", "simples")), anim_t)
+		cv.draw_circle(Vector2(312, 130), 11, Color(0.03, 0.05, 0.08))
+		cv.draw_circle(Vector2(312, 130), 8, Color("3ddc84") if online else Color(0.5, 0.5, 0.55))
+		cv.draw_string(f, Vector2(0, 184), nm, HORIZONTAL_ALIGNMENT_CENTER, 520, 32, Color.WHITE)
+		var ti: Dictionary = AV.find(AV.TITLES, str(d.get("ti", "novato")))
+		cv.draw_string(f, Vector2(0, 212), str(ti.name) + "   •   Nível %d" % int(d.get("lvl", 1)), HORIZONTAL_ALIGNMENT_CENTER, 520, 18, Color("f4c542"))
+		var dv := clampi(int(d.get("div", 0)), 0, 4)
+		_div_badge(cv, Vector2(70, 268), 26, dv)
+		cv.draw_string(f, Vector2(104, 264), "%s  •  %d pts" % [game.DIVS[dv].name, int(d.get("pts", 0))], HORIZONTAL_ALIGNMENT_LEFT, 200, 16, game.DIVS[dv].col)
+		cv.draw_string(f, Vector2(104, 286), "liga da semana", HORIZONTAL_ALIGNMENT_LEFT, 200, 12, Color(1, 1, 1, 0.5))
+		var pl := maxi(1, int(d.get("played", 0)))
+		cv.draw_string(f, Vector2(300, 254), "Vitórias: %d (%d%%)" % [int(d.get("wins", 0)), int(round(100.0 * int(d.get("wins", 0)) / pl))], HORIZONTAL_ALIGNMENT_LEFT, 220, 16, Color.WHITE)
+		cv.draw_string(f, Vector2(300, 276), "Maior sequência: %d" % int(d.get("best", 0)), HORIZONTAL_ALIGNMENT_LEFT, 220, 16, Color.WHITE)
+		cv.draw_string(f, Vector2(300, 298), "Conquistas: %d / %d" % [int(d.get("achs", 0)), game.ACHS.size()], HORIZONTAL_ALIGNMENT_LEFT, 220, 16, Color.WHITE))
+	var ok := mk_btn("FECHAR", 220, 58, GRAY, 22)
+	ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	ok.pressed.connect(close_modal)
+	vb.add_child(ok)
+
+
+# conquista nova: aviso que desce do topo
+func ach_toast(nm: String, coins: int) -> void:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", sbox(Color(0.05, 0.07, 0.12, 0.97), 22, GOLD, 3, 16))
+	root.add_child(p)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	p.add_child(margin(h, 12))
+	var md := Control.new()
+	md.custom_minimum_size = Vector2(50, 50)
+	md.draw.connect(func():
+		md.draw_circle(Vector2(25, 25), 22, Color("8a5a10"))
+		md.draw_circle(Vector2(25, 25), 18, Color("ffd34a"))
+		md.draw_colored_polygon(_star(Vector2(25, 25), 12, 5), Color.WHITE))
+	h.add_child(md)
+	var tv := VBoxContainer.new()
+	tv.add_theme_constant_override("separation", 0)
+	h.add_child(tv)
+	var l1 := mk_lbl("CONQUISTA DESBLOQUEADA!", 15, Color("f4c542"), 2)
+	l1.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	tv.add_child(l1)
+	var l2 := mk_lbl("%s   +%d moedas" % [nm, coins], 22, Color.WHITE, 3)
+	l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	tv.add_child(l2)
+	await get_tree().process_frame
+	if not is_instance_valid(p):
+		return
+	var k := get_tree().get_nodes_in_group("ach_toast").size()
+	p.add_to_group("ach_toast")
+	p.position = Vector2((root.size.x - p.size.x) / 2.0, -120)
+	game.play("win", 0.5)
+	var tw := p.create_tween()
+	tw.tween_interval(0.6 * k)
+	tw.tween_property(p, "position:y", 100.0 + 0.0 * k, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(3.0)
+	tw.tween_property(p, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(p.queue_free)
+	refresh_top()
+
+
+# ---------------------------------------------------------------- ranking (liga semanal)
+func _build_ranking() -> void:
+	var v := mk_screen("ranking", 10)
+	add_bg("ranking", "res://assets/menu_bg.jpg", 0.2)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_child(row)
+	var lp := PanelContainer.new()
+	lp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.9), 26, Color(1, 1, 1, 0.2), 2, 12))
+	row.add_child(lp)
+	rk_head = Control.new()
+	rk_head.custom_minimum_size = Vector2(380, 500)
+	lp.add_child(rk_head)
+	rk_head.draw.connect(_rank_head_draw)
+	var rp := PanelContainer.new()
+	rp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.9), 26, Color("5aa9ff"), 3, 12))
+	row.add_child(rp)
+	var rv := VBoxContainer.new()
+	rv.add_theme_constant_override("separation", 8)
+	rp.add_child(margin(rv, 12))
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 8)
+	tabs.name = "RkTabs"
+	rv.add_child(tabs)
+	for k in [["todos", "TOP 50"], ["amigos", "AMIGOS"]]:
+		var b := mk_btn(k[1], 200, 48, GRAY, 19)
+		b.set_meta("tab", k[0])
+		b.pressed.connect(func():
+			rk_tab = k[0]
+			_rank_render())
+		tabs.add_child(b)
+	var sc := ScrollContainer.new()
+	sc.custom_minimum_size = Vector2(640, 430)
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.name = "RkScroll"
+	rv.add_child(sc)
+	rk_box = VBoxContainer.new()
+	rk_box.add_theme_constant_override("separation", 6)
+	rk_box.custom_minimum_size = Vector2(620, 0)
+	sc.add_child(rk_box)
+	var back := mk_btn("◀  VOLTAR", 220, 54, GRAY, 24)
+	back.pressed.connect(show_screen.bind("main"))
+	v.add_child(back)
+
+
+func _rank_head_draw() -> void:
+	var c := rk_head
+	var f: Font = ThemeDB.fallback_font
+	var lg: Dictionary = game.league()
+	var pts := int(lg.pts)
+	var dv: int = game.div_of(pts)
+	c.draw_string(f, Vector2(0, 40), "LIGA DA SEMANA", HORIZONTAL_ALIGNMENT_CENTER, 380, 30, Color("f4c542"))
+	c.draw_string(f, Vector2(0, 66), "termina em " + game.week_left_txt(), HORIZONTAL_ALIGNMENT_CENTER, 380, 16, Color(1, 1, 1, 0.6))
+	_div_badge(c, Vector2(190, 140), 56, dv)
+	c.draw_string(f, Vector2(0, 236), str(game.DIVS[dv].name), HORIZONTAL_ALIGNMENT_CENTER, 380, 32, game.DIVS[dv].col)
+	c.draw_string(f, Vector2(0, 268), "%d pontos" % pts, HORIZONTAL_ALIGNMENT_CENTER, 380, 22, Color.WHITE)
+	var me := int(rk_data.get("me", 0))
+	c.draw_string(f, Vector2(0, 296), ("%dº lugar de %d" % [me, int(rk_data.get("total", 0))]) if me > 0 else "Jogue online para entrar no ranking", HORIZONTAL_ALIGNMENT_CENTER, 380, 17, Color(1, 1, 1, 0.75))
+	if dv < 4:
+		var nx: int = int(game.DIVS[dv + 1].min)
+		var lo: int = int(game.DIVS[dv].min)
+		var fr := clampf(float(pts - lo) / float(nx - lo), 0.0, 1.0)
+		c.draw_style_box(sbox(Color(0, 0, 0, 0.5), 7), Rect2(40, 312, 300, 14))
+		c.draw_style_box(sbox(game.DIVS[dv + 1].col, 7), Rect2(40, 312, maxf(14.0, 300.0 * fr), 14))
+		c.draw_string(f, Vector2(0, 346), "faltam %d para %s" % [nx - pts, game.DIVS[dv + 1].name], HORIZONTAL_ALIGNMENT_CENTER, 380, 15, Color(1, 1, 1, 0.65))
+	c.draw_string(f, Vector2(0, 384), "Vitória online: +20 (+1 a cada 50 apostadas)", HORIZONTAL_ALIGNMENT_CENTER, 380, 14, Color(1, 1, 1, 0.6))
+	c.draw_string(f, Vector2(0, 404), "Derrota online: -8", HORIZONTAL_ALIGNMENT_CENTER, 380, 14, Color(1, 1, 1, 0.6))
+	c.draw_string(f, Vector2(0, 436), "PRÊMIO NO FIM DA SEMANA", HORIZONTAL_ALIGNMENT_CENTER, 380, 15, Color("f4c542"))
+	var x0 := 14.0
+	for i in game.DIVS.size():
+		var dd: Dictionary = game.DIVS[i]
+		var cx: float = x0 + i * 71.0 + 35.0
+		c.draw_string(f, Vector2(cx - 36, 462), str(dd.name).left(4), HORIZONTAL_ALIGNMENT_CENTER, 72, 13, dd.col)
+		c.draw_string(f, Vector2(cx - 36, 484), str(dd.prize), HORIZONTAL_ALIGNMENT_CENTER, 72, 17, Color.WHITE if i == dv else Color(1, 1, 1, 0.6))
+
+
+func _ranking_refresh() -> void:
+	friends_scroll = screens["ranking"].find_child("RkScroll", true, false)
+	rk_head.queue_redraw()
+	if not game.net.server_ok:
+		game.net.connect_server()
+		rk_data = {}
+		_rank_render()
+		_rank_msg("Conectando ao servidor... (se estiver dormindo, pode levar até 1 minuto)")
+		get_tree().create_timer(3.0).timeout.connect(func():
+			if cur == "ranking" and game.net.server_ok:
+				game.net.ask_rank())
+		return
+	_rank_msg("Carregando ranking...")
+	game.net.ask_rank()
+
+
+func _rank_msg(t: String) -> void:
+	for c in rk_box.get_children():
+		c.queue_free()
+	var l := mk_lbl(t, 18, Color(1, 1, 1, 0.7), 2)
+	l.custom_minimum_size = Vector2(600, 0)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rk_box.add_child(l)
+
+
+func rank_update(m: Dictionary) -> void:
+	rk_data = m
+	if cur == "ranking":
+		rk_head.queue_redraw()
+		_rank_render()
+
+
+func _rank_render() -> void:
+	var tabs: HBoxContainer = screens["ranking"].find_child("RkTabs", true, false)
+	for b in tabs.get_children():
+		var on: bool = str(b.get_meta("tab")) == rk_tab
+		b.add_theme_stylebox_override("normal", sbox(BLUE if on else Color(0.09, 0.12, 0.17, 0.95), 18, Color.WHITE if on else Color(1, 1, 1, 0.18), 3 if on else 2, 4))
+	if rk_data.is_empty():
+		return
+	for c in rk_box.get_children():
+		c.queue_free()
+	var list: Array = rk_data.get("top", []) if rk_tab == "todos" else rk_data.get("friends", [])
+	if list.is_empty():
+		_rank_msg("Ninguém pontuou ainda nesta semana. Jogue online e seja o primeiro!" if rk_tab == "todos" else "Nenhum amigo pontuou ainda nesta semana.")
+		return
+	for e in list:
+		var mine: bool = str(e.code) == game.my_code()
+		var pos := int(e.pos)
+		var row := PanelContainer.new()
+		row.add_theme_stylebox_override("panel", sbox(Color(0.12, 0.2, 0.32, 0.95) if mine else Color(0.04, 0.07, 0.11, 0.92), 14, GOLD if mine else Color(1, 1, 1, 0.08), 2, 2))
+		rk_box.add_child(row)
+		var dc := Control.new()
+		dc.custom_minimum_size = Vector2(610, 54)
+		row.add_child(dc)
+		var dv: int = game.div_of(int(e.pts))
+		var nm := str(e.name)
+		var av := str(e.get("av", "b8"))
+		var fr := str(e.get("fr", "simples"))
+		dc.draw.connect(func():
+			var f: Font = ThemeDB.fallback_font
+			var pc := [Color("ffd34a"), Color("d6dde5"), Color("d08a4a")]
+			if pos <= 3:
+				dc.draw_circle(Vector2(34, 27), 19, pc[pos - 1])
+				dc.draw_string(f, Vector2(15, 35), str(pos), HORIZONTAL_ALIGNMENT_CENTER, 38, 20, Color("2a1a00"))
+			else:
+				dc.draw_string(f, Vector2(4, 35), "%dº" % pos, HORIZONTAL_ALIGNMENT_CENTER, 60, 19, Color(1, 1, 1, 0.8))
+			AV.draw(dc, Vector2(92, 27), 22, av, fr)
+			dc.draw_string(f, Vector2(126, 35), nm + ("  (você)" if mine else ""), HORIZONTAL_ALIGNMENT_LEFT, 280, 21, Color.WHITE)
+			_div_badge(dc, Vector2(452, 27), 17, dv)
+			dc.draw_string(f, Vector2(476, 33), str(game.DIVS[dv].name).left(4), HORIZONTAL_ALIGNMENT_LEFT, 60, 13, game.DIVS[dv].col)
+			dc.draw_string(f, Vector2(500, 35), str(int(e.pts)), HORIZONTAL_ALIGNMENT_RIGHT, 100, 22, Color("ffe066")))

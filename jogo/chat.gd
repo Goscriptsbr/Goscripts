@@ -2,6 +2,8 @@ extends CanvasLayer
 # Chat da partida online (sinuca e truco): frases rápidas, texto e voz (segurar o microfone).
 # Os balões aparecem em cima da placa com o nome de quem falou.
 
+const EMOTES := ["riso", "bravo", "oculos", "choro", "uau", "piscada", "fogo", "coracao"]
+var emotes: Array = []
 const QUICK := ["Tempo...", "Boa jogada!", "Vai logo!", "Kkkkkk", "Que sorte!", "Foi mal!", "Obrigado!", "Calma aí...", "Bora!", "Boa partida!"]
 const QUICK_TRUCO := ["TRUCO NELE!", "Tô forte!", "Vai correr?", "Confia, parceiro!"]
 const VOICE_RATE := 8000
@@ -87,6 +89,27 @@ func _build_panel() -> void:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	panel.add_child(game.ui.margin(vb, 12))
+	vb.add_child(game.ui.mk_lbl("EMOJIS", 18, Color("f4c542"), 3))
+	var er := HBoxContainer.new()
+	er.add_theme_constant_override("separation", 6)
+	vb.add_child(er)
+	for i in EMOTES.size():
+		var eb := Button.new()
+		eb.focus_mode = Control.FOCUS_NONE
+		eb.custom_minimum_size = Vector2(42, 46)
+		eb.add_theme_stylebox_override("normal", game.ui.sbox(Color("24304a"), 12))
+		eb.add_theme_stylebox_override("hover", game.ui.sbox(Color("31405f"), 12))
+		eb.add_theme_stylebox_override("pressed", game.ui.sbox(Color("18202f"), 12))
+		var ec := Control.new()
+		ec.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ec.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var eid: String = EMOTES[i]
+		ec.draw.connect(func(): draw_emote(ec, Vector2(21, 23), 16.0, eid, 0.0))
+		eb.add_child(ec)
+		eb.pressed.connect(func():
+			send(":e:" + eid)
+			panel.visible = false)
+		er.add_child(eb)
 	vb.add_child(game.ui.mk_lbl("CHAT RÁPIDO", 20, Color("f4c542"), 3))
 	quick_box = GridContainer.new()
 	quick_box.columns = 2
@@ -176,6 +199,10 @@ func _process(delta: float) -> void:
 		bubbles[i].t += delta
 		if bubbles[i].t > (1.2 if bubbles[i].voice else 3.5):
 			bubbles.remove_at(i)
+	for i in range(emotes.size() - 1, -1, -1):
+		emotes[i].t += delta
+		if emotes[i].t > 2.6:
+			emotes.remove_at(i)
 	if talking:
 		_voice_pump(delta)
 	elif mic_testing:
@@ -197,6 +224,9 @@ func _process(delta: float) -> void:
 			for i in 800:
 				fake.append(_mulaw(sin(i * 0.3) * 0.5))
 			game.net.send_voice(fake)
+		if test_t > 5.0 and test_done and emotes.is_empty() and not get_meta("emo_sent", false):
+			set_meta("emo_sent", true)
+			send(":e:riso")
 	draw_c.queue_redraw()
 
 
@@ -230,6 +260,17 @@ func abs_seat(peer: int) -> int:
 
 func add(peer: int, txt: String, voice: bool) -> void:
 	var a := abs_seat(peer)
+	if txt.begins_with(":e:"):
+		var eid := txt.substr(3)
+		if EMOTES.has(eid):
+			for e in emotes:
+				if int(e.abs) == a:
+					emotes.erase(e)
+					break
+			emotes.append({"abs": a, "id": eid, "t": 0.0})
+			if game.net_auto:
+				print("EMOTE de=", peer, " id=", eid)
+		return
 	if game.net_auto:
 		print("CHATRX de=", peer, " lugar=", a, " nome=", _name_of(a), " txt=", txt, " voz=", voice)
 	for b in bubbles:
@@ -319,6 +360,21 @@ func _draw_bubbles() -> void:
 		var tc := Color(0.1, 0.1, 0.12, fade) if not b.voice else Color.WHITE
 		draw_c.draw_string(f, r.position + Vector2(0, 22 * pop), str(b.name).left(14), HORIZONTAL_ALIGNMENT_CENTER, bw, int(13 * pop), Color(0.35, 0.35, 0.4, fade) if not b.voice else Color(1, 1, 1, 0.8))
 		draw_c.draw_string(f, r.position + Vector2(0, 50 * pop), txt, HORIZONTAL_ALIGNMENT_CENTER, bw, fs, tc)
+	for e in emotes:
+		var t: float = e.t
+		var p2 := _anchor(int(e.abs))
+		var vs2 := get_viewport().get_visible_rect().size
+		var base: Vector2
+		if _truco() == null:
+			base = Vector2(p2.x + 160.0, 60.0)
+		else:
+			base = p2 + (Vector2(0, -90) if p2.y > vs2.y * 0.6 else Vector2(0, 90))
+		base.x = clampf(base.x, 60, vs2.x - 60)
+		var sc := minf(1.0, t * 6.0) * (1.0 + 0.25 * maxf(0.0, 1.0 - absf(t - 0.25) * 6.0))
+		var a := clampf((2.6 - t) / 0.4, 0.0, 1.0)
+		var ctr := base + Vector2(0, -t * 18.0 + sin(t * 7.0) * 3.0)
+		draw_c.draw_circle(ctr, 44.0 * sc, Color(0, 0, 0, 0.25 * a))
+		draw_emote(draw_c, ctr, 38.0 * sc, str(e.id), t, a)
 
 
 # ---------------------------------------------------------------- voz (segurar para falar)
@@ -527,3 +583,84 @@ static func _unmulaw(b: int) -> float:
 	var y := float(b) / 127.5 - 1.0
 	var mu := 255.0
 	return signf(y) * (pow(1.0 + mu, absf(y)) - 1.0) / mu
+
+
+
+# emojis desenhados (a fonte do jogo não tem emoji)
+static func draw_emote(c: CanvasItem, p: Vector2, r: float, id: String, t: float, a: float = 1.0) -> void:
+	if r < 1.0:
+		return
+	var yel := Color(1.0, 0.82, 0.2, a)
+	var dark := Color(0.25, 0.14, 0.04, a)
+	if id == "fogo":
+		var fl := sin(t * 10.0) * 0.08
+		for k in 3:
+			var s := 1.0 - k * 0.3
+			var col: Color = [Color(1, 0.25, 0.1, a), Color(1, 0.6, 0.1, a), Color(1, 0.92, 0.45, a)][k]
+			var pts := PackedVector2Array([p + Vector2(fl * r * 2.0, -r * 1.05 * s)])
+			for j in 15:
+				var an := PI * 0.0 + float(j) / 14.0 * PI
+				pts.append(p + Vector2(cos(an) * r * 0.75 * s, r * 0.25 + sin(an) * r * 0.65 * s))
+			c.draw_colored_polygon(pts, col)
+		return
+	if id == "coracao":
+		var b := 1.0 + 0.1 * sin(t * 12.0)
+		var pts2 := PackedVector2Array()
+		for k in 40:
+			var tt := float(k) / 40.0 * TAU
+			var x := 16.0 * pow(sin(tt), 3)
+			var y := -(13.0 * cos(tt) - 5.0 * cos(2 * tt) - 2.0 * cos(3 * tt) - cos(4 * tt))
+			pts2.append(p + Vector2(x, y) * r / 17.0 * b)
+		c.draw_colored_polygon(pts2, Color(0.9, 0.12, 0.25, a))
+		c.draw_circle(p + Vector2(-r * 0.4, -r * 0.35), r * 0.15, Color(1, 1, 1, 0.5 * a))
+		return
+	var face := yel
+	if id == "bravo":
+		face = Color(0.95, 0.3, 0.2, a)
+	c.draw_circle(p, r, face)
+	c.draw_arc(p, r, 0, TAU, 32, Color(0.6, 0.35, 0.0, a), maxf(1.5, r * 0.06))
+	var ex := r * 0.36
+	var ey := -r * 0.18
+	match id:
+		"riso":
+			c.draw_arc(p + Vector2(-ex, ey), r * 0.16, PI, TAU, 10, dark, r * 0.08)
+			c.draw_arc(p + Vector2(ex, ey), r * 0.16, PI, TAU, 10, dark, r * 0.08)
+			var m := PackedVector2Array([p + Vector2(-r * 0.55, r * 0.1)])
+			for j in 11:
+				var an := float(j) / 10.0 * PI
+				m.append(p + Vector2(-cos(an) * r * 0.55, r * 0.1 + sin(an) * r * 0.5))
+			c.draw_colored_polygon(m, dark)
+			c.draw_circle(p + Vector2(0, r * 0.45), r * 0.18, Color(0.95, 0.4, 0.45, a))
+			var drop := 0.5 + 0.5 * sin(t * 6.0)
+			c.draw_circle(p + Vector2(-r * 0.75, ey + r * 0.2 + drop * r * 0.2), r * 0.12, Color(0.4, 0.75, 1.0, a))
+			c.draw_circle(p + Vector2(r * 0.75, ey + r * 0.2 + drop * r * 0.2), r * 0.12, Color(0.4, 0.75, 1.0, a))
+		"bravo":
+			c.draw_line(p + Vector2(-ex - r * 0.2, ey - r * 0.25), p + Vector2(-ex + r * 0.15, ey - r * 0.08), dark, r * 0.1)
+			c.draw_line(p + Vector2(ex + r * 0.2, ey - r * 0.25), p + Vector2(ex - r * 0.15, ey - r * 0.08), dark, r * 0.1)
+			c.draw_circle(p + Vector2(-ex, ey + r * 0.05), r * 0.1, dark)
+			c.draw_circle(p + Vector2(ex, ey + r * 0.05), r * 0.1, dark)
+			c.draw_arc(p + Vector2(0, r * 0.55), r * 0.32, PI * 1.15, PI * 1.85, 12, dark, r * 0.09)
+		"oculos":
+			c.draw_rect(Rect2(p + Vector2(-r * 0.75, ey - r * 0.15), Vector2(r * 0.62, r * 0.32)), Color(0.08, 0.08, 0.1, a))
+			c.draw_rect(Rect2(p + Vector2(r * 0.13, ey - r * 0.15), Vector2(r * 0.62, r * 0.32)), Color(0.08, 0.08, 0.1, a))
+			c.draw_line(p + Vector2(-r * 0.15, ey - r * 0.05), p + Vector2(r * 0.15, ey - r * 0.05), Color(0.08, 0.08, 0.1, a), r * 0.08)
+			c.draw_line(p + Vector2(-r * 0.6, ey - r * 0.08), p + Vector2(-r * 0.4, ey + r * 0.05), Color(1, 1, 1, 0.5 * a), r * 0.05)
+			c.draw_arc(p + Vector2(0, r * 0.1), r * 0.45, PI * 0.2, PI * 0.8, 12, dark, r * 0.08)
+		"choro":
+			c.draw_arc(p + Vector2(-ex, ey), r * 0.14, 0, PI, 10, dark, r * 0.08)
+			c.draw_arc(p + Vector2(ex, ey), r * 0.14, 0, PI, 10, dark, r * 0.08)
+			c.draw_arc(p + Vector2(0, r * 0.6), r * 0.3, PI * 1.15, PI * 1.85, 12, dark, r * 0.08)
+			var fall := fmod(t * 1.6, 1.0)
+			for sx in [-1.0, 1.0]:
+				c.draw_rect(Rect2(p + Vector2(sx * ex - r * 0.08, ey + r * 0.12), Vector2(r * 0.16, r * 0.7 * fall + r * 0.1)), Color(0.4, 0.75, 1.0, 0.9 * a))
+		"uau":
+			c.draw_circle(p + Vector2(-ex, ey), r * 0.13, dark)
+			c.draw_circle(p + Vector2(ex, ey), r * 0.13, dark)
+			c.draw_arc(p + Vector2(-ex, ey - r * 0.28), r * 0.14, PI * 1.2, PI * 1.8, 8, dark, r * 0.06)
+			c.draw_arc(p + Vector2(ex, ey - r * 0.28), r * 0.14, PI * 1.2, PI * 1.8, 8, dark, r * 0.06)
+			c.draw_circle(p + Vector2(0, r * 0.4), r * 0.2 * (1.0 + 0.1 * sin(t * 8.0)), dark)
+		"piscada":
+			c.draw_circle(p + Vector2(-ex, ey), r * 0.12, dark)
+			c.draw_line(p + Vector2(ex - r * 0.18, ey), p + Vector2(ex + r * 0.18, ey), dark, r * 0.08)
+			c.draw_arc(p + Vector2(0, r * 0.1), r * 0.45, PI * 0.15, PI * 0.85, 12, dark, r * 0.08)
+			c.draw_circle(p + Vector2(r * 0.25, r * 0.55), r * 0.13, Color(0.95, 0.4, 0.45, a))
