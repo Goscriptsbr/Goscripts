@@ -18,7 +18,7 @@ const DECKS := [
 	{"id": "dk_preto", "deck": "preto", "name": "Black Edition", "price": 1200, "tag": "Preto e prata com listras vermelhas"},
 	{"id": "dk_ouro", "deck": "ouro", "name": "Baralho de Ouro", "price": 1500, "tag": "Todo dourado, para quem é rei da mesa"},
 ]
-const APP_VERSION := 70  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 71  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -1446,6 +1446,11 @@ func launch() -> void:
 		var sm := 0.55 + 0.15 * float(shot_spin)
 		cue.top = -spin.y * sm
 		cue.side = spin.x * sm
+		# PRECISÃO: taco bom acerta mesmo na tacada forte; taco fraco desvia um pouquinho quando bate com força
+		# (lado do desvio vem do próprio ângulo da tacada, então todo celular calcula igual no online)
+		var prc := int(turn_cue_def().get("prec", 3))
+		var dev := deg_to_rad(0.3 * float(maxi(0, 5 - prc))) * pow(strike_pw, 3.0)
+		ang += dev if fposmod(ang * 997.0, 2.0) < 1.0 else -dev
 	cue.vel = Vector2.from_angle(ang) * (150.0 + pow(strike_pw, 1.5) * (maxv - 150.0))
 	if str(turn_cue_def().get("impact", "")) == "math" and not bot:
 		spawn_math(cue.pos, ang, strike_pw)
@@ -1564,8 +1569,9 @@ func move_balls() -> void:
 			var d: Vector2 = b.pos - a.pos
 			var d2 := d.length_squared()
 			var ccd_rem := 0.0
-			if ccd_on and d2 >= 4.0 * R * R and a.has("pp") and b.has("pp"):
-				# colisão contínua: evita a bola "atravessar" numa batida fina em alta velocidade
+			if ccd_on and a.has("pp") and b.has("pp") and (b.pp - a.pp).length_squared() >= 4.0 * R * R:
+				# colisão contínua: volta as bolas ao instante exato do toque (antes só fazia isso quando
+				# uma atravessava a outra; numa tacada forte elas se sobrepunham uns pixels e a bola saía torta)
 				var r0: Vector2 = b.pp - a.pp
 				var da: Vector2 = a.pos - a.pp
 				var db: Vector2 = b.pos - b.pp
