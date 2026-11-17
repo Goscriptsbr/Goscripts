@@ -171,7 +171,7 @@ func connect_server() -> void:
 
 func send_hello() -> void:
 	if ws != null and ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins)}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": str(game.save.felt)}))
 
 
 func world_send(d: Dictionary) -> void:
@@ -260,7 +260,7 @@ func _world_poll(delta: float) -> void:
 	var stt := ws.get_ready_state()
 	if stt == WebSocketPeer.STATE_OPEN and not hello_sent:
 		hello_sent = true
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins)}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": str(game.save.felt)}))
 	if stt == WebSocketPeer.STATE_CONNECTING:
 		world_t += delta
 	while stt == WebSocketPeer.STATE_OPEN and ws.get_available_packet_count() > 0:
@@ -333,6 +333,7 @@ func _world_msg(m: Dictionary) -> void:
 			var opp: Dictionary = m.get("opp", {})
 			game.net_peer_name = str(opp.get("name", "Adversário"))
 			# aposta: as moedas saem agora; quem sair no meio perde, quem ganhar leva a mesa
+			game.net_owner = int(m.get("owner", -1))
 			game.bet_begin(int(m.get("stake", 0)))
 			game.match_stake = game.bet_cur
 			multiplayer.multiplayer_peer = relay

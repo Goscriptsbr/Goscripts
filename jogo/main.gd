@@ -33,7 +33,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 74  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 75  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -342,6 +342,8 @@ func _ready() -> void:
 				save["bet_on"] = int(a2.substr(8))
 			if a2.begins_with("--coins="):
 				save.coins = int(a2.substr(8))
+			if a2.begins_with("--myfelt="):
+				save.felt = a2.substr(9)
 		ui.show_screen("")
 		if args.has("--tourcreate"):
 			net.connect_server()
@@ -2280,16 +2282,29 @@ func net_start4(is_host: bool, plist: Array, my_peer: int) -> void:
 		return
 	net4 = true
 	ui.show_screen("")
-	felt_override = ""
+	var own4 := net_owner
+	if own4 < 0 or own4 > 3 or bot_seats.has(own4):
+		var hs := []
+		for k in 4:
+			if not bot_seats.has(k):
+				hs.append(k)
+		own4 = hs[randi() % hs.size()]
+	var tf4 := _table_felt(own4)
+	felt_override = tf4
 	apply_felt()
 	start_game(Mode.ONLINE, 2, ["%s & %s" % [seat_names[0], seat_names[2]], "%s & %s" % [seat_names[1], seat_names[3]]])
 	cue_ids = [str(save.cue), random_ai_cue(), random_ai_cue(), random_ai_cue()]
+	# o dono da mesa desta partida quebra o triângulo
+	turn = own4 % 2
 	tm_member = [1, 1]
+	tm_member[turn] = 1 - own4 / 2
 	last_team = -1
+	banner_turn = -1
+	say("Mesa de %s! %s começa quebrando o triângulo." % [seat_names[own4], seat_names[own4]], 3.5)
 	begin_turn()
 	var sn := net_snapshot()
 	sn["names"] = players
-	sn["felt"] = str(save.felt)
+	sn["felt"] = tf4
 	sn["n4"] = true
 	net.send_start(sn)
 
@@ -2321,14 +2336,21 @@ func net_start_match() -> void:
 		return
 	net_seat = 0
 	ui.show_screen("")
-	felt_override = ""
+	var own := net_owner if net_owner == 0 or net_owner == 1 else randi() % 2
+	var tf := _table_felt(own)
+	felt_override = tf
 	apply_felt()
 	start_game(Mode.ONLINE, 1, [my_name(), net_peer_name])
 	cue_ids = [str(save.cue), net_peer_cue]
+	# quem é o dono da mesa desta partida quebra o triângulo
+	turn = own
+	banner_turn = -1
+	say("Mesa de %s! %s começa quebrando o triângulo." % [players[own], players[own]], 3.5)
+	begin_turn()
 	var sn := net_snapshot()
 	sn["names"] = players
 	sn["cues"] = cue_ids
-	sn["felt"] = str(save.felt)
+	sn["felt"] = tf
 	net.send_start(sn)
 
 
@@ -2452,8 +2474,9 @@ func net_tick(delta: float) -> void:
 			net_send_state()
 	if net_auto and OS.get_cmdline_user_args().has("--rematchtest"):
 		rm_t += delta
-		if net.is_host and net.snaps >= 3 and st == St.AIM and rm_n == 0:
-			rm_n = 1
+		if net.is_host and net.snaps >= 3 and st == St.AIM and rm_n < 3:
+			rm_n += 1
+			net.snaps = 0
 			end_game(0)
 			net_send_state()
 		if st == St.OVER and rm_t > 2.0 and ui.cur == "over" and not ui.over_rematch.disabled:
@@ -3414,6 +3437,7 @@ const AI_STAKES := [0, 50, 100, 200]
 var bet_cur := 0  # moedas apostadas na partida atual (já descontadas)
 var bet_resuming := false
 var match_stake := 0
+var net_owner := -1  # lugar do dono da mesa da partida (vem do servidor)
 
 
 func stake_txt(v: int) -> String:
@@ -3909,3 +3933,17 @@ func tour_update(m: Dictionary) -> void:
 
 func game_invite_lobby(code: String) -> void:
 	net.world_send({"t": "invite", "code": code, "game": net_game, "lobby": true})
+
+
+
+# mesa (feltro) do dono da partida: a minha se eu for o dono, senão a que ele mandou para o servidor
+func _table_felt(seat: int) -> String:
+	var fid := str(save.felt) if seat == net_seat or seat == 0 else ""
+	if fid == "" and net != null:
+		for p in net.room_players:
+			if int(p.get("peer", 0)) - 1 == seat:
+				fid = str(p.get("felt", ""))
+	for f in FELTS:
+		if str(f.id) == fid:
+			return fid
+	return str(save.felt)

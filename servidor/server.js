@@ -128,6 +128,7 @@ function onMsg(c, op, payload) {
       c.code = code;
       c.name = String(m.name || "Jogador").slice(0, 15);
       c.coins = Math.max(0, Number(m.coins) || 0);
+      c.felt = String(m.felt || "").slice(0, 24);
       clients.set(code, c);
       remember(c);
       sendJ(c, { t: "welcome", code, online: clients.size, app: appVersion() });
@@ -331,8 +332,10 @@ function onMsg(c, op, payload) {
       }
       for (const x of r.members) { x.room = null; x.peer = 0; x.rem = 0; }
       r.members = [];
-      // quem perdeu sai na frente? simples: troca o anfitrião a cada revanche
-      matchSeats([c, o], gameOf(r.game), r.stake || 0);
+      // revanche: troca o anfitrião e a mesa passa para quem não era o dono da última
+      const nseats = [c, o];
+      const own = nseats.findIndex((x) => x.code !== r.ownerCode);
+      matchSeats(nseats, gameOf(r.game), r.stake || 0, own < 0 ? null : own);
       break;
     }
     case "friends": {
@@ -473,7 +476,7 @@ function norm(t) {
 function matchN(list, game, stake) { matchSeats(list, game, stake); }
 
 // seats[i] = jogador no lugar i (ou null = IA). Lugar i usa peer i+1; times: 0 e 2 contra 1 e 3
-function matchSeats(seats, game, stake) {
+function matchSeats(seats, game, stake, ownerSeat) {
   stake = stakeOf(stake);
   const list = seats.filter((p) => p);
   if (seats[0] == null) { // o lugar 0 (anfitrião) precisa ser gente
@@ -483,11 +486,19 @@ function matchSeats(seats, game, stake) {
   // o lobby continua existindo durante a partida: no fim todos voltam para ele
   for (const p of list) unqueue(p);
   const room = { id: nextRoom++, members: list.slice(), game, seats: game.endsWith("4") ? 4 : 2, stake };
+  // dono da mesa da partida (a mesa dele é a usada e ele quebra): no lobby vai revezando, senão sorteia
+  const humans = [];
+  seats.forEach((p, i) => { if (p) humans.push(i); });
+  let owner = humans[Math.floor(Math.random() * humans.length)];
+  const party = list[0] && list[0].party && list.every((p) => p.party === list[0].party) ? list[0].party : null;
+  if (ownerSeat != null && seats[ownerSeat]) owner = ownerSeat;
+  else if (party) { party.rot = ((party.rot ?? -1) + 1) % humans.length; owner = humans[party.rot]; }
+  room.ownerCode = seats[owner] ? seats[owner].code : "";
   const players = [];
-  seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; const e = playersDir.get(p.code); players.push({ peer: i + 1, name: p.name, code: p.code, av: e && e.prof ? e.prof.av : "b8", fr: e && e.prof ? e.prof.fr : "" }); } });
+  seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; const e = playersDir.get(p.code); players.push({ peer: i + 1, name: p.name, code: p.code, felt: p.felt || "", av: e && e.prof ? e.prof.av : "b8", fr: e && e.prof ? e.prof.fr : "" }); } });
   for (const p of list) {
     const opp = list.find((o) => o !== p) || p;
-    sendJ(p, { t: "match", role: p.peer === 1 ? "host" : "guest", peer: p.peer, game, seats: room.seats, players, opp: { name: opp.name, code: opp.code }, stake });
+    sendJ(p, { t: "match", role: p.peer === 1 ? "host" : "guest", peer: p.peer, game, seats: room.seats, players, opp: { name: opp.name, code: opp.code }, stake, owner });
   }
 }
 

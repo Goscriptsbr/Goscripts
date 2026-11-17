@@ -3423,6 +3423,7 @@ func _equip(id: String) -> void:
 	if is_felt:
 		game.save.felt = id
 		game.apply_felt()
+		game.net.send_hello()
 	else:
 		game.save.cue = id
 	game.write_save()
