@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="app.css?v=46863">
+<link rel="stylesheet" href="app.css?v=47255">
 <style>
   /* login */
   .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -464,7 +464,7 @@
   body.e-equipe .paytile{cursor:not-allowed;opacity:.75}
 </style>
 </head>
-<body>
+<body data-aviso="painel">
 
 <!-- ===================== LOGIN ===================== -->
 <div id="v-auth" class="auth hide entrar">
@@ -1023,7 +1023,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=48530"></script>
+<script src="app.js?v=47255"></script>
 <script src="plano-pagar.js?v=32758"></script>
 <script src="financeiro-painel.js?v=43772"></script>
 <script src="assin-painel.js?v=34641"></script>
@@ -1280,6 +1280,8 @@
     await abrirLoja(lojas.find(l => l.id === salva) || lojas[0]);
     const qAba = new URLSearchParams(location.search).get('aba');
     if (qAba && ['fin', 'loja', 'cardapio', 'promo', 'pedidos'].includes(qAba) && loja) go(qAba);
+    const qMod = new URLSearchParams(location.search).get('mod');
+    if (qAba === 'loja' && qMod && loja && /^[a-z]+$/.test(qMod)) setTimeout(() => setMod(qMod, true), 150);
     if (!(await voltaMercadoPago())) await voltaMelhorEnvio();
     setTimeout(avisoPlano, 700);
   }

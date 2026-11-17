@@ -1405,6 +1405,48 @@
     GP.app.aoMudar(() => { if (GP.app.instalado()) { const el = document.getElementById('gp-inst'); if (el) el.remove(); } else setTimeout(mostrar, 300); });
   };
 
-  const iniciar = () => { GP.olhoSenha(); GP.rodape(); try { GP.convidarInstalar(); } catch (_) {} };
+  // ---------- Avisos / banners (avisos/avisos.json) ----------
+  // Cada aviso aparece uma vez para cada pessoa (guarda o id no aparelho).
+  // Para trocar: muda a imagem e o "id" no avisos.json. Páginas marcadas com <body data-aviso="...">.
+  GP.aviso = async (onde) => {
+    let lista;
+    try {
+      const r = await fetch('avisos/avisos.json?t=' + Math.floor(Date.now() / 6e4), { cache: 'no-store' });
+      if (!r.ok) return; lista = (await r.json()).avisos || [];
+    } catch (_) { return; }
+    const hoje = new Date().toISOString().slice(0, 10);
+    const vistos = GP.ls.get('gp_avisos_vistos', []) || [];
+    const a = lista.find(x => x && x.ativo && x.id && x.imagem && (x.onde || []).includes(onde)
+      && (!x.de || x.de <= hoje) && (!x.ate || x.ate >= hoje) && !vistos.includes(x.id));
+    if (!a) return;
+    const ocupado = () => document.querySelector('.cfm-wrap, .gp-av, [aria-modal="true"]:not([hidden]), .sheet.on, .ovl.on, .overlay.on');
+    for (let i = 0; i < 6 && ocupado(); i++) await new Promise(r => setTimeout(r, 2500));
+    if (ocupado()) return;
+    const img = new Image(); img.src = a.imagem; img.alt = a.titulo || '';
+    try { await img.decode(); } catch (_) { return; }
+    const marcar = () => { const v = (GP.ls.get('gp_avisos_vistos', []) || []).concat(a.id).slice(-30); GP.ls.set('gp_avisos_vistos', v); };
+    const wrap = document.createElement('div');
+    wrap.className = 'gp-av';
+    wrap.innerHTML = `<div class="gp-av-box" role="dialog" aria-modal="true" aria-label="${GP.esc(a.titulo || 'Aviso')}">
+      <button type="button" class="gp-av-x" data-f aria-label="Fechar">×</button>
+      <div class="gp-av-img"></div>
+      <div class="gp-av-acts">
+        ${a.botao && a.botao.link ? `<a class="btn btn-primary" data-ir href="${GP.esc(a.botao.link)}">${GP.esc(a.botao.texto || 'Ver agora')}</a>` : ''}
+        <button type="button" class="btn btn-ghost" data-f>${a.botao && a.botao.link ? 'Agora não' : 'Fechar'}</button>
+      </div></div>`;
+    wrap.querySelector('.gp-av-img').appendChild(img);
+    document.body.appendChild(wrap); marcar();
+    requestAnimationFrame(() => wrap.classList.add('on'));
+    const fim = () => { document.removeEventListener('keydown', key, true); wrap.classList.remove('on'); setTimeout(() => wrap.remove(), 200); };
+    const key = (e) => { if (e.key === 'Escape') fim(); };
+    document.addEventListener('keydown', key, true);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-f]')) fim(); else if (e.target.closest('[data-ir]')) fim(); });
+  };
+
+  const iniciar = () => {
+    GP.olhoSenha(); GP.rodape(); try { GP.convidarInstalar(); } catch (_) {}
+    const onde = document.body && document.body.dataset.aviso;
+    if (onde) setTimeout(() => GP.aviso(onde).catch(() => {}), onde === 'painel' ? 3000 : 1500);
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();

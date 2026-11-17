@@ -533,3 +533,14 @@ body:not(.modo-assin) .as-only{display:none!important}
 .fv-it .dt{font-size:.74rem;color:var(--muted);width:78px;flex:none}
 .fv-it small{display:block;color:var(--muted);font-size:.74rem;margin-top:2px}
 .fv-it.canc{opacity:.6}
+
+/* Avisos / banners */
+.gp-av{position:fixed;inset:0;z-index:310;background:rgba(15,15,20,.6);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;transition:opacity .2s}
+.gp-av.on{opacity:1}
+.gp-av-box{position:relative;width:min(440px,100%);max-height:calc(100dvh - 36px);display:flex;flex-direction:column;background:#fff;border-radius:24px;overflow:hidden;box-shadow:var(--sh-lg);transform:scale(.94) translateY(10px);transition:transform .25s cubic-bezier(.2,1.2,.4,1)}
+.gp-av.on .gp-av-box{transform:none}
+.gp-av-img{min-height:0;flex:1;display:flex;background:#16161B}
+.gp-av-img img{display:block;width:100%;height:auto;max-height:calc(100dvh - 140px);object-fit:contain}
+.gp-av-acts{display:flex;gap:8px;padding:12px}
+.gp-av-acts .btn{flex:1;justify-content:center}
+.gp-av-x{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:22px;line-height:1;display:grid;place-items:center;z-index:2}

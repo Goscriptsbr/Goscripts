@@ -1,0 +1,23 @@
+{
+  "_como_usar": "Cada aviso aparece uma vez para cada pessoa. Para um aviso novo, use um id novo. onde: inicio (página inicial), lojistas (página para lojistas), painel (painel do lojista). de/ate: datas AAAA-MM-DD (opcional).",
+  "avisos": [
+    {
+      "id": "2026-11-novidades-painel",
+      "ativo": false,
+      "onde": ["painel"],
+      "titulo": "Novidades: caixa, mesas, financeiro e modo sem internet",
+      "imagem": "avisos/2026-11-novidades.jpg",
+      "botao": { "texto": "Ver Caixa e mesas", "link": "painel.html?aba=loja&mod=caixa" },
+      "ate": "2026-12-31"
+    },
+    {
+      "id": "2026-11-novidades-site",
+      "ativo": false,
+      "onde": ["inicio", "lojistas"],
+      "titulo": "Novidades do GoPedido",
+      "imagem": "avisos/2026-11-novidades.jpg",
+      "botao": { "texto": "Ver o vídeo de 1 minuto", "link": "lojistas.html#video" },
+      "ate": "2026-12-31"
+    }
+  ]
+}
