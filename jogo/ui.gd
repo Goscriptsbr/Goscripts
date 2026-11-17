@@ -665,6 +665,8 @@ func _build_main() -> void:
 	mis_btn = rail_btn("MISSÕES", "target", Color("d35400"))
 	mis_btn.pressed.connect(show_screen.bind("missoes"))
 	rail.add_child(mis_btn)
+	# ordem do trilho: amigos, roleta, passe e missões
+	rail.move_child(fr_btn, 0)
 	rail.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT, Control.PRESET_MODE_MINSIZE, 22)
 	rail.offset_top -= 10
 	rail.offset_bottom -= 10

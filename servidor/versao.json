@@ -1,5 +1,5 @@
 {
- "versao": 76,
- "notas": "Corrige prêmio diário e conquistas que apareciam de novo toda vez que abria o jogo. A mesa do online reveza e o dono da mesa quebra.",
- "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/d3201e0ae601ab4b79973d693ee207ac076eede2/Sinucou.apk"
+ "versao": 77,
+ "notas": "Menu na ordem: Amigos, Roleta, Passe e Missões. Prêmio diário corrigido.",
+ "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/8865e6593fbe66d378254745a52fdaba720acf4b/Sinucou.apk"
 }
