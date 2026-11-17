@@ -1,5 +1,5 @@
 {
- "versao": 69,
- "notas": "Corrige amigos que não se encontravam online (todos agora no mesmo servidor).",
- "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/162e5a908f3ddff66708c4a95ff8d4796b471ca5/Sinucou.apk"
+ "versao": 70,
+ "notas": "Linha de mira maior. Amigos agora sempre se encontram online (um servidor só).",
+ "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/77f2bf8550992f463695b5491f6159d7af961b1f/Sinucou.apk"
 }
