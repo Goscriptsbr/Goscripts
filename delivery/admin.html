@@ -336,8 +336,8 @@
     $('pg-resumo').textContent = `· ${GP.brl(noMes)} recebidos este mês`;
     $('pagamentos').innerHTML = (data || []).length ? (data || []).map(x => `<div class="card pl" style="padding:10px 14px">
       <div style="min-width:0"><b class="ellipsis" style="display:block">${esc(x.email)}</b>
-        <div class="small muted">${x.plano === 'extra' ? '+' + x.qtd + ' produtos extras' : GP.planoNome(x.plano)} · ${x.meses} ${x.meses > 1 ? 'meses' : 'mês'} · ${x.metodo === 'cartao' ? 'cartão' : 'Pix'} · ${new Date(x.criado_em).toLocaleString('pt-BR')}${x.valido_ate ? ' · até ' + x.valido_ate.split('-').reverse().join('/') : ''}</div></div>
-      <div style="text-align:right;white-space:nowrap"><b>${GP.brl(x.valor)}</b><div class="small" style="font-weight:800;color:${x.status === 'aprovado' ? 'var(--ok)' : x.status === 'pendente' ? 'var(--muted)' : '#b42318'}">${{ aprovado: 'Pago', pendente: 'Aguardando', recusado: 'Recusado', estornado: 'Devolvido' }[x.status]}</div></div></div>`).join('')
+        <div class="small muted">${x.plano === 'extra' ? '+' + x.qtd + ' produtos extras' : x.plano === 'extra_assin' ? '+' + x.qtd + ' assinantes extras' : GP.planoNome(x.plano)} · ${x.meses} ${x.meses > 1 ? 'meses' : 'mês'} · ${x.metodo === 'cartao' ? 'cartão' : 'Pix'} · ${new Date(x.criado_em).toLocaleString('pt-BR')}${x.valido_ate ? ' · até ' + x.valido_ate.split('-').reverse().join('/') : ''}</div></div>
+      <div style="text-align:right;white-space:nowrap"><b>${GP.brl(x.valor)}</b>${(() => { const [k, t] = GP.statusPag(x); return `<div class="small" style="font-weight:800;color:${k === 'aprovado' ? 'var(--ok)' : k === 'pendente' ? 'var(--muted)' : k === 'expirado' ? '#9a6700' : '#b42318'}">${t}</div>`; })()}</div></div>`).join('')
       : '<p class="small muted">Nenhum pagamento de plano ainda.</p>';
   }
   function renderPlanos() {
