@@ -544,3 +544,14 @@ body:not(.modo-assin) .as-only{display:none!important}
 .gp-av-acts{display:flex;gap:8px;padding:12px}
 .gp-av-acts .btn{flex:1;justify-content:center}
 .gp-av-x{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:22px;line-height:1;display:grid;place-items:center;z-index:2}
+
+/* Descontos por período nos planos */
+.pl-eco{margin:14px 0 4px;border:1.5px solid #CDEFD9;background:#F1FBF5;border-radius:16px;padding:14px 14px 10px;text-align:left}
+.pl-eco-t{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.95rem;color:#0F6E42;margin-bottom:8px}
+.pl-eco-t svg{width:18px;height:18px}
+.pl-eco table{width:100%;border-collapse:collapse;font-size:.86rem}
+.pl-eco th{font-size:.74rem;color:var(--muted);font-weight:600;text-align:right;padding:2px 0 6px}
+.pl-eco th:first-child,.pl-eco td:first-child{text-align:left;font-weight:700}
+.pl-eco td{text-align:right;padding:8px 0;border-top:1px solid #D9F1E3;vertical-align:top}
+.pl-eco td small{display:block;font-size:.7rem;color:var(--ok);font-weight:700}
+.pl-eco p{margin:8px 0 0;font-size:.78rem;color:var(--muted)}

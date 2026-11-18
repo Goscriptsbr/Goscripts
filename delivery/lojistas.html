@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=47409">
+<link rel="stylesheet" href="app.css?v=99899">
 <link rel="stylesheet" href="site.css?v=46863">
 <style>
 .nv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -370,7 +370,7 @@
 </footer>
 
 <script src="config.js?v=32758"></script>
-<script src="app.js?v=47409"></script>
+<script src="app.js?v=99899"></script>
 <script>
 (() => {
   const { $, ic } = GP;
@@ -392,6 +392,7 @@
 
   // Planos: mesma lista usada dentro do painel
   $('planos-lista').innerHTML = GP.planosHtml(null, null, true);
+  $('planos-lista').insertAdjacentHTML('afterend', `<div style="max-width:640px;margin:18px auto 0">${GP.descontosHtml()}</div>`);
   $('nota-planos').textContent = GP.NOTA_PLANOS;
   // Comparação: preço, lojas e produtos vêm de GP.PLANOS; o restante repete os itens de cada plano
   (() => {

@@ -187,6 +187,17 @@
         : p.preco ? '<span class="btn btn-ghost btn-sm btn-block" style="pointer-events:none">Só o dono da conta assina</span>' : ''}
     </div>`;
   }).join('');
+  // Preços por período (iguais aos do servidor: ff_preco_plano)
+  GP.PRECOS_MESES = { profissional: { 1: 50, 2: 95, 3: 135 }, premium: { 1: 100, 2: 195, 3: 285 } };
+  GP.descontosHtml = () => {
+    const linhas = Object.entries(GP.PRECOS_MESES).map(([id, v]) => `<tr><td>${GP.planoNome(id)}</td>${[1, 2, 3].map(m => {
+      const eco = v[1] * m - v[m];
+      return `<td><b>R$ ${v[m]}</b>${eco > 0 ? `<small>economize R$ ${eco}</small>` : ''}</td>`;
+    }).join('')}</tr>`).join('');
+    return `<div class="pl-eco"><div class="pl-eco-t">${GP.ic('star')}Pague 2 ou 3 meses de uma vez e economize</div>
+      <table><tr><th>Plano</th><th>1 mês</th><th>2 meses</th><th>3 meses</th></tr>${linhas}</table>
+      <p>Já tem plano? Renove antes de vencer: os meses somam no fim do plano atual (até 3 meses à frente).</p></div>`;
+  };
   GP.mostrarPlanos = (o = {}) => {
     const wrap = document.createElement('div');
     wrap.className = 'cfm-wrap';
@@ -195,8 +206,8 @@
       <div class="cfm-ic">${GP.ic('star')}</div>
       <h3>${GP.esc(o.titulo || 'Planos do GoPedido')}</h3>
       <p>${GP.esc(o.texto || (o.comprar ? 'Escolha o plano ideal para o tamanho do seu negócio. Pague por Pix ou cartão e o plano libera na hora.' : 'Escolha o plano ideal para o tamanho do seu negócio. O dono da conta assina pelo painel, com Pix ou cartão, e o plano libera na hora.'))}</p>
-      ${o.comprar ? '<p class="small" style="margin:-4px 0 10px"><b>Pagando 2 ou 3 meses de uma vez, sai mais barato.</b></p>' : ''}
       <div class="planos">${GP.planosHtml(o.atual, o.email, false, !!o.comprar)}</div>
+      ${GP.descontosHtml()}
       <p class="pl-nota">${GP.NOTA_PLANOS}</p>
       <p class="small" style="margin-top:12px">Dúvidas? Chame no WhatsApp <a href="https://wa.me/${GP.WHATS}" target="_blank" rel="noopener" style="font-weight:700;color:var(--brand-2)">(19) 98828-3178</a></p>
     </div>`;
@@ -1422,7 +1433,8 @@
     const a = lista.find(x => x && x.ativo && x.id && x.imagem && (x.onde || []).includes(onde)
       && (!x.de || x.de <= hoje) && (!x.ate || x.ate >= hoje) && !vistos.includes(x.id));
     if (!a) return;
-    const ocupado = () => document.querySelector('.cfm-wrap, .gp-av, [aria-modal="true"]:not([hidden]), .sheet.on, .ovl.on, .overlay.on');
+    // Espera outra janela aberta fechar (janelas escondidas do painel não contam)
+    const ocupado = () => document.querySelector('.cfm-wrap, .gp-av, .termos-box, .sheet.on, .modal.on, .ovl.on, .overlay.on');
     for (let i = 0; i < 6 && ocupado(); i++) await new Promise(r => setTimeout(r, 2500));
     if (ocupado()) return;
     const img = new Image(); img.src = a.imagem; img.alt = a.titulo || '';
