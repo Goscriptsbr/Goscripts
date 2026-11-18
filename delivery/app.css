@@ -555,3 +555,5 @@ body:not(.modo-assin) .as-only{display:none!important}
 .pl-eco td{text-align:right;padding:8px 0 8px 14px;border-top:1px solid #D9F1E3;vertical-align:top}
 .pl-eco td small{display:block;font-size:.7rem;color:var(--ok);font-weight:700}
 .pl-eco p{margin:8px 0 0;font-size:.78rem;color:var(--muted)}
+.pl-eco th:first-child,.pl-eco td:first-child{padding-left:0}
+.pl-eco td b{white-space:nowrap}
