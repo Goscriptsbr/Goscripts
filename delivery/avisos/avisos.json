@@ -3,7 +3,7 @@
   "avisos": [
     {
       "id": "2026-11-gratis-planos-painel",
-      "ativo": false,
+      "ativo": true,
       "onde": [
         "painel"
       ],
@@ -17,7 +17,7 @@
     },
     {
       "id": "2026-11-gratis-planos-site",
-      "ativo": false,
+      "ativo": true,
       "onde": [
         "lojistas"
       ],
