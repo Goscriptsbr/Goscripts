@@ -10,6 +10,7 @@ const HW := 500.0
 const HH := 250.0
 var splash_node: Node = null
 var chat: CanvasLayer
+var replay: Node
 # baralhos do truco (estilo das cartas); o "classico" é de graça
 const DECKS := [
 	{"id": "dk_classico", "deck": "classico", "name": "Clássico", "price": 0, "tag": "O baralho azul de sempre"},
@@ -33,7 +34,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 83  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 84  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -359,6 +360,9 @@ func _ready() -> void:
 	chat = load("res://chat.gd").new()
 	add_child(chat)
 	chat.setup(self)
+	replay = load("res://replay.gd").new()
+	add_child(replay)
+	replay.setup(self)
 	rack()
 	attract_kick()
 	var args := OS.get_cmdline_user_args()
@@ -3114,6 +3118,15 @@ func pause_rect() -> Rect2:
 	return Rect2(8, 8, 60, 60)
 
 
+# botão "salvar replay" (últimos 30s), embaixo do pause
+func rec_rect() -> Rect2:
+	return Rect2(6, 76, 64, 30)
+
+
+func rec_active() -> bool:
+	return st != St.MENU and not bot
+
+
 func human_turn() -> bool:
 	if mode == Mode.ONLINE and shooter() != net_seat:
 		return false
@@ -3127,6 +3140,9 @@ func touch_down(i: int, p: Vector2) -> void:
 		paused = mode != Mode.ONLINE
 		touches.clear()
 		ui.show_screen("pause")
+		return
+	if rec_rect().grow(6).has_point(p):
+		replay.save_clip()
 		return
 	if not human_turn():
 		return
@@ -3735,6 +3751,13 @@ func _draw_hud() -> void:
 	var pc := prr.get_center()
 	hud.draw_style_box(ui.sbox(Color.WHITE, 3), Rect2(pc + Vector2(-11, -13), Vector2(8, 26)))
 	hud.draw_style_box(ui.sbox(Color.WHITE, 3), Rect2(pc + Vector2(3, -13), Vector2(8, 26)))
+	if st != St.OVER and replay != null:
+		var rr := rec_rect()
+		var sv: bool = replay.busy
+		hud.draw_style_box(ui.sbox(Color(0.04, 0.07, 0.12, 0.88), 14, Color(1.0, 0.35, 0.35, 0.6), 1, 4), rr)
+		var blink := 0.55 + 0.45 * sin(fx_t * 4.0)
+		hud.draw_circle(rr.position + Vector2(14, 15), 6.0, Color(1.0, 0.2, 0.2, blink if not sv else 1.0))
+		hud.draw_string(font, rr.position + Vector2(23, 21), "..." if sv else "30s", HORIZONTAL_ALIGNMENT_LEFT, 40, 15, Color.WHITE)
 	if mode != Mode.TRAIN:
 		for i in 2:
 			_draw_player_panel(i)

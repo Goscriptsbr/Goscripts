@@ -4396,7 +4396,7 @@ func _to_menu() -> void:
 
 func _build_over() -> void:
 	var v := mk_screen("over", 16)
-	var p := panel(560, 420)
+	var p := panel(560, 490)
 	v.add_child(p)
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 14)
@@ -4415,6 +4415,9 @@ func _build_over() -> void:
 	b2.pressed.connect(_to_menu)
 	vb.add_child(b1)
 	vb.add_child(b2)
+	var b3 := mk_btn("● SALVAR REPLAY (30s)", 400, 56, Color("b8323a"), 22)
+	b3.pressed.connect(func(): game.replay.save_clip())
+	vb.add_child(b3)
 
 
 func _rematch() -> void:
