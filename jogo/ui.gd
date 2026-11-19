@@ -3502,6 +3502,7 @@ func _process(delta: float) -> void:
 
 var friends_scroll: ScrollContainer
 var hear_btn: Button
+var tfx_btn: Button
 var micb_btn: Button
 var _synth_release := false
 
@@ -3962,6 +3963,9 @@ func _build_settings() -> void:
 	vib_btn.add_theme_font_size_override("font_size", 24)
 	tg.add_child(sfx_btn)
 	tg.add_child(vib_btn)
+	tfx_btn = mk_btn("", 330, 64, GREEN, 22)
+	tfx_btn.pressed.connect(_toggle.bind("table_fx"))
+	tg.add_child(tfx_btn)
 	var tg2 := HBoxContainer.new()
 	tg2.add_theme_constant_override("separation", 16)
 	tg2.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -4020,7 +4024,8 @@ func _settings_refresh() -> void:
 	vib_btn.text = "VIBRAÇÃO: " + ("LIGADA" if game.save.vib else "DESLIGADA")
 	hear_btn.text = "OUVIR VOZ: " + ("SIM" if game.save.get("voice_hear", true) else "NÃO")
 	micb_btn.text = "MEU MICROFONE: " + ("SIM" if game.save.get("voice_mic", true) else "NÃO")
-	for pair in [[sfx_btn, game.save.sfx], [vib_btn, game.save.vib], [hear_btn, game.save.get("voice_hear", true)], [micb_btn, game.save.get("voice_mic", true)]]:
+	tfx_btn.text = "ANIMAÇÃO DA MESA: " + ("SIM" if game.save.get("table_fx", true) else "NÃO")
+	for pair in [[tfx_btn, game.save.get("table_fx", true)], [sfx_btn, game.save.sfx], [vib_btn, game.save.vib], [hear_btn, game.save.get("voice_hear", true)], [micb_btn, game.save.get("voice_mic", true)]]:
 		var b: Button = pair[0]
 		var col: Color = GREEN if pair[1] else GRAY
 		b.add_theme_stylebox_override("normal", sbox(col, 20, col.lightened(0.35), 3, 8))

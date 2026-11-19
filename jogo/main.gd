@@ -33,7 +33,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 82  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 83  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -86,7 +86,7 @@ const RAILS := [
 	{"id": "rb_nogueira", "name": "Nogueira", "price": 300, "c1": Color("7a5636"), "c2": Color("2e1d10"), "trim": Color("d9b36a"), "mat": 0, "tag": "Madeira escura"},
 	{"id": "rb_mogno", "name": "Mogno", "price": 400, "c1": Color("9a3a22"), "c2": Color("3a0f08"), "trim": Color("e0b25a"), "mat": 0, "tag": "Madeira avermelhada"},
 	{"id": "rb_marfim", "name": "Marfim e Ouro", "price": 800, "c1": Color("f4efe2"), "c2": Color("c9bfa6"), "trim": Color("e3b341"), "mat": 1, "tag": "Laca branca, friso dourado"},
-	{"id": "rb_piano", "name": "Piano Preto", "price": 900, "c1": Color("34343c"), "c2": Color("060608"), "trim": Color("d8dde6"), "mat": 1, "tag": "Laca preta, friso cromado"},
+	{"id": "rb_piano", "name": "Piano Preto", "price": 900, "c1": Color("1c1c22"), "c2": Color("040406"), "trim": Color("d8dde6"), "mat": 1, "tag": "Laca preta, friso cromado"},
 	{"id": "rb_azul", "name": "Azul Safira", "price": 1000, "c1": Color("3466e0"), "c2": Color("0a1a50"), "trim": Color("c8d6ff"), "mat": 1, "tag": "Laca azul brilhante"},
 	{"id": "rb_carbono", "name": "Carbono", "price": 1200, "c1": Color("42454c"), "c2": Color("0c0d10"), "trim": Color("e63946"), "mat": 3, "tag": "Fibra de carbono, friso vermelho"},
 	{"id": "rb_rosa", "name": "Ouro Rosé", "price": 1200, "c1": Color("f2c6b8"), "c2": Color("a0605a"), "trim": Color("fff0e6"), "mat": 2, "tag": "Metal rosé escovado"},
@@ -3291,7 +3291,13 @@ func _process(delta: float) -> void:
 	update_cue()
 	overlay.queue_redraw()
 	if felt_fx != null and str(felt_def().get("anim", "")) != "":
-		felt_fx.queue_redraw()
+		# durante a partida a animação fica bem fraquinha (para não atrapalhar a mira); forte só no menu
+		var on_fx: bool = bool(save.get("table_fx", true))
+		var tgt: float = 0.0 if not on_fx else (1.0 if st == St.MENU or st == St.OVER else (0.15 if st == St.AIM or st == St.STRIKE else 0.3))
+		felt_fx.modulate.a = move_toward(felt_fx.modulate.a, tgt, delta * 1.5)
+		felt_fx.visible = felt_fx.modulate.a > 0.01
+		if felt_fx.visible:
+			felt_fx.queue_redraw()
 	hud.queue_redraw()
 
 
@@ -3613,7 +3619,7 @@ func _draw_felt_fx() -> void:
 			var cyc := fposmod(t, 5.0)
 			if cyc < 0.35:
 				var fl := (1.0 if cyc < 0.08 or (cyc > 0.16 and cyc < 0.22) else 0.3)
-				c.draw_rect(Rect2(-W2, -H2, W2 * 2.0, H2 * 2.0), Color(0.75, 0.85, 1.0, 0.12 * fl))
+				c.draw_rect(Rect2(-W2, -H2, W2 * 2.0, H2 * 2.0), Color(0.75, 0.85, 1.0, 0.04 * fl))
 				var sd: float = floor(t / 5.0)
 				var pts3 := PackedVector2Array()
 				var q := Vector2((_h(sd) * 1.6 - 0.8) * W2, -H2)
