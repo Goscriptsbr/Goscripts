@@ -33,7 +33,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 81  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 82  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -70,6 +70,31 @@ const FELTS := [
 	{"id": "carbono_m", "name": "Fibra de Carbono", "price": 650, "light": Color("3a3f47"), "dark": Color("101216"), "pat": 10, "accent": Color("e63946"), "accent2": Color("ffffff"), "tag": "Trama de carbono e borda vermelha"},
 	{"id": "arcoiris", "name": "Arco-Íris Neon", "price": 1500, "light": Color("1c1236"), "dark": Color("06040f"), "pat": 1, "accent": Color("ff4fd8"), "accent2": Color("ffffff"), "edge": "rainbow", "tag": "Luzes animadas nas bordas"},
 	{"id": "royal", "name": "Ouro Real", "price": 1200, "light": Color("2a1540"), "dark": Color("0b0614"), "pat": 7, "accent": Color("e3b341"), "accent2": Color("ffffff"), "tag": "Treliça dourada"},
+	{"id": "estrelas_m", "name": "Céu Estrelado", "price": 1800, "light": Color("16205a"), "dark": Color("03051a"), "pat": 2, "accent": Color("ffe9a0"), "accent2": Color("9fc0ff"), "anim": "stars", "rail": "rb_azul", "tag": "Estrelas piscando e cadentes"},
+	{"id": "aurora_m", "name": "Aurora Boreal", "price": 2000, "light": Color("0f3a40"), "dark": Color("020c14"), "pat": 2, "accent": Color("6affc8"), "accent2": Color("8a7aff"), "anim": "aurora", "rail": "rb_piano", "tag": "Luzes do norte dançando"},
+	{"id": "matrix_m", "name": "Matrix", "price": 2000, "light": Color("06200e"), "dark": Color("010603"), "pat": 1, "accent": Color("1aff6a"), "accent2": Color("caffd8"), "anim": "matrix", "rail": "rb_piano", "tag": "Chuva de código verde"},
+	{"id": "lava_m", "name": "Lava Viva", "price": 2200, "light": Color("3a0c06"), "dark": Color("0c0302"), "pat": 5, "accent": Color("ff7a1a"), "accent2": Color("c4200c"), "anim": "lava", "rail": "rb_fogo", "tag": "Brasas subindo, borda em chamas"},
+	{"id": "sakura_m", "name": "Sakura", "price": 2200, "light": Color("d9809a"), "dark": Color("6a2440"), "pat": 0, "anim": "sakura", "rail": "rb_marfim", "tag": "Pétalas de cerejeira caindo"},
+	{"id": "mar_m", "name": "Fundo do Mar", "price": 2400, "light": Color("0a6a8a"), "dark": Color("02203a"), "pat": 9, "accent": Color("9ff6ff"), "accent2": Color("0a3f66"), "anim": "sea", "rail": "rb_azul", "tag": "Bolhas e luz do mar"},
+	{"id": "tempest_m", "name": "Tempestade", "price": 2600, "light": Color("2a3040"), "dark": Color("080a10"), "pat": 0, "anim": "storm", "rail": "rb_raio", "tag": "Chuva, raios e borda elétrica"},
+	{"id": "diamante_m", "name": "Diamante Real", "price": 3500, "light": Color("c8d2e6"), "dark": Color("5a6a8a"), "pat": 6, "accent": Color("ffffff"), "accent2": Color("e8f0ff"), "anim": "glints", "rail": "rb_ouro", "tag": "Brilhos de diamante e ouro"},
+]
+# Bordas (tabela de madeira em volta da mesa). "rb_padrao" usa a borda de cada mesa.
+# mat: 0 madeira, 1 laca brilhante, 2 metal escovado, 3 fibra de carbono | edge: luz animada na borda
+const RAILS := [
+	{"id": "rb_padrao", "name": "Borda da Mesa", "price": 0, "tag": "Cada mesa com a sua borda"},
+	{"id": "rb_nogueira", "name": "Nogueira", "price": 300, "c1": Color("7a5636"), "c2": Color("2e1d10"), "trim": Color("d9b36a"), "mat": 0, "tag": "Madeira escura"},
+	{"id": "rb_mogno", "name": "Mogno", "price": 400, "c1": Color("9a3a22"), "c2": Color("3a0f08"), "trim": Color("e0b25a"), "mat": 0, "tag": "Madeira avermelhada"},
+	{"id": "rb_marfim", "name": "Marfim e Ouro", "price": 800, "c1": Color("f4efe2"), "c2": Color("c9bfa6"), "trim": Color("e3b341"), "mat": 1, "tag": "Laca branca, friso dourado"},
+	{"id": "rb_piano", "name": "Piano Preto", "price": 900, "c1": Color("34343c"), "c2": Color("060608"), "trim": Color("d8dde6"), "mat": 1, "tag": "Laca preta, friso cromado"},
+	{"id": "rb_azul", "name": "Azul Safira", "price": 1000, "c1": Color("3466e0"), "c2": Color("0a1a50"), "trim": Color("c8d6ff"), "mat": 1, "tag": "Laca azul brilhante"},
+	{"id": "rb_carbono", "name": "Carbono", "price": 1200, "c1": Color("42454c"), "c2": Color("0c0d10"), "trim": Color("e63946"), "mat": 3, "tag": "Fibra de carbono, friso vermelho"},
+	{"id": "rb_rosa", "name": "Ouro Rosé", "price": 1200, "c1": Color("f2c6b8"), "c2": Color("a0605a"), "trim": Color("fff0e6"), "mat": 2, "tag": "Metal rosé escovado"},
+	{"id": "rb_ouro", "name": "Ouro Maciço", "price": 1800, "c1": Color("ffd86a"), "c2": Color("8a5c0c"), "trim": Color("fff4c0"), "mat": 2, "tag": "Metal dourado", "edge": "gold"},
+	{"id": "rb_fogo", "name": "Chamas", "price": 2500, "c1": Color("3a0e06"), "c2": Color("0a0302"), "trim": Color("ff8a1a"), "mat": 1, "edge": "fire", "tag": "Fogo correndo na borda"},
+	{"id": "rb_gelo", "name": "Gelo Eterno", "price": 2500, "c1": Color("d8f3ff"), "c2": Color("5a9ccc"), "trim": Color("ffffff"), "mat": 1, "edge": "ice", "tag": "Brilho gelado na borda"},
+	{"id": "rb_neon", "name": "Neon Arco-Íris", "price": 2500, "c1": Color("1e1e2a"), "c2": Color("050508"), "trim": Color("ff4fd8"), "mat": 1, "edge": "rainbow", "tag": "Luzes coloridas correndo"},
+	{"id": "rb_raio", "name": "Elétrica", "price": 3000, "c1": Color("18223e"), "c2": Color("04060e"), "trim": Color("6fe3ff"), "mat": 3, "edge": "electric", "tag": "Raios estalando na borda"},
 ]
 # aim = tamanho da projeção da mira | pow = força máxima | prec = precisão | spin = controle de efeito
 const CUES := [
@@ -99,6 +124,18 @@ const MONTHLY := [
 	{"id": "m_esmeralda", "theme": 5, "glow": Color("3dff9a"), "name": "Esmeralda Real", "price": 5000, "shaft": Color("f3f0d8"), "butt": Color("0b5a35"), "butt2": Color("d4af37"), "accent": Color("f6e27a"), "ring": Color("d4af37"), "wrap": Color("06180e"), "pat": 6, "shine": 1, "fx": "gems", "aim": 5, "pow": 5, "prec": 5, "spin": 4, "rare": "LENDÁRIO"},
 	{"id": "m_vulcao", "theme": 6, "glow": Color("ff5a10"), "name": "Vulcão", "price": 4800, "shaft": Color("eadfce"), "butt": Color("160805"), "butt2": Color("ff6a00"), "accent": Color("ffd24a"), "ring": Color("8a3a10"), "wrap": Color("0d0503"), "pat": 7, "shine": 0, "fx": "lava", "aim": 4, "pow": 5, "prec": 4, "spin": 5, "rare": "LENDÁRIO"},
 	{"id": "m_aurora", "theme": 7, "glow": Color("7affd0"), "name": "Aurora Boreal", "price": 6000, "shaft": Color("f4f7ff"), "butt": Color("12203f"), "butt2": Color("2ee6a6"), "accent": Color("ffffff"), "ring": Color("d8c8ff"), "wrap": Color("080b1a"), "pat": 8, "shine": 1, "fx": "aurora", "aim": 5, "pow": 5, "prec": 5, "spin": 5, "rare": "MÍTICO"},
+]
+# Tacos ELITE: passam de 100% (cada ponto = 20%, então 7.5 = 150%). Arte animada no taco inteiro,
+# efeito no cabo e efeito na hora que o taco bate na bola branca ("impact").
+const ELITE := [
+	{"id": "e_neon", "name": "Neon Cyber", "price": 10000, "theme": 11, "glow": Color("ff3df0"), "shaft": Color("f2ecff"), "butt": Color("1a0630"), "butt2": Color("3df0ff"), "accent": Color("ffffff"), "ring": Color("3df0ff"), "wrap": Color("0a0418"), "pat": 2, "shine": 1, "aim": 5.5, "pow": 5.5, "prec": 5.5, "spin": 5.5, "fx": "neon", "impact": "neon", "rare": "ÉPICO"},
+	{"id": "e_jade", "name": "Serpente de Jade", "price": 12500, "theme": 12, "glow": Color("3dffa0"), "shaft": Color("f1f3e2"), "butt": Color("0b4a30"), "butt2": Color("e3b341"), "accent": Color("f6e27a"), "ring": Color("e3b341"), "wrap": Color("06180e"), "pat": 2, "shine": 1, "aim": 5.75, "pow": 5.5, "prec": 6.0, "spin": 5.75, "fx": "jade", "impact": "jade", "rare": "ÉPICO"},
+	{"id": "e_nova", "name": "Supernova", "price": 15000, "theme": 13, "glow": Color("ff9a3d"), "shaft": Color("fff2e0"), "butt": Color("2a0838"), "butt2": Color("ff8a1a"), "accent": Color("ffffff"), "ring": Color("ffd08a"), "wrap": Color("120418"), "pat": 2, "shine": 1, "aim": 6.0, "pow": 6.25, "prec": 5.75, "spin": 6.0, "fx": "nova", "impact": "nova", "rare": "LENDÁRIO"},
+	{"id": "e_rosa", "name": "Rosa Negra", "price": 18000, "theme": 14, "glow": Color("ff2a4a"), "shaft": Color("f3e6e6"), "butt": Color("120306"), "butt2": Color("c0102a"), "accent": Color("ff6a80"), "ring": Color("c9a24a"), "wrap": Color("0a0204"), "pat": 2, "shine": 1, "aim": 6.25, "pow": 6.0, "prec": 6.5, "spin": 6.25, "fx": "rose", "impact": "rose", "rare": "LENDÁRIO"},
+	{"id": "e_anjo", "name": "Anjo Celestial", "price": 22000, "theme": 15, "glow": Color("ffe9a0"), "shaft": Color("fffdf6"), "butt": Color("f2efe6"), "butt2": Color("e3b341"), "accent": Color("ffffff"), "ring": Color("ffd34a"), "wrap": Color("d8d2c0"), "pat": 2, "shine": 1, "aim": 6.75, "pow": 6.25, "prec": 6.75, "spin": 6.25, "fx": "angel", "impact": "angel", "rare": "LENDÁRIO"},
+	{"id": "e_void", "name": "Buraco Negro", "price": 26000, "theme": 16, "glow": Color("a35aff"), "shaft": Color("ece6f6"), "butt": Color("06020e"), "butt2": Color("ff8a2a"), "accent": Color("ffffff"), "ring": Color("b68aff"), "wrap": Color("040108"), "pat": 2, "shine": 1, "aim": 6.75, "pow": 7.0, "prec": 6.5, "spin": 6.75, "fx": "void", "impact": "void", "rare": "MÍTICO"},
+	{"id": "e_zeus", "name": "Fúria de Zeus", "price": 32000, "theme": 17, "glow": Color("ffe45a"), "shaft": Color("fbf8ee"), "butt": Color("e8e4da"), "butt2": Color("ffd34a"), "accent": Color("ffffff"), "ring": Color("ffd34a"), "wrap": Color("2a2418"), "pat": 2, "shine": 1, "aim": 7.0, "pow": 7.25, "prec": 7.0, "spin": 6.75, "fx": "zeus", "impact": "zeus", "rare": "MÍTICO"},
+	{"id": "e_infinito", "name": "Infinito", "price": 40000, "theme": 18, "glow": Color("ff6af0"), "shaft": Color("ffffff"), "butt": Color("101018"), "butt2": Color("6af0ff"), "accent": Color("ffffff"), "ring": Color("e8e8ff"), "wrap": Color("08080c"), "pat": 2, "shine": 1, "aim": 7.5, "pow": 7.5, "prec": 7.5, "spin": 7.5, "fx": "infinity", "impact": "infinity", "rare": "DIVINO"},
 ]
 const MONTH_NAMES := ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"]
 
@@ -189,8 +226,8 @@ var rm_t := 0.0
 var rm_n := 0
 var net_tgt: Dictionary = {}
 var impacts: Array = []
-var shot_pow := 3
-var shot_spin := 3
+var shot_pow := 3.0
+var shot_spin := 3.0
 var touches := {}
 var vw := 1280.0
 var hud: Control
@@ -211,7 +248,7 @@ var rot_count := 0
 var ui: CanvasLayer
 var save := {
 	"coins": 150, "wins": 0, "losses": 0, "played": 0, "sfx": true, "vib": true,
-	"felt": "verde", "cue": "classico", "deck": "classico", "voice_hear": true, "voice_mic": true, "chats": {}, "owned": ["verde", "classico"], "timer": 20, "grana": 0, "spin_day": "", "pass_got": [], "spins": 0, "name": "", "truco_wins": 0, "truco_losses": 0, "pcode": "", "friends": [], "f_out": [], "f_in": [], "f_dec": [],
+	"felt": "verde", "rail": "rb_padrao", "cue": "classico", "deck": "classico", "voice_hear": true, "voice_mic": true, "chats": {}, "owned": ["verde", "classico"], "timer": 20, "grana": 0, "spin_day": "", "pass_got": [], "spins": 0, "name": "", "truco_wins": 0, "truco_losses": 0, "pcode": "", "friends": [], "f_out": [], "f_in": [], "f_dec": [],
 }
 var white_tex: ImageTexture
 var atlas_vp: SubViewport
@@ -221,6 +258,7 @@ var felt_s: Sprite2D
 var felt_vp: SubViewport
 var felt_rect: ColorRect
 var rails: Node2D
+var felt_fx: Node2D
 var ball_layer: Node2D
 var overlay: Node2D
 var ball_shader: Shader
@@ -268,6 +306,10 @@ func _ready() -> void:
 	felt_s.texture = felt_vp.get_texture()
 	felt_s.scale = Vector2(0.5, 0.5)
 	add_child(felt_s)
+	# animação por cima do pano (mesas especiais): fica embaixo das bolas e das tabelas
+	felt_fx = Node2D.new()
+	add_child(felt_fx)
+	felt_fx.draw.connect(_draw_felt_fx)
 	rails = Node2D.new()
 	add_child(rails)
 	rails.draw.connect(_draw_rails)
@@ -905,10 +947,34 @@ func write_save() -> void:
 
 func felt_def() -> Dictionary:
 	var fid: String = felt_override if felt_override != "" else str(save.felt)
+	fid = fid.get_slice("~", 0)
 	for f in FELTS:
 		if f.id == fid:
 			return f
 	return FELTS[0]
+
+
+# borda: a escolhida pelo jogador (ou pelo dono da mesa no online); "rb_padrao" = a da própria mesa
+func rail_def() -> Dictionary:
+	var rid: String = str(save.get("rail", "rb_padrao"))
+	if felt_override != "":
+		rid = felt_override.get_slice("~", 1) if felt_override.contains("~") else "rb_padrao"
+	if rid == "" or rid == "rb_padrao":
+		rid = str(felt_def().get("rail", ""))
+	return rail_for(rid)
+
+
+func rail_for(rid: String) -> Dictionary:
+	for r in RAILS:
+		if str(r.id) == rid and r.has("c1"):
+			return r
+	return {"id": "", "c1": Color(0.45, 0.25, 0.1), "c2": Color(0.2, 0.1, 0.04), "trim": Color(0.86, 0.68, 0.32), "mat": 0}
+
+
+# mesa + borda num texto só ("mesa~borda"): vai para o servidor e para quem joga na minha mesa
+func my_felt_tag() -> String:
+	var r := str(save.get("rail", "rb_padrao"))
+	return str(save.felt) if r == "rb_padrao" or r == "" else str(save.felt) + "~" + r
 
 
 func cue_def() -> Dictionary:
@@ -949,6 +1015,9 @@ func cue_by_id(id: String) -> Dictionary:
 		if c.id == id:
 			return c
 	for c in MONTHLY:
+		if c.id == id:
+			return c
+	for c in ELITE:
 		if c.id == id:
 			return c
 	return CUES[0]
@@ -1124,8 +1193,17 @@ func apply_felt() -> void:
 	m.set_shader_parameter("accent", f.get("accent", Color.WHITE))
 	m.set_shader_parameter("accent2", f.get("accent2", Color.WHITE))
 	felt_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	if wood_s != null:
+		var rd := rail_def()
+		var wm: ShaderMaterial = wood_s.material
+		wm.set_shader_parameter("c1", rd.c1)
+		wm.set_shader_parameter("c2", rd.c2)
+		wm.set_shader_parameter("trim", rd.trim)
+		wm.set_shader_parameter("mat", int(rd.mat))
 	if rails != null:
 		rails.queue_redraw()
+	if felt_fx != null:
+		felt_fx.queue_redraw()
 
 
 # ---------------------------------------------------------------- atlas dos números
@@ -1450,8 +1528,8 @@ func shoot(pw: float, remote: bool = false) -> void:
 		return
 	var h0 := ball_in_hand
 	if not remote:
-		shot_pow = int(cue_def().pow)
-		shot_spin = int(cue_def().spin)
+		shot_pow = float(cue_def().pow)
+		shot_spin = float(cue_def().spin)
 	# a tacada fica "congelada" aqui: mira e efeito não mudam durante a animação do taco
 	shot_ang = aim_angle
 	shot_spv = spin
@@ -1494,13 +1572,14 @@ func launch_params() -> Dictionary:
 	var top := 0.0
 	var side := 0.0
 	if human and not bot:
-		maxv = MAXV * (0.92 + 0.05 * float(shot_pow))
-		var sm := 0.55 + 0.15 * float(shot_spin)
+		# acima de 100% (tacos ELITE) cada ponto extra rende um pouco menos, para não quebrar o jogo
+		maxv = MAXV * (0.92 + 0.05 * minf(shot_pow, 5.0) + 0.035 * maxf(0.0, shot_pow - 5.0))
+		var sm := 0.55 + 0.15 * minf(shot_spin, 5.0) + 0.09 * maxf(0.0, shot_spin - 5.0)
 		top = -shot_spv.y * sm
 		side = shot_spv.x * sm
 		# PRECISÃO: taco bom acerta mesmo na tacada forte; taco fraco desvia um pouquinho quando bate com força
-		var prc := int(turn_cue_def().get("prec", 3))
-		var dev := deg_to_rad(0.3 * float(maxi(0, 5 - prc))) * pow(strike_pw, 3.0)
+		var prc := float(turn_cue_def().get("prec", 3))
+		var dev := deg_to_rad(0.3 * maxf(0.0, 5.0 - prc)) * pow(strike_pw, 3.0)
 		ang += dev if fposmod(ang * 997.0, 2.0) < 1.0 else -dev
 	var v := Vector2.from_angle(ang) * (150.0 + pow(strike_pw, 1.5) * (maxv - 150.0))
 	return {"v": v, "t": top, "s": side, "ang": ang}
@@ -1517,8 +1596,11 @@ func launch() -> void:
 	cue.vel = lp.v
 	if net_auto:
 		print("LAUNCH shooter=", shooter(), " seat=", net_seat, " sum=", net_checksum(), " cp=", cue.pos, " v=", cue.vel, " t=", cue.top, " s=", cue.side, " pre=", not lp.has("x"))
-	if str(turn_cue_def().get("impact", "")) == "math" and not bot:
+	var imp := str(turn_cue_def().get("impact", ""))
+	if imp == "math" and not bot:
 		spawn_math(cue.pos, float(lp.ang), strike_pw)
+	elif imp != "" and not bot:
+		spawn_impact(imp, cue.pos, float(lp.ang), strike_pw)
 	st = St.ROLL
 	play("shot", 0.4 + strike_pw * 0.6)
 	vibrate(15)
@@ -1825,6 +1907,142 @@ func spawn_math(p: Vector2, ang: float, pw: float) -> void:
 	for i in n:
 		var a := ang + PI + randf_range(-1.6, 1.6)
 		impacts.append({"p": p, "v": Vector2.from_angle(a) * randf_range(60.0, 170.0) * (0.7 + pw), "t": 0.0, "life": randf_range(0.9, 1.5), "txt": MATH_TXT[randi() % MATH_TXT.size()], "c": [Color("3df0ff"), Color("ffd34a"), Color("ffffff"), Color("ff6b8a")][randi() % 4], "s": randi_range(16, 26)})
+
+
+func _impact_leaf(c: CanvasItem, p: Vector2, s: float, rot: float, col: Color, wide: float) -> void:
+	var pts := PackedVector2Array()
+	for j in 12:
+		var a := float(j) / 12.0 * TAU
+		pts.append(p + Vector2(cos(a) * s, sin(a) * s * wide).rotated(rot))
+	c.draw_colored_polygon(pts, col)
+
+
+func draw_impact(c: CanvasItem, f: Dictionary, font: Font) -> void:
+	var k: float = clampf(float(f.t) / float(f.life), 0.0, 1.0)
+	var al := 1.0 - k * k
+	var pos: Vector2 = f.p
+	var col: Color = f.get("c", Color.WHITE)
+	col.a *= al
+	match str(f.get("k", "txt")):
+		"ring":
+			var r: float = lerpf(float(f.r0), float(f.r1), 1.0 - pow(1.0 - k, 2.0))
+			c.draw_arc(pos, r, 0, TAU, 40, col, float(f.w) * (1.0 - k * 0.6))
+			c.draw_arc(pos, r, 0, TAU, 40, Color(col.r, col.g, col.b, col.a * 0.3), float(f.w) * 3.0)
+		"halo":
+			var r2: float = lerpf(float(f.r0), float(f.r1), 1.0 - pow(1.0 - k, 2.0))
+			c.draw_set_transform(pos + Vector2(0, -r2 * 0.3), 0.0, Vector2(1.0, 0.35))
+			c.draw_arc(Vector2.ZERO, r2, 0, TAU, 40, col, float(f.w) * 2.0)
+			c.draw_arc(Vector2.ZERO, r2, 0, TAU, 40, Color(1, 1, 0.9, col.a * 0.5), float(f.w) * 5.0)
+			c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		"flash":
+			c.draw_circle(pos, float(f.r) * (0.6 + 0.6 * k), Color(col.r, col.g, col.b, col.a * 0.55))
+			c.draw_circle(pos, float(f.r) * 0.45 * (1.0 - k), Color(1, 1, 1, col.a))
+		"spark":
+			var v: Vector2 = f.v
+			c.draw_line(pos, pos - v * 0.06, Color(col.r, col.g, col.b, col.a * 0.6), float(f.s))
+			c.draw_circle(pos, float(f.s), col)
+		"sq":
+			var sz: float = f.s
+			c.draw_rect(Rect2(pos - Vector2(sz, sz) * 0.5, Vector2(sz, sz)), col, true)
+			c.draw_rect(Rect2(pos - Vector2(sz, sz), Vector2(sz, sz) * 2.0), Color(col.r, col.g, col.b, col.a * 0.25), true)
+		"leaf":
+			_impact_leaf(c, pos, float(f.s), float(f.rot), col, 0.45)
+			c.draw_line(pos - Vector2(float(f.s), 0).rotated(float(f.rot)), pos + Vector2(float(f.s), 0).rotated(float(f.rot)), Color(0, 0, 0, col.a * 0.25), 1.0)
+		"feather":
+			_impact_leaf(c, pos, float(f.s), float(f.rot), Color(1, 1, 1, col.a * 0.95), 0.32)
+			c.draw_line(pos - Vector2(float(f.s) * 1.2, 0).rotated(float(f.rot)), pos + Vector2(float(f.s), 0).rotated(float(f.rot)), Color(0.85, 0.7, 0.3, col.a), 1.4)
+		"shard":
+			var sz2: float = f.s
+			var rt: float = f.rot
+			var tri := PackedVector2Array([pos + Vector2(0, -sz2).rotated(rt), pos + Vector2(sz2 * 0.6, sz2 * 0.7).rotated(rt), pos + Vector2(-sz2 * 0.6, sz2 * 0.7).rotated(rt)])
+			c.draw_colored_polygon(tri, col)
+			c.draw_line(tri[0], tri[1], Color(1, 1, 1, col.a * 0.8), 1.2)
+		"pull":
+			c.draw_circle(pos, float(f.s) * (1.0 - k * 0.5), Color(col.r, col.g, col.b, minf(1.0, k * 3.0) * al))
+		"hole":
+			var hr: float = float(f.r) * sin(k * PI)
+			c.draw_circle(pos, hr * 1.8, Color(0.64, 0.35, 1.0, 0.25 * al))
+			c.draw_arc(pos, hr * 1.25, 0, TAU, 32, Color(1.0, 0.6, 0.2, 0.8 * al), 2.5)
+			c.draw_circle(pos, hr, Color(0, 0, 0, 0.92 * al))
+		"bolt":
+			var flick := 0.6 + 0.4 * sin(float(f.t) * 70.0)
+			c.draw_polyline(f.pts, Color(col.r, col.g, col.b, col.a * 0.45 * flick), 7.0)
+			c.draw_polyline(f.pts, Color(1, 1, 1, col.a * flick), 2.2)
+		_:
+			if f.get("rainbow", false):
+				col = Color.from_hsv(fmod(float(f.t) * 1.5, 1.0), 0.6, 1.0, al)
+			c.draw_string_outline(font, pos + Vector2(-40, 0), f.txt, HORIZONTAL_ALIGNMENT_CENTER, 80, int(f.s), 5, Color(0, 0, 0, 0.5 * col.a))
+			c.draw_string(font, pos + Vector2(-40, 0), f.txt, HORIZONTAL_ALIGNMENT_CENTER, 80, int(f.s), col)
+
+
+# efeito de batida dos tacos ELITE (só visual: usa randf à vontade, não mexe na física)
+func spawn_impact(kind: String, p: Vector2, ang: float, pw: float) -> void:
+	var back := ang + PI
+	var k := 0.6 + pw
+	var add := func(d: Dictionary) -> void:
+		d["p"] = d.get("p", p)
+		d["t"] = 0.0
+		impacts.append(d)
+	match kind:
+		"neon":
+			for c in [Color("ff3df0"), Color("3df0ff")]:
+				add.call({"k": "ring", "r0": 6.0, "r1": 70.0 * k, "w": 4.0, "c": c, "life": 0.45 + randf() * 0.2})
+			for i in 14 + int(pw * 10.0):
+				var a := back + randf_range(-1.7, 1.7)
+				add.call({"k": "sq", "v": Vector2.from_angle(a) * randf_range(90, 260) * k, "s": randf_range(3, 7), "c": [Color("ff3df0"), Color("3df0ff"), Color("ffffff")][randi() % 3], "life": randf_range(0.4, 0.8)})
+			add.call({"txt": ["GG", "POW!", "+1UP", "HIT!"][randi() % 4], "v": Vector2.from_angle(back) * 60.0 + Vector2(0, -40), "c": Color("3df0ff"), "s": 22, "life": 0.9})
+		"jade":
+			for i in 12 + int(pw * 10.0):
+				var a := back + randf_range(-1.5, 1.5)
+				add.call({"k": "leaf", "v": Vector2.from_angle(a) * randf_range(70, 200) * k, "s": randf_range(6, 11), "rot": randf() * TAU, "w": randf_range(-8, 8), "c": [Color("3dffa0"), Color("1fbf6a"), Color("e3b341")][randi() % 3], "life": randf_range(0.7, 1.2)})
+			add.call({"k": "ring", "r0": 4.0, "r1": 55.0 * k, "w": 3.0, "c": Color("3dffa0"), "life": 0.5})
+		"nova":
+			add.call({"k": "flash", "r": 34.0 * k, "c": Color("fff2c0"), "life": 0.22})
+			add.call({"k": "ring", "r0": 8.0, "r1": 110.0 * k, "w": 6.0, "c": Color("ff9a3d"), "life": 0.55})
+			add.call({"k": "ring", "r0": 4.0, "r1": 70.0 * k, "w": 3.0, "c": Color("c070ff"), "life": 0.7})
+			for i in 22 + int(pw * 14.0):
+				var a := randf() * TAU
+				add.call({"k": "spark", "v": Vector2.from_angle(a) * randf_range(120, 340) * k, "s": randf_range(2, 4), "c": [Color("ffd08a"), Color("ff7a1a"), Color("ffffff"), Color("c070ff")][randi() % 4], "life": randf_range(0.35, 0.8)})
+		"rose":
+			for i in 14 + int(pw * 12.0):
+				var a := back + randf_range(-1.8, 1.8)
+				add.call({"k": "leaf", "v": Vector2.from_angle(a) * randf_range(60, 190) * k, "s": randf_range(7, 12), "rot": randf() * TAU, "w": randf_range(-6, 6), "c": [Color("c0102a"), Color("ff2a4a"), Color("7a0010")][randi() % 3], "life": randf_range(0.8, 1.4), "fall": true})
+			add.call({"k": "ring", "r0": 5.0, "r1": 50.0 * k, "w": 3.0, "c": Color("ff2a4a"), "life": 0.45})
+		"angel":
+			add.call({"k": "flash", "r": 28.0 * k, "c": Color("fffbe8"), "life": 0.25})
+			add.call({"k": "halo", "r0": 10.0, "r1": 60.0 * k, "w": 4.0, "c": Color("ffd34a"), "life": 0.8})
+			for i in 10 + int(pw * 10.0):
+				var a := back + randf_range(-1.6, 1.6)
+				add.call({"k": "feather", "v": Vector2.from_angle(a) * randf_range(50, 170) * k, "s": randf_range(9, 15), "rot": a, "w": randf_range(-3, 3), "c": Color(1, 1, 1), "life": randf_range(0.9, 1.5), "fall": true})
+			for i in 10:
+				add.call({"k": "spark", "v": Vector2.from_angle(randf() * TAU) * randf_range(60, 160), "s": 2.5, "c": Color("ffe9a0"), "life": randf_range(0.5, 0.9)})
+		"void":
+			for i in 26 + int(pw * 10.0):
+				var a := randf() * TAU
+				var d := randf_range(45, 95) * k
+				add.call({"k": "pull", "p": p + Vector2.from_angle(a) * d, "c0": p, "a0": a, "d0": d, "s": randf_range(2, 4), "c": [Color("a35aff"), Color("ff8a2a"), Color("ffffff")][randi() % 3], "life": randf_range(0.45, 0.7)})
+			add.call({"k": "hole", "r": 16.0 * k, "life": 0.7})
+			add.call({"k": "ring", "r0": 70.0 * k, "r1": 6.0, "w": 3.0, "c": Color("a35aff"), "life": 0.5})
+		"zeus":
+			add.call({"k": "flash", "r": 40.0 * k, "c": Color("fff6c0"), "life": 0.18})
+			for i in 5 + int(pw * 4.0):
+				var a := back + randf_range(-1.9, 1.9)
+				var pts := PackedVector2Array([p])
+				var q := p
+				for j in 6:
+					q += Vector2.from_angle(a + randf_range(-0.6, 0.6)) * randf_range(10, 22) * k
+					pts.append(q)
+				add.call({"k": "bolt", "pts": pts, "c": Color("ffe45a"), "life": randf_range(0.2, 0.35)})
+			add.call({"k": "ring", "r0": 6.0, "r1": 90.0 * k, "w": 4.0, "c": Color("ffe45a"), "life": 0.4})
+			add.call({"txt": "⚡", "v": Vector2(0, -70), "c": Color("ffe45a"), "s": 30, "life": 0.8})
+		"infinity":
+			add.call({"k": "flash", "r": 36.0 * k, "c": Color(1, 1, 1), "life": 0.2})
+			for i in 3:
+				add.call({"k": "ring", "r0": 6.0, "r1": (60.0 + i * 30.0) * k, "w": 4.0, "c": Color.from_hsv(float(i) / 3.0, 0.7, 1.0), "life": 0.5 + i * 0.12})
+			for i in 18 + int(pw * 14.0):
+				var a := randf() * TAU
+				add.call({"k": "shard", "v": Vector2.from_angle(a) * randf_range(100, 300) * k, "s": randf_range(5, 9), "rot": randf() * TAU, "w": randf_range(-10, 10), "c": Color.from_hsv(randf(), 0.65, 1.0), "life": randf_range(0.5, 1.0)})
+			add.call({"txt": "∞", "v": Vector2(0, -60), "c": Color("ffffff"), "s": 40, "life": 1.0, "rainbow": true})
 
 
 # ---------------------------------------------------------------- proteção: voltar / sair do app sem querer
@@ -2401,7 +2619,7 @@ func net_client_start(s: Dictionary) -> void:
 	felt_override = str(s.get("felt", ""))
 	var ok := false
 	for f in FELTS:
-		if f.id == felt_override:
+		if f.id == felt_override.get_slice("~", 0):
 			ok = true
 	if not ok:
 		felt_override = ""
@@ -2443,8 +2661,8 @@ func net_remote_shot(d: Dictionary) -> void:
 	# a posição da branca vem sempre de quem tacou (bola na mão, saída etc.)
 	cue.pos = d.cp
 	touches.clear()
-	shot_pow = int(d.sps)
-	shot_spin = int(d.sss)
+	shot_pow = float(d.sps)
+	shot_spin = float(d.sss)
 	shoot(float(d.pw), true)
 	if d.has("lv"):
 		launch_pre = {"v": d.lv, "t": float(d.lt), "s": float(d.ls), "ang": float(d.get("la", d.a))}
@@ -2950,7 +3168,7 @@ func touch_move(i: int, p: Vector2) -> void:
 	elif t.m == "dial":
 		var a: float = (p - dial_center()).angle()
 		var da: float = angle_difference(t.last, a)
-		aim_angle += da * 0.1 * (1.0 - 0.07 * float(int(cue_def().prec) - 1))
+		aim_angle += da * 0.1 * maxf(0.5, 1.0 - 0.07 * (float(cue_def().prec) - 1.0))
 		dial_rot += da
 		t.last = a
 	elif t.m == "aim":
@@ -2958,7 +3176,7 @@ func touch_move(i: int, p: Vector2) -> void:
 		var cur: Vector2 = lp - cue.pos
 		if old.length() > 20.0 and cur.length() > 20.0:
 			var da := old.angle_to(cur)
-			aim_angle += da * clampf(cur.length() / 200.0, 0.12, 1.0) * 0.55 * (1.0 - 0.06 * float(int(cue_def().prec) - 1))
+			aim_angle += da * clampf(cur.length() / 200.0, 0.12, 1.0) * 0.55 * maxf(0.55, 1.0 - 0.06 * (float(cue_def().prec) - 1.0))
 		t.last = lp
 
 
@@ -2990,8 +3208,17 @@ func update_visuals(delta: float) -> void:
 	for i in range(impacts.size() - 1, -1, -1):
 		var f: Dictionary = impacts[i]
 		f.t += delta
-		f.p += f.v * delta
-		f.v *= 1.0 - 2.2 * delta
+		if f.has("v"):
+			f.p += f.v * delta
+			f.v *= 1.0 - 2.2 * delta
+			if f.has("fall"):
+				f.v += Vector2(0, 60) * delta
+		if f.has("rot"):
+			f.rot = float(f.rot) + float(f.get("w", 0.0)) * delta
+		if str(f.get("k", "")) == "pull":
+			var kk: float = clampf(float(f.t) / float(f.life), 0.0, 1.0)
+			var a2: float = float(f.a0) + kk * kk * 5.0
+			f.p = (f.c0 as Vector2) + Vector2.from_angle(a2) * float(f.d0) * (1.0 - kk * kk)
 		if f.t >= f.life:
 			impacts.remove_at(i)
 	for b in balls:
@@ -3063,6 +3290,8 @@ func _process(delta: float) -> void:
 	update_visuals(delta)
 	update_cue()
 	overlay.queue_redraw()
+	if felt_fx != null and str(felt_def().get("anim", "")) != "":
+		felt_fx.queue_redraw()
 	hud.queue_redraw()
 
 
@@ -3206,12 +3435,7 @@ func _draw_overlay() -> void:
 		for tb in target_balls():
 			overlay.draw_arc(tb.pos, R + 4.0 + pul * 2.0, 0, TAU, 28, Color(1.0, 0.95, 0.4, 0.55 + 0.35 * pul), 2.5)
 	for f in impacts:
-		var k: float = f.t / f.life
-		var col: Color = f.c
-		col.a = 1.0 - k * k
-		var pos: Vector2 = f.p
-		overlay.draw_string_outline(font, pos + Vector2(-40, 0), f.txt, HORIZONTAL_ALIGNMENT_CENTER, 80, int(f.s), 5, Color(0, 0, 0, 0.5 * col.a))
-		overlay.draw_string(font, pos + Vector2(-40, 0), f.txt, HORIZONTAL_ALIGNMENT_CENTER, 80, int(f.s), col)
+		draw_impact(overlay, f, font)
 	if st != St.AIM and st != St.STRIKE:
 		return
 	var cue := get_ball(0)
@@ -3238,9 +3462,12 @@ func _draw_overlay() -> void:
 		overlay.draw_arc(cue.pos, R + 22.0 + pul * 6.0, 0, TAU, 32, Color(1.0, 0.88, 0.4, 0.35), 2.0)
 
 
-# mesa decorativa: faixa de luz colorida correndo pelas bordas (desviando das caçapas)
+# mesa/borda decorativa: faixa de luz correndo pelas bordas (desviando das caçapas)
 func _draw_edge_fx() -> void:
-	if str(felt_def().get("edge", "")) != "rainbow":
+	var mode_e := str(rail_def().get("edge", ""))
+	if mode_e == "":
+		mode_e = str(felt_def().get("edge", ""))
+	if mode_e == "":
 		return
 	var e := 7.0
 	var segs := [
@@ -3250,6 +3477,7 @@ func _draw_edge_fx() -> void:
 		[Vector2(-HW + e, HH - 44), Vector2(-HW + e, -HH + 44)],
 	]
 	var dist := 0.0
+	var zap: float = floor(fx_t * 14.0)
 	for sg in segs:
 		var a0: Vector2 = sg[0]
 		var a1: Vector2 = sg[1]
@@ -3258,14 +3486,154 @@ func _draw_edge_fx() -> void:
 		for k in n:
 			var p0 := a0.lerp(a1, float(k) / n)
 			var p1 := a0.lerp(a1, float(k + 1) / n)
-			var s := dist + ln * float(k) / n
-			var hue := fposmod(s / 520.0 - fx_t * 0.22, 1.0)
-			var pulse := 0.55 + 0.45 * sin(s * 0.035 - fx_t * 6.0)
-			var c := Color.from_hsv(hue, 0.85, 1.0, 0.85 * pulse)
+			var s2 := dist + ln * float(k) / n
+			var c := Color.WHITE
+			var pulse := 1.0
+			match mode_e:
+				"rainbow":
+					pulse = 0.55 + 0.45 * sin(s2 * 0.035 - fx_t * 6.0)
+					c = Color.from_hsv(fposmod(s2 / 520.0 - fx_t * 0.22, 1.0), 0.85, 1.0, 0.85 * pulse)
+				"fire":
+					var fl := FxScript.hsh(floor(s2 / 12.0) * 1.3 + floor(fx_t * 10.0))
+					pulse = 0.45 + 0.55 * (0.5 + 0.5 * sin(s2 * 0.05 + fx_t * 7.0)) * (0.6 + 0.4 * fl)
+					c = Color(1.0, 0.35 + 0.45 * fl, 0.05, 0.9 * pulse)
+				"ice":
+					pulse = 0.5 + 0.5 * sin(s2 * 0.02 - fx_t * 2.0)
+					var gl := pow(maxf(0.0, sin(s2 * 0.013 - fx_t * 3.0)), 18.0)
+					c = Color(0.6 + 0.4 * gl, 0.9 + 0.1 * gl, 1.0, 0.55 + 0.4 * pulse)
+				"gold":
+					var ch := fposmod(s2 / 60.0 - fx_t * 1.5, 1.0)
+					pulse = 0.35 + 0.65 * smoothstep(0.75, 1.0, ch)
+					c = Color(1.0, 0.82, 0.3, 0.9 * pulse)
+				"electric":
+					var on := FxScript.hsh(floor(s2 / 36.0) + zap * 7.7)
+					pulse = 0.25 + (0.75 if on > 0.78 else 0.0)
+					c = Color(0.45, 0.85, 1.0, 0.9 * pulse)
 			overlay.draw_line(p0, p1, Color(c.r, c.g, c.b, 0.22 * pulse), 16.0)
 			overlay.draw_line(p0, p1, Color(c.r, c.g, c.b, 0.4 * pulse), 8.0)
 			overlay.draw_line(p0, p1, c.lightened(0.3), 3.5)
 		dist += ln
+
+
+func _h(x: float) -> float:
+	return fposmod(sin(x * 127.1) * 43758.5453, 1.0)
+
+
+# animações das mesas especiais (desenhadas por cima do pano, embaixo das bolas); tudo vem do tempo
+# (sem lista de partículas) e com pouca opacidade para não atrapalhar a mira
+func _draw_felt_fx() -> void:
+	var kind := str(felt_def().get("anim", ""))
+	if kind == "":
+		return
+	var c := felt_fx
+	var t := fx_t
+	var W2 := HW - 20.0
+	var H2 := HH - 20.0
+	match kind:
+		"stars":
+			for i in 60:
+				var p := Vector2((_h(float(i) * 1.7) * 2.0 - 1.0) * W2, (_h(float(i) * 3.1) * 2.0 - 1.0) * H2)
+				var tw: float = pow(0.5 + 0.5 * sin(t * (1.5 + _h(float(i)) * 3.0) + float(i)), 3.0)
+				c.draw_circle(p, 1.2 + tw * 1.6, Color(1.0, 0.95, 0.8, 0.25 + 0.55 * tw))
+				if tw > 0.85:
+					c.draw_line(p - Vector2(6, 0), p + Vector2(6, 0), Color(1, 1, 1, 0.35 * tw), 1.0)
+					c.draw_line(p - Vector2(0, 6), p + Vector2(0, 6), Color(1, 1, 1, 0.35 * tw), 1.0)
+			var ph := fposmod(t * 0.35, 1.0)
+			var sid: float = floor(t * 0.35)
+			var a0 := Vector2((_h(sid) * 1.6 - 0.8) * W2, -H2 + _h(sid * 2.0) * 60.0)
+			var hd := a0 + Vector2(260, 160) * ph
+			if ph < 0.6:
+				for k in 10:
+					var q := hd - Vector2(26, 16) * float(k) * 0.6
+					c.draw_circle(q, 2.4 * (1.0 - float(k) / 10.0), Color(1.0, 0.95, 0.8, 0.7 * (1.0 - float(k) / 10.0) * (1.0 - ph / 0.6)))
+		"aurora":
+			for k in 3:
+				var pts := PackedVector2Array()
+				for j in 41:
+					var x := -W2 + float(j) / 40.0 * W2 * 2.0
+					var y := sin(x * 0.006 + t * 0.6 + float(k) * 2.1) * 80.0 + sin(x * 0.017 - t * 0.9 + float(k)) * 30.0 + (float(k) - 1.0) * 70.0
+					pts.append(Vector2(x, y))
+				var col: Color = [Color(0.3, 1.0, 0.7), Color(0.5, 0.5, 1.0), Color(0.2, 0.9, 1.0)][k]
+				c.draw_polyline(pts, Color(col.r, col.g, col.b, 0.06), 70.0)
+				c.draw_polyline(pts, Color(col.r, col.g, col.b, 0.10), 30.0)
+				c.draw_polyline(pts, Color(col.r, col.g, col.b, 0.22), 6.0)
+		"matrix":
+			var fnt := font
+			for col_i in 26:
+				var x := -W2 + (float(col_i) + 0.5) / 26.0 * W2 * 2.0
+				var spd := 60.0 + _h(float(col_i) * 2.3) * 90.0
+				var head := fposmod(t * spd + _h(float(col_i)) * 900.0, H2 * 2.0 + 200.0) - H2 - 100.0
+				for k in 12:
+					var y := head - float(k) * 17.0
+					if absf(y) > H2:
+						continue
+					var ch: String = ["0", "1", "7", "Z", "X", "4", "9", "8", "$", "#"][int(_h(float(col_i) * 11.0 + float(k) + floor(t * 6.0)) * 10.0) % 10]
+					var a := (1.0 - float(k) / 12.0) * (0.6 if k > 0 else 0.95)
+					c.draw_string(fnt, Vector2(x - 7, y), ch, HORIZONTAL_ALIGNMENT_CENTER, 14, 16, Color(0.75, 1.0, 0.8, a) if k == 0 else Color(0.15, 1.0, 0.45, a * 0.7))
+		"lava":
+			for i in 7:
+				var p := Vector2((_h(float(i) * 5.3) * 2.0 - 1.0) * W2 * 0.85, (_h(float(i) * 2.9) * 2.0 - 1.0) * H2 * 0.8)
+				var pu := 0.5 + 0.5 * sin(t * 1.3 + float(i) * 1.9)
+				c.draw_circle(p, 50.0 + 25.0 * pu, Color(1.0, 0.35, 0.05, 0.05 + 0.05 * pu))
+			for i in 40:
+				var life := fposmod(t * (0.12 + _h(float(i)) * 0.12) + _h(float(i) * 7.0), 1.0)
+				var x := (_h(float(i) * 3.3) * 2.0 - 1.0) * W2 + sin(t * 2.0 + float(i)) * 8.0
+				var y := H2 - life * H2 * 2.0
+				c.draw_circle(Vector2(x, y), 1.5 + (1.0 - life) * 2.0, Color(1.0, 0.6 - life * 0.4, 0.15, 0.7 * sin(life * PI)))
+		"sakura":
+			for i in 34:
+				var life := fposmod(t * (0.06 + _h(float(i)) * 0.05) + _h(float(i) * 4.0), 1.0)
+				var x := (_h(float(i) * 2.2) * 2.0 - 1.0) * W2 + sin(t * 0.8 + float(i)) * 40.0 + life * 120.0
+				x = fposmod(x + W2, W2 * 2.0) - W2
+				var y := -H2 + life * H2 * 2.0
+				var rot := t * (1.0 + _h(float(i))) + float(i)
+				var pts2 := PackedVector2Array()
+				for j in 10:
+					var aa := float(j) / 10.0 * TAU
+					pts2.append(Vector2(x, y) + Vector2(cos(aa) * 6.0, sin(aa) * 3.4 * (0.4 + 0.6 * absf(sin(rot)))).rotated(rot))
+				c.draw_colored_polygon(pts2, Color(1.0, 0.82, 0.88, 0.75 * sin(life * PI)))
+		"sea":
+			for i in 9:
+				var p := Vector2(sin(t * 0.3 + float(i) * 2.1) * W2 * 0.8, cos(t * 0.25 + float(i) * 1.3) * H2 * 0.7)
+				c.draw_circle(p, 60.0 + 20.0 * sin(t + float(i)), Color(0.6, 1.0, 1.0, 0.045))
+			for i in 30:
+				var life := fposmod(t * (0.08 + _h(float(i)) * 0.08) + _h(float(i) * 9.0), 1.0)
+				var x := (_h(float(i) * 1.9) * 2.0 - 1.0) * W2 + sin(t * 3.0 + float(i)) * 6.0
+				var y := H2 - life * H2 * 2.0
+				var rr := 2.0 + _h(float(i) * 3.0) * 4.0
+				c.draw_arc(Vector2(x, y), rr, 0, TAU, 12, Color(0.85, 1.0, 1.0, 0.5 * sin(life * PI)), 1.2)
+				c.draw_circle(Vector2(x - rr * 0.35, y - rr * 0.35), rr * 0.25, Color(1, 1, 1, 0.5 * sin(life * PI)))
+		"storm":
+			for i in 70:
+				var life := fposmod(t * 1.6 + _h(float(i) * 5.0), 1.0)
+				var x := (_h(float(i) * 2.7) * 2.2 - 1.1) * W2 + life * 80.0
+				var y := -H2 + life * H2 * 2.0
+				if absf(x) < W2:
+					c.draw_line(Vector2(x, y), Vector2(x - 8, y - 22), Color(0.75, 0.85, 1.0, 0.28), 1.2)
+			var cyc := fposmod(t, 5.0)
+			if cyc < 0.35:
+				var fl := (1.0 if cyc < 0.08 or (cyc > 0.16 and cyc < 0.22) else 0.3)
+				c.draw_rect(Rect2(-W2, -H2, W2 * 2.0, H2 * 2.0), Color(0.75, 0.85, 1.0, 0.12 * fl))
+				var sd: float = floor(t / 5.0)
+				var pts3 := PackedVector2Array()
+				var q := Vector2((_h(sd) * 1.6 - 0.8) * W2, -H2)
+				pts3.append(q)
+				while q.y < H2 * 0.6:
+					q += Vector2((_h(sd + q.y) - 0.5) * 70.0, 40.0)
+					pts3.append(q)
+				c.draw_polyline(pts3, Color(0.7, 0.85, 1.0, 0.35 * fl), 8.0)
+				c.draw_polyline(pts3, Color(1, 1, 1, 0.8 * fl), 2.0)
+		"glints":
+			for i in 26:
+				var life := fposmod(t * 0.5 + _h(float(i) * 6.0), 1.0)
+				var cyc2: float = floor(t * 0.5 + _h(float(i) * 6.0))
+				var p := Vector2((_h(float(i) + cyc2 * 3.3) * 2.0 - 1.0) * W2, (_h(float(i) * 2.0 + cyc2 * 1.7) * 2.0 - 1.0) * H2)
+				var a := sin(life * PI)
+				var sz := 3.0 + a * 9.0
+				var col2 := Color(1, 1, 1, 0.75 * a) if i % 3 != 0 else Color(1.0, 0.85, 0.4, 0.75 * a)
+				c.draw_line(p - Vector2(sz, 0), p + Vector2(sz, 0), col2, 1.4)
+				c.draw_line(p - Vector2(0, sz), p + Vector2(0, sz), col2, 1.4)
+				c.draw_circle(p, 1.8 * a, col2)
 
 
 func _draw_cue_fx(additive: bool) -> void:
@@ -3772,7 +4140,7 @@ const ACHS := [
 func ach_val(k: String) -> int:
 	if k == "cues_owned":
 		var c := 0
-		for it in CUES:
+		for it in CUES + ELITE:
 			if (save.owned as Array).has(str(it.id)):
 				c += 1
 		return c
@@ -3984,15 +4352,15 @@ func game_invite_lobby(code: String) -> void:
 
 # mesa (feltro) do dono da partida: a minha se eu for o dono, senão a que ele mandou para o servidor
 func _table_felt(seat: int) -> String:
-	var fid := str(save.felt) if seat == net_seat or seat == 0 else ""
+	var fid := my_felt_tag() if seat == net_seat or seat == 0 else ""
 	if fid == "" and net != null:
 		for p in net.room_players:
 			if int(p.get("peer", 0)) - 1 == seat:
 				fid = str(p.get("felt", ""))
 	for f in FELTS:
-		if str(f.id) == fid:
+		if str(f.id) == fid.get_slice("~", 0):
 			return fid
-	return str(save.felt)
+	return my_felt_tag()
 
 
 

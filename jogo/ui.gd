@@ -3260,13 +3260,13 @@ func _build_shop() -> void:
 	tabs.add_theme_constant_override("separation", 14)
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(tabs)
-	for k in [["felt", "MESAS"], ["cue", "TACOS"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"], ["pack", "PACOTES"]]:
-		var b := mk_btn(k[1], 200, 54, GRAY, 24)
+	for k in [["felt", "MESAS"], ["rail", "BORDAS"], ["cue", "TACOS"], ["elite", "★ ELITE"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"], ["pack", "PACOTES"]]:
+		var b := mk_btn(k[1], 152, 54, GRAY, 20)
 		b.pressed.connect(_shop_tab.bind(k[0]))
 		tab_btns[k[0]] = b
 		tabs.add_child(b)
-	for k in [["cue", "TACOS"], ["felt", "MESAS"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"]]:
-		var sb := mk_btn(k[1], 200, 54, GRAY, 24)
+	for k in [["cue", "TACOS"], ["felt", "MESAS"], ["rail", "BORDAS"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"]]:
+		var sb := mk_btn(k[1], 190, 54, GRAY, 22)
 		sb.pressed.connect(_inv_sub.bind(k[0]))
 		inv_btns[k[0]] = sb
 		tabs.add_child(sb)
@@ -3356,7 +3356,7 @@ func _month_refresh() -> void:
 		c.queue_free()
 	var it: Dictionary = game.month_cue()
 	var owned: bool = game.save.owned.has(it.id)
-	var rc := Color("ffb21a") if it.rare == "LENDÁRIO" else (Color("c070ff") if it.rare == "MÍTICO" else Color("4fc3ff"))
+	var rc := rare_color(str(it.rare))
 	month_box.add_child(mk_lbl("★ TACO DE %s ★" % game.month_name().to_upper(), 23, Color("f4c542"), 6))
 	var pv := Control.new()
 	pv.custom_minimum_size = Vector2(348, 168)
@@ -3382,10 +3382,10 @@ func _month_refresh() -> void:
 	pv.add_child(ob)
 	month_box.add_child(pv)
 	month_box.add_child(mk_lbl(it.name, 28, Color.WHITE, 5))
-	month_box.add_child(_stat_row("Mira", int(it.aim)))
-	month_box.add_child(_stat_row("Força", int(it.pow)))
-	month_box.add_child(_stat_row("Precisão", int(it.prec)))
-	month_box.add_child(_stat_row("Efeito", int(it.spin)))
+	month_box.add_child(_stat_row("Mira", float(it.aim)))
+	month_box.add_child(_stat_row("Força", float(it.pow)))
+	month_box.add_child(_stat_row("Precisão", float(it.prec)))
+	month_box.add_child(_stat_row("Efeito", float(it.spin)))
 	var promo: int = game.month_price(it)
 	var pr := HBoxContainer.new()
 	pr.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -3586,12 +3586,23 @@ func _shop_tab(t: String) -> void:
 	_shop_refresh()
 
 
-func _stat_row(label: String, val: int) -> Control:
-	# barra contínua + porcentagem (cada ponto do taco = 20%)
+func rare_color(r: String) -> Color:
+	match r:
+		"LENDÁRIO":
+			return Color("ffb21a")
+		"MÍTICO":
+			return Color("c070ff")
+		"DIVINO":
+			return Color("ff6af0")
+	return Color("4fc3ff")
+
+
+func _stat_row(label: String, val: float) -> Control:
+	# barra contínua + porcentagem (cada ponto do taco = 20%; tacos ELITE passam de 100%, até 150%)
 	var c := Control.new()
 	c.custom_minimum_size = Vector2(212, 20)
 	var f: Font = ThemeDB.fallback_font
-	var pct: int = clampi(val, 0, 5) * 20
+	var pct: int = int(round(clampf(val, 0.0, 7.5) * 20.0))
 	var fn := func():
 		c.draw_string(f, Vector2(0, 15), label, HORIZONTAL_ALIGNMENT_LEFT, 74, 14, Color(1, 1, 1, 0.85))
 		var bx := 76.0
@@ -3599,10 +3610,15 @@ func _stat_row(label: String, val: int) -> Control:
 		c.draw_rect(Rect2(bx, 5, bw, 11), Color(1, 1, 1, 0.12), true)
 		var col := Color("4cd37b") if pct >= 60 else (Color("f4c542") if pct >= 40 else Color("e0733a"))
 		if pct > 0:
-			c.draw_rect(Rect2(bx, 5, bw * float(pct) / 100.0, 11), col, true)
+			c.draw_rect(Rect2(bx, 5, bw * minf(float(pct), 100.0) / 100.0, 11), col, true)
+		if pct > 100:
+			# parte acima de 100%: faixa dourada/rosa por cima, com um brilho andando
+			var ex := float(pct - 100) / 50.0
+			c.draw_rect(Rect2(bx, 5, bw * ex, 11), Color("ffcf3a"), true)
+			c.draw_rect(Rect2(bx, 5, bw * ex, 4), Color(1, 1, 1, 0.45), true)
 		for k in range(1, 5):
 			c.draw_line(Vector2(bx + bw * k / 5.0, 5), Vector2(bx + bw * k / 5.0, 16), Color(0, 0, 0, 0.35), 1.0)
-		c.draw_string(f, Vector2(bx + bw + 6, 15), "%d%%" % pct, HORIZONTAL_ALIGNMENT_LEFT, 40, 14, Color.WHITE)
+		c.draw_string(f, Vector2(bx + bw + 6, 15), "%d%%" % pct, HORIZONTAL_ALIGNMENT_LEFT, 44, 14, Color("ffcf3a") if pct > 100 else Color.WHITE)
 	c.draw.connect(fn)
 	return c
 
@@ -3616,16 +3632,16 @@ func _shop_refresh() -> void:
 	if shop_tab == "pack":
 		_packs_render()
 		return
-	var srcmap := {"cue": game.CUES + game.MONTHLY, "deck": game.DECKS, "felt": game.FELTS, "wfx": game.WFX}
+	var srcmap := {"cue": game.CUES + game.MONTHLY + game.ELITE, "elite": game.ELITE, "rail": game.RAILS, "deck": game.DECKS, "felt": game.FELTS, "wfx": game.WFX}
 	if shop_tab == "inv":
 		var src: Array = srcmap.get(inv_sub, game.FELTS)
 		for it in src:
-			if owned_l.has(it.id) or int(it.get("price", 1)) == 0 and (str(it.id).begins_with("dk_") or str(it.id).begins_with("wf_")):
+			if owned_l.has(it.id) or int(it.get("price", 1)) == 0 and (str(it.id).begins_with("dk_") or str(it.id).begins_with("wf_") or str(it.id).begins_with("rb_")):
 				items.append(it)
 	else:
 		var src2: Array = game.CUES if shop_tab == "cue" else srcmap.get(shop_tab, game.FELTS)
 		for it in src2:
-			if not owned_l.has(it.id) and it.id != "dk_classico" and it.id != "wf_confete":
+			if not owned_l.has(it.id) and it.id != "dk_classico" and it.id != "wf_confete" and it.id != "rb_padrao":
 				items.append(it)
 	if items.is_empty():
 		var el := mk_lbl("Você já tem todos os itens desta aba!\nVeja tudo em INVENTÁRIO.", 26, Color(1, 1, 1, 0.8), 4)
@@ -3637,10 +3653,14 @@ func _shop_refresh() -> void:
 		var is_cue: bool = it.has("shaft")
 		var is_deck: bool = it.has("deck")
 		var is_wfx: bool = it.has("wfx")
-		var equipped: String = game.save.cue if is_cue else ("dk_" + str(game.save.get("deck", "classico")) if is_deck else (str(game.save.get("wfx", "wf_confete")) if is_wfx else game.save.felt))
+		var is_rail: bool = str(it.id).begins_with("rb_")
+		var equipped: String = game.save.cue if is_cue else ("dk_" + str(game.save.get("deck", "classico")) if is_deck else (str(game.save.get("wfx", "wf_confete")) if is_wfx else (str(game.save.get("rail", "rb_padrao")) if is_rail else game.save.felt)))
 		var card := PanelContainer.new()
 		card.custom_minimum_size = Vector2(212, 404)
 		card.add_theme_stylebox_override("panel", sbox(NAVY, 22, Color(1, 1, 1, 0.22) if it.id != equipped else GOLD, 3 if it.id != equipped else 5, 10))
+		if is_cue and it.has("rare") and str(it.id).begins_with("e_"):
+			var rcol: Color = rare_color(str(it.rare))
+			card.add_theme_stylebox_override("panel", sbox(Color(0.04, 0.03, 0.09), 22, GOLD if it.id == equipped else rcol, 5 if it.id == equipped else 3, 10))
 		shop_row.add_child(card)
 		var vb := VBoxContainer.new()
 		vb.add_theme_constant_override("separation", 8)
@@ -3650,53 +3670,31 @@ func _shop_refresh() -> void:
 		pv.clip_contents = true
 		if is_cue:
 			_cue_preview(pv, it, Vector2(60, 100), 140.0, -40.0, 22.0, 0.85, fx_nodes)
+			if it.has("rare"):
+				var rt := mk_lbl(str(it.rare), 14, rare_color(str(it.rare)), 4)
+				rt.position = Vector2(4, 2)
+				pv.add_child(rt)
 		elif is_deck:
 			_deck_preview(pv, str(it.deck))
 		elif is_wfx:
 			_wfx_preview(pv, str(it.wfx))
+		elif is_rail:
+			_rail_preview(pv, it, game.felt_def())
 		else:
-			var wood := ColorRect.new()
-			wood.color = Color("5b3a1e")
-			wood.position = Vector2(0, 8)
-			wood.size = Vector2(184, 112)
-			pv.add_child(wood)
-			var fr := ColorRect.new()
-			fr.position = Vector2(8, 16)
-			fr.size = Vector2(168, 96)
-			var fm := ShaderMaterial.new()
-			fm.shader = load("res://shaders/felt.gdshader")
-			fm.set_shader_parameter("c_light", it.light)
-			fm.set_shader_parameter("c_dark", it.dark)
-			fm.set_shader_parameter("pat", int(it.pat))
-			fm.set_shader_parameter("accent", it.get("accent", Color.WHITE))
-			fm.set_shader_parameter("accent2", it.get("accent2", Color.WHITE))
-			fr.material = fm
-			pv.add_child(fr)
-			var top := Control.new()
-			top.set_anchors_preset(Control.PRESET_FULL_RECT)
-			top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			var fnt := func():
-				for p in [Vector2(8, 16), Vector2(176, 16), Vector2(8, 112), Vector2(176, 112), Vector2(92, 16), Vector2(92, 112)]:
-					top.draw_circle(p, 7, Color("050505"))
-				top.draw_circle(Vector2(52, 66), 8, Color("f4f4ee"))
-				top.draw_circle(Vector2(112, 58), 8, Color("d12a1e"))
-				top.draw_circle(Vector2(129, 70), 8, Color("1a4fb4"))
-				top.draw_circle(Vector2(109, 55), 2.5, Color(1, 1, 1, 0.5))
-			top.draw.connect(fnt)
-			pv.add_child(top)
+			_rail_preview(pv, game.rail_for(str(it.get("rail", ""))), it)
 		vb.add_child(pv)
 		vb.add_child(mk_lbl(it.name, 24, Color.WHITE, 4))
 		if is_cue:
-			vb.add_child(_stat_row("Mira", int(it.aim)))
-			vb.add_child(_stat_row("Força", int(it.pow)))
-			vb.add_child(_stat_row("Precisão", int(it.prec)))
-			vb.add_child(_stat_row("Efeito", int(it.spin)))
+			vb.add_child(_stat_row("Mira", float(it.aim)))
+			vb.add_child(_stat_row("Força", float(it.pow)))
+			vb.add_child(_stat_row("Precisão", float(it.prec)))
+			vb.add_child(_stat_row("Efeito", float(it.spin)))
 		else:
 			var tg := mk_lbl(it.tag, 16, Color(1, 1, 1, 0.65))
 			tg.custom_minimum_size = Vector2(184, 0)
 			tg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vb.add_child(tg)
-		var owned: bool = game.save.owned.has(it.id) or it.id == "dk_classico" or it.id == "wf_confete"
+		var owned: bool = game.save.owned.has(it.id) or it.id == "dk_classico" or it.id == "wf_confete" or it.id == "rb_padrao"
 		var btn: Button
 		if it.id == equipped:
 			btn = mk_btn("EM USO", 184, 56, GREEN, 24)
@@ -3725,6 +3723,84 @@ func _shop_refresh() -> void:
 		vb.add_child(btn)
 
 
+# miniatura de mesa com a borda (madeira/laca/metal/carbono) e luz animada se tiver
+func _rail_preview(pv: Control, rd: Dictionary, felt: Dictionary) -> void:
+	var wood := ColorRect.new()
+	wood.position = Vector2(0, 8)
+	wood.size = Vector2(184, 112)
+	var wm := ShaderMaterial.new()
+	wm.shader = load("res://shaders/wood.gdshader")
+	wm.set_shader_parameter("size", Vector2(184, 112) * 2.6)
+	wm.set_shader_parameter("c1", rd.get("c1", Color(0.45, 0.25, 0.1)))
+	wm.set_shader_parameter("c2", rd.get("c2", Color(0.2, 0.1, 0.04)))
+	wm.set_shader_parameter("trim", rd.get("trim", Color(0.86, 0.68, 0.32)))
+	wm.set_shader_parameter("mat", int(rd.get("mat", 0)))
+	wood.material = wm
+	pv.add_child(wood)
+	var fr := ColorRect.new()
+	fr.position = Vector2(8, 16)
+	fr.size = Vector2(168, 96)
+	var fm := ShaderMaterial.new()
+	fm.shader = load("res://shaders/felt.gdshader")
+	fm.set_shader_parameter("c_light", felt.light)
+	fm.set_shader_parameter("c_dark", felt.dark)
+	fm.set_shader_parameter("pat", int(felt.pat))
+	fm.set_shader_parameter("accent", felt.get("accent", Color.WHITE))
+	fm.set_shader_parameter("accent2", felt.get("accent2", Color.WHITE))
+	fr.material = fm
+	pv.add_child(fr)
+	var edge := str(rd.get("edge", ""))
+	if edge == "":
+		edge = str(felt.get("edge", ""))
+	var anim := str(felt.get("anim", ""))
+	var top := Control.new()
+	top.set_anchors_preset(Control.PRESET_FULL_RECT)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fnt := func():
+		var t := fx_t
+		if anim != "":
+			for i in 10:
+				var hx := fposmod(sin(float(i) * 12.9898) * 43758.5453, 1.0)
+				var hy := fposmod(sin(float(i) * 78.233) * 43758.5453, 1.0)
+				var a := 0.5 + 0.5 * sin(t * 2.0 + float(i) * 1.7)
+				var col: Color = {"stars": Color(1, 0.95, 0.8), "aurora": Color(0.4, 1, 0.75), "matrix": Color(0.2, 1, 0.45), "lava": Color(1, 0.55, 0.15), "sakura": Color(1, 0.85, 0.9), "sea": Color(0.8, 1, 1), "storm": Color(0.75, 0.85, 1), "glints": Color(1, 1, 1)}.get(anim, Color.WHITE)
+				var p := Vector2(14 + hx * 156, 22 + fposmod(hy + (t * 0.08 if anim in ["matrix", "sakura", "storm"] else (-t * 0.06 if anim in ["lava", "sea"] else 0.0)), 1.0) * 84)
+				top.draw_circle(p, 1.2 + a * 1.2, Color(col.r, col.g, col.b, 0.35 + 0.5 * a))
+		for p in [Vector2(8, 16), Vector2(176, 16), Vector2(8, 112), Vector2(176, 112), Vector2(92, 16), Vector2(92, 112)]:
+			top.draw_circle(p, 7, Color("050505"))
+		if edge != "":
+			var per := [Vector2(14, 19), Vector2(170, 19), Vector2(173, 22), Vector2(173, 106), Vector2(170, 109), Vector2(14, 109), Vector2(11, 106), Vector2(11, 22)]
+			for k in 4:
+				var a0: Vector2 = per[k * 2]
+				var a1: Vector2 = per[k * 2 + 1]
+				for j in 8:
+					var q0 := a0.lerp(a1, float(j) / 8.0)
+					var q1 := a0.lerp(a1, float(j + 1) / 8.0)
+					var ph := float(k * 8 + j) / 32.0
+					var col2 := Color.WHITE
+					match edge:
+						"rainbow":
+							col2 = Color.from_hsv(fposmod(ph - t * 0.25, 1.0), 0.8, 1.0)
+						"fire":
+							col2 = Color(1.0, 0.4 + 0.4 * (0.5 + 0.5 * sin(ph * 40.0 + t * 8.0)), 0.05)
+						"ice":
+							col2 = Color(0.7, 0.95, 1.0, 0.6 + 0.4 * sin(ph * 20.0 - t * 3.0))
+						"gold":
+							col2 = Color(1.0, 0.82, 0.3, 0.3 + 0.7 * smoothstep(0.7, 1.0, fposmod(ph * 4.0 - t * 1.5, 1.0)))
+						"electric":
+							col2 = Color(0.45, 0.85, 1.0, 1.0 if fposmod(sin(floor(ph * 8.0) + floor(t * 12.0) * 7.7) * 43758.5, 1.0) > 0.7 else 0.25)
+					top.draw_line(q0, q1, Color(col2.r, col2.g, col2.b, col2.a * 0.35), 6.0)
+					top.draw_line(q0, q1, col2, 2.0)
+		top.draw_circle(Vector2(52, 66), 8, Color("f4f4ee"))
+		top.draw_circle(Vector2(112, 58), 8, Color("d12a1e"))
+		top.draw_circle(Vector2(129, 70), 8, Color("1a4fb4"))
+		top.draw_circle(Vector2(109, 55), 2.5, Color(1, 1, 1, 0.5))
+	top.draw.connect(fnt)
+	pv.add_child(top)
+	if anim != "" or edge != "":
+		fx_nodes.append(top)
+
+
 func _deck_preview(pv: Control, style_id: String) -> void:
 	var CARDS = load("res://cards.gd")
 	var st: Dictionary = CARDS.style(style_id)
@@ -3741,6 +3817,13 @@ func _deck_preview(pv: Control, style_id: String) -> void:
 
 
 func _equip(id: String) -> void:
+	if id.begins_with("rb_"):
+		game.save["rail"] = id
+		game.write_save()
+		game.apply_felt()
+		game.net.send_hello()
+		_shop_refresh()
+		return
 	if id.begins_with("wf_"):
 		game.save["wfx"] = id
 		game.write_save()
@@ -4011,7 +4094,7 @@ func close_modal() -> void:
 func reward_icon(r: Dictionary, sz: float) -> Control:
 	if r.has("item"):
 		var item: Dictionary = {}
-		for it in game.FELTS + game.CUES + game.DECKS + game.WFX:
+		for it in game.FELTS + game.CUES + game.ELITE + game.DECKS + game.WFX:
 			if it.id == r.item:
 				item = it
 		var ic := Control.new()

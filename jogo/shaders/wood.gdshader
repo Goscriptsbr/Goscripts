@@ -3,6 +3,8 @@ shader_type canvas_item;
 uniform vec4 c1 : source_color = vec4(0.45, 0.25, 0.1, 1.0);
 uniform vec4 c2 : source_color = vec4(0.2, 0.1, 0.04, 1.0);
 uniform vec2 size = vec2(1104.0, 604.0);
+uniform vec4 trim : source_color = vec4(0.86, 0.68, 0.32, 1.0);
+uniform int mat = 0; // 0 madeira, 1 laca brilhante, 2 metal escovado, 3 fibra de carbono
 
 // hash sem sin(): fica igual no celular
 float hash(vec2 p) {
@@ -38,13 +40,28 @@ void fragment() {
 	vec3 col = mix(c2.rgb, c1.rgb, g);
 	col = mix(col, c1.rgb * 1.22, smoothstep(0.55, 1.0, tone) * 0.22);
 	col *= 0.93 + 0.07 * smoothstep(0.25, 0.6, pore);
+	if (mat == 1) {
+		// laca: cor lisa e profunda, quase sem veio
+		col = mix(c2.rgb, c1.rgb, 0.55 + 0.2 * smoothstep(0.0, 1.0, across / 27.0) + 0.06 * (tone - 0.5));
+	} else if (mat == 2) {
+		// metal escovado: riscos finos no comprimento
+		float br = vnoise(vec2(along * 0.8 + seed, across * 9.0)) * 0.6 + vnoise(vec2(along * 0.05, across * 3.0)) * 0.4;
+		col = mix(c2.rgb, c1.rgb, 0.45 + 0.4 * br);
+	} else if (mat == 3) {
+		// fibra de carbono: trama em xadrez
+		vec2 cq = vec2(along, across) * 0.55;
+		float tw = step(0.5, fract((floor(cq.x) + floor(cq.y)) * 0.5));
+		float sh = fract(tw > 0.5 ? cq.x : cq.y);
+		col = mix(c2.rgb, c1.rgb, 0.25 + 0.5 * smoothstep(0.0, 0.5, sh) * smoothstep(1.0, 0.5, sh) + 0.15 * tw);
+	}
 	// perfil da moldura: borda de fora arredondada, verniz e friso de latão perto da tabela
 	col *= mix(0.42, 1.0, smoothstep(0.0, 7.0, across));
 	col += vec3(0.2, 0.14, 0.07) * smoothstep(3.0, 6.0, across) * smoothstep(10.0, 6.0, across) * 0.55;
 	float gl = exp(-pow((across - 13.5) / 4.2, 2.0));
-	col += vec3(0.3, 0.23, 0.14) * gl * (0.3 + 0.4 * vnoise(vec2(along * 0.012 + seed, 2.0)));
+	float glk = mat == 0 ? 1.0 : (mat == 1 ? 1.1 : (mat == 3 ? 1.2 : 1.9));
+	col += mix(vec3(0.3, 0.23, 0.14), vec3(0.45), step(0.5, float(mat))) * gl * glk * (0.3 + 0.4 * vnoise(vec2(along * 0.012 + seed, 2.0)));
 	float brass = smoothstep(1.4, 0.5, abs(across - 21.6));
-	vec3 bc = vec3(0.86, 0.68, 0.32) * (0.72 + 0.5 * smoothstep(0.7, 0.0, abs(across - 21.2)));
+	vec3 bc = trim.rgb * (0.72 + 0.5 * smoothstep(0.7, 0.0, abs(across - 21.2)));
 	col = mix(col, bc, brass * 0.92);
 	col *= mix(1.0, 0.5, smoothstep(23.0, 27.0, across));
 	// emenda dos cantos

@@ -171,7 +171,7 @@ func connect_server() -> void:
 
 func send_hello() -> void:
 	if ws != null and ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": str(game.save.felt), "wfx": game.my_wfx()}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx()}))
 
 
 func world_send(d: Dictionary) -> void:
@@ -216,12 +216,12 @@ var look_sent := ""
 # o servidor confere se cada um tem moedas para a aposta
 func send_coins() -> void:
 	var c := int(game.save.coins)
-	var lk: String = str(game.save.felt) + "|" + str(game.my_wfx())
+	var lk: String = game.my_felt_tag() + "|" + str(game.my_wfx())
 	if (c == coins_sent and lk == look_sent) or ws == null or not server_ok:
 		return
 	coins_sent = c
 	look_sent = lk
-	world_send({"t": "coins", "n": c, "felt": str(game.save.felt), "wfx": game.my_wfx()})
+	world_send({"t": "coins", "n": c, "felt": game.my_felt_tag(), "wfx": game.my_wfx()})
 
 
 func send_score() -> void:
@@ -263,7 +263,7 @@ func _world_poll(delta: float) -> void:
 	var stt := ws.get_ready_state()
 	if stt == WebSocketPeer.STATE_OPEN and not hello_sent:
 		hello_sent = true
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": str(game.save.felt), "wfx": game.my_wfx()}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx()}))
 	if stt == WebSocketPeer.STATE_CONNECTING:
 		world_t += delta
 	while stt == WebSocketPeer.STATE_OPEN and ws.get_available_packet_count() > 0:
@@ -301,7 +301,7 @@ func _world_msg(m: Dictionary) -> void:
 		"welcome":
 			server_ok = true
 			coins_sent = int(game.save.coins)
-			look_sent = str(game.save.felt) + "|" + game.my_wfx()
+			look_sent = game.my_felt_tag() + "|" + game.my_wfx()
 			send_score()
 			send_profile()
 			was_ok = true

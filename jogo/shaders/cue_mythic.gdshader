@@ -1,5 +1,6 @@
 shader_type canvas_item;
 // Tacos do mês: arte no taco inteiro, animada e com brilho em volta.
+// theme: 11 neon, 12 jade, 13 supernova, 14 rosa negra, 15 anjo, 16 buraco negro, 17 zeus, 18 infinito (tacos ELITE)
 // theme: 0 fênix, 1 trovão, 2 samurai, 3 lobo da lua, 4 tsunami, 5 esmeralda, 6 vulcão, 7 aurora, 8 pedro, 9 cometa, 10 imperador
 
 uniform int theme = 0;
@@ -77,10 +78,213 @@ vec2 scales(vec2 p) {
 	return vec2(smoothstep(0.08, 0.0, abs(r - 0.55)), r);
 }
 
+// ---------- tacos ELITE ----------
+float lemni(vec2 q, float a) {
+	// distância aproximada até o símbolo do infinito (lemniscata)
+	float v = dot(q, q) * dot(q, q) - a * a * (q.x * q.x - q.y * q.y);
+	return abs(v) / (a * a * 2.2 * max(length(q), 0.2));
+}
+
+vec3 art2(int th, vec2 P, float t, out float e) {
+	vec3 c = vec3(0.0);
+	e = 0.0;
+	if (th == 11) {
+		// NEON CYBER: grade retrô andando, linha de varredura e falhas de tela
+		c = mix(vec3(0.05, 0.0, 0.12), vec3(0.2, 0.0, 0.3), 0.5 + 0.5 * P.y);
+		float gx = smoothstep(0.07, 0.0, abs(fract(P.x * 0.7 - t * 0.9) - 0.5) - 0.43);
+		float gy = smoothstep(0.06, 0.0, abs(fract(P.y * 2.0 + 0.5) - 0.5) - 0.44);
+		c += vec3(1.0, 0.2, 0.85) * gx * 0.9 + vec3(0.2, 0.9, 1.0) * gy * 0.55;
+		vec2 sc = vec2(mod(P.x, 5.0) - 2.5, P.y + 0.15);
+		float sun = smoothstep(0.75, 0.7, length(sc * vec2(0.9, 1.0))) * step(0.0, sin(P.y * 18.0 + t * 2.0) + 0.3 + P.y);
+		c = mix(c, mix(vec3(1.0, 0.85, 0.2), vec3(1.0, 0.2, 0.6), 0.5 - P.y * 0.6), sun);
+		float scan = smoothstep(0.08, 0.0, abs(fract(P.x * 0.05 - t * 0.35) - 0.5) - 0.46);
+		float gseed = floor(t * 7.0);
+		float gb = step(0.9, hash(floor(P.x * 1.3) + gseed * 3.1)) * step(abs(P.y - (hash(gseed + floor(P.x)) * 1.6 - 0.8)), 0.15);
+		c = mix(c, vec3(0.3, 1.0, 1.0), gb * 0.8);
+		c += vec3(1.0) * scan * 0.5;
+		e = gx * 0.8 + gy * 0.4 + sun * 0.5 + gb * 0.5 + scan * 0.5;
+	} else if (th == 12) {
+		// SERPENTE DE JADE: mármore de jade com escamas e uma serpente dourada ondulando
+		float n = fbm(P * vec2(0.5, 1.6) + vec2(0.0, t * 0.05));
+		c = mix(vec3(0.01, 0.22, 0.13), vec3(0.25, 0.7, 0.45), n);
+		c += vec3(0.5, 1.0, 0.75) * smoothstep(0.05, 0.0, abs(fbm(P * vec2(0.9, 2.4)) - 0.55)) * 0.35;
+		vec2 sc2 = scales(P * 1.4);
+		c = mix(c, vec3(0.55, 1.0, 0.75), sc2.x * 0.35);
+		float y = 0.5 * sin(P.x * 0.65 - t * 1.4);
+		float d = abs(P.y - y);
+		float body = smoothstep(0.32, 0.24, d);
+		float belly = fract(P.x * 1.6 - t * 0.89);
+		vec3 sk = mix(vec3(0.75, 0.52, 0.08), vec3(1.0, 0.9, 0.45), smoothstep(0.24, 0.0, d));
+		sk = mix(sk, vec3(0.1, 0.25, 0.08), smoothstep(0.1, 0.0, abs(belly - 0.5) - 0.3) * smoothstep(0.1, 0.18, d) * 0.7);
+		c = mix(c, sk, body);
+		float shine = smoothstep(0.06, 0.0, abs(P.y - y + 0.12)) * body;
+		c += vec3(1.0, 0.95, 0.7) * shine * 0.6;
+		e = body * 0.3 + shine * 0.6 + sc2.x * 0.15;
+	} else if (th == 13) {
+		// SUPERNOVA: núcleos explodindo, raios, ondas de choque e nuvens de gás
+		c = mix(vec3(0.04, 0.0, 0.1), vec3(0.5, 0.08, 0.45), fbm(P * vec2(0.45, 1.3) + vec2(t * 0.15, 0.0)));
+		c += vec3(1.0, 0.45, 0.1) * smoothstep(0.55, 0.9, fbm(P * vec2(0.7, 1.8) - vec2(t * 0.25, 0.0))) * 0.7;
+		float cell = floor(P.x / 4.2);
+		vec2 lc = vec2(mod(P.x, 4.2) - 2.1, P.y);
+		float r = length(lc);
+		float pulse = 0.75 + 0.35 * sin(t * 4.0 + cell * 2.0);
+		float core = exp(-r * r * 7.0) * pulse;
+		float a = atan(lc.y, lc.x);
+		float rays = pow(abs(cos(a * 5.0 + t * 0.8 + cell)), 24.0) * exp(-r * 1.1) * pulse;
+		float wave = smoothstep(0.08, 0.0, abs(r - fract(t * 0.45 + hash(cell)) * 2.4)) * (1.0 - fract(t * 0.45 + hash(cell)));
+		c += vec3(1.0, 0.97, 0.85) * core * 1.8 + vec3(1.0, 0.7, 0.3) * rays * 1.2 + vec3(1.0, 0.6, 0.9) * wave;
+		c += vec3(1.0) * twinkle(P * vec2(1.8, 2.6), 0.25, t) * 0.7;
+		e = core * 1.4 + rays + wave + fbm(P) * 0.2;
+	} else if (th == 14) {
+		// ROSA NEGRA: veludo preto, rosas vermelhas girando devagar e ramos com espinhos
+		c = mix(vec3(0.02, 0.0, 0.01), vec3(0.12, 0.01, 0.03), fbm(P * vec2(0.6, 1.8)));
+		float vine = smoothstep(0.07, 0.0, abs(P.y - 0.62 * sin(P.x * 0.5 + 0.8)));
+		float thorn = smoothstep(0.12, 0.0, abs(fract(P.x * 0.8) - 0.5) - 0.1) * smoothstep(0.2, 0.05, abs(P.y - 0.62 * sin(P.x * 0.5 + 0.8)));
+		c = mix(c, vec3(0.05, 0.2, 0.06), max(vine, thorn * 0.6));
+		float cell = floor(P.x / 2.8);
+		vec2 lc = vec2(mod(P.x, 2.8) - 1.4, P.y - (hash(cell) - 0.5) * 0.4);
+		float r = length(lc);
+		float a = atan(lc.y, lc.x) + t * 0.3 + cell;
+		float pet = 0.5 + 0.5 * sin(a * 3.0 + r * 16.0);
+		float rose = smoothstep(0.72, 0.66, r);
+		vec3 rc = mix(vec3(0.35, 0.0, 0.03), vec3(0.95, 0.08, 0.15), pet * (1.0 - r));
+		rc += vec3(1.0, 0.4, 0.45) * pow(pet, 6.0) * (1.0 - r) * 0.4;
+		c = mix(c, rc, rose);
+		float dew = smoothstep(0.07, 0.0, length(lc - vec2(0.25, -0.3))) * rose;
+		c += vec3(1.0) * dew * (0.6 + 0.4 * sin(t * 3.0 + cell));
+		float gl = smoothstep(0.05, 0.0, abs(abs(P.y) - 0.88));
+		c = mix(c, vec3(0.85, 0.65, 0.3), gl);
+		e = rose * pet * 0.35 + dew + gl * 0.3;
+	} else if (th == 15) {
+		// ANJO CELESTIAL: nuvens brancas, penas, auréolas douradas e raios de luz
+		c = mix(vec3(0.78, 0.82, 0.92), vec3(1.0, 0.99, 0.95), fbm(P * vec2(0.35, 1.2) + vec2(t * 0.12, 0.0)));
+		vec2 sc2 = scales(P * vec2(1.1, 1.0));
+		c = mix(c, vec3(1.0, 0.95, 0.8), sc2.x * 0.5);
+		vec2 lc = vec2(mod(P.x, 3.6) - 1.8, P.y);
+		float halo = smoothstep(0.08, 0.0, abs(length(lc * vec2(1.0, 2.2)) - 0.62));
+		c = mix(c, vec3(1.0, 0.8, 0.25), halo);
+		float rays = smoothstep(0.4, 0.0, abs(fract(P.x * 0.08 - P.y * 0.05 - t * 0.2) - 0.5) * 6.0 - 1.4);
+		c += vec3(1.0, 0.93, 0.6) * rays * 0.35;
+		c += vec3(1.0, 0.9, 0.5) * twinkle(P * vec2(1.6, 2.4), 0.2, t) * 0.6;
+		float gl = smoothstep(0.05, 0.0, abs(abs(P.y) - 0.86));
+		c = mix(c, vec3(1.0, 0.82, 0.3), gl);
+		e = halo * 0.7 + rays * 0.4 + gl * 0.3 + 0.15;
+	} else if (th == 16) {
+		// BURACO NEGRO: disco de acreção girando, anel de fótons e estrelas sendo puxadas
+		c = mix(vec3(0.01, 0.0, 0.03), vec3(0.08, 0.02, 0.16), 0.5 + 0.5 * P.y);
+		c += vec3(0.8, 0.85, 1.0) * twinkle(P * vec2(2.0, 2.6), 0.25, t) * 0.6;
+		vec2 lc = vec2(mod(P.x, 3.6) - 1.8, P.y) * vec2(0.8, 1.15);
+		float r = length(lc);
+		float a = atan(lc.y, lc.x);
+		float sw = fbm(vec2(a * 1.6 + t * 2.4 - r * 4.0, r * 4.0));
+		float disk = smoothstep(1.05, 0.5, r) * smoothstep(0.28, 0.38, r);
+		vec3 dc = mix(vec3(0.6, 0.15, 0.9), vec3(1.0, 0.65, 0.2), sw);
+		dc = mix(dc, vec3(1.0, 0.95, 0.85), smoothstep(0.7, 0.95, sw));
+		c = mix(c, dc, disk * (0.55 + 0.6 * sw));
+		float ring2 = smoothstep(0.04, 0.0, abs(r - 0.33));
+		c += vec3(1.0, 0.85, 0.6) * ring2 * 1.2;
+		c = mix(c, vec3(0.0), smoothstep(0.31, 0.28, r));
+		e = disk * sw * 1.1 + ring2 * 1.2;
+	} else if (th == 17) {
+		// FÚRIA DE ZEUS: mármore branco com veios dourados, faixa grega e raios que estalam
+		float m = fbm(P * vec2(0.55, 1.6));
+		c = vec3(0.93, 0.92, 0.88) - vec3(0.25, 0.22, 0.18) * smoothstep(0.05, 0.0, abs(m - 0.5));
+		c = mix(c, vec3(0.95, 0.75, 0.25), smoothstep(0.03, 0.0, abs(fbm(P * vec2(0.8, 2.0) + 4.0) - 0.5)) * 0.8);
+		float bandy = abs(P.y) - 0.78;
+		float mk = step(0.0, bandy) * step(0.5, fract(P.x * 1.4 + step(0.88, abs(P.y)) * 0.5));
+		c = mix(c, vec3(0.85, 0.62, 0.15), step(0.0, bandy) * 0.6 + mk * 0.4);
+		float seed = floor(t * 6.0);
+		float on = step(0.25, hash(seed * 1.3));
+		for (int k = 0; k < 2; k++) {
+			float fk = float(k);
+			float path = (tri(P.x * 0.25 + hash(seed + fk * 7.0) * 3.0) - 0.5) * 1.2 + (vnoise(vec2(P.x * 2.0, seed + fk * 3.0)) - 0.5) * 0.5;
+			float d = abs(P.y - path);
+			c += vec3(1.0, 0.98, 0.8) * smoothstep(0.1, 0.0, d) * on + vec3(1.0, 0.8, 0.2) * smoothstep(0.5, 0.0, d) * on * 0.5;
+			e += smoothstep(0.35, 0.0, d) * on;
+		}
+		e += step(0.0, bandy) * 0.2;
+	} else {
+		// INFINITO: diamante com facetas de arco-íris, símbolos ∞ brilhando e brilhos
+		vec2 q = P * vec2(0.9, 1.5);
+		vec2 ip = floor(q);
+		float d1 = 9.0;
+		float d2 = 9.0;
+		float id = 0.0;
+		for (int j = -1; j <= 1; j++) {
+			for (int i = -1; i <= 1; i++) {
+				vec2 g = ip + vec2(float(i), float(j));
+				vec2 o = g + vec2(hash2(g), hash2(g + 5.3)) * 0.8 + 0.1;
+				float dd = length(q - o);
+				if (dd < d1) { d2 = d1; d1 = dd; id = hash2(g * 1.3); }
+				else if (dd < d2) { d2 = dd; }
+			}
+		}
+		vec3 hc = hue(id + t * 0.15 + P.x * 0.02);
+		float sh = 0.5 + 0.5 * sin(t * 2.5 + id * 6.2831);
+		c = mix(vec3(0.08, 0.08, 0.14), hc, 0.55 + 0.35 * sh);
+		float edge = smoothstep(0.08, 0.0, d2 - d1);
+		c = mix(c, vec3(1.0), edge * 0.85);
+		c += vec3(1.0) * pow(sh, 16.0) * 0.8;
+		vec2 lc = vec2(mod(P.x, 3.4) - 1.7, P.y * 1.2);
+		float inf = smoothstep(0.09, 0.02, lemni(lc, 1.05));
+		c = mix(c, vec3(1.0) * 1.2, inf);
+		e = edge * 0.6 + pow(sh, 8.0) * 0.6 + inf * 1.2 + 0.1;
+	}
+	return c;
+}
+
+vec3 grip2(int th, vec2 P, float t, out float e) {
+	e = 0.0;
+	vec3 c;
+	float dd = abs(fract(P.x * 0.5 + P.y * 0.5) - 0.5) + abs(fract(P.x * 0.5 - P.y * 0.5) - 0.5);
+	if (th == 11) {
+		c = vec3(0.04, 0.03, 0.08) * (0.8 + 0.4 * tri(P.x * 1.2 + P.y * 0.8));
+		float st = smoothstep(0.08, 0.0, abs(fract(P.x * 0.25 - t * 0.5) - 0.5) - 0.42);
+		c += mix(vec3(1.0, 0.2, 0.85), vec3(0.2, 0.9, 1.0), step(0.5, fract(P.x * 0.125 - t * 0.25))) * st;
+		e = st * 0.8;
+	} else if (th == 12) {
+		vec2 s2 = scales(P * 1.2);
+		c = mix(vec3(0.2, 0.65, 0.4), vec3(0.02, 0.2, 0.12), smoothstep(0.0, 0.6, s2.y));
+		c = mix(c, vec3(1.0, 0.82, 0.3), s2.x);
+		e = s2.x * 0.35;
+	} else if (th == 13) {
+		float n = fbm(vec2(P.x * 0.9, P.y * 1.8) + t * 0.1);
+		c = vec3(0.1, 0.02, 0.14) + vec3(1.0, 0.5, 0.1) * smoothstep(0.05, 0.0, abs(n - 0.5)) * (0.8 + 0.4 * sin(t * 4.0 + P.x * 0.5));
+		e = smoothstep(0.05, 0.0, abs(n - 0.5));
+	} else if (th == 14) {
+		c = vec3(0.05, 0.01, 0.02) * (0.6 + 0.9 * smoothstep(0.0, 0.5, dd));
+		float seam = smoothstep(0.05, 0.0, abs(dd - 0.5));
+		c = mix(c, vec3(0.85, 0.08, 0.15), seam);
+		e = seam * 0.4;
+	} else if (th == 15) {
+		c = vec3(0.97, 0.96, 0.92) * (0.75 + 0.35 * smoothstep(0.0, 0.5, dd));
+		float seam = smoothstep(0.05, 0.0, abs(dd - 0.5));
+		float stud = smoothstep(0.14, 0.07, dd);
+		c = mix(c, vec3(1.0, 0.8, 0.3), max(seam * 0.8, stud));
+		e = seam * 0.2 + stud * 0.4 + 0.1;
+	} else if (th == 16) {
+		vec2 lc = vec2(mod(P.x, 2.0) - 1.0, P.y);
+		float sp = fract(length(lc) * 3.0 - atan(lc.y, lc.x) / 6.2831 - t * 0.6);
+		c = mix(vec3(0.02, 0.0, 0.05), vec3(0.4, 0.15, 0.7), smoothstep(0.3, 0.0, abs(sp - 0.5) - 0.2));
+		e = smoothstep(0.1, 0.0, abs(sp - 0.5) - 0.35) * 0.5;
+	} else if (th == 17) {
+		float rope = fract(P.x * 0.6 + P.y * 0.45);
+		c = mix(vec3(0.95, 0.94, 0.9), vec3(0.95, 0.72, 0.2), step(0.5, fract(P.x * 0.3 + P.y * 0.225)));
+		c *= 0.7 + 0.3 * smoothstep(0.0, 0.5, rope) * smoothstep(1.0, 0.5, rope);
+		e = 0.15;
+	} else {
+		float h = fract(P.x * 0.08 + P.y * 0.25 - t * 0.25);
+		c = mix(vec3(0.95), hue(h), 0.75) * (0.7 + 0.3 * tri(P.x * 0.6 + P.y * 0.3));
+		e = 0.45;
+	}
+	return c;
+}
+
 // arte principal (antebraço do taco). e = brilho próprio (não escurece com a luz)
 vec3 art(int th, vec2 P, float t, out float e) {
 	vec3 c = vec3(0.0);
 	e = 0.0;
+	if (th >= 11) { return art2(th, P, t, e); }
 	if (th == 0) {
 		float n = fbm(vec2(P.x * 0.55 + t * 2.0, P.y * 1.4));
 		float fl = smoothstep(0.3, 0.8, n + (1.0 - abs(P.y)) * 0.3);
@@ -255,6 +459,7 @@ vec3 art(int th, vec2 P, float t, out float e) {
 vec3 grip(int th, vec2 P, float t, out float e) {
 	e = 0.0;
 	vec3 c;
+	if (th >= 11) { return grip2(th, P, t, e); }
 	if (th == 0 || th == 3) {
 		vec2 s = scales(P);
 		vec3 a = th == 0 ? vec3(0.55, 0.05, 0.02) : vec3(0.06, 0.1, 0.25);

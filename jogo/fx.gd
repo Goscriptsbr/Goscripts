@@ -90,6 +90,22 @@ static func draw(cn, ca, kind: String, t: float, ang: float, sc: float) -> void:
 			_comet(cn, ca, t, ax, pp, sc)
 		"crown":
 			_crown(cn, ca, t, ax, pp, sc)
+		"neon":
+			_neon(cn, ca, t, ax, pp, sc)
+		"jade":
+			_jade(cn, ca, t, ax, pp, sc)
+		"nova":
+			_nova(cn, ca, t, ax, pp, sc)
+		"rose":
+			_rose(cn, ca, t, ax, pp, sc)
+		"angel":
+			_angel(cn, ca, t, ax, pp, sc)
+		"void":
+			_void(cn, ca, t, ax, pp, sc)
+		"zeus":
+			_zeus(cn, ca, t, ax, pp, sc)
+		"infinity":
+			_infinity(cn, ca, t, ax, pp, sc)
 
 
 static func _dragon(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
@@ -573,3 +589,234 @@ static func _crown(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> voi
 		var p := pt(ax, pp, sc, u0 + 30.0 + hsh(float(i)) * 30.0 - life * 10.0, (hsh(float(i) + 3.0) - 0.5) * 50.0)
 		var tw2 := 0.5 + 0.5 * sin(t * 6.0 + float(i))
 		sparkle(ca, p, (1.4 + tw2 * 2.6) * sc, Color(1.0, 0.86, 0.4, 0.85 * (1.0 - life)))
+
+
+# ---------------------------------------------------------------- tacos ELITE
+
+# NEON CYBER: anéis de neon pulsando, quadradinhos de "pixel" saindo e um losango holográfico
+static func _neon(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var c := pt(ax, pp, sc, 20.0, 0.0)
+	for k in 3:
+		var ph := fposmod(t * 0.9 + float(k) / 3.0, 1.0)
+		var col := Color(1.0, 0.24, 0.94, (1.0 - ph) * 0.7) if k % 2 == 0 else Color(0.24, 0.94, 1.0, (1.0 - ph) * 0.7)
+		ca.draw_arc(c, (6.0 + ph * 30.0) * sc, 0, TAU, 32, col, 2.4 * sc)
+	var rot := t * 1.6
+	var dm := PackedVector2Array()
+	for k in 4:
+		var a := rot + float(k) * PI / 2.0
+		dm.append(c + (ax * cos(a) + pp * sin(a)) * 11.0 * sc)
+	cn.draw_colored_polygon(dm, Color(0.08, 0.02, 0.16, 0.9))
+	var dl := dm.duplicate()
+	dl.append(dm[0])
+	ca.draw_polyline(dl, Color(0.24, 0.94, 1.0, 0.95), 2.2 * sc)
+	ca.draw_circle(c, 4.0 * sc, Color(1.0, 0.3, 0.95, 0.8 + 0.2 * sin(t * 9.0)))
+	for i in 14:
+		var life := fposmod(t * 0.8 + float(i) / 14.0, 1.0)
+		var p := pt(ax, pp, sc, 12.0 + life * 80.0, (hsh(float(i) * 3.3) - 0.5) * 50.0 * (0.4 + life))
+		var sz := (1.0 + (1.0 - life) * 3.5) * sc
+		var col2 := Color(1.0, 0.24, 0.94, 1.0 - life) if i % 2 == 0 else Color(0.24, 0.94, 1.0, 1.0 - life)
+		if fposmod(t * 12.0 + float(i), 3.0) < 2.4:
+			ca.draw_colored_polygon(PackedVector2Array([p + Vector2(-sz, -sz), p + Vector2(sz, -sz), p + Vector2(sz, sz), p + Vector2(-sz, sz)]), col2)
+
+
+# SERPENTE DE JADE: cabeça de cobra de jade com olhos dourados e língua que sai
+static func _jade(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var sway := sin(t * 2.2) * 3.0
+	var o := Vector2(0, sway)
+	# pescoço ondulando
+	var neck := PackedVector2Array()
+	for i in 10:
+		var u := float(i) * 2.2
+		neck.append(pt(ax, pp, sc, u, sin(t * 2.2 - u * 0.25) * 3.0))
+	cn.draw_polyline(neck, Color("0f6a42"), 9.0 * sc)
+	cn.draw_polyline(neck, Color("2fbf78"), 4.0 * sc)
+	var head := [Vector2(18, -8), Vector2(30, -9), Vector2(40, -5), Vector2(44, 0), Vector2(40, 5), Vector2(30, 9), Vector2(18, 8), Vector2(14, 0)]
+	var hp := PackedVector2Array()
+	for q in head:
+		hp.append(pt(ax, pp, sc, q.x, q.y + o.y))
+	cn.draw_colored_polygon(hp, Color("138a55"))
+	var hl := PackedVector2Array()
+	for q in [Vector2(20, -6), Vector2(32, -6), Vector2(40, -3), Vector2(30, -2), Vector2(20, -2)]:
+		hl.append(pt(ax, pp, sc, q.x, q.y + o.y))
+	cn.draw_colored_polygon(hl, Color(0.6, 1.0, 0.75, 0.35))
+	var hc := hp.duplicate()
+	hc.append(hp[0])
+	cn.draw_polyline(hc, Color("e3b341"), 1.6 * sc)
+	for sgn in [-1.0, 1.0]:
+		var eye := pt(ax, pp, sc, 32.0, 4.5 * sgn + o.y)
+		ca.draw_circle(eye, 4.5 * sc, Color(1.0, 0.85, 0.2, 0.35 + 0.2 * sin(t * 5.0)))
+		cn.draw_circle(eye, 2.2 * sc, Color("ffd34a"))
+		cn.draw_line(eye - ax * 1.6 * sc, eye + ax * 1.6 * sc, Color(0.05, 0.05, 0.0), 1.0 * sc)
+	var tl := fposmod(t * 1.3, 1.0)
+	if tl < 0.35:
+		var ext := sin(tl / 0.35 * PI) * 14.0
+		var tip := pt(ax, pp, sc, 44.0 + ext, o.y)
+		cn.draw_line(pt(ax, pp, sc, 43.0, o.y), tip, Color("e0203a"), 1.6 * sc)
+		cn.draw_line(tip, tip + (ax * 3.0 + pp * 2.5) * sc, Color("e0203a"), 1.2 * sc)
+		cn.draw_line(tip, tip + (ax * 3.0 - pp * 2.5) * sc, Color("e0203a"), 1.2 * sc)
+	for i in 8:
+		var life := fposmod(t * 0.5 + float(i) / 8.0, 1.0)
+		var p := pt(ax, pp, sc, 10.0 + life * 60.0, sin(float(i) * 2.3 + t) * 22.0 * life)
+		sparkle(ca, p, (1.0 + (1.0 - life) * 2.5) * sc, Color(0.4, 1.0, 0.65, 0.9 * (1.0 - life)))
+
+
+# SUPERNOVA: estrela pulsando com raios girando e faíscas sendo lançadas
+static func _nova(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var c := pt(ax, pp, sc, 22.0, 0.0)
+	var pul := 0.8 + 0.25 * sin(t * 5.0)
+	ca.draw_circle(c, 30.0 * sc * pul, Color(1.0, 0.45, 0.1, 0.12))
+	ca.draw_circle(c, 18.0 * sc * pul, Color(0.8, 0.3, 1.0, 0.18))
+	for k in 10:
+		var a := t * 0.7 + float(k) * TAU / 10.0
+		var ln := (16.0 + 10.0 * hsh(float(k) + floor(t * 3.0))) * pul
+		var d := ax * cos(a) + pp * sin(a)
+		ca.draw_line(c, c + d * ln * sc, Color(1.0, 0.75, 0.35, 0.55), 2.6 * sc)
+	var ph := fposmod(t * 0.7, 1.0)
+	ca.draw_arc(c, (8.0 + ph * 40.0) * sc, 0, TAU, 36, Color(1.0, 0.6, 0.9, 0.7 * (1.0 - ph)), 2.0 * sc)
+	cn.draw_circle(c, 8.0 * sc * pul, Color(1.0, 0.7, 0.3))
+	ca.draw_circle(c, 6.0 * sc * pul, Color(1.0, 1.0, 0.9, 0.95))
+	for i in 18:
+		var life := fposmod(t * 0.9 + float(i) / 18.0, 1.0)
+		var a2 := hsh(float(i) * 7.1) * TAU
+		var p := c + (ax * cos(a2) + pp * sin(a2)) * (10.0 + life * 55.0) * sc
+		ca.draw_circle(p, (2.4 * (1.0 - life) + 0.6) * sc, Color(1.0, 0.8 - life * 0.5, 0.4, 1.0 - life))
+
+
+# ROSA NEGRA: rosa vermelha girando devagar com pétalas caindo
+static func _rose(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var c := pt(ax, pp, sc, 20.0, 0.0)
+	ca.draw_circle(c, 24.0 * sc, Color(1.0, 0.1, 0.2, 0.10 + 0.05 * sin(t * 2.0)))
+	# folhas
+	for sgn in [-1.0, 1.0]:
+		var lf := PackedVector2Array()
+		for j in 12:
+			var a := float(j) / 12.0 * TAU
+			lf.append(pt(ax, pp, sc, 8.0 + cos(a) * 9.0, sgn * (12.0 + sin(a) * 4.0)))
+		cn.draw_colored_polygon(lf, Color("0f4a18"))
+	# camadas de pétalas
+	for layer in 4:
+		var rr := 13.0 - float(layer) * 3.0
+		var n := 6 - layer
+		var col := Color(0.45 + 0.15 * layer, 0.02, 0.06 + 0.02 * layer)
+		for k in n:
+			var a := t * (0.25 + 0.1 * layer) + float(k) * TAU / float(n) + float(layer)
+			var pc := c + (ax * cos(a) + pp * sin(a)) * rr * 0.55 * sc
+			cn.draw_circle(pc, rr * 0.62 * sc, col)
+	cn.draw_circle(c, 3.0 * sc, Color("3a0008"))
+	ca.draw_circle(c + (ax * 3.0 - pp * 4.0) * sc, 1.6 * sc, Color(1, 1, 1, 0.6 + 0.4 * sin(t * 3.0)))
+	for i in 7:
+		var life := fposmod(t * 0.35 + float(i) / 7.0, 1.0)
+		var p := pt(ax, pp, sc, 14.0 + life * 70.0, sin(t * 1.5 + float(i) * 2.0) * 10.0 + (hsh(float(i)) - 0.5) * 30.0)
+		var a3 := t * 2.0 + float(i)
+		var pet := PackedVector2Array()
+		for j in 10:
+			var aa := float(j) / 10.0 * TAU
+			pet.append(p + (ax * cos(aa + a3) * 4.0 + pp * sin(aa + a3) * 2.2) * sc)
+		cn.draw_colored_polygon(pet, Color(0.85, 0.05, 0.12, 1.0 - life))
+
+
+# ANJO CELESTIAL: asas brancas batendo devagar, auréola dourada e brilhinhos
+static func _angel(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var flap := sin(t * 2.4) * 0.18
+	var c := pt(ax, pp, sc, 12.0, 0.0)
+	ca.draw_circle(c, 30.0 * sc, Color(1.0, 0.95, 0.7, 0.10 + 0.05 * sin(t * 2.0)))
+	for sgn in [-1.0, 1.0]:
+		for f in 6:
+			var a: float = (0.35 + float(f) * 0.2 + flap) * float(sgn)
+			var ln := 30.0 - float(f) * 2.5
+			var dir := (ax * cos(a) + pp * sin(a)).normalized()
+			var base := c
+			var tip := base + dir * ln * sc
+			var side := dir.orthogonal() * 3.6 * sc
+			var fe := PackedVector2Array([base + side * 0.4, base.lerp(tip, 0.5) + side, tip, base.lerp(tip, 0.5) - side, base - side * 0.4])
+			cn.draw_colored_polygon(fe, Color(1.0, 1.0, 1.0, 0.95) if f % 2 == 0 else Color(0.93, 0.94, 1.0, 0.95))
+			cn.draw_line(base, tip, Color(0.85, 0.75, 0.45, 0.6), 0.8 * sc)
+	# auréola (elipse) acima da ponta
+	var hc := pt(ax, pp, sc, 34.0, 0.0)
+	var hl := PackedVector2Array()
+	for j in 33:
+		var aa := float(j) / 32.0 * TAU
+		hl.append(hc + (ax * cos(aa) * 3.5 + pp * sin(aa) * 11.0) * sc)
+	ca.draw_polyline(hl, Color(1.0, 0.85, 0.3, 0.5), 5.0 * sc)
+	ca.draw_polyline(hl, Color(1.0, 0.95, 0.7, 0.95), 2.0 * sc)
+	for i in 10:
+		var life := fposmod(t * 0.4 + float(i) / 10.0, 1.0)
+		var p := pt(ax, pp, sc, 6.0 + life * 60.0, (hsh(float(i) * 5.0) - 0.5) * 50.0)
+		sparkle(ca, p, (1.0 + (1.0 - life) * 2.6) * sc, Color(1.0, 0.92, 0.6, 0.9 * (1.0 - life)))
+
+
+# BURACO NEGRO: disco de acreção girando com partículas sendo sugadas
+static func _void(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var c := pt(ax, pp, sc, 22.0, 0.0)
+	ca.draw_circle(c, 32.0 * sc, Color(0.55, 0.25, 1.0, 0.10))
+	for k in 3:
+		var rr := 13.0 + float(k) * 5.0
+		var pts := PackedVector2Array()
+		for j in 41:
+			var a := float(j) / 40.0 * TAU
+			pts.append(c + (ax * cos(a) * rr + pp * sin(a) * rr * 0.4) * sc)
+		var col := Color(1.0, 0.6, 0.2, 0.55) if k == 0 else (Color(0.8, 0.4, 1.0, 0.45) if k == 1 else Color(0.5, 0.3, 1.0, 0.3))
+		ca.draw_polyline(pts, col, (4.0 - float(k)) * sc)
+	for i in 16:
+		var life := fposmod(t * 0.6 + float(i) / 16.0, 1.0)
+		var a2 := hsh(float(i) * 3.7) * TAU + life * 6.0
+		var rr2 := (40.0 * (1.0 - life) + 6.0)
+		var p := c + (ax * cos(a2) * rr2 + pp * sin(a2) * rr2 * 0.4) * sc
+		ca.draw_circle(p, (1.0 + life * 1.8) * sc, Color(1.0, 0.75, 0.4, life))
+	cn.draw_circle(c, 9.0 * sc, Color(0, 0, 0))
+	ca.draw_arc(c, 9.5 * sc, 0, TAU, 32, Color(1.0, 0.8, 0.5, 0.8 + 0.2 * sin(t * 4.0)), 1.6 * sc)
+
+
+# FÚRIA DE ZEUS: esfera de energia dourada com raios estalando para todo lado
+static func _zeus(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var c := pt(ax, pp, sc, 20.0, 0.0)
+	var pul := 0.85 + 0.2 * sin(t * 8.0)
+	ca.draw_circle(c, 26.0 * sc * pul, Color(1.0, 0.85, 0.3, 0.12))
+	ca.draw_circle(c, 12.0 * sc * pul, Color(1.0, 0.9, 0.5, 0.35))
+	var seed: float = floor(t * 12.0)
+	for k in 4:
+		var a := hsh(seed + float(k) * 3.1) * TAU
+		var pts := PackedVector2Array([c])
+		var q := c
+		var ln := 14.0 + hsh(seed * 1.7 + float(k)) * 22.0
+		for j in 5:
+			var aj := a + (hsh(seed + float(k) * 9.0 + float(j)) - 0.5) * 1.2
+			q += (ax * cos(aj) + pp * sin(aj)) * ln / 5.0 * sc
+			pts.append(q)
+		ca.draw_polyline(pts, Color(1.0, 0.85, 0.3, 0.5), 4.0 * sc)
+		ca.draw_polyline(pts, Color(1.0, 1.0, 0.9, 0.95), 1.4 * sc)
+	cn.draw_circle(c, 6.5 * sc, Color(1.0, 0.95, 0.75))
+	ca.draw_circle(c, 5.0 * sc, Color(1, 1, 1, 0.9))
+
+
+# INFINITO: diamante girando que solta feixes de arco-íris e um ∞ brilhando
+static func _infinity(cn, ca, t: float, ax: Vector2, pp: Vector2, sc: float) -> void:
+	var c := pt(ax, pp, sc, 22.0, 0.0)
+	for k in 7:
+		var a := t * 0.8 + float(k) * TAU / 7.0
+		var d := ax * cos(a) + pp * sin(a)
+		ca.draw_line(c, c + d * (30.0 + 8.0 * sin(t * 3.0 + k)) * sc, Color.from_hsv(fposmod(float(k) / 7.0 + t * 0.2, 1.0), 0.7, 1.0, 0.45), 3.0 * sc)
+	var rot := t * 1.2
+	var dm := PackedVector2Array()
+	for k in 6:
+		var a2 := rot + float(k) * TAU / 6.0
+		dm.append(c + (ax * cos(a2) * 12.0 + pp * sin(a2) * 12.0) * sc)
+	for k in 6:
+		var tri := PackedVector2Array([c, dm[k], dm[(k + 1) % 6]])
+		cn.draw_colored_polygon(tri, Color.from_hsv(fposmod(float(k) / 6.0 + t * 0.25, 1.0), 0.45, 1.0))
+	var dl := dm.duplicate()
+	dl.append(dm[0])
+	ca.draw_polyline(dl, Color(1, 1, 1, 0.9), 1.6 * sc)
+	# ∞ desenhado com a lemniscata
+	var li := PackedVector2Array()
+	var lc := pt(ax, pp, sc, 46.0, 0.0)
+	for j in 49:
+		var s := float(j) / 48.0 * TAU
+		var den := 1.0 + sin(s) * sin(s)
+		li.append(lc + (pp * (cos(s) / den) * 13.0 + ax * (sin(s) * cos(s) / den) * 9.0) * sc)
+	ca.draw_polyline(li, Color.from_hsv(fposmod(t * 0.3, 1.0), 0.6, 1.0, 0.6), 5.0 * sc)
+	ca.draw_polyline(li, Color(1, 1, 1, 0.95), 1.8 * sc)
+	for i in 10:
+		var life := fposmod(t * 0.5 + float(i) / 10.0, 1.0)
+		var p := pt(ax, pp, sc, 8.0 + life * 70.0, (hsh(float(i) * 4.4) - 0.5) * 50.0)
+		sparkle(ca, p, (1.0 + (1.0 - life) * 2.8) * sc, Color.from_hsv(fposmod(float(i) * 0.13 + t * 0.2, 1.0), 0.5, 1.0, 0.9 * (1.0 - life)))
