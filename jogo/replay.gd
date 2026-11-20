@@ -51,13 +51,10 @@ func _process(delta: float) -> void:
 	if game == null:
 		return
 	if busy and thread != null and not thread.is_alive():
-		thread.wait_to_finish()
+		var bytes: PackedByteArray = thread.wait_to_finish()
 		thread = null
 		busy = false
-		if result_err == "":
-			game.ui.say("Replay salvo na galeria! (%s)" % result_path.get_file())
-		else:
-			game.ui.say(result_err)
+		_write_file(bytes)
 	var want: bool = game.rec_active()
 	if not want:
 		if recording:
@@ -108,29 +105,62 @@ func save_clip() -> void:
 	thread.start(_worker.bind(fr, rs))
 
 
-func _worker(fr: Array, rs: Array) -> void:
-	var bytes := build_gif(fr, rs, W, H, int(round(100.0 / FPS)))
+func _worker(fr: Array, rs: Array) -> PackedByteArray:
+	# só monta o GIF aqui (em segundo plano); gravar no armazenamento do Android fica na linha principal
+	return build_gif(fr, rs, W, H, int(round(100.0 / FPS)))
+
+
+# grava o GIF onde a galeria mostra. Ordem: DCIM/Camera (aparece junto das fotos), DCIM, Imagens, Downloads.
+func _write_file(bytes: PackedByteArray) -> void:
+	if bytes.size() < 100:
+		_done(false, "Não consegui montar o replay.")
+		return
+	if OS.get_name() == "Android":
+		OS.request_permission("android.permission.WRITE_EXTERNAL_STORAGE")
 	var stamp := Time.get_datetime_string_from_system().replace(":", "").replace("-", "").replace("T", "_")
-	var name := "sinucou_%s.gif" % stamp
-	var dirs: Array = []
+	var fname := "Sinucou_%s.gif" % stamp
+	var dcim := OS.get_system_dir(OS.SYSTEM_DIR_DCIM)
 	var pics := OS.get_system_dir(OS.SYSTEM_DIR_PICTURES)
-	if pics != "":
-		dirs.append(pics + "/Sinucou")
 	var dl := OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS)
+	var tries: Array = []
+	if dcim != "":
+		tries.append([dcim + "/Camera", "Galeria > Câmera"])
+		tries.append([dcim, "Galeria > DCIM"])
+	if pics != "":
+		tries.append([pics, "Galeria > Imagens (Pictures)"])
 	if dl != "":
-		dirs.append(dl)
-	dirs.append(OS.get_user_data_dir() + "/replays")
-	for d in dirs:
-		DirAccess.make_dir_recursive_absolute(d)
-		var f := FileAccess.open(d + "/" + name, FileAccess.WRITE)
-		if f != null:
-			f.store_buffer(bytes)
-			f.close()
-			result_path = d + "/" + name
-			if d.ends_with("/replays"):
-				result_err = "Sem permissão para a galeria: replay guardado dentro do jogo."
+		tries.append([dl, "pasta Downloads"])
+	for tr2 in tries:
+		var d: String = tr2[0]
+		if not DirAccess.dir_exists_absolute(d):
+			DirAccess.make_dir_recursive_absolute(d)
+		var path := d + "/" + fname
+		var f := FileAccess.open(path, FileAccess.WRITE)
+		if f == null:
+			continue
+		f.store_buffer(bytes)
+		f.close()
+		if FileAccess.file_exists(path):
+			result_path = path
+			_done(true, "Replay salvo em:\n%s\n\n(arquivo %s)" % [tr2[1], fname])
 			return
-	result_err = "Não consegui salvar o replay (sem espaço ou sem permissão)."
+	# último recurso: dentro do jogo
+	var ud := OS.get_user_data_dir() + "/replays"
+	DirAccess.make_dir_recursive_absolute(ud)
+	var f2 := FileAccess.open(ud + "/" + fname, FileAccess.WRITE)
+	if f2 != null:
+		f2.store_buffer(bytes)
+		f2.close()
+		result_path = ud + "/" + fname
+		_done(false, "O celular não deixou salvar na galeria (permissão de armazenamento).\nO replay ficou guardado dentro do jogo.")
+		return
+	_done(false, "Não consegui salvar o replay (sem espaço ou sem permissão).")
+
+
+func _done(ok: bool, msg: String) -> void:
+	result_err = "" if ok else msg
+	print("REPLAY salvo=", ok, " ", result_path)
+	game.ui.confirm("REPLAY SALVO!" if ok else "REPLAY", msg, "OK", func(): pass, "", Callable())
 
 
 # ---------------------------------------------------------------- GIF

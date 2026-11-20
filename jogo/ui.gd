@@ -4366,7 +4366,9 @@ func confirm(title: String, msg: String, yes: String, yes_cb: Callable, no: Stri
 	var bn := mk_btn(no, 220, 62, GRAY, 20)
 	bn.pressed.connect(func():
 		close_modal()
-		no_cb.call())
+		if no_cb.is_valid():
+			no_cb.call())
+	bn.visible = no != ""
 	row.add_child(bn)
 
 
