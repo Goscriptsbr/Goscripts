@@ -1,6 +1,7 @@
 shader_type canvas_item;
-// Reduz a tela para 128 cores (4 tons de vermelho x 8 de verde x 4 de azul) com pontilhado,
+// Reduz a tela para as 128 cores da paleta (escolhidas da própria tela) com um pontilhado bem leve,
 // e escreve o NÚMERO da cor no canal vermelho: o replay lê 1 byte por pixel e já vira GIF.
+uniform vec3 pal[128];
 
 float bayer(vec2 p) {
 	ivec2 q = ivec2(mod(p, 4.0));
@@ -10,10 +11,13 @@ float bayer(vec2 p) {
 
 void fragment() {
 	vec3 c = clamp(texture(TEXTURE, UV).rgb, 0.0, 1.0);
-	float b = bayer(FRAGCOORD.xy);
-	float r = clamp(floor(c.r * 3.0 + b), 0.0, 3.0);
-	float g = clamp(floor(c.g * 7.0 + b), 0.0, 7.0);
-	float bl = clamp(floor(c.b * 3.0 + b), 0.0, 3.0);
-	float idx = r * 32.0 + g * 4.0 + bl;
-	COLOR = vec4(idx / 255.0, 0.0, 0.0, 1.0);
+	c += (bayer(FRAGCOORD.xy) - 0.5) * 0.045;
+	float best = 1e9;
+	int bi = 0;
+	for (int i = 0; i < 128; i++) {
+		vec3 d = (c - pal[i]) * vec3(0.9, 1.2, 0.7);
+		float e = dot(d, d);
+		if (e < best) { best = e; bi = i; }
+	}
+	COLOR = vec4(float(bi) / 255.0, 0.0, 0.0, 1.0);
 }

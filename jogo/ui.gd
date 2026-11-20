@@ -4005,11 +4005,13 @@ func _build_settings() -> void:
 var rp_list: VBoxContainer
 var rp_view: TextureRect
 var rp_cur := ""
+var rp_title: Label
 
 
 func _build_replays() -> void:
 	var v := mk_screen("replays", 12)
-	v.add_child(mk_lbl("MEUS REPLAYS", 48, Color("f4c542"), 10))
+	rp_title = mk_lbl("MEUS REPLAYS", 48, Color("f4c542"), 10)
+	v.add_child(rp_title)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
 	v.add_child(row)
@@ -4054,6 +4056,7 @@ func _replays_refresh() -> void:
 	for c in rp_list.get_children():
 		c.queue_free()
 	var lst: Array = game.replay.list_local()
+	rp_title.text = "MEUS REPLAYS  (%d/%d)" % [lst.size(), game.replay.MAX_SAVED]
 	if lst.is_empty():
 		var el := mk_lbl("Nenhum replay ainda.\n\nNa partida, toque no botão\n● 30s (embaixo do pause)\npara salvar a jogada.", 22, Color(1, 1, 1, 0.75), 3)
 		el.custom_minimum_size = Vector2(400, 300)
@@ -4088,11 +4091,7 @@ func _replays_refresh() -> void:
 			_replays_refresh())
 		hb.add_child(bv)
 		var bo := mk_btn("ABRIR / ENVIAR", 170, 46, GREEN, 17)
-		bo.pressed.connect(func():
-			var path: String = game.replay.local_dir() + "/" + n + ".gif"
-			var err := OS.shell_open(path)
-			if err != OK:
-				say("Não consegui abrir o arquivo neste celular."))
+		bo.pressed.connect(func(): game.replay.open_local(n))
 		hb.add_child(bo)
 		var bd := mk_btn("APAGAR", 96, 46, RED, 16)
 		bd.pressed.connect(func():
