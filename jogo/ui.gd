@@ -1482,7 +1482,9 @@ func check_update(info: Dictionary) -> void:
 	if game.net.active or (truco_node != null and is_instance_valid(truco_node)) or game.st != game.St.MENU:
 		return  # não atrapalha no meio de uma partida; aparece na próxima vez que conectar
 	update_seen = true
-	show_update(nv, str(info.url), str(info.get("notas", "")))
+	# baixa direto do GitHub (não gasta o tráfego do servidor); o servidor fica de reserva
+	upd_alt = str(info.url)
+	show_update(nv, str(info.get("apk", info.url)), str(info.get("notas", "")))
 
 
 func show_update(nv: int, url: String, notas: String) -> void:
@@ -1553,6 +1555,7 @@ var upd_bar: ProgressBar
 var upd_lbl: Label
 const UPD_FILE := "user://update.apk"
 var upd_try := 0
+var upd_alt := ""
 
 
 # baixa o APK novo dentro do próprio jogo e abre a instalação do Android
@@ -1575,8 +1578,12 @@ func _update_download(url: String) -> void:
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 			if upd_try < 3 and upd_lbl != null and is_instance_valid(upd_lbl):
 				upd_try += 1
-				upd_lbl.text = "O servidor demorou, tentando de novo (%d/3)..." % upd_try
-				get_tree().create_timer(2.0).timeout.connect(func(): _update_download(url))
+				# GitHub falhou: tenta pelo servidor do jogo
+				var nxt := url
+				if upd_alt != "" and upd_alt != url:
+					nxt = upd_alt
+				upd_lbl.text = "Tentando de novo (%d/3)..." % upd_try
+				get_tree().create_timer(2.0).timeout.connect(func(): _update_download(nxt))
 				return
 			if upd_lbl != null and is_instance_valid(upd_lbl):
 				upd_lbl.text = "Não consegui baixar (erro %d/%d). Toque em PELO NAVEGADOR." % [result, code]
