@@ -3988,10 +3988,118 @@ func _build_settings() -> void:
 		else:
 			say("Microfone OK! Você deve ouvir sua voz agora."))
 	tg2.add_child(mt)
+	var brow := HBoxContainer.new()
+	brow.add_theme_constant_override("separation", 16)
+	brow.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_child(brow)
+	var rpb := mk_btn("● MEUS REPLAYS", 300, 64, Color("b8323a"), 24)
+	rpb.pressed.connect(open_replays)
+	brow.add_child(rpb)
 	var back := mk_btn("VOLTAR", 240, 64, GRAY, 28)
 	back.pressed.connect(show_screen.bind("main"))
-	v.add_child(back)
+	brow.add_child(back)
 	_settings_refresh()
+
+
+# ---------------------------------------------------------------- replays salvos dentro do jogo
+var rp_list: VBoxContainer
+var rp_view: TextureRect
+var rp_cur := ""
+
+
+func _build_replays() -> void:
+	var v := mk_screen("replays", 12)
+	v.add_child(mk_lbl("MEUS REPLAYS", 48, Color("f4c542"), 10))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 18)
+	v.add_child(row)
+	var left := PanelContainer.new()
+	left.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.09, 0.9), 20, Color(1, 1, 1, 0.2), 2, 10))
+	row.add_child(left)
+	var sc := ScrollContainer.new()
+	sc.custom_minimum_size = Vector2(420, 430)
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	left.add_child(sc)
+	rp_list = VBoxContainer.new()
+	rp_list.add_theme_constant_override("separation", 10)
+	rp_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(rp_list)
+	var right := PanelContainer.new()
+	right.add_theme_stylebox_override("panel", sbox(Color(0, 0, 0, 0.85), 20, Color("f4c542"), 2, 8))
+	row.add_child(right)
+	rp_view = TextureRect.new()
+	rp_view.custom_minimum_size = Vector2(612, 344)
+	rp_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rp_view.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rp_view.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var pm := ShaderMaterial.new()
+	pm.shader = load("res://shaders/gif_pal.gdshader")
+	rp_view.material = pm
+	right.add_child(rp_view)
+	var back := mk_btn("◀  VOLTAR", 260, 60, GRAY, 26)
+	back.pressed.connect(func():
+		game.replay.stop_play()
+		show_screen("settings"))
+	v.add_child(back)
+
+
+func open_replays() -> void:
+	if not screens.has("replays"):
+		_build_replays()
+	show_screen("replays")
+	_replays_refresh()
+
+
+func _replays_refresh() -> void:
+	for c in rp_list.get_children():
+		c.queue_free()
+	var lst: Array = game.replay.list_local()
+	if lst.is_empty():
+		var el := mk_lbl("Nenhum replay ainda.\n\nNa partida, toque no botão\n● 30s (embaixo do pause)\npara salvar a jogada.", 22, Color(1, 1, 1, 0.75), 3)
+		el.custom_minimum_size = Vector2(400, 300)
+		rp_list.add_child(el)
+		rp_view.texture = null
+		return
+	if rp_cur == "" or not lst.has(rp_cur):
+		rp_cur = str(lst[0])
+	if not game.replay.play_local(rp_cur, rp_view):
+		rp_view.texture = null
+		say("Esse replay é antigo: toque em ABRIR / ENVIAR para ver.")
+	for nm in lst:
+		var n: String = nm
+		var card := PanelContainer.new()
+		card.add_theme_stylebox_override("panel", sbox(Color(0.08, 0.12, 0.2) if n != rp_cur else Color(0.2, 0.15, 0.04), 14, GOLD if n == rp_cur else Color(1, 1, 1, 0.15), 2, 8))
+		rp_list.add_child(card)
+		var vb := VBoxContainer.new()
+		vb.add_theme_constant_override("separation", 6)
+		card.add_child(vb)
+		# Sinucou_20261119_211704 -> 19/11 21:17
+		var ds := n.get_slice("_", 1)
+		var ts := n.get_slice("_", 2)
+		var label := "Replay  %s/%s  %s:%s" % [ds.substr(6, 2), ds.substr(4, 2), ts.substr(0, 2), ts.substr(2, 2)] if ds.length() >= 8 and ts.length() >= 4 else n
+		vb.add_child(mk_lbl(label, 20, Color.WHITE, 3))
+		var hb := HBoxContainer.new()
+		hb.add_theme_constant_override("separation", 8)
+		hb.alignment = BoxContainer.ALIGNMENT_CENTER
+		vb.add_child(hb)
+		var bv := mk_btn("▶ VER", 110, 46, BLUE, 18)
+		bv.pressed.connect(func():
+			rp_cur = n
+			_replays_refresh())
+		hb.add_child(bv)
+		var bo := mk_btn("ABRIR / ENVIAR", 170, 46, GREEN, 17)
+		bo.pressed.connect(func():
+			var path: String = game.replay.local_dir() + "/" + n + ".gif"
+			var err := OS.shell_open(path)
+			if err != OK:
+				say("Não consegui abrir o arquivo neste celular."))
+		hb.add_child(bo)
+		var bd := mk_btn("APAGAR", 96, 46, RED, 16)
+		bd.pressed.connect(func():
+			confirm("APAGAR REPLAY", "Apagar este replay?", "APAGAR", func():
+				game.replay.delete_local(n)
+				_replays_refresh(), "CANCELAR", func(): pass))
+		hb.add_child(bd)
 
 
 func _save_name() -> void:

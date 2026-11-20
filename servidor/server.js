@@ -713,8 +713,34 @@ const APK_FILE = "/tmp/sinucou.apk";
 let apkReady = ""; // link (fixo no commit) do APK que já está guardado
 // o link do versao.json aponta para o commit exato do APK: o cache do GitHub nunca entrega um APK velho
 let apkBusy = false;
+// a versão nova do app fica no GitHub (ramo do APK): publicar um APK NÃO reinicia o servidor
+// (no plano grátis cada reinício apagava o ranking e o cadastro)
+const VER_URL = process.env.VER_URL || "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/sinucou-apk/versao.json";
+let remoteVer = {};
+function pullVer() {
+  https.get(VER_URL + "?t=" + Date.now(), { headers: { "User-Agent": "sinucou-servidor", "Cache-Control": "no-cache" } }, (r) => {
+    if (r.statusCode !== 200) { r.resume(); return; }
+    let b = "";
+    r.setEncoding("utf8");
+    r.on("data", (d) => { b += d; if (b.length > 20000) r.destroy(); });
+    r.on("end", () => {
+      try {
+        const j = JSON.parse(b);
+        if (Number(j.versao) > 0 && j.apk) {
+          if (Number(j.versao) !== Number(remoteVer.versao)) console.log("versão no GitHub: " + j.versao);
+          remoteVer = j;
+          refreshApk(0);
+        }
+      } catch (e) {}
+    });
+  }).on("error", () => {});
+}
+setTimeout(pullVer, 1000);
+setInterval(pullVer, 3 * 60 * 1000);
 function versionFile() {
-  try { return JSON.parse(fs.readFileSync(__dirname + "/versao.json", "utf8")); } catch (e) { return {}; }
+  let local = {};
+  try { local = JSON.parse(fs.readFileSync(__dirname + "/versao.json", "utf8")); } catch (e) {}
+  return (Number(remoteVer.versao) || 0) > (Number(local.versao) || 0) ? remoteVer : local;
 }
 function appVersion() {
   const v = versionFile();

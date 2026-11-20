@@ -26,6 +26,8 @@ var busy := false
 var thread: Thread
 var result_path := ""
 var result_err := ""
+var last_frames: Array = []
+var last_rs: Array = []
 
 
 func setup(g: Node) -> void:
@@ -50,6 +52,15 @@ func setup(g: Node) -> void:
 func _process(delta: float) -> void:
 	if game == null:
 		return
+	if play_tex != null and not play_fr.is_empty():
+		if not is_instance_valid(play_tex) or not play_tex.is_visible_in_tree():
+			stop_play()
+		else:
+			play_t += delta
+			if play_t >= 1.0 / FPS:
+				play_t = fmod(play_t, 1.0 / FPS)
+				play_i = (play_i + 1) % play_fr.size()
+				_show_frame()
 	if busy and thread != null and not thread.is_alive():
 		var bytes: PackedByteArray = thread.wait_to_finish()
 		thread = null
@@ -100,6 +111,8 @@ func save_clip() -> void:
 	result_err = ""
 	var fr := frames.duplicate()
 	var rs := raw_sizes.duplicate()
+	last_frames = fr
+	last_rs = rs
 	game.ui.say("Salvando os últimos %ds..." % int(ceil(float(fr.size()) / FPS)))
 	thread = Thread.new()
 	thread.start(_worker.bind(fr, rs))
@@ -130,6 +143,8 @@ func _write_file(bytes: PackedByteArray) -> void:
 		tries.append([pics, "Galeria > Imagens (Pictures)"])
 	if dl != "":
 		tries.append([dl, "pasta Downloads"])
+	var errs: Array = []
+	_store_local(fname, bytes)
 	for tr2 in tries:
 		var d: String = tr2[0]
 		if not DirAccess.dir_exists_absolute(d):
@@ -137,24 +152,104 @@ func _write_file(bytes: PackedByteArray) -> void:
 		var path := d + "/" + fname
 		var f := FileAccess.open(path, FileAccess.WRITE)
 		if f == null:
+			errs.append(str(FileAccess.get_open_error()))
 			continue
 		f.store_buffer(bytes)
 		f.close()
 		if FileAccess.file_exists(path):
 			result_path = path
-			_done(true, "Replay salvo em:\n%s\n\n(arquivo %s)" % [tr2[1], fname])
+			_done(true, "Replay salvo em:\n%s\n\nTambém fica em AJUSTES > MEUS REPLAYS." % tr2[1])
 			return
-	# último recurso: dentro do jogo
-	var ud := OS.get_user_data_dir() + "/replays"
+		errs.append("x")
+	result_path = local_dir() + "/" + fname
+	_done(false, "O celular não deixou o jogo gravar na galeria (erro %s).\n\nO replay ficou guardado em AJUSTES > MEUS REPLAYS:\nlá você toca em ABRIR e salva ou manda no WhatsApp." % ",".join(errs))
+
+
+# cópia dentro do jogo (sempre): o GIF e os quadros crus (para assistir aqui mesmo). Guarda os 10 últimos.
+static func local_dir() -> String:
+	return OS.get_user_data_dir() + "/replays"
+
+
+func _store_local(fname: String, bytes: PackedByteArray) -> void:
+	var ud := local_dir()
 	DirAccess.make_dir_recursive_absolute(ud)
-	var f2 := FileAccess.open(ud + "/" + fname, FileAccess.WRITE)
+	var f := FileAccess.open(ud + "/" + fname, FileAccess.WRITE)
+	if f != null:
+		f.store_buffer(bytes)
+		f.close()
+	var f2 := FileAccess.open(ud + "/" + fname.get_basename() + ".rpl", FileAccess.WRITE)
 	if f2 != null:
-		f2.store_buffer(bytes)
+		f2.store_var({"w": W, "h": H, "fps": FPS, "frames": last_frames, "rs": last_rs})
 		f2.close()
-		result_path = ud + "/" + fname
-		_done(false, "O celular não deixou salvar na galeria (permissão de armazenamento).\nO replay ficou guardado dentro do jogo.")
+	var lst := list_local()
+	while lst.size() > 10:
+		delete_local(str(lst.pop_back()))
+
+
+# nomes (sem extensão), do mais novo para o mais velho
+static func list_local() -> Array:
+	var out: Array = []
+	var da := DirAccess.open(local_dir())
+	if da == null:
+		return out
+	for fn in da.get_files():
+		if fn.ends_with(".gif"):
+			out.append(fn.get_basename())
+	out.sort_custom(func(a, b): return str(a).to_lower() > str(b).to_lower())
+	return out
+
+
+static func delete_local(nm: String) -> void:
+	DirAccess.remove_absolute(local_dir() + "/" + nm + ".gif")
+	DirAccess.remove_absolute(local_dir() + "/" + nm + ".rpl")
+
+
+# assistir dentro do jogo: carrega os quadros e vai trocando a imagem (cores pelo shader)
+var play_tex: TextureRect = null
+var play_fr: Array = []
+var play_rs: Array = []
+var play_i := 0
+var play_t := 0.0
+var play_w := W
+var play_h := H
+
+
+func play_local(nm: String, target: TextureRect) -> bool:
+	var f := FileAccess.open(local_dir() + "/" + nm + ".rpl", FileAccess.READ)
+	if f == null:
+		return false
+	var d = f.get_var()
+	f.close()
+	if not (d is Dictionary) or not d.has("frames"):
+		return false
+	play_fr = d.frames
+	play_rs = d.rs
+	play_w = int(d.w)
+	play_h = int(d.h)
+	play_i = 0
+	play_t = 0.0
+	play_tex = target
+	_show_frame()
+	return true
+
+
+func stop_play() -> void:
+	play_tex = null
+	play_fr = []
+
+
+func _show_frame() -> void:
+	if play_tex == null or play_fr.is_empty() or not is_instance_valid(play_tex):
 		return
-	_done(false, "Não consegui salvar o replay (sem espaço ou sem permissão).")
+	var raw: PackedByteArray = (play_fr[play_i] as PackedByteArray).decompress(int(play_rs[play_i]), FileAccess.COMPRESSION_FASTLZ)
+	if raw.size() != play_w * play_h:
+		return
+	var img := Image.create_from_data(play_w, play_h, false, Image.FORMAT_R8, raw)
+	var tex := play_tex.texture as ImageTexture
+	if tex == null or tex.get_width() != play_w:
+		play_tex.texture = ImageTexture.create_from_image(img)
+	else:
+		tex.update(img)
 
 
 func _done(ok: bool, msg: String) -> void:
