@@ -137,15 +137,96 @@ async function sbFlush() {
 // saves na nuvem: guarda moedas, itens e progresso de cada celular (protegido por um "token" do aparelho)
 async function getSave(code) {
   if (!SB) return saves.get(code) || null;
-  const r = await sb("GET", "sinucou_saves?select=code,tok,pass,save&code=eq." + encodeURIComponent(code));
+  const r = await sb("GET", "sinucou_saves?select=code,tok,pass,save,eco&code=eq." + encodeURIComponent(code));
   if (r.status !== 200 || !Array.isArray(r.json)) return undefined; // undefined = erro (não sobrescrever)
   return r.json[0] || null;
 }
 async function putSave(code, row) {
-  if (!SB) { saves.set(code, Object.assign({}, row, { at: Date.now() })); saveSoon(); return true; }
-  const r = await sb("POST", "sinucou_saves?on_conflict=code", [{ code, tok: row.tok, pass: row.pass || null, save: row.save, updated_at: new Date().toISOString() }], { Prefer: "resolution=merge-duplicates,return=minimal" });
+  if (!SB) { saves.set(code, Object.assign({}, saves.get(code) || {}, row, { at: Date.now() })); saveSoon(); return true; }
+  const rec = { code, updated_at: new Date().toISOString() };
+  for (const k of ["tok", "pass", "save", "eco"]) if (row[k] !== undefined) rec[k] = row[k];
+  const r = await sb("POST", "sinucou_saves?on_conflict=code", [rec], { Prefer: "resolution=merge-duplicates,return=minimal" });
   return r.status >= 200 && r.status < 300;
 }
+// ------------------------------------------------------------ MOEDAS NO SERVIDOR
+// O saldo de verdade (moedas e grana) fica aqui. O celular manda cada ganho/gasto como uma
+// "transação" com motivo; o servidor confere e devolve o saldo certo. Assim editar o save do
+// celular não dá mais moedas. Na primeira vez (versão nova), o saldo do celular é trazido uma vez só.
+const ECO_START = { coins: 150, grana: 0 };
+const ECO_MIGRATE_MAX = { coins: 100000, grana: 1000 };   // teto da migração (contra save editado)
+const ECO_DAY_MAX = { coins: 12000, grana: 120 };         // ganhos comuns por dia (missões, IA, roleta...)
+const betOpen = new Map();   // code -> {room, stake, claimed, at}
+const tourPrize = new Map(); // code -> prêmio de campeão a resgatar
+const ecoLocks = new Map();
+function dayBR() { return new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10); }
+function withLock(code, fn) {
+  const prev = ecoLocks.get(code) || Promise.resolve();
+  const next = prev.then(fn, fn);
+  ecoLocks.set(code, next.catch(() => {}));
+  return next;
+}
+function ecoApply(code, eco, tx) {
+  const dc = Math.trunc(Number(tx.c) || 0), dg = Math.trunc(Number(tx.g) || 0);
+  const why = String(tx.w || "");
+  if (Math.abs(dc) > 1000000 || Math.abs(dg) > 100000) return false;
+  // gastos: só se tiver saldo
+  if (dc < 0 && eco.coins + dc < 0) return false;
+  if (dg < 0 && eco.grana + dg < 0) return false;
+  let gc = Math.max(0, dc), gg = Math.max(0, dg);
+  if (gc > 0 || gg > 0) {
+    if (why === "bet_win" || why === "bet_refund") {
+      const b = betOpen.get(code);
+      const lim = b ? (why === "bet_win" ? b.stake * 2 : b.stake) : 0;
+      if (!b || b.claimed || gc > lim || gg > 0) return false;
+      b.claimed = true;
+      gc = 0; gg = 0; // não conta no limite do dia
+    } else if (why === "tour") {
+      const pz = tourPrize.get(code) || 0;
+      if (gc > pz || gg > 0) return false;
+      tourPrize.delete(code);
+      gc = 0;
+    } else {
+      if (eco.day !== dayBR()) { eco.day = dayBR(); eco.ec = 0; eco.eg = 0; }
+      if (eco.ec + gc > ECO_DAY_MAX.coins || eco.eg + gg > ECO_DAY_MAX.grana) return false;
+      eco.ec += gc;
+      eco.eg += gg;
+    }
+  }
+  eco.coins += dc;
+  eco.grana += dg;
+  return true;
+}
+function ecoMsg(c, m) {
+  if (!c.code || typeof m.tok !== "string" || m.tok.length < 16) return;
+  const code = c.code;
+  withLock(code, async () => {
+    const row = await getSave(code);
+    if (row === undefined) return;
+    if (row && row.tok && row.tok !== m.tok) return sendJ(c, { t: "eco_r", denied: true });
+    let eco = row && row.eco;
+    let migrated = false;
+    if (!eco) {
+      const ini = m.init && typeof m.init === "object" ? m.init : null;
+      eco = { coins: ECO_START.coins, grana: ECO_START.grana, seq: 0, day: dayBR(), ec: 0, eg: 0 };
+      if (ini) {
+        eco.coins = Math.max(0, Math.min(ECO_MIGRATE_MAX.coins, Math.trunc(Number(ini.coins) || 0)));
+        eco.grana = Math.max(0, Math.min(ECO_MIGRATE_MAX.grana, Math.trunc(Number(ini.grana) || 0)));
+      }
+      migrated = true;
+    }
+    const rej = [];
+    for (const tx of Array.isArray(m.txs) ? m.txs.slice(0, 200) : []) {
+      const sq = Math.trunc(Number(tx.s) || 0);
+      if (sq <= (eco.seq || 0)) continue; // já processada
+      if (!ecoApply(code, eco, tx)) rej.push(sq);
+      eco.seq = sq;
+    }
+    await putSave(code, { tok: m.tok, eco });
+    c.coins = eco.coins;
+    sendJ(c, { t: "eco_r", seq: eco.seq, coins: eco.coins, grana: eco.grana, rej, migrated });
+  });
+}
+
 function passHash(code, pass, salt) {
   return salt + "$" + crypto.createHash("sha256").update(salt + ":" + code + ":" + pass).digest("hex");
 }
@@ -269,6 +350,7 @@ function onMsg(c, op, payload) {
       }
       break;
     }
+    case "eco": ecoMsg(c, m); break;
     case "csave": { // backup do save do celular
       if (!c.code || typeof m.tok !== "string" || m.tok.length < 16 || !m.save || typeof m.save !== "object") return;
       const js = JSON.stringify(m.save);
@@ -305,7 +387,7 @@ function onMsg(c, op, payload) {
         const row = await getSave(code);
         if (row === undefined) return sendJ(c, { t: "recover_r", ok: false, msg: "Servidor sem acesso ao banco, tente de novo." });
         if (!row || !passOk(code, String(m.pass || ""), row.pass)) return sendJ(c, { t: "recover_r", ok: false, msg: "Código ou senha errados." });
-        sendJ(c, { t: "recover_r", ok: true, code, tok: row.tok, save: row.save });
+        sendJ(c, { t: "recover_r", ok: true, code, tok: row.tok, save: row.save, eco: row.eco || null });
       })();
       break;
     }
@@ -664,6 +746,7 @@ function matchSeats(seats, game, stake, ownerSeat) {
   if (ownerSeat != null && seats[ownerSeat]) owner = ownerSeat;
   else if (party) { party.rot = ((party.rot ?? -1) + 1) % humans.length; owner = humans[party.rot]; }
   room.ownerCode = seats[owner] ? seats[owner].code : "";
+  if (stake) for (const p of list) betOpen.set(p.code, { room: room.id, stake, claimed: false, at: Date.now() });
   const players = [];
   seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; const e = playersDir.get(p.code); players.push({ peer: i + 1, name: p.name, code: p.code, felt: p.felt || "", wfx: p.wfx || "", av: e && e.prof ? e.prof.av : "b8", fr: e && e.prof ? e.prof.fr : "" }); } });
   for (const p of list) {
@@ -1058,6 +1141,7 @@ function tourNext(T) {
   if (winners.length <= 1) {
     T.done = true;
     T.champ = winners[0] || null;
+    if (T.champ) tourPrize.set(T.champ, T.fee * T.players.length + 50 * T.players.length);
     sendTour(T, "end");
     return;
   }

@@ -11,6 +11,7 @@ const HH := 250.0
 var splash_node: Node = null
 var chat: CanvasLayer
 var replay: Node
+var tutorial: Node
 # baralhos do truco (estilo das cartas); o "classico" é de graça
 const DECKS := [
 	{"id": "dk_classico", "deck": "classico", "name": "Clássico", "price": 0, "tag": "O baralho azul de sempre"},
@@ -34,7 +35,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 90  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 91  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -363,6 +364,9 @@ func _ready() -> void:
 	replay = load("res://replay.gd").new()
 	add_child(replay)
 	replay.setup(self)
+	tutorial = load("res://tutorial.gd").new()
+	add_child(tutorial)
+	tutorial.setup(self)
 	rack()
 	attract_kick()
 	var args := OS.get_cmdline_user_args()
@@ -998,6 +1002,54 @@ func cur_ai() -> bool:
 	return bool(ai[turn])
 
 
+# ---------------------------------------------------------------- moedas no servidor
+# Toda mudança de moedas/grana passa por aqui: muda na hora no celular e entra numa fila que vai
+# para o servidor conferir. O saldo que o servidor devolve é o que vale (editar o save não adianta).
+func eco(dc: int, dg: int, why: String) -> void:
+	if bot or (dc == 0 and dg == 0):
+		return
+	var q: Array = save.get("eco_q", [])
+	var sq := int(save.get("eco_seq", 0)) + 1
+	save["eco_seq"] = sq
+	q.append({"s": sq, "c": dc, "g": dg, "w": why})
+	save["eco_q"] = q
+	if net != null:
+		net.eco_dirty = true
+
+
+# resposta do servidor: tira da fila o que ele já conferiu e usa o saldo dele
+func eco_result(m: Dictionary) -> void:
+	if bool(m.get("denied", false)):
+		return
+	var seq := int(m.get("seq", 0))
+	var q: Array = save.get("eco_q", [])
+	var rest: Array = []
+	var pc := 0
+	var pg := 0
+	for tx in q:
+		if int(tx.s) > seq:
+			rest.append(tx)
+			pc += int(tx.c)
+			pg += int(tx.g)
+	save["eco_q"] = rest
+	if seq > int(save.get("eco_seq", 0)):
+		save["eco_seq"] = seq
+	save["eco_ok"] = true
+	var nc := int(m.get("coins", 0)) + pc
+	var ng := int(m.get("grana", 0)) + pg
+	var changed: bool = nc != int(save.coins) or ng != int(save.get("grana", 0))
+	save.coins = nc
+	save["grana"] = ng
+	var cf := ConfigFile.new()
+	for k in save.keys():
+		cf.set_value("s", k, save[k])
+	cf.save("user://save.cfg")
+	if changed and ui != null:
+		ui.refresh_top()
+	if (m.get("rej", []) as Array).size() > 0 and ui != null:
+		ui.say("O servidor corrigiu seu saldo de moedas.")
+
+
 # segredo deste aparelho (protege o backup na nuvem: só quem tem o token grava por cima)
 func my_tok() -> String:
 	var t := str(save.get("tok", ""))
@@ -1031,7 +1083,7 @@ func _jfix(v):
 
 
 # entrou na conta em outro celular: troca o save deste pelo da nuvem
-func apply_recovered(code: String, tok: String, sv: Dictionary) -> void:
+func apply_recovered(code: String, tok: String, sv: Dictionary, eco_d = null) -> void:
 	var keep := {}
 	for k in ["sfx", "vib", "voice_hear", "voice_mic", "table_fx", "chats"]:
 		if save.has(k):
@@ -1043,6 +1095,15 @@ func apply_recovered(code: String, tok: String, sv: Dictionary) -> void:
 		save[k] = keep[k]
 	save["pcode"] = code
 	save["tok"] = tok
+	if eco_d is Dictionary and not eco_d.is_empty():
+		save.coins = int(float(eco_d.get("coins", save.coins)))
+		save["grana"] = int(float(eco_d.get("grana", save.get("grana", 0))))
+		save["eco_seq"] = int(float(eco_d.get("seq", 0)))
+		save["eco_q"] = []
+		save["eco_ok"] = true
+	else:
+		save["eco_q"] = []
+		save["eco_ok"] = false
 	write_save()
 	load_save()
 	if net != null:
@@ -1147,10 +1208,12 @@ func pass_claim(lv: int) -> bool:
 	var r := pass_reward(lv)
 	save.coins += int(r.get("coins", 0))
 	save.grana += int(r.get("grana", 0))
+	eco(int(r.get("coins", 0)), int(r.get("grana", 0)), "pass")
 	save.spins = int(save.get("spins", 0)) + int(r.get("spins", 0))
 	if r.has("item"):
 		if save.owned.has(r.item):
 			save.grana += 15 # já tinha comprado: vira Grana extra
+			eco(0, 15, "pass")
 		else:
 			save.owned.append(r.item)
 	save.pass_got.append(lv)
@@ -1199,9 +1262,11 @@ func spin_award(i: int) -> String:
 		save.spins = maxi(0, int(save.spins) - 1)
 	if w[0] == "g":
 		save.grana += int(w[1])
+		eco(0, int(w[1]), "roleta")
 		write_save()
 		return "+%d Grana!" % int(w[1])
 	save.coins += int(w[1])
+	eco(int(w[1]), 0, "roleta")
 	write_save()
 	return "+%d moedas!" % int(w[1])
 
@@ -2321,20 +2386,24 @@ func end_game(win_idx: int) -> void:
 		if win_idx == 0:
 			var r: int = 50 + diff * 25
 			save.coins += r
+			eco(r, 0, "ia")
 			save.wins += 1
 			reward_txt = "+%d moedas" % r
 		else:
 			save.coins += 10
+			eco(10, 0, "ia")
 			save.losses += 1
 			reward_txt = "+10 moedas"
 	if mode == Mode.ONLINE:
 		if win_idx == net_seat % 2:
 			save.wins += 1
 			save.coins += 60
+			eco(60, 0, "online")
 			reward_txt = "+60 moedas"
 		else:
 			save.losses += 1
 			save.coins += 15
+			eco(15, 0, "online")
 			reward_txt = "+15 moedas"
 	var me_won: bool = (win_idx == 0) if mode == Mode.AI else (win_idx == net_seat % 2)
 	# o anfitrião avisa o servidor quem ganhou (o torneio usa isso para avançar a chave)
@@ -3909,13 +3978,18 @@ func ai_stake_max(d: int) -> int:
 	return [50, 100, 200][clampi(d, 0, 2)]
 
 
-func bet_begin(v: int) -> void:
+var bet_online := false
+
+
+func bet_begin(v: int, online: bool = false) -> void:
 	bet_cur = 0
+	bet_online = online
 	v = mini(v, int(save.coins))
 	if v <= 0:
 		return
 	bet_cur = v
 	save.coins -= v
+	eco(-v, 0, "bet")
 	if net_auto:
 		print("BET begin seat=", net_seat, " stake=", v, " coins=", save.coins)
 	write_save()
@@ -3932,6 +4006,7 @@ func bet_settle(result: String) -> String:
 	var t := ""
 	if result == "win":
 		save.coins += v * 2
+		eco(v * 2, 0, "bet_win" if bet_online else "aposta_ia")
 		t = "Aposta: você levou a mesa! +%d moedas" % (v * 2)
 		mission_event("bet_win", 1)
 		stat_add("bets_won", 1)
@@ -3939,6 +4014,7 @@ func bet_settle(result: String) -> String:
 			stat_add("bet1k_won", 1)
 	elif result == "refund":
 		save.coins += v
+		eco(v, 0, "bet_refund" if bet_online else "aposta_ia")
 		t = "Aposta devolvida (%d moedas)" % v
 	else:
 		t = "Aposta perdida: -%d moedas" % v
@@ -4034,6 +4110,7 @@ func mission_claim(id: String) -> void:
 		if str(m.id) == id and int(m.prog) >= int(m.n) and not bool(m.claimed):
 			m.claimed = true
 			save.coins += int(m.r)
+			eco(int(m.r), 0, "missao")
 			write_save()
 			if ui != null:
 				ui.show_reward("Missão concluída!", "+%d MOEDAS" % int(m.r), {"coins": int(m.r)})
@@ -4058,6 +4135,11 @@ func _league_after() -> void:
 		return
 	league_prize_check()
 	check_achs()
+	# primeira vez no jogo: o Oitão aparece e ensina tudo
+	if not bool(save.get("tut_done", false)) and int(save.get("played", 0)) == 0 and int(save.get("truco_wins", 0)) + int(save.get("truco_losses", 0)) == 0 and not net_auto:
+		get_tree().create_timer(1.2).timeout.connect(func():
+			if ui != null and not ui.has_modal() and st == St.MENU:
+				tutorial.start_full())
 
 
 # primeira vez que abre o jogo no dia: prêmio por dias seguidos (7 dias, depois recomeça)
@@ -4080,6 +4162,7 @@ func check_daily() -> void:
 	var gems := 5 if streak == 7 else 0
 	if gems > 0:
 		save["grana"] = int(save.get("grana", 0)) + gems
+	eco(r, gems, "diario")
 	write_save()
 	if ui != null:
 		ui.show_daily(streak, r, gems)
@@ -4190,6 +4273,7 @@ func league_prize_check() -> void:
 		return
 	save.erase("league_prize")
 	save.coins += int(pz.coins)
+	eco(int(pz.coins), 0, "liga")
 	write_save()
 	if ui != null:
 		ui.show_reward("Fim da liga da semana: você ficou no %s (%d pontos)" % [DIVS[int(pz.div)].name, int(pz.pts)], "+%d MOEDAS" % int(pz.coins), {"coins": int(pz.coins)})
@@ -4241,6 +4325,7 @@ func check_achs() -> void:
 		if not got.has(str(a.id)) and ach_val(str(a.k)) >= int(a.n):
 			got.append(str(a.id))
 			save.coins += int(a.r)
+			eco(int(a.r), 0, "conquista")
 			news.append(a)
 	save["achs"] = got
 	if not news.is_empty():
@@ -4380,6 +4465,7 @@ func open_pack(id: String) -> Dictionary:
 		coins = [500, 1500, 4000][tier]
 	if coins > 0:
 		save.coins += coins
+		eco(coins, 0, "pacote")
 		write_save()
 		return {"coins": coins, "txt": "+%d MOEDAS" % coins}
 	var it: Dictionary = pool[randi() % pool.size()]
@@ -4410,12 +4496,14 @@ func tour_update(m: Dictionary) -> void:
 		var fee := mini(int(m.fee), int(save.coins))
 		if fee > 0:
 			save.coins -= fee
+			eco(-fee, 0, "torneio")
 			write_save()
 	if bool(m.done) and str(m.get("champ", "")) == my_code().to_upper() and str(save.get("tour_won", "")) != tid:
 		save["tour_won"] = tid
 		var bonus := 50 * int(m.n)
 		var prize := int(m.pot) + bonus
 		save.coins += prize
+		eco(prize, 0, "tour")
 		stat_add("tour_wins", 1)
 		write_save()
 		play_victory()

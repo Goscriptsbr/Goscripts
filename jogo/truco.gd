@@ -55,6 +55,9 @@ var round_win := -2
 var queda_win := -1
 var auto_t := 0.0
 var auto_done := false
+# tutorial: a primeira mão vem "arrumada" para ensinar (vira 4, você com o Zap) e a IA não pede truco
+var tut := false
+var tut_hand := 0
 
 var btn_truco: Button
 var btn_enc: Button
@@ -81,8 +84,10 @@ func setup(g: Node2D, players: int, simulate: bool = false, role: String = "", i
 	score = [0, 0]
 	quedas = [0, 0]
 	dealer = randi() % n
+	if tut:
+		dealer = n - 1   # você começa
 	# aposta contra a IA (no online já foi descontada quando a partida foi montada)
-	if role == "" and not sim:
+	if role == "" and not sim and not tut:
 		game.bet_begin(mini(int(game.save.get("bet_tr", 0)), TR_AI_MAX))
 	if netmode == "guest":
 		phase = "wait"
@@ -173,6 +178,15 @@ func new_hand() -> void:
 	for i in n:
 		hands.append([deck.pop_back(), deck.pop_back(), deck.pop_back()])
 	vira = deck.pop_back()
+	if tut and tut_hand == 0:
+		vira = {"r": 0, "s": 1}                                   # vira: 4 de espadas -> manilha é o 5
+		hands[0] = [{"r": 9, "s": 2}, {"r": 1, "s": 3}, {"r": 3, "s": 0}]   # 3 de copas, ZAP (5 de paus), 7 de ouros
+		hands[1] = [{"r": 0, "s": 3}, {"r": 4, "s": 0}, {"r": 5, "s": 3}]   # 4, Q, J (fracas)
+		if n == 4:
+			hands[2] = [{"r": 2, "s": 1}, {"r": 6, "s": 2}, {"r": 7, "s": 0}]
+			hands[3] = [{"r": 2, "s": 3}, {"r": 4, "s": 2}, {"r": 6, "s": 1}]
+	if tut:
+		tut_hand += 1
 	value = 1
 	last_raiser = -1
 	pending = 0
@@ -412,6 +426,9 @@ func _speaker(tm: int) -> int:
 func _ai_respond() -> void:
 	if phase != "respond":
 		return
+	if tut:
+		respond("aceita")
+		return
 	var tm := 1 - asker
 	var st := team_strength(tm)
 	var need := 0.75 + 0.07 * float(pending)
@@ -457,7 +474,7 @@ func _ai_turn() -> void:
 	if phase != "play" or (turn == 0 and not sim) or is_remote(turn):
 		return
 	var seat := turn
-	if can_raise(seat):
+	if can_raise(seat) and not tut:
 		var st := team_strength(team(seat))
 		var chance := 0.0
 		if st > 1.6:
@@ -677,6 +694,7 @@ func _show_over() -> void:
 		else:
 			game.save.truco_losses = int(game.save.get("truco_losses", 0)) + 1
 		game.save.coins += r
+		game.eco(r, 0, "truco")
 		game.write_save()
 		game.play("win")
 		var bts: Array = [["MENU", Color("3b4556"), _quit]]
@@ -693,6 +711,7 @@ func _show_over() -> void:
 		r = 10
 		game.save.truco_losses = int(game.save.get("truco_losses", 0)) + 1
 	game.save.coins += r
+	game.eco(r, 0, "truco")
 	game.write_save()
 	game.play("win")
 	_modal("VITÓRIA!" if won else "DERROTA", "Quedas %d x %d   •   +%d moedas%s" % [quedas[0], quedas[1], r, btl], [["JOGAR DE NOVO", Color("1fa85a"), func():
@@ -985,6 +1004,9 @@ func waiting_seat() -> int:
 
 func _tick_timer(delta: float) -> void:
 	if sim:
+		return
+	if tut:
+		tl = 20.0   # no tutorial o relógio não corre (dá tempo de ler)
 		return
 	if netmode == "guest":
 		# o relógio desce aqui mesmo; o anfitrião só manda o valor quando a vez muda (e a cada 2 s)

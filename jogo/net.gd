@@ -213,6 +213,35 @@ var coins_sent := -1
 var look_sent := ""
 
 
+# ---------------------------------------------------------------- moedas no servidor
+var eco_dirty := true
+var eco_t := 99.0
+
+
+func send_eco() -> void:
+	if ws == null or not server_ok:
+		return
+	var q: Array = game.save.get("eco_q", [])
+	var m := {"t": "eco", "tok": game.my_tok(), "txs": q}
+	if not bool(game.save.get("eco_ok", false)):
+		# primeira vez na versão nova: leva o saldo que estava no celular (uma vez só)
+		var pc := 0
+		var pg := 0
+		for tx in q:
+			pc += int(tx.c)
+			pg += int(tx.g)
+		m["init"] = {"coins": int(game.save.coins) - pc, "grana": int(game.save.get("grana", 0)) - pg}
+	world_send(m)
+	eco_dirty = false
+	eco_t = 0.0
+
+
+func eco_tick(delta: float) -> void:
+	eco_t += delta
+	if server_ok and eco_dirty and eco_t >= 1.0:
+		send_eco()
+
+
 # ---------------------------------------------------------------- backup na nuvem
 # o save do celular (moedas, itens, progresso) vai para o banco do jogo a cada 30s quando muda;
 # com uma senha, dá para entrar na mesma conta em outro celular
@@ -228,7 +257,7 @@ func send_csave() -> void:
 	if ws == null or not server_ok:
 		return
 	var s2: Dictionary = game.save.duplicate(true)
-	for k in ["chats", "tok", "server"]:
+	for k in ["chats", "tok", "server", "eco_q", "eco_seq", "eco_ok"]:
 		s2.erase(k)
 	world_send({"t": "csave", "tok": game.my_tok(), "save": s2})
 	csave_dirty = false
@@ -243,7 +272,7 @@ func cloud_tick(delta: float) -> void:
 
 func send_setpass(pw: String) -> void:
 	var s2: Dictionary = game.save.duplicate(true)
-	for k in ["chats", "tok", "server"]:
+	for k in ["chats", "tok", "server", "eco_q", "eco_seq", "eco_ok"]:
 		s2.erase(k)
 	world_send({"t": "setpass", "tok": game.my_tok(), "pass": pw, "save": s2})
 
@@ -315,6 +344,7 @@ func _world_poll(delta: float) -> void:
 	if stt == WebSocketPeer.STATE_CONNECTING:
 		world_t += delta
 	cloud_tick(delta)
+	eco_tick(delta)
 	while stt == WebSocketPeer.STATE_OPEN and ws.get_available_packet_count() > 0:
 		var pk := ws.get_packet()
 		if ws.was_string_packet():
@@ -354,6 +384,7 @@ func _world_msg(m: Dictionary) -> void:
 			send_score()
 			send_profile()
 			was_ok = true
+			send_eco()
 			send_csave()
 			if game.ui != null and m.has("app"):
 				game.ui.check_update(m.app)
@@ -388,7 +419,7 @@ func _world_msg(m: Dictionary) -> void:
 			game.net_peer_name = str(opp.get("name", "Adversário"))
 			# aposta: as moedas saem agora; quem sair no meio perde, quem ganhar leva a mesa
 			game.net_owner = int(m.get("owner", -1))
-			game.bet_begin(int(m.get("stake", 0)))
+			game.bet_begin(int(m.get("stake", 0)), true)
 			game.match_stake = game.bet_cur
 			multiplayer.multiplayer_peer = relay
 			_status("Oponente encontrado: %s! Conectando..." % game.net_peer_name)
@@ -454,6 +485,8 @@ func _world_msg(m: Dictionary) -> void:
 				game.ui._online_btn_refresh()
 		"tour":
 			game.tour_update(m)
+		"eco_r":
+			game.eco_result(m)
 		"csave_ok":
 			cloud_ok = bool(m.get("ok", false))
 			cloud_pass = bool(m.get("pass", false)) or cloud_pass

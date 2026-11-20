@@ -624,6 +624,9 @@ const RAIL_W := 130.0
 const CARD_W := 330.0
 
 
+var tut_refs := {}   # partes do menu que o tutorial aponta
+
+
 func _build_main() -> void:
 	var s := Control.new()
 	s.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -671,9 +674,11 @@ func _build_main() -> void:
 	var h1 := hero_btn("SINUCA", "8 bolas  •  IA, 2 jogadores e online", "res://assets/hero_sinuca.png", Color("3ddc84"))
 	h1.pressed.connect(show_screen.bind("play"))
 	hr.add_child(h1)
+	tut_refs["sinuca"] = h1
 	var h2 := hero_btn("TRUCO", "paulista  •  1x1, 2x2 e online", "res://assets/hero_truco.png", Color("ff7a7a"))
 	h2.pressed.connect(show_screen.bind("truco"))
 	hr.add_child(h2)
+	tut_refs["truco"] = h2
 	hr.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
 	hr.offset_left += shift
 	hr.offset_right += shift
@@ -683,6 +688,7 @@ func _build_main() -> void:
 	var rail := VBoxContainer.new()
 	rail.add_theme_constant_override("separation", 14)
 	s.add_child(rail)
+	tut_refs["rail"] = rail
 	rail.add_theme_constant_override("separation", 10)
 	spin_top_btn = rail_btn("ROLETA", "wheel", PURPLE)
 	spin_top_btn.pressed.connect(show_screen.bind("roleta"))
@@ -705,6 +711,7 @@ func _build_main() -> void:
 	var mc := PanelContainer.new()
 	mc.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.82), 26, Color(0.96, 0.77, 0.26, 0.75), 2, 16))
 	s.add_child(mc)
+	tut_refs["month"] = mc
 	month_box = VBoxContainer.new()
 	month_box.add_theme_constant_override("separation", 3)
 	mc.add_child(margin(month_box, 12))
@@ -728,6 +735,7 @@ func _build_main() -> void:
 	var nav := PanelContainer.new()
 	nav.add_theme_stylebox_override("panel", sbox(Color(0.03, 0.06, 0.1, 0.92), 26, Color(1, 1, 1, 0.14), 2, 14))
 	s.add_child(nav)
+	tut_refs["nav"] = nav
 	nav.anchor_left = 0.5
 	nav.anchor_right = 0.5
 	nav.anchor_top = 1.0
@@ -2823,13 +2831,14 @@ func _build_truco_menu() -> void:
 	v.add_child(back)
 
 
-func open_truco(players: int) -> void:
+func open_truco(players: int, tut: bool = false) -> void:
 	show_screen("")
 	dim.visible = false
 	game.paused = true
 	if truco_node != null and is_instance_valid(truco_node):
 		truco_node.queue_free()
 	truco_node = load("res://truco.gd").new()
+	truco_node.tut = tut
 	root.add_child(truco_node)
 	root.move_child(truco_node, root.get_child_count() - 1)
 	truco_node.setup(game, players)
@@ -3440,6 +3449,7 @@ func _month_buy(id: String, price: int) -> void:
 		say("Moedas insuficientes! Vença partidas para ganhar mais.")
 		return
 	game.save.coins -= price
+	game.eco(-price, 0, "compra")
 	game.save.owned.append(id)
 	game.write_save()
 	refresh_top()
@@ -3862,6 +3872,7 @@ func _buy_grana(id: String, gp: int, month: bool) -> void:
 		say("Grana insuficiente! Ganhe Grana no Passe e na Roleta.")
 		return
 	game.save.grana = int(game.save.grana) - gp
+	game.eco(0, -gp, "compra")
 	game.save.owned.append(id)
 	game.write_save()
 	refresh_top()
@@ -3878,6 +3889,7 @@ func _buy(id: String, price: int) -> void:
 		say("Moedas insuficientes! Vença partidas para ganhar mais.")
 		return
 	game.save.coins -= price
+	game.eco(-price, 0, "compra")
 	game.save.owned.append(id)
 	game.write_save()
 	refresh_top()
@@ -3996,6 +4008,9 @@ func _build_settings() -> void:
 	brow.add_theme_constant_override("separation", 16)
 	brow.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(brow)
+	var tub := mk_btn("? COMO JOGAR", 260, 64, Color("1fa85a"), 24)
+	tub.pressed.connect(open_tutorial_menu)
+	brow.add_child(tub)
 	var rpb := mk_btn("● MEUS REPLAYS", 300, 64, Color("b8323a"), 24)
 	rpb.pressed.connect(open_replays)
 	brow.add_child(rpb)
@@ -4003,6 +4018,29 @@ func _build_settings() -> void:
 	back.pressed.connect(show_screen.bind("main"))
 	brow.add_child(back)
 	_settings_refresh()
+
+
+# ---------------------------------------------------------------- tutorial
+func open_tutorial_menu() -> void:
+	var vb := _modal_box("COMO JOGAR")
+	vb.add_child(mk_lbl("O Oitão te ensina! Escolha o que quer aprender:", 20, Color(1, 1, 1, 0.85), 2))
+	for it in [["TUDO (menu, sinuca e truco)", "full", Color("1fa85a")], ["SÓ A SINUCA", "sinuca", BLUE], ["SÓ O TRUCO", "truco", Color("c0392b")]]:
+		var b := mk_btn(it[0], 420, 60, it[2], 22)
+		var k: String = it[1]
+		b.pressed.connect(func():
+			close_modal()
+			show_screen("main")
+			if k == "full":
+				game.tutorial.start_full()
+			elif k == "sinuca":
+				game.tutorial.start_sinuca()
+			else:
+				game.tutorial.start_truco())
+		vb.add_child(b)
+	var c := mk_btn("FECHAR", 200, 50, GRAY, 20)
+	c.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	c.pressed.connect(close_modal)
+	vb.add_child(c)
 
 
 # ---------------------------------------------------------------- backup na nuvem e recuperar conta
@@ -4111,8 +4149,11 @@ func cloud_recover_result(m: Dictionary) -> void:
 	var cd := str(m.get("code", ""))
 	var sv = m.get("save", {})
 	var coins := int(float((sv as Dictionary).get("coins", 0))) if sv is Dictionary else 0
+	var ed = m.get("eco", null)
+	if ed is Dictionary:
+		coins = int(float(ed.get("coins", coins)))
 	confirm("ENTRAR NA CONTA %s?" % cd, "Conta encontrada (%d moedas).\nO progresso DESTE celular será trocado pelo da conta %s." % [coins, cd], "ENTRAR", func():
-		game.apply_recovered(cd, str(m.get("tok", "")), sv if sv is Dictionary else {})
+		game.apply_recovered(cd, str(m.get("tok", "")), sv if sv is Dictionary else {}, m.get("eco", null))
 		show_screen("main")
 		say("Pronto! Você entrou na conta %s." % cd), "CANCELAR", func(): pass)
 
@@ -5554,11 +5595,13 @@ func _pack_buy(id: String) -> void:
 			say("Grana insuficiente! Ganhe Grana no Passe, na Roleta e no prêmio do 7º dia.")
 			return
 		game.save.grana = int(game.save.grana) - int(pk.grana)
+		game.eco(0, -int(pk.grana), "pacote")
 	else:
 		if int(game.save.coins) < int(pk.price):
 			say("Moedas insuficientes!")
 			return
 		game.save.coins -= int(pk.price)
+		game.eco(-int(pk.price), 0, "pacote")
 	game.write_save()
 	refresh_top()
 	var res: Dictionary = game.open_pack(id)
