@@ -4163,6 +4163,7 @@ var rp_list: VBoxContainer
 var rp_view: TextureRect
 var rp_cur := ""
 var rp_title: Label
+var rp_hint: Label
 
 
 func _build_replays() -> void:
@@ -4195,6 +4196,9 @@ func _build_replays() -> void:
 	pm.shader = load("res://shaders/gif_pal.gdshader")
 	rp_view.material = pm
 	right.add_child(rp_view)
+	rp_hint = mk_lbl("Toque em ▶ VER para assistir\nem tela cheia, com câmera lenta.\n\nLá você também salva na\nGALERIA ou ENVIA no WhatsApp.", 24, Color(1, 1, 1, 0.85), 3)
+	rp_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	right.add_child(rp_hint)
 	var back := mk_btn("◀  VOLTAR", 260, 60, GRAY, 26)
 	back.pressed.connect(func():
 		game.replay.stop_play()
@@ -4222,9 +4226,12 @@ func _replays_refresh() -> void:
 		return
 	if rp_cur == "" or not lst.has(rp_cur):
 		rp_cur = str(lst[0])
-	if not game.replay.play_local(rp_cur, rp_view):
+	rp_hint.visible = false
+	if game.replay.is_state(rp_cur):
 		rp_view.texture = null
-		say("Esse replay é antigo: toque em ABRIR / ENVIAR para ver.")
+		rp_hint.visible = true
+	elif not game.replay.play_local(rp_cur, rp_view):
+		rp_view.texture = null
 	for nm in lst:
 		var n: String = nm
 		var card := PanelContainer.new()
@@ -4245,9 +4252,12 @@ func _replays_refresh() -> void:
 		var bv := mk_btn("▶ VER", 110, 46, BLUE, 18)
 		bv.pressed.connect(func():
 			rp_cur = n
-			_replays_refresh())
+			if game.replay.is_state(n):
+				game.replay.start_watch(n)
+			else:
+				_replays_refresh())
 		hb.add_child(bv)
-		var bo := mk_btn("ABRIR / ENVIAR", 170, 46, GREEN, 17)
+		var bo := mk_btn("ENVIAR", 170, 46, GREEN, 18)
 		bo.pressed.connect(func(): game.replay.open_local(n))
 		hb.add_child(bo)
 		var bd := mk_btn("APAGAR", 96, 46, RED, 16)

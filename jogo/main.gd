@@ -35,7 +35,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 92  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 93  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -45,7 +45,7 @@ const HOLE_S := 21.0
 const PR_SIDE := 19.0
 const PAD := 1.45
 
-enum St { MENU, AIM, STRIKE, ROLL, OVER }
+enum St { MENU, AIM, STRIKE, ROLL, OVER, REPLAY }
 enum Mode { AI, TWO, TRAIN, ONLINE }
 
 const BALL_COL := {
@@ -1145,7 +1145,15 @@ func cue_by_id(id: String) -> Dictionary:
 
 
 # taco de quem está jogando agora (cada um usa o seu)
+# replay: o taco que aparece é o de quem tacou naquela hora
+var rp_cue_id := ""
+var rp_pull := 0.0
+var rp_cue_vis := false
+
+
 func turn_cue_def() -> Dictionary:
+	if st == St.REPLAY and rp_cue_id != "":
+		return cue_by_id(rp_cue_id)
 	var cs := shooter()
 	if (mode == Mode.AI or mode == Mode.ONLINE) and cs < cue_ids.size() and str(cue_ids[cs]) != "":
 		return cue_by_id(str(cue_ids[cs]))
@@ -1726,6 +1734,8 @@ func launch() -> void:
 		spawn_math(cue.pos, float(lp.ang), strike_pw)
 	elif imp != "" and not bot:
 		spawn_impact(imp, cue.pos, float(lp.ang), strike_pw)
+	if replay != null and not bot:
+		replay.note_shot(imp, cue.pos, float(lp.ang), strike_pw)
 	st = St.ROLL
 	play("shot", 0.4 + strike_pw * 0.6)
 	vibrate(15)
@@ -3249,7 +3259,15 @@ func rec_rect() -> Rect2:
 
 
 func rec_active() -> bool:
-	return st != St.MENU and not bot
+	return st != St.MENU and st != St.REPLAY and not bot
+
+
+# quanto o taco está puxado agora (para o replay desenhar igual)
+func cur_pull() -> float:
+	if st == St.STRIKE:
+		var k := clampf(strike_t / strike_dur, 0.0, 1.0)
+		return strike_pull * (1.0 - k * k)
+	return power * 130.0
 
 
 func human_turn() -> bool:
@@ -3259,7 +3277,7 @@ func human_turn() -> bool:
 
 
 func touch_down(i: int, p: Vector2) -> void:
-	if st == St.MENU or st == St.OVER or paused:
+	if st == St.MENU or st == St.OVER or st == St.REPLAY or paused:
 		return
 	if pause_rect().has_point(p):
 		paused = mode != Mode.ONLINE
@@ -3400,7 +3418,7 @@ func _process(delta: float) -> void:
 	vw = get_viewport_rect().size.x
 	var s := minf(1.0, (vw - 130.0) / 1100.0)
 	scale = Vector2(s, s)
-	position = Vector2(vw / 2.0 if st == St.MENU else (vw - 110.0) / 2.0, 390.0)
+	position = Vector2(vw / 2.0 if st == St.MENU or st == St.REPLAY else (vw - 110.0) / 2.0, 390.0)
 	if bot:
 		for k in 960:
 			eval_budget = 1 if k % 120 == 0 else eval_budget
@@ -3798,7 +3816,7 @@ func _draw_cue_fx(additive: bool) -> void:
 
 func update_cue() -> void:
 	var cue := get_ball(0)
-	var show: bool = (st == St.AIM or st == St.STRIKE) and not cue.is_empty() and bool(cue.on)
+	var show: bool = ((st == St.AIM or st == St.STRIKE) or (st == St.REPLAY and rp_cue_vis)) and not cue.is_empty() and bool(cue.on)
 	cue_s.visible = show
 	cue_sh.visible = show
 	var has_fx: bool = show and turn_cue_def().get("fx", "") != ""
@@ -3836,6 +3854,8 @@ func update_cue() -> void:
 	if st == St.STRIKE:
 		var k := clampf(strike_t / strike_dur, 0.0, 1.0)
 		pull = strike_pull * (1.0 - k * k)
+	elif st == St.REPLAY:
+		pull = rp_pull
 	var tip: Vector2 = cue.pos - dir * (R + 4.0 + pull) + Vector2(-dir.y, dir.x) * spin.x * R * 0.6
 	cue_s.position = tip
 	cue_s.rotation = aim_angle + PI
@@ -3868,7 +3888,7 @@ func mini_ball(c: Vector2, n: int, alpha: float) -> void:
 
 
 func _draw_hud() -> void:
-	if st == St.MENU:
+	if st == St.MENU or st == St.REPLAY:
 		return
 	var cx := (vw - 110.0) / 2.0
 	var prr := pause_rect()

@@ -1,40 +1,42 @@
 extends Node
-# REPLAY: grava sempre os últimos 30 segundos da partida e, quando o jogador toca em SALVAR,
-# guarda o replay no jogo (AJUSTES > MEUS REPLAYS) e tenta pôr uma cópia na galeria do celular.
+# REPLAY: grava sempre os últimos 30 segundos da partida de sinuca e, quando o jogador toca em
+# SALVAR, guarda no jogo (AJUSTES > MEUS REPLAYS). De lá ele assiste em tela cheia e salva na galeria.
 #
-# Qualidade: cada quadro é a tela reduzida para 960 px de largura (na proporção do celular), com as
-# cores de verdade, comprimido em WebP pelo próprio Godot (rápido, numa linha separada). O arquivo
-# final é um WebP ANIMADO: é só juntar os quadros prontos num envelope (sem recomprimir nada).
+# Leve: durante a partida NÃO se grava imagem nenhuma (isso pesava nos celulares fracos). Grava-se só
+# o "estado" da mesa 30 vezes por segundo: onde está cada bola, como está girando e o taco. Para
+# assistir, o jogo redesenha a mesa com esses dados (qualidade máxima). Para a galeria, o replay é
+# tocado e fotografado quadro a quadro só na hora de salvar, e vira um WebP animado.
 
-const W := 960
-const FPS := 12.0
+const W := 960               # largura do arquivo salvo na galeria
+const REC_HZ := 30.0         # amostras por segundo da gravação (estado da mesa)
+const OUT_FPS := 15.0        # quadros por segundo do arquivo da galeria
 const SECS := 30.0
-const MAX_FRAMES := int(FPS * SECS)
+const MAX_FRAMES := int(REC_HZ * SECS)
 const MAX_SAVED := 10
-const QUALITY := 0.72
+const QUALITY := 0.75
+const NB := 16               # bolas 0..15
+const FPB := 10              # números por bola: x, y, on, drop, dx, dy, qx, qy, qz, qw
 
 var game: Node
-var H := 432                 # altura segue o formato da tela do celular (sem achatar a mesa)
-var frames: Array = []       # cada item: PackedByteArray (um WebP pronto)
-var sv: SubViewport
-var tr: TextureRect
-var acc := 0.0
-var pending := false
+var H := 432
+var rec: Array = []          # quadros gravados (dicionários pequenos)
+var rec_felt := ""
+var rec_t := 0.0
 var recording := false
+var pend_shot: Array = []
 var busy := false
 var result_path := ""
 var result_err := ""
-var save_w := W
-var save_h := 432
 
-# compressão dos quadros numa linha separada (para não travar o jogo)
+# fotografar para a galeria (só na hora de salvar)
+var sv: SubViewport
+var tr: TextureRect
 var enc_thread: Thread
 var enc_sem := Semaphore.new()
 var enc_mx := Mutex.new()
-var enc_queue: Array = []    # [gen, Image]
-var enc_out: Array = []      # [gen, PackedByteArray]
+var enc_queue: Array = []    # [ordem, Image]
+var enc_out: Array = []      # [ordem, PackedByteArray]
 var enc_quit := false
-var gen := 0                 # muda quando a gravação recomeça (descarta quadros velhos)
 
 
 func setup(g: Node) -> void:
@@ -80,7 +82,6 @@ func _enc_loop() -> void:
 		enc_mx.unlock()
 
 
-# mesma proporção da tela (celulares 20:9 ficavam com a mesa espremida)
 func _fit_size() -> void:
 	var rs2: Vector2 = get_tree().root.get_visible_rect().size
 	if rs2.x < 10.0:
@@ -90,77 +91,92 @@ func _fit_size() -> void:
 	tr.size = Vector2(W, H)
 
 
+# o jogo avisa quando sai uma tacada (para o replay mostrar o efeito do taco ELITE na hora certa)
+func note_shot(imp: String, p: Vector2, ang: float, pw: float) -> void:
+	if recording and imp != "":
+		pend_shot.append([imp, p.x, p.y, ang, pw])
+
+
+func _snap() -> Dictionary:
+	var f := PackedFloat32Array()
+	f.resize(NB * FPB)
+	for b in game.balls:
+		var n := int(b.n)
+		if n < 0 or n >= NB:
+			continue
+		var o := n * FPB
+		var p: Vector2 = b.pos
+		var dp: Vector2 = b.get("dpos", p)
+		var q := Quaternion((b.basis as Basis).orthonormalized())
+		f[o] = p.x
+		f[o + 1] = p.y
+		f[o + 2] = 1.0 if bool(b.on) else 0.0
+		f[o + 3] = float(b.get("drop", -1.0))
+		f[o + 4] = dp.x
+		f[o + 5] = dp.y
+		f[o + 6] = q.x
+		f[o + 7] = q.y
+		f[o + 8] = q.z
+		f[o + 9] = q.w
+	var d := {"f": f, "a": game.aim_angle, "pl": game.cur_pull(), "sx": (game.spin as Vector2).x,
+		"cv": (game.st == game.St.AIM or game.st == game.St.STRIKE), "c": str(game.turn_cue_def().get("id", ""))}
+	if not pend_shot.is_empty():
+		d["imp"] = pend_shot.duplicate()
+		pend_shot.clear()
+	return d
+
+
 func _process(delta: float) -> void:
 	if game == null:
 		return
 	_play_tick(delta)
-	# quadros que a outra linha já comprimiu
-	enc_mx.lock()
-	var outs := enc_out
-	enc_out = []
-	enc_mx.unlock()
-	for o in outs:
-		if int(o[0]) == gen:
-			frames.append(o[1])
-	while frames.size() > MAX_FRAMES:
-		frames.pop_front()
-	var want: bool = game.rec_active()
+	_old_play_tick(delta)
+	var want: bool = game.rec_active() and not game.paused
 	if not want:
-		if recording:
+		if recording and not game.rec_active():
 			recording = false
 		return
 	if not recording:
 		recording = true
-		gen += 1
-		_fit_size()
-		frames.clear()
-		acc = 0.0
-	if pending:
-		pending = false
-		var img: Image = sv.get_texture().get_image()
-		if img != null and not img.is_empty():
-			enc_mx.lock()
-			var lag := enc_queue.size()
-			if lag < 6:
-				enc_queue.append([gen, img])
-			enc_mx.unlock()
-			if lag < 6:
-				enc_sem.post()
-	acc += delta
-	if acc >= 1.0 / FPS:
-		acc = fmod(acc, 1.0 / FPS)
-		sv.render_target_update_mode = SubViewport.UPDATE_ONCE
-		pending = true
+		rec.clear()
+		rec_t = 0.0
+		pend_shot.clear()
+		rec_felt = game.felt_override if game.felt_override != "" else game.my_felt_tag()
+	rec_t += delta
+	var step := 1.0 / REC_HZ
+	if rec_t >= step:
+		rec_t = fmod(rec_t, step)
+		rec.append(_snap())
+		while rec.size() > MAX_FRAMES:
+			rec.pop_front()
 
 
 func can_save() -> bool:
-	return frames.size() >= 8 and not busy
+	return rec.size() >= int(REC_HZ) and not busy
 
 
+# botão ● 30s: guarda os últimos 30s no jogo (instantâneo, quase nada de espaço)
 func save_clip() -> void:
 	if busy:
-		game.ui.say("Ainda salvando o replay anterior...")
+		game.ui.say("Espere terminar o replay que está sendo salvo...")
 		return
-	if frames.size() < 8:
+	if rec.size() < int(REC_HZ):
 		game.ui.say("Ainda não tem jogada gravada para salvar.")
 		return
 	if list_local().size() >= MAX_SAVED:
 		game.ui.confirm("REPLAYS CHEIOS", "Você já tem %d replays guardados (o máximo).\nApague algum em AJUSTES > MEUS REPLAYS para salvar outro." % MAX_SAVED, "OK", func(): pass, "", Callable())
 		return
-	if OS.get_name() == "Android":
-		OS.request_permissions()
-	busy = true
-	result_err = ""
-	save_w = W
-	save_h = H
-	var fr := frames.duplicate()
 	var stamp := Time.get_datetime_string_from_system().replace(":", "").replace("-", "").replace("T", "_")
-	var fname := "Sinucou_%s" % stamp
-	# guarda no jogo (os quadros prontos) e monta o WebP animado: só junta bytes, é rápido
-	_store_local(fname, fr, save_w, save_h)
-	var bytes := build_webp(fr, save_w, save_h, int(round(1000.0 / FPS)))
-	busy = false
-	_write_gallery(fname + ".webp", bytes)
+	var nm := "Sinucou_%s" % stamp
+	var ud := local_dir()
+	DirAccess.make_dir_recursive_absolute(ud)
+	var f := FileAccess.open(ud + "/" + nm + ".rpl", FileAccess.WRITE)
+	if f == null:
+		game.ui.say("Não consegui salvar o replay (sem espaço?).")
+		return
+	f.store_var({"fmt": "state", "hz": REC_HZ, "felt": rec_felt, "frames": rec.duplicate()})
+	f.close()
+	game.ui.say("Replay salvo! Veja e mande para a galeria em AJUSTES > MEUS REPLAYS.")
 
 
 # grava onde a galeria mostra. Ordem: DCIM/Camera (aparece junto das fotos), DCIM, Imagens, Downloads.
@@ -192,10 +208,10 @@ func _write_gallery(fname: String, bytes: PackedByteArray) -> void:
 		f.close()
 		if FileAccess.file_exists(path):
 			result_path = path
-			_done(true, "Replay salvo em:\n%s\n\nTambém fica em AJUSTES > MEUS REPLAYS." % tr2[1])
+			_done(true, "Replay salvo em:\n%s" % tr2[1])
 			return
 		errs.append("x")
-	_done(false, "O celular não deixou o jogo gravar na galeria (erro %s).\n\nO replay ficou guardado em AJUSTES > MEUS REPLAYS:\nlá você toca em ABRIR e salva ou manda no WhatsApp." % ",".join(errs))
+	_done(false, "O celular não deixou o jogo gravar na galeria (erro %s).\nUse o botão ENVIAR: ele abre o replay no app de fotos, e de lá você salva ou manda no WhatsApp." % ",".join(errs))
 
 
 func _done(ok: bool, msg: String) -> void:
@@ -207,15 +223,6 @@ func _done(ok: bool, msg: String) -> void:
 # ---------------------------------------------------------------- replays guardados no jogo
 static func local_dir() -> String:
 	return OS.get_user_data_dir() + "/replays"
-
-
-func _store_local(nm: String, fr: Array, w: int, h: int) -> void:
-	var ud := local_dir()
-	DirAccess.make_dir_recursive_absolute(ud)
-	var f := FileAccess.open(ud + "/" + nm + ".rpl", FileAccess.WRITE)
-	if f != null:
-		f.store_var({"fmt": "webp", "w": w, "h": h, "fps": FPS, "frames": fr})
-		f.close()
 
 
 # nomes (sem extensão), do mais novo para o mais velho
@@ -255,11 +262,14 @@ func open_local(nm: String) -> void:
 	if d.is_empty():
 		game.ui.say("Replay não encontrado.")
 		return
+	if str(d.get("fmt", "")) == "state":
+		export_state(d, "open")
+		return
 	var path := ""
 	var bytes := PackedByteArray()
 	if str(d.get("fmt", "")) == "webp":
 		path = local_dir() + "/_envio.webp"
-		bytes = build_webp(d.frames, int(d.w), int(d.h), int(round(1000.0 / float(d.get("fps", FPS)))))
+		bytes = build_webp(d.frames, int(d.w), int(d.h), int(round(1000.0 / float(d.get("fps", 12.0)))))
 	else:
 		path = local_dir() + "/_envio.gif"
 		bytes = build_gif(d.frames, d.rs, d.get("pals", []), int(d.w), int(d.h), int(round(100.0 / float(d.get("fps", 8.0)))))
@@ -283,9 +293,13 @@ var play_i := 0
 var play_t := 0.0
 
 
+func is_state(nm: String) -> bool:
+	return str(_load_rpl(nm).get("fmt", "")) == "state"
+
+
 func play_local(nm: String, target: TextureRect) -> bool:
 	var d := _load_rpl(nm)
-	if d.is_empty() or not d.has("frames") or (d.frames as Array).is_empty():
+	if d.is_empty() or not d.has("frames") or (d.frames as Array).is_empty() or str(d.get("fmt", "")) == "state":
 		return false
 	if play_mat == null:
 		play_mat = target.material
@@ -307,13 +321,13 @@ func stop_play() -> void:
 	play_d = {}
 
 
-func _play_tick(delta: float) -> void:
+func _old_play_tick(delta: float) -> void:
 	if play_tex == null or play_d.is_empty():
 		return
 	if not is_instance_valid(play_tex) or not play_tex.is_visible_in_tree():
 		stop_play()
 		return
-	var fps := float(play_d.get("fps", FPS))
+	var fps := float(play_d.get("fps", 12.0))
 	play_t += delta
 	if play_t >= 1.0 / fps:
 		play_t = fmod(play_t, 1.0 / fps)
@@ -348,6 +362,302 @@ func _show_frame() -> void:
 		play_tex.texture = ImageTexture.create_from_image(img)
 	else:
 		tex.update(img)
+
+
+# ---------------------------------------------------------------- assistir em tela cheia (estado)
+# A mesa de verdade do jogo vira a "televisão": as bolas e o taco são colocados nas posições
+# gravadas (com movimento suave entre uma amostra e outra).
+var sp_d: Dictionary = {}
+var sp_t := 0.0
+var sp_speed := 1.0
+var sp_play := false
+var sp_last_i := -1
+var sp_ui: CanvasLayer = null
+var sp_bar: Control = null
+var sp_btn_play: Button = null
+var sp_btn_speed: Button = null
+var sp_name := ""
+var exporting := false
+
+
+func start_watch(nm: String) -> void:
+	var d := _load_rpl(nm)
+	if str(d.get("fmt", "")) != "state" or (d.frames as Array).size() < 2:
+		game.ui.say("Não consegui abrir esse replay.")
+		return
+	sp_name = nm
+	game.go_menu()
+	game.ui.close_modal()
+	game.ui.show_screen("")
+	game.felt_override = str(d.get("felt", ""))
+	game.apply_felt()
+	game.st = game.St.REPLAY
+	game.paused = false
+	sp_d = d
+	sp_t = 0.0
+	sp_speed = 1.0
+	sp_play = true
+	sp_last_i = -1
+	_apply_state(0.0)
+	_build_watch_ui()
+
+
+func stop_watch() -> void:
+	sp_play = false
+	sp_d = {}
+	if sp_ui != null and is_instance_valid(sp_ui):
+		sp_ui.queue_free()
+	sp_ui = null
+	game.rp_cue_vis = false
+	if game.st == game.St.REPLAY:
+		game.st = game.St.MENU
+	game.go_menu()
+	game.ui.open_replays()
+
+
+func _sp_len() -> float:
+	return float((sp_d.frames as Array).size() - 1) / float(sp_d.get("hz", REC_HZ))
+
+
+func _play_tick(delta: float) -> void:
+	if sp_d.is_empty() or exporting:
+		return
+	if sp_play:
+		sp_t += delta * sp_speed
+		if sp_t >= _sp_len():
+			sp_t = _sp_len()
+			sp_play = false
+			if sp_btn_play != null:
+				sp_btn_play.text = "↻ DE NOVO"
+		_apply_state(sp_t)
+	if sp_bar != null:
+		sp_bar.queue_redraw()
+
+
+func _ball_by_n() -> Dictionary:
+	var m := {}
+	for b in game.balls:
+		m[int(b.n)] = b
+	return m
+
+
+# põe a mesa no instante t (segundos) do replay
+func _apply_state(t: float) -> void:
+	var fr: Array = sp_d.frames
+	var hz := float(sp_d.get("hz", REC_HZ))
+	var x := clampf(t * hz, 0.0, float(fr.size() - 1))
+	var i0 := int(floor(x))
+	var i1 := mini(i0 + 1, fr.size() - 1)
+	var k := x - float(i0)
+	var a: Dictionary = fr[i0]
+	var b: Dictionary = fr[i1]
+	var fa: PackedFloat32Array = a.f
+	var fb: PackedFloat32Array = b.f
+	var bm := _ball_by_n()
+	for n in NB:
+		if not bm.has(n):
+			continue
+		var bl: Dictionary = bm[n]
+		var o := n * FPB
+		var on_a := fa[o + 2] > 0.5
+		var on_b := fb[o + 2] > 0.5
+		var pa := Vector2(fa[o], fa[o + 1])
+		var pb := Vector2(fb[o], fb[o + 1])
+		bl.on = on_a
+		bl.vel = Vector2.ZERO
+		bl.pos = pa.lerp(pb, k) if on_a and on_b else pa
+		bl.drop = lerpf(fa[o + 3], fb[o + 3], k) if not on_a and fa[o + 3] >= 0.0 and fb[o + 3] >= 0.0 else fa[o + 3]
+		bl.dpos = Vector2(fa[o + 4], fa[o + 5])
+		var qa := Quaternion(fa[o + 6], fa[o + 7], fa[o + 8], fa[o + 9])
+		var qb := Quaternion(fb[o + 6], fb[o + 7], fb[o + 8], fb[o + 9])
+		if qa.is_normalized() and qb.is_normalized():
+			bl.basis = Basis(qa.slerp(qb, k))
+	game.aim_angle = lerp_angle(float(a.a), float(b.a), k)
+	game.rp_pull = lerpf(float(a.pl), float(b.pl), k)
+	game.rp_cue_vis = bool(a.cv)
+	game.rp_cue_id = str(a.c)
+	game.spin = Vector2(float(a.sx), 0.0)
+	# efeitos de taco ELITE: dispara quando passa pelo quadro da tacada
+	if i0 != sp_last_i:
+		if sp_last_i >= 0 and i0 > sp_last_i:
+			for j in range(sp_last_i + 1, i0 + 1):
+				var fj: Dictionary = fr[j]
+				for e in fj.get("imp", []):
+					game.spawn_impact(str(e[0]), Vector2(e[1], e[2]), float(e[3]), float(e[4]))
+		sp_last_i = i0
+
+
+func _build_watch_ui() -> void:
+	if sp_ui != null and is_instance_valid(sp_ui):
+		sp_ui.queue_free()
+	var ui = game.ui
+	sp_ui = CanvasLayer.new()
+	sp_ui.layer = 60
+	add_child(sp_ui)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 12)
+	top.position = Vector2(16, 12)
+	sp_ui.add_child(top)
+	var bx: Button = ui.mk_btn("◀ SAIR", 150, 56, Color("4a5568"), 20)
+	bx.pressed.connect(stop_watch)
+	top.add_child(bx)
+	sp_btn_play = ui.mk_btn("❚❚ PAUSAR", 170, 56, Color("2b6cb0"), 20)
+	sp_btn_play.pressed.connect(func():
+		if not sp_play and sp_t >= _sp_len() - 0.01:
+			sp_t = 0.0
+			sp_last_i = -1
+		sp_play = not sp_play
+		sp_btn_play.text = "❚❚ PAUSAR" if sp_play else "▶ PLAY")
+	top.add_child(sp_btn_play)
+	sp_btn_speed = ui.mk_btn("VELOCIDADE 1x", 210, 56, Color("6b46c1"), 19)
+	sp_btn_speed.pressed.connect(func():
+		sp_speed = 0.5 if sp_speed == 1.0 else (0.25 if sp_speed == 0.5 else 1.0)
+		sp_btn_speed.text = "VELOCIDADE " + ("1x" if sp_speed == 1.0 else ("0.5x" if sp_speed == 0.5 else "0.25x")))
+	top.add_child(sp_btn_speed)
+	var bg: Button = ui.mk_btn("⬇ SALVAR NA GALERIA", 290, 56, Color("1fa85a"), 19)
+	bg.pressed.connect(func(): export_state(sp_d, "gallery"))
+	top.add_child(bg)
+	var bs: Button = ui.mk_btn("ENVIAR", 140, 56, Color("c05621"), 19)
+	bs.pressed.connect(func(): export_state(sp_d, "open"))
+	top.add_child(bs)
+	# barra do tempo (toque para pular)
+	sp_bar = Control.new()
+	sp_bar.position = Vector2(40, 676)
+	sp_bar.size = Vector2(1200, 30)
+	sp_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	sp_ui.add_child(sp_bar)
+	sp_bar.draw.connect(func():
+		var w := sp_bar.size.x
+		sp_bar.draw_rect(Rect2(0, 11, w, 8), Color(1, 1, 1, 0.2))
+		var kk := 0.0 if _sp_len() <= 0.0 else sp_t / _sp_len()
+		sp_bar.draw_rect(Rect2(0, 11, w * kk, 8), Color("f4c542"))
+		sp_bar.draw_circle(Vector2(w * kk, 15), 11, Color.WHITE)
+		sp_bar.draw_string(ThemeDB.fallback_font, Vector2(w - 120, 6), "%.1fs / %.1fs" % [sp_t, _sp_len()], HORIZONTAL_ALIGNMENT_RIGHT, 120, 15, Color(1, 1, 1, 0.8)))
+	sp_bar.gui_input.connect(func(ev):
+		if (ev is InputEventMouseButton and ev.pressed) or (ev is InputEventMouseMotion and ev.button_mask != 0) or ev is InputEventScreenDrag or (ev is InputEventScreenTouch and ev.pressed):
+			var kk2 := clampf(ev.position.x / sp_bar.size.x, 0.0, 1.0)
+			sp_t = kk2 * _sp_len()
+			sp_last_i = -1
+			_apply_state(sp_t))
+
+
+# ---------------------------------------------------------------- salvar na galeria / enviar
+# toca o replay quadro a quadro e fotografa cada um (sem os botões na tela), depois junta num WebP animado
+func export_state(d: Dictionary, target: String) -> void:
+	if exporting or busy:
+		return
+	if OS.get_name() == "Android" and target == "gallery":
+		OS.request_permissions()
+	var watching := not sp_d.is_empty()
+	var keep_t := sp_t
+	var keep_play := sp_play
+	if not watching:
+		# veio do botão ENVIAR da lista: monta a mesa por baixo
+		game.go_menu()
+		game.ui.close_modal()
+		game.ui.show_screen("")
+		game.felt_override = str(d.get("felt", ""))
+		game.apply_felt()
+		game.st = game.St.REPLAY
+		sp_d = d
+	exporting = true
+	busy = true
+	_fit_size()
+	if sp_ui != null:
+		sp_ui.visible = false
+	# o texto de progresso some na hora de cada foto; a marca SINUCOU entra no vídeo
+	var prog := CanvasLayer.new()
+	prog.layer = 61
+	add_child(prog)
+	var pl := Label.new()
+	pl.add_theme_font_size_override("font_size", 22)
+	pl.add_theme_color_override("font_color", Color.WHITE)
+	pl.add_theme_constant_override("outline_size", 6)
+	pl.add_theme_color_override("font_outline_color", Color.BLACK)
+	pl.position = Vector2(20, 690)
+	prog.add_child(pl)
+	var wm := Label.new()
+	wm.text = "SINUCOU"
+	wm.add_theme_font_size_override("font_size", 26)
+	wm.add_theme_color_override("font_color", Color(1, 0.85, 0.3, 0.85))
+	wm.add_theme_constant_override("outline_size", 6)
+	wm.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+	wm.position = Vector2(20, 14)
+	prog.add_child(wm)
+	var total := int(floor(_sp_len() * OUT_FPS)) + 1
+	var outs: Array = []
+	outs.resize(total)
+	var got := 0
+	sp_last_i = -1
+	for k in total:
+		var t := float(k) / OUT_FPS
+		_apply_state(t)
+		pl.text = "Preparando o replay... %d%%" % int(100.0 * float(k) / float(total))
+		pl.visible = false
+		await get_tree().process_frame
+		sv.render_target_update_mode = SubViewport.UPDATE_ONCE
+		await RenderingServer.frame_post_draw
+		var img: Image = sv.get_texture().get_image()
+		pl.visible = true
+		if img != null and not img.is_empty():
+			enc_mx.lock()
+			enc_queue.append([k, img])
+			enc_mx.unlock()
+			enc_sem.post()
+		# não deixa a fila crescer demais em celular fraco
+		while true:
+			enc_mx.lock()
+			var ql := enc_queue.size()
+			for o in enc_out:
+				outs[int(o[0])] = o[1]
+				got += 1
+			enc_out.clear()
+			enc_mx.unlock()
+			if ql < 4:
+				break
+			await get_tree().process_frame
+	while got < total:
+		await get_tree().process_frame
+		enc_mx.lock()
+		for o in enc_out:
+			outs[int(o[0])] = o[1]
+			got += 1
+		enc_out.clear()
+		var left := enc_queue.size()
+		enc_mx.unlock()
+		pl.text = "Finalizando... %d%%" % int(100.0 * float(got) / float(total))
+		if left == 0 and got < total and enc_out.is_empty():
+			await get_tree().create_timer(0.05).timeout
+	var good: Array = []
+	for o in outs:
+		if o is PackedByteArray and (o as PackedByteArray).size() > 0:
+			good.append(o)
+	var bytes := build_webp(good, W, H, int(round(1000.0 / OUT_FPS)))
+	prog.queue_free()
+	exporting = false
+	busy = false
+	if watching:
+		if sp_ui != null:
+			sp_ui.visible = true
+		sp_t = keep_t
+		sp_play = keep_play
+		_apply_state(sp_t)
+	else:
+		sp_d = {}
+		game.st = game.St.MENU
+		game.go_menu()
+		game.ui.open_replays()
+	var stamp := Time.get_datetime_string_from_system().replace(":", "").replace("-", "").replace("T", "_")
+	if target == "gallery":
+		_write_gallery("Sinucou_%s.webp" % stamp, bytes)
+	else:
+		var path := local_dir() + "/_envio.webp"
+		var fo := FileAccess.open(path, FileAccess.WRITE)
+		if fo != null:
+			fo.store_buffer(bytes)
+			fo.close()
+			if OS.shell_open(path) != OK:
+				game.ui.say("Não consegui abrir o replay neste celular.")
 
 
 # ---------------------------------------------------------------- WebP animado
