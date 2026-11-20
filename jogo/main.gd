@@ -35,7 +35,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 91  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 92  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -1035,6 +1035,8 @@ func eco_result(m: Dictionary) -> void:
 	if seq > int(save.get("eco_seq", 0)):
 		save["eco_seq"] = seq
 	save["eco_ok"] = true
+	save["eco_srv_c"] = int(m.get("coins", 0))
+	save["eco_srv_g"] = int(m.get("grana", 0))
 	var nc := int(m.get("coins", 0)) + pc
 	var ng := int(m.get("grana", 0)) + pg
 	var changed: bool = nc != int(save.coins) or ng != int(save.get("grana", 0))
@@ -1099,6 +1101,8 @@ func apply_recovered(code: String, tok: String, sv: Dictionary, eco_d = null) ->
 		save.coins = int(float(eco_d.get("coins", save.coins)))
 		save["grana"] = int(float(eco_d.get("grana", save.get("grana", 0))))
 		save["eco_seq"] = int(float(eco_d.get("seq", 0)))
+		save["eco_srv_c"] = int(save.coins)
+		save["eco_srv_g"] = int(save.grana)
 		save["eco_q"] = []
 		save["eco_ok"] = true
 	else:

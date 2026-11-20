@@ -231,6 +231,9 @@ func send_eco() -> void:
 			pc += int(tx.c)
 			pg += int(tx.g)
 		m["init"] = {"coins": int(game.save.coins) - pc, "grana": int(game.save.get("grana", 0)) - pg}
+	else:
+		# segurança: se o servidor perder os dados, ele recomeça do último saldo que ELE confirmou
+		m["init"] = {"coins": int(game.save.get("eco_srv_c", 0)), "grana": int(game.save.get("eco_srv_g", 0))}
 	world_send(m)
 	eco_dirty = false
 	eco_t = 0.0
@@ -257,7 +260,7 @@ func send_csave() -> void:
 	if ws == null or not server_ok:
 		return
 	var s2: Dictionary = game.save.duplicate(true)
-	for k in ["chats", "tok", "server", "eco_q", "eco_seq", "eco_ok"]:
+	for k in ["chats", "tok", "server", "eco_q", "eco_seq", "eco_ok", "eco_srv_c", "eco_srv_g"]:
 		s2.erase(k)
 	world_send({"t": "csave", "tok": game.my_tok(), "save": s2})
 	csave_dirty = false
@@ -272,7 +275,7 @@ func cloud_tick(delta: float) -> void:
 
 func send_setpass(pw: String) -> void:
 	var s2: Dictionary = game.save.duplicate(true)
-	for k in ["chats", "tok", "server", "eco_q", "eco_seq", "eco_ok"]:
+	for k in ["chats", "tok", "server", "eco_q", "eco_seq", "eco_ok", "eco_srv_c", "eco_srv_g"]:
 		s2.erase(k)
 	world_send({"t": "setpass", "tok": game.my_tok(), "pass": pw, "save": s2})
 
