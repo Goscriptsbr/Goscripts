@@ -5,6 +5,7 @@
 "use strict";
 const http = require("http");
 const crypto = require("crypto");
+const https = require("https");
 
 const PORT = process.env.PORT || 10000;
 const clients = new Map(); // code -> client
@@ -27,18 +28,142 @@ const fs = require("fs");
 const DATA_FILE = process.env.DATA_FILE || __dirname + "/dados.json";
 const players = new Map(); // code -> {name, seen, wk, pts, prof}
 const playersDir = players;
+const saves = new Map(); // (modo arquivo) code -> {tok, pass, save, at}
 try {
   const d = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
   for (const [k, v] of d.players || []) players.set(k, v);
   for (const [k, v] of d.mailbox || []) mailbox.set(k, v);
+  for (const [k, v] of d.saves || []) saves.set(k, v);
   console.log("cadastro carregado: " + players.size + " jogadores");
 } catch (e) {}
+
+// ------------------------------------------------------------ Supabase (projeto SÓ do jogo)
+// Com SUPABASE_URL e SUPABASE_KEY (chave service_role) no ambiente da Render, o cadastro, o ranking,
+// os recados e os saves na nuvem ficam no banco e não somem mais quando o servidor reinicia.
+// Sem essas variáveis, continua tudo no arquivo (como antes).
+const SB_URL = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+const SB_KEY = process.env.SUPABASE_KEY || "";
+const SB = !!(SB_URL && SB_KEY);
+let sbReady = !SB;
+function sb(method, path, body, extra) {
+  return new Promise((resolve) => {
+    let u;
+    try { u = new URL(SB_URL + "/rest/v1/" + path); } catch (e) { return resolve({ status: 0, json: null }); }
+    const lib = u.protocol === "http:" ? http : https;
+    const data = body == null ? null : Buffer.from(JSON.stringify(body));
+    const headers = Object.assign({ apikey: SB_KEY, Authorization: "Bearer " + SB_KEY, "Content-Type": "application/json" }, extra || {});
+    if (data) headers["Content-Length"] = data.length;
+    const rq = lib.request(u, { method, headers, timeout: 15000 }, (r) => {
+      let b = "";
+      r.setEncoding("utf8");
+      r.on("data", (x) => { b += x; });
+      r.on("end", () => {
+        let j = null;
+        try { j = b ? JSON.parse(b) : null; } catch (e) {}
+        if (r.statusCode >= 300) console.log("supabase " + method + " " + path.split("?")[0] + " -> " + r.statusCode + " " + b.slice(0, 200));
+        resolve({ status: r.statusCode, json: j });
+      });
+    });
+    rq.on("error", (e) => { console.log("supabase erro: " + e.message); resolve({ status: 0, json: null }); });
+    rq.on("timeout", () => rq.destroy(new Error("timeout")));
+    if (data) rq.write(data);
+    rq.end();
+  });
+}
+const lastPl = new Map(); // code -> json já gravado (para mandar só o que mudou)
+const lastMb = new Set();
+async function sbLoad() {
+  let n = 0;
+  for (let off = 0; off < 200000; off += 1000) {
+    const r = await sb("GET", "sinucou_players?select=code,data&order=code&limit=1000&offset=" + off);
+    if (r.status !== 200 || !Array.isArray(r.json)) { if (off === 0) { console.log("supabase: não consegui carregar (vou tentar de novo)"); return false; } break; }
+    for (const row of r.json) {
+      const cur = players.get(row.code);
+      const v = row.data || {};
+      // o que já chegou neste meio tempo (jogador conectou) vale mais que o do banco
+      players.set(row.code, cur ? Object.assign({}, v, cur) : v);
+      lastPl.set(row.code, JSON.stringify(v));
+      n++;
+    }
+    if (r.json.length < 1000) break;
+  }
+  const mb = await sb("GET", "sinucou_mailbox?select=code,msgs&limit=10000");
+  if (mb.status === 200 && Array.isArray(mb.json)) {
+    for (const row of mb.json) {
+      if (!mailbox.has(row.code)) mailbox.set(row.code, row.msgs || []);
+      lastMb.add(row.code);
+    }
+  }
+  console.log("supabase: " + n + " jogadores carregados");
+  return true;
+}
+if (SB) {
+  (async () => {
+    for (let i = 0; i < 20 && !(await sbLoad()); i++) await new Promise((r) => setTimeout(r, 5000));
+    sbReady = true;
+    saveSoon();
+  })();
+}
+let sbBusy = false;
+async function sbFlush() {
+  if (!sbReady || sbBusy) return;
+  sbBusy = true;
+  try {
+    const rows = [];
+    for (const [code, v] of players) {
+      const j = JSON.stringify(v);
+      if (lastPl.get(code) !== j) rows.push({ code, data: v, j });
+    }
+    for (let i = 0; i < rows.length; i += 500) {
+      const part = rows.slice(i, i + 500);
+      const r = await sb("POST", "sinucou_players?on_conflict=code", part.map((x) => ({ code: x.code, data: x.data, updated_at: new Date().toISOString() })), { Prefer: "resolution=merge-duplicates,return=minimal" });
+      if (r.status >= 200 && r.status < 300) for (const x of part) lastPl.set(x.code, x.j);
+    }
+    const mrows = [...mailbox].map(([code, msgs]) => ({ code, msgs }));
+    if (mrows.length) {
+      const r = await sb("POST", "sinucou_mailbox?on_conflict=code", mrows, { Prefer: "resolution=merge-duplicates,return=minimal" });
+      if (r.status >= 200 && r.status < 300) for (const x of mrows) lastMb.add(x.code);
+    }
+    const gone = [...lastMb].filter((k) => !mailbox.has(k));
+    if (gone.length) {
+      const r = await sb("DELETE", "sinucou_mailbox?code=in.(" + gone.map((k) => encodeURIComponent(k)).join(",") + ")", null, { Prefer: "return=minimal" });
+      if (r.status >= 200 && r.status < 300) for (const k of gone) lastMb.delete(k);
+    }
+  } finally {
+    sbBusy = false;
+  }
+}
+
+// saves na nuvem: guarda moedas, itens e progresso de cada celular (protegido por um "token" do aparelho)
+async function getSave(code) {
+  if (!SB) return saves.get(code) || null;
+  const r = await sb("GET", "sinucou_saves?select=code,tok,pass,save&code=eq." + encodeURIComponent(code));
+  if (r.status !== 200 || !Array.isArray(r.json)) return undefined; // undefined = erro (não sobrescrever)
+  return r.json[0] || null;
+}
+async function putSave(code, row) {
+  if (!SB) { saves.set(code, Object.assign({}, row, { at: Date.now() })); saveSoon(); return true; }
+  const r = await sb("POST", "sinucou_saves?on_conflict=code", [{ code, tok: row.tok, pass: row.pass || null, save: row.save, updated_at: new Date().toISOString() }], { Prefer: "resolution=merge-duplicates,return=minimal" });
+  return r.status >= 200 && r.status < 300;
+}
+function passHash(code, pass, salt) {
+  return salt + "$" + crypto.createHash("sha256").update(salt + ":" + code + ":" + pass).digest("hex");
+}
+function passOk(code, pass, stored) {
+  if (!stored || stored.indexOf("$") < 0) return false;
+  const salt = stored.split("$")[0];
+  const a = Buffer.from(passHash(code, pass, salt));
+  const b = Buffer.from(stored);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 let saveTimer = null;
 function saveSoon() {
   if (saveTimer) return;
   saveTimer = setTimeout(() => {
     saveTimer = null;
-    const d = JSON.stringify({ players: [...players], mailbox: [...mailbox] });
+    if (SB) { sbFlush(); return; }
+    const d = JSON.stringify({ players: [...players], mailbox: [...mailbox], saves: [...saves] });
     fs.writeFile(DATA_FILE + ".tmp", d, (err) => { if (!err) fs.rename(DATA_FILE + ".tmp", DATA_FILE, () => {}); });
   }, 3000);
 }
@@ -142,6 +267,46 @@ function onMsg(c, op, payload) {
           else sendJ(c, { t: "fmsg", kind: x.kind, from: x.from, name: x.name });
         }
       }
+      break;
+    }
+    case "csave": { // backup do save do celular
+      if (!c.code || typeof m.tok !== "string" || m.tok.length < 16 || !m.save || typeof m.save !== "object") return;
+      const js = JSON.stringify(m.save);
+      if (js.length > 200000) return;
+      const code = c.code;
+      (async () => {
+        const row = await getSave(code);
+        if (row === undefined) return;
+        if (row && row.tok && row.tok !== m.tok) return sendJ(c, { t: "csave_fail", why: "outro aparelho" });
+        const ok = await putSave(code, { tok: m.tok, pass: row ? row.pass : null, save: m.save });
+        sendJ(c, { t: "csave_ok", ok, pass: !!(row && row.pass) });
+      })();
+      break;
+    }
+    case "setpass": { // cria/troca a senha da conta (para recuperar em outro celular)
+      if (!c.code || typeof m.tok !== "string" || typeof m.pass !== "string" || m.pass.length < 4 || m.pass.length > 40) return;
+      const code = c.code;
+      (async () => {
+        const row = await getSave(code);
+        if (row === undefined) return sendJ(c, { t: "setpass_r", ok: false, msg: "Servidor sem acesso ao banco, tente de novo." });
+        if (row && row.tok && row.tok !== m.tok) return sendJ(c, { t: "setpass_r", ok: false, msg: "Esta conta pertence a outro aparelho." });
+        const salt = crypto.randomBytes(8).toString("hex");
+        const ok = await putSave(code, { tok: m.tok, pass: passHash(code, m.pass, salt), save: m.save || (row ? row.save : {}) });
+        sendJ(c, { t: "setpass_r", ok, msg: ok ? "Senha criada!" : "Não consegui salvar, tente de novo." });
+      })();
+      break;
+    }
+    case "recover": { // entrar na conta em outro celular: código + senha
+      const code = String(m.code || "").toUpperCase().slice(0, 8);
+      c.recTries = (c.recTries || 0) + 1;
+      if (c.recTries > 6) return sendJ(c, { t: "recover_r", ok: false, msg: "Muitas tentativas. Feche o jogo e tente mais tarde." });
+      (async () => {
+        await new Promise((r) => setTimeout(r, 600));
+        const row = await getSave(code);
+        if (row === undefined) return sendJ(c, { t: "recover_r", ok: false, msg: "Servidor sem acesso ao banco, tente de novo." });
+        if (!row || !passOk(code, String(m.pass || ""), row.pass)) return sendJ(c, { t: "recover_r", ok: false, msg: "Código ou senha errados." });
+        sendJ(c, { t: "recover_r", ok: true, code, tok: row.tok, save: row.save });
+      })();
       break;
     }
     case "queue": {
@@ -708,7 +873,6 @@ setInterval(() => {
 
 // versão mais nova do app (o app compara com a dele e oferece atualizar)
 // o app baixa o APK daqui do servidor (/apk); o servidor busca no GitHub e guarda uma cópia
-const https = require("https");
 const APK_FILE = "/tmp/sinucou.apk";
 let apkReady = ""; // link (fixo no commit) do APK que já está guardado
 // o link do versao.json aponta para o commit exato do APK: o cache do GitHub nunca entrega um APK velho

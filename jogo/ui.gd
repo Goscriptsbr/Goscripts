@@ -3947,11 +3947,8 @@ func _build_settings() -> void:
 	var sv := mk_btn("SALVAR", 130, 60, GREEN, 24)
 	sv.pressed.connect(_save_name)
 	nr.add_child(sv)
-	var gg := mk_btn("G   CONECTAR CONTA GOOGLE", 440, 60, Color("ffffff"), 22)
-	gg.add_theme_color_override("font_color", Color("3c4043"))
-	gg.add_theme_color_override("font_hover_color", Color("1a73e8"))
-	gg.add_theme_constant_override("outline_size", 0)
-	gg.pressed.connect(func(): say("Login com Google chega em breve (precisa configurar no Google Play)."))
+	var gg := mk_btn("☁  BACKUP NA NUVEM / SENHA", 440, 60, BLUE, 22)
+	gg.pressed.connect(open_cloud)
 	av.add_child(gg)
 	var tg := HBoxContainer.new()
 	tg.add_theme_constant_override("separation", 16)
@@ -3999,6 +3996,118 @@ func _build_settings() -> void:
 	back.pressed.connect(show_screen.bind("main"))
 	brow.add_child(back)
 	_settings_refresh()
+
+
+# ---------------------------------------------------------------- backup na nuvem e recuperar conta
+var cloud_box: VBoxContainer = null
+
+
+func _edit(ph: String, secret: bool, maxl: int) -> LineEdit:
+	var e := LineEdit.new()
+	e.placeholder_text = ph
+	e.secret = secret
+	e.max_length = maxl
+	e.custom_minimum_size = Vector2(360, 58)
+	e.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	e.add_theme_font_size_override("font_size", 26)
+	e.add_theme_stylebox_override("normal", sbox(Color(0.02, 0.05, 0.09, 0.95), 16, Color(1, 1, 1, 0.35), 2, 0))
+	e.add_theme_stylebox_override("focus", sbox(Color(0.02, 0.05, 0.09, 0.95), 16, Color("5aa9ff"), 3, 0))
+	return e
+
+
+func _modal_box(title: String) -> VBoxContainer:
+	close_modal()
+	modal_layer = Control.new()
+	modal_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(modal_layer)
+	var dimr := ColorRect.new()
+	dimr.color = Color(0, 0, 0, 0.65)
+	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(dimr)
+	var cc := CenterContainer.new()
+	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	modal_layer.add_child(cc)
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.97), 26, Color("5aa9ff"), 3, 20))
+	cc.add_child(p)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 12)
+	p.add_child(margin(vb, 22))
+	vb.add_child(mk_lbl(title, 32, Color("8fd0ff"), 6))
+	return vb
+
+
+func open_cloud() -> void:
+	game.net.connect_server()
+	cloud_box = _modal_box("☁  BACKUP NA NUVEM")
+	cloud_refresh()
+
+
+func cloud_refresh() -> void:
+	if cloud_box == null or not is_instance_valid(cloud_box) or not has_modal():
+		return
+	while cloud_box.get_child_count() > 1:
+		var ch := cloud_box.get_child(1)
+		cloud_box.remove_child(ch)
+		ch.queue_free()
+	var n = game.net
+	var st := "✓ Seu progresso está guardado na nuvem (último: %s)" % n.cloud_last if n.cloud_ok else ("⚠ Esta conta está sendo usada em outro celular." if n.cloud_fail else "Conectando ao servidor...")
+	cloud_box.add_child(mk_lbl("Seu código:  %s" % game.my_code(), 26, Color("f4c542"), 4))
+	cloud_box.add_child(mk_lbl(st, 18, Color("7dffa8") if n.cloud_ok else Color(1, 0.85, 0.5), 2))
+	cloud_box.add_child(mk_lbl("Senha: " + ("criada ✓ (você pode entrar em outro celular)" if n.cloud_pass else "ainda não criada — crie uma para não perder a conta"), 18, Color(1, 1, 1, 0.85), 2))
+	var pe := _edit("Nova senha (4 a 20 letras/números)", true, 20)
+	cloud_box.add_child(pe)
+	var b1 := mk_btn("TROCAR SENHA" if n.cloud_pass else "CRIAR SENHA", 360, 58, GREEN, 22)
+	b1.pressed.connect(func():
+		var pw := pe.text.strip_edges()
+		if pw.length() < 4:
+			say("A senha precisa ter pelo menos 4 caracteres.")
+			return
+		game.net.send_setpass(pw)
+		say("Salvando senha..."))
+	cloud_box.add_child(b1)
+	cloud_box.add_child(mk_lbl("— Celular novo? Entre na sua conta antiga —", 18, Color(1, 1, 1, 0.6), 2))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	cloud_box.add_child(row)
+	var ce := _edit("Código", false, 8)
+	ce.custom_minimum_size = Vector2(170, 58)
+	row.add_child(ce)
+	var cpe := _edit("Senha", true, 20)
+	cpe.custom_minimum_size = Vector2(190, 58)
+	row.add_child(cpe)
+	var b2 := mk_btn("ENTRAR NA CONTA", 360, 58, BLUE, 22)
+	b2.pressed.connect(func():
+		var cd := ce.text.strip_edges().to_upper()
+		var pw2 := cpe.text
+		if cd.length() < 4 or pw2.length() < 4:
+			say("Digite o código e a senha da conta.")
+			return
+		if cd == game.my_code():
+			say("Esse já é o código deste celular.")
+			return
+		game.net.send_recover(cd, pw2)
+		say("Procurando a conta..."))
+	cloud_box.add_child(b2)
+	var b3 := mk_btn("FECHAR", 200, 52, GRAY, 20)
+	b3.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	b3.pressed.connect(close_modal)
+	cloud_box.add_child(b3)
+
+
+func cloud_recover_result(m: Dictionary) -> void:
+	if not bool(m.get("ok", false)):
+		say(str(m.get("msg", "Não deu certo.")))
+		return
+	var cd := str(m.get("code", ""))
+	var sv = m.get("save", {})
+	var coins := int(float((sv as Dictionary).get("coins", 0))) if sv is Dictionary else 0
+	confirm("ENTRAR NA CONTA %s?" % cd, "Conta encontrada (%d moedas).\nO progresso DESTE celular será trocado pelo da conta %s." % [coins, cd], "ENTRAR", func():
+		game.apply_recovered(cd, str(m.get("tok", "")), sv if sv is Dictionary else {})
+		show_screen("main")
+		say("Pronto! Você entrou na conta %s." % cd), "CANCELAR", func(): pass)
 
 
 # ---------------------------------------------------------------- replays salvos dentro do jogo

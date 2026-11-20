@@ -213,6 +213,54 @@ var coins_sent := -1
 var look_sent := ""
 
 
+# ---------------------------------------------------------------- backup na nuvem
+# o save do celular (moedas, itens, progresso) vai para o banco do jogo a cada 30s quando muda;
+# com uma senha, dá para entrar na mesma conta em outro celular
+var csave_dirty := true
+var csave_t := 99.0
+var cloud_ok := false
+var cloud_pass := false
+var cloud_fail := false
+var cloud_last := ""
+
+
+func send_csave() -> void:
+	if ws == null or not server_ok:
+		return
+	var s2: Dictionary = game.save.duplicate(true)
+	for k in ["chats", "tok", "server"]:
+		s2.erase(k)
+	world_send({"t": "csave", "tok": game.my_tok(), "save": s2})
+	csave_dirty = false
+	csave_t = 0.0
+
+
+func cloud_tick(delta: float) -> void:
+	csave_t += delta
+	if server_ok and csave_dirty and csave_t >= 30.0:
+		send_csave()
+
+
+func send_setpass(pw: String) -> void:
+	var s2: Dictionary = game.save.duplicate(true)
+	for k in ["chats", "tok", "server"]:
+		s2.erase(k)
+	world_send({"t": "setpass", "tok": game.my_tok(), "pass": pw, "save": s2})
+
+
+func send_recover(code: String, pw: String) -> void:
+	world_send({"t": "recover", "code": code.strip_edges().to_upper(), "pass": pw})
+
+
+# troca de conta (depois de recuperar): reconecta com o código novo
+func reconnect() -> void:
+	if ws != null:
+		ws.close()
+	ws = null
+	server_ok = false
+	connect_server()
+
+
 # o servidor confere se cada um tem moedas para a aposta
 func send_coins() -> void:
 	var c := int(game.save.coins)
@@ -266,6 +314,7 @@ func _world_poll(delta: float) -> void:
 		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx()}))
 	if stt == WebSocketPeer.STATE_CONNECTING:
 		world_t += delta
+	cloud_tick(delta)
 	while stt == WebSocketPeer.STATE_OPEN and ws.get_available_packet_count() > 0:
 		var pk := ws.get_packet()
 		if ws.was_string_packet():
@@ -305,6 +354,7 @@ func _world_msg(m: Dictionary) -> void:
 			send_score()
 			send_profile()
 			was_ok = true
+			send_csave()
 			if game.ui != null and m.has("app"):
 				game.ui.check_update(m.app)
 			# reenvia pedidos de amizade pendentes (o servidor não guarda nada)
@@ -404,6 +454,24 @@ func _world_msg(m: Dictionary) -> void:
 				game.ui._online_btn_refresh()
 		"tour":
 			game.tour_update(m)
+		"csave_ok":
+			cloud_ok = bool(m.get("ok", false))
+			cloud_pass = bool(m.get("pass", false)) or cloud_pass
+			cloud_fail = false
+			if cloud_ok:
+				cloud_last = Time.get_time_string_from_system().substr(0, 5)
+		"csave_fail":
+			cloud_ok = false
+			cloud_fail = true
+		"setpass_r":
+			if bool(m.get("ok", false)):
+				cloud_pass = true
+			if game.ui != null:
+				game.ui.say(str(m.get("msg", "")))
+				game.ui.cloud_refresh()
+		"recover_r":
+			if game.ui != null:
+				game.ui.cloud_recover_result(m)
 		"rank":
 			if game.ui != null:
 				game.ui.rank_update(m)

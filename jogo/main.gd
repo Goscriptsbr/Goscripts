@@ -34,7 +34,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 88  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 89  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -943,6 +943,7 @@ func write_save() -> void:
 		return
 	if net != null:
 		net.send_coins()
+		net.csave_dirty = true
 	var cf := ConfigFile.new()
 	for k in save.keys():
 		cf.set_value("s", k, save[k])
@@ -995,6 +996,57 @@ func cur_ai() -> bool:
 	if net4:
 		return net.is_host and bot_seats.has(shooter())
 	return bool(ai[turn])
+
+
+# segredo deste aparelho (protege o backup na nuvem: só quem tem o token grava por cima)
+func my_tok() -> String:
+	var t := str(save.get("tok", ""))
+	if t.length() < 24:
+		var abc := "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+		var crypto := Crypto.new()
+		var rb := crypto.generate_random_bytes(32)
+		t = ""
+		for i in 32:
+			t += abc[rb[i] % abc.length()]
+		save["tok"] = t
+		write_save()
+	return t
+
+
+# JSON devolve números como decimais: volta para inteiro o que era inteiro
+func _jfix(v):
+	if v is float and is_equal_approx(v, round(v)) and absf(v) < 1e15:
+		return int(round(v))
+	if v is Array:
+		var a: Array = []
+		for x in v:
+			a.append(_jfix(x))
+		return a
+	if v is Dictionary:
+		var d := {}
+		for k in v:
+			d[k] = _jfix(v[k])
+		return d
+	return v
+
+
+# entrou na conta em outro celular: troca o save deste pelo da nuvem
+func apply_recovered(code: String, tok: String, sv: Dictionary) -> void:
+	var keep := {}
+	for k in ["sfx", "vib", "voice_hear", "voice_mic", "table_fx", "chats"]:
+		if save.has(k):
+			keep[k] = save[k]
+	var ns: Dictionary = _jfix(sv)
+	for k in ns:
+		save[k] = ns[k]
+	for k in keep:
+		save[k] = keep[k]
+	save["pcode"] = code
+	save["tok"] = tok
+	write_save()
+	load_save()
+	if net != null:
+		net.reconnect()
 
 
 func my_code() -> String:
