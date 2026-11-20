@@ -1,44 +1,40 @@
 extends Node
-# REPLAY: grava sempre os últimos 30 segundos da partida (imagens pequenas, 8 por segundo) e, quando o
-# jogador toca em SALVAR, monta um GIF animado e guarda na galeria do celular (Imagens/Sinucou).
+# REPLAY: grava sempre os últimos 30 segundos da partida e, quando o jogador toca em SALVAR,
+# guarda o replay no jogo (AJUSTES > MEUS REPLAYS) e tenta pôr uma cópia na galeria do celular.
 #
-# Como fica leve:
-#  - a tela é reduzida e convertida para 128 cores por um shader na placa de vídeo; as 128 cores são
-#    escolhidas a partir da própria tela (a cada 5s), então o pano, a borda e as bolas ficam com as cores
-#    certas; o celular só lê 1 byte por pixel;
-#  - o GIF é gravado "sem compressão LZW" (cada pixel = 1 byte e um código de limpeza a cada 120),
-#    então montar o arquivo é só juntar pedaços de memória, sem conta pixel a pixel.
+# Qualidade: cada quadro é a tela reduzida para 960 px de largura (na proporção do celular), com as
+# cores de verdade, comprimido em WebP pelo próprio Godot (rápido, numa linha separada). O arquivo
+# final é um WebP ANIMADO: é só juntar os quadros prontos num envelope (sem recomprimir nada).
 
-const W := 480
+const W := 960
 const FPS := 12.0
-const MAX_SAVED := 10
 const SECS := 30.0
 const MAX_FRAMES := int(FPS * SECS)
+const MAX_SAVED := 10
+const QUALITY := 0.72
 
 var game: Node
-var H := 216   # altura segue o formato da tela do celular (sem achatar a mesa)
-var frames: Array = []        # cada item: PackedByteArray comprimido (índices de cor)
-var raw_sizes: Array = []
-var frame_pals: Array = []    # paleta (128 cores, 384 bytes) de cada quadro
-var cur_pal := PackedByteArray()
-var pal_req := PackedByteArray()
-var sv2: SubViewport          # amostra pequena em cores de verdade, para escolher a paleta
-var sample_pending := false
-var pal_t := 99.0
-var last_pals: Array = []
-var last_w := W
-var last_h := 216
+var H := 432                 # altura segue o formato da tela do celular (sem achatar a mesa)
+var frames: Array = []       # cada item: PackedByteArray (um WebP pronto)
 var sv: SubViewport
 var tr: TextureRect
 var acc := 0.0
 var pending := false
 var recording := false
 var busy := false
-var thread: Thread
 var result_path := ""
 var result_err := ""
-var last_frames: Array = []
-var last_rs: Array = []
+var save_w := W
+var save_h := 432
+
+# compressão dos quadros numa linha separada (para não travar o jogo)
+var enc_thread: Thread
+var enc_sem := Semaphore.new()
+var enc_mx := Mutex.new()
+var enc_queue: Array = []    # [gen, Image]
+var enc_out: Array = []      # [gen, PackedByteArray]
+var enc_quit := false
+var gen := 0                 # muda quando a gravação recomeça (descarta quadros velhos)
 
 
 func setup(g: Node) -> void:
@@ -54,22 +50,34 @@ func setup(g: Node) -> void:
 	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tr.stretch_mode = TextureRect.STRETCH_SCALE
 	tr.texture = get_tree().root.get_texture()
-	var m := ShaderMaterial.new()
-	m.shader = load("res://shaders/gif_quant.gdshader")
-	tr.material = m
 	sv.add_child(tr)
-	sv2 = SubViewport.new()
-	sv2.size = Vector2i(96, 54)
-	sv2.disable_3d = true
-	sv2.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	add_child(sv2)
-	var tr2 := TextureRect.new()
-	tr2.size = Vector2(96, 54)
-	tr2.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tr2.stretch_mode = TextureRect.STRETCH_SCALE
-	tr2.texture = get_tree().root.get_texture()
-	sv2.add_child(tr2)
-	_set_pal(cube_palette())
+	enc_thread = Thread.new()
+	enc_thread.start(_enc_loop)
+
+
+func _exit_tree() -> void:
+	enc_quit = true
+	enc_sem.post()
+	if enc_thread != null and enc_thread.is_started():
+		enc_thread.wait_to_finish()
+
+
+func _enc_loop() -> void:
+	while true:
+		enc_sem.wait()
+		if enc_quit:
+			return
+		enc_mx.lock()
+		var job: Array = enc_queue.pop_front() if not enc_queue.is_empty() else []
+		enc_mx.unlock()
+		if job.is_empty():
+			continue
+		var img: Image = job[1]
+		img.convert(Image.FORMAT_RGB8)
+		var bytes := img.save_webp_to_buffer(true, QUALITY)
+		enc_mx.lock()
+		enc_out.append([job[0], bytes])
+		enc_mx.unlock()
 
 
 # mesma proporção da tela (celulares 20:9 ficavam com a mesa espremida)
@@ -77,46 +85,25 @@ func _fit_size() -> void:
 	var rs2: Vector2 = get_tree().root.get_visible_rect().size
 	if rs2.x < 10.0:
 		return
-	H = clampi(int(round(float(W) * rs2.y / rs2.x / 2.0)) * 2, 150, 360)
+	H = clampi(int(round(float(W) * rs2.y / rs2.x / 2.0)) * 2, 300, 720)
 	sv.size = Vector2i(W, H)
 	tr.size = Vector2(W, H)
-
-
-func _set_pal(p: PackedByteArray) -> void:
-	cur_pal = p
-	var arr := PackedVector3Array()
-	for i in 128:
-		arr.append(Vector3(p[i * 3], p[i * 3 + 1], p[i * 3 + 2]) / 255.0)
-	(tr.material as ShaderMaterial).set_shader_parameter("pal", arr)
 
 
 func _process(delta: float) -> void:
 	if game == null:
 		return
-	if play_tex != null and not play_fr.is_empty():
-		if not is_instance_valid(play_tex) or not play_tex.is_visible_in_tree():
-			stop_play()
-		else:
-			play_t += delta
-			if play_t >= 1.0 / FPS:
-				play_t = fmod(play_t, 1.0 / FPS)
-				play_i = (play_i + 1) % play_fr.size()
-				_show_frame()
-	if busy and thread != null and not thread.is_alive():
-		var bytes: PackedByteArray = thread.wait_to_finish()
-		thread = null
-		busy = false
-		if open_after != "":
-			var path := open_after
-			open_after = ""
-			var fo := FileAccess.open(path, FileAccess.WRITE)
-			if fo != null:
-				fo.store_buffer(bytes)
-				fo.close()
-				if OS.shell_open(path) != OK:
-					game.ui.say("Não consegui abrir o replay neste celular.")
-		else:
-			_write_file(bytes)
+	_play_tick(delta)
+	# quadros que a outra linha já comprimiu
+	enc_mx.lock()
+	var outs := enc_out
+	enc_out = []
+	enc_mx.unlock()
+	for o in outs:
+		if int(o[0]) == gen:
+			frames.append(o[1])
+	while frames.size() > MAX_FRAMES:
+		frames.pop_front()
 	var want: bool = game.rec_active()
 	if not want:
 		if recording:
@@ -124,42 +111,25 @@ func _process(delta: float) -> void:
 		return
 	if not recording:
 		recording = true
+		gen += 1
 		_fit_size()
 		frames.clear()
-		raw_sizes.clear()
-		frame_pals.clear()
 		acc = 0.0
-		pal_t = 99.0
 	if pending:
 		pending = false
 		var img: Image = sv.get_texture().get_image()
 		if img != null and not img.is_empty():
-			img.convert(Image.FORMAT_R8)
-			var d := img.get_data()
-			raw_sizes.append(d.size())
-			frames.append(d.compress(FileAccess.COMPRESSION_FASTLZ))
-			frame_pals.append(pal_req)
-			while frames.size() > MAX_FRAMES:
-				frames.pop_front()
-				raw_sizes.pop_front()
-				frame_pals.pop_front()
-	# paleta: a cada 5s olha a tela em cores de verdade e escolhe as 128 cores que mais aparecem
-	if sample_pending:
-		sample_pending = false
-		var si: Image = sv2.get_texture().get_image()
-		if si != null and not si.is_empty():
-			_set_pal(make_palette(si))
-	pal_t += delta
-	if pal_t >= 5.0:
-		pal_t = 0.0
-		sv2.render_target_update_mode = SubViewport.UPDATE_ONCE
-		sample_pending = true
-		return
+			enc_mx.lock()
+			var lag := enc_queue.size()
+			if lag < 6:
+				enc_queue.append([gen, img])
+			enc_mx.unlock()
+			if lag < 6:
+				enc_sem.post()
 	acc += delta
 	if acc >= 1.0 / FPS:
 		acc = fmod(acc, 1.0 / FPS)
 		sv.render_target_update_mode = SubViewport.UPDATE_ONCE
-		pal_req = cur_pal
 		pending = true
 
 
@@ -181,33 +151,22 @@ func save_clip() -> void:
 		OS.request_permissions()
 	busy = true
 	result_err = ""
+	save_w = W
+	save_h = H
 	var fr := frames.duplicate()
-	var rs := raw_sizes.duplicate()
-	var ps := frame_pals.duplicate()
-	last_frames = fr
-	last_rs = rs
-	last_pals = ps
-	last_w = W
-	last_h = H
-	game.ui.say("Salvando os últimos %ds..." % int(ceil(float(fr.size()) / FPS)))
-	thread = Thread.new()
-	thread.start(_worker.bind(fr, rs, ps, W, H))
+	var stamp := Time.get_datetime_string_from_system().replace(":", "").replace("-", "").replace("T", "_")
+	var fname := "Sinucou_%s" % stamp
+	# guarda no jogo (os quadros prontos) e monta o WebP animado: só junta bytes, é rápido
+	_store_local(fname, fr, save_w, save_h)
+	var bytes := build_webp(fr, save_w, save_h, int(round(1000.0 / FPS)))
+	busy = false
+	_write_gallery(fname + ".webp", bytes)
 
 
-func _worker(fr: Array, rs: Array, ps: Array, w: int, h: int) -> PackedByteArray:
-	# só monta o GIF aqui (em segundo plano); gravar no armazenamento do Android fica na linha principal
-	return build_gif(fr, rs, ps, w, h, int(round(100.0 / FPS)))
-
-
-# grava o GIF onde a galeria mostra. Ordem: DCIM/Camera (aparece junto das fotos), DCIM, Imagens, Downloads.
-func _write_file(bytes: PackedByteArray) -> void:
-	if bytes.size() < 100:
-		_done(false, "Não consegui montar o replay.")
-		return
+# grava onde a galeria mostra. Ordem: DCIM/Camera (aparece junto das fotos), DCIM, Imagens, Downloads.
+func _write_gallery(fname: String, bytes: PackedByteArray) -> void:
 	if OS.get_name() == "Android":
 		OS.request_permission("android.permission.WRITE_EXTERNAL_STORAGE")
-	var stamp := Time.get_datetime_string_from_system().replace(":", "").replace("-", "").replace("T", "_")
-	var fname := "Sinucou_%s.gif" % stamp
 	var dcim := OS.get_system_dir(OS.SYSTEM_DIR_DCIM)
 	var pics := OS.get_system_dir(OS.SYSTEM_DIR_PICTURES)
 	var dl := OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS)
@@ -220,7 +179,6 @@ func _write_file(bytes: PackedByteArray) -> void:
 	if dl != "":
 		tries.append([dl, "pasta Downloads"])
 	var errs: Array = []
-	_store_local(fname, bytes)
 	for tr2 in tries:
 		var d: String = tr2[0]
 		if not DirAccess.dir_exists_absolute(d):
@@ -237,23 +195,27 @@ func _write_file(bytes: PackedByteArray) -> void:
 			_done(true, "Replay salvo em:\n%s\n\nTambém fica em AJUSTES > MEUS REPLAYS." % tr2[1])
 			return
 		errs.append("x")
-	result_path = local_dir() + "/" + fname
 	_done(false, "O celular não deixou o jogo gravar na galeria (erro %s).\n\nO replay ficou guardado em AJUSTES > MEUS REPLAYS:\nlá você toca em ABRIR e salva ou manda no WhatsApp." % ",".join(errs))
 
 
-# cópia dentro do jogo (sempre): o GIF e os quadros crus (para assistir aqui mesmo). Guarda os 10 últimos.
+func _done(ok: bool, msg: String) -> void:
+	result_err = "" if ok else msg
+	print("REPLAY salvo=", ok, " ", result_path)
+	game.ui.confirm("REPLAY SALVO!" if ok else "REPLAY", msg, "OK", func(): pass, "", Callable())
+
+
+# ---------------------------------------------------------------- replays guardados no jogo
 static func local_dir() -> String:
 	return OS.get_user_data_dir() + "/replays"
 
 
-func _store_local(fname: String, bytes: PackedByteArray) -> void:
-	# guarda só os quadros (o GIF é montado de novo quando for abrir/enviar): ocupa bem menos espaço
+func _store_local(nm: String, fr: Array, w: int, h: int) -> void:
 	var ud := local_dir()
 	DirAccess.make_dir_recursive_absolute(ud)
-	var f2 := FileAccess.open(ud + "/" + fname.get_basename() + ".rpl", FileAccess.WRITE)
-	if f2 != null:
-		f2.store_var({"w": last_w, "h": last_h, "fps": FPS, "frames": last_frames, "rs": last_rs, "pals": last_pals})
-		f2.close()
+	var f := FileAccess.open(ud + "/" + nm + ".rpl", FileAccess.WRITE)
+	if f != null:
+		f.store_var({"fmt": "webp", "w": w, "h": h, "fps": FPS, "frames": fr})
+		f.close()
 
 
 # nomes (sem extensão), do mais novo para o mais velho
@@ -274,178 +236,173 @@ static func delete_local(nm: String) -> void:
 	DirAccess.remove_absolute(local_dir() + "/" + nm + ".rpl")
 
 
-# ABRIR / ENVIAR: monta o GIF do replay guardado e abre no app de fotos do celular
+func _load_rpl(nm: String) -> Dictionary:
+	var f := FileAccess.open(local_dir() + "/" + nm + ".rpl", FileAccess.READ)
+	if f == null:
+		return {}
+	var d = f.get_var()
+	f.close()
+	return d if d is Dictionary else {}
+
+
+# ABRIR / ENVIAR: monta o arquivo animado e abre no app de fotos do celular
 func open_local(nm: String) -> void:
 	var gif := local_dir() + "/" + nm + ".gif"
 	if FileAccess.file_exists(gif):
 		OS.shell_open(gif)
 		return
-	if busy:
-		game.ui.say("Espere terminar o replay que está salvando...")
-		return
-	var f := FileAccess.open(local_dir() + "/" + nm + ".rpl", FileAccess.READ)
-	if f == null:
+	var d := _load_rpl(nm)
+	if d.is_empty():
 		game.ui.say("Replay não encontrado.")
 		return
-	var d = f.get_var()
-	f.close()
-	if not (d is Dictionary):
+	var path := ""
+	var bytes := PackedByteArray()
+	if str(d.get("fmt", "")) == "webp":
+		path = local_dir() + "/_envio.webp"
+		bytes = build_webp(d.frames, int(d.w), int(d.h), int(round(1000.0 / float(d.get("fps", FPS)))))
+	else:
+		path = local_dir() + "/_envio.gif"
+		bytes = build_gif(d.frames, d.rs, d.get("pals", []), int(d.w), int(d.h), int(round(100.0 / float(d.get("fps", 8.0)))))
+	DirAccess.remove_absolute(local_dir() + "/_envio.webp")
+	DirAccess.remove_absolute(local_dir() + "/_envio.gif")
+	var fo := FileAccess.open(path, FileAccess.WRITE)
+	if fo == null:
+		game.ui.say("Não consegui preparar o replay.")
 		return
-	busy = true
-	open_after = local_dir() + "/_envio.gif"
-	game.ui.say("Preparando o replay...")
-	thread = Thread.new()
-	thread.start(_worker.bind(d.frames, d.rs, d.get("pals", []), int(d.w), int(d.h)))
+	fo.store_buffer(bytes)
+	fo.close()
+	if OS.shell_open(path) != OK:
+		game.ui.say("Não consegui abrir o replay neste celular.")
 
 
-var open_after := ""
-
-
-# assistir dentro do jogo: carrega os quadros e vai trocando a imagem (cores pelo shader)
+# ---------------------------------------------------------------- assistir dentro do jogo
 var play_tex: TextureRect = null
-var play_fr: Array = []
-var play_rs: Array = []
+var play_mat: Material = null
+var play_d: Dictionary = {}
 var play_i := 0
 var play_t := 0.0
-var play_w := W
-var play_h := H
-var play_ps: Array = []
 
 
 func play_local(nm: String, target: TextureRect) -> bool:
-	var f := FileAccess.open(local_dir() + "/" + nm + ".rpl", FileAccess.READ)
-	if f == null:
+	var d := _load_rpl(nm)
+	if d.is_empty() or not d.has("frames") or (d.frames as Array).is_empty():
 		return false
-	var d = f.get_var()
-	f.close()
-	if not (d is Dictionary) or not d.has("frames"):
-		return false
-	play_fr = d.frames
-	play_rs = d.rs
-	play_w = int(d.w)
-	play_h = int(d.h)
-	play_ps = d.get("pals", [])
+	if play_mat == null:
+		play_mat = target.material
+	play_d = d
 	play_i = 0
 	play_t = 0.0
 	play_tex = target
+	target.texture = null
+	# quadros WebP já têm as cores; os replays antigos (128 cores) usam o shader de paleta
+	var is_webp := str(d.get("fmt", "")) == "webp"
+	target.material = null if is_webp else play_mat
+	target.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if is_webp else CanvasItem.TEXTURE_FILTER_NEAREST
 	_show_frame()
 	return true
 
 
 func stop_play() -> void:
 	play_tex = null
-	play_fr = []
+	play_d = {}
+
+
+func _play_tick(delta: float) -> void:
+	if play_tex == null or play_d.is_empty():
+		return
+	if not is_instance_valid(play_tex) or not play_tex.is_visible_in_tree():
+		stop_play()
+		return
+	var fps := float(play_d.get("fps", FPS))
+	play_t += delta
+	if play_t >= 1.0 / fps:
+		play_t = fmod(play_t, 1.0 / fps)
+		play_i = (play_i + 1) % (play_d.frames as Array).size()
+		_show_frame()
 
 
 func _show_frame() -> void:
-	if play_tex == null or play_fr.is_empty() or not is_instance_valid(play_tex):
+	if play_tex == null or play_d.is_empty() or not is_instance_valid(play_tex):
 		return
-	var raw: PackedByteArray = (play_fr[play_i] as PackedByteArray).decompress(int(play_rs[play_i]), FileAccess.COMPRESSION_FASTLZ)
-	if raw.size() != play_w * play_h:
-		return
-	var pal: PackedByteArray = play_ps[play_i] if play_i < play_ps.size() else cube_palette()
-	var arr := PackedVector3Array()
-	for i in 128:
-		arr.append(Vector3(pal[i * 3], pal[i * 3 + 1], pal[i * 3 + 2]) / 255.0)
-	if play_tex.material is ShaderMaterial:
-		(play_tex.material as ShaderMaterial).set_shader_parameter("pal", arr)
-	var img := Image.create_from_data(play_w, play_h, false, Image.FORMAT_R8, raw)
+	var img: Image
+	var w := int(play_d.w)
+	var h := int(play_d.h)
+	if str(play_d.get("fmt", "")) == "webp":
+		img = Image.new()
+		if img.load_webp_from_buffer(play_d.frames[play_i]) != OK:
+			return
+	else:
+		var raw: PackedByteArray = (play_d.frames[play_i] as PackedByteArray).decompress(int(play_d.rs[play_i]), FileAccess.COMPRESSION_FASTLZ)
+		if raw.size() != w * h:
+			return
+		var ps: Array = play_d.get("pals", [])
+		var pal: PackedByteArray = ps[play_i] if play_i < ps.size() else cube_palette()
+		var arr := PackedVector3Array()
+		for i in 128:
+			arr.append(Vector3(pal[i * 3], pal[i * 3 + 1], pal[i * 3 + 2]) / 255.0)
+		if play_tex.material is ShaderMaterial:
+			(play_tex.material as ShaderMaterial).set_shader_parameter("pal", arr)
+		img = Image.create_from_data(w, h, false, Image.FORMAT_R8, raw)
 	var tex := play_tex.texture as ImageTexture
-	if tex == null or tex.get_width() != play_w:
+	if tex == null or tex.get_width() != img.get_width() or tex.get_height() != img.get_height() or tex.get_format() != img.get_format():
 		play_tex.texture = ImageTexture.create_from_image(img)
 	else:
 		tex.update(img)
 
 
-func _done(ok: bool, msg: String) -> void:
-	result_err = "" if ok else msg
-	print("REPLAY salvo=", ok, " ", result_path)
-	game.ui.confirm("REPLAY SALVO!" if ok else "REPLAY", msg, "OK", func(): pass, "", Callable())
+# ---------------------------------------------------------------- WebP animado
+static func _u24(b: PackedByteArray, v: int) -> void:
+	b.append(v & 255)
+	b.append((v >> 8) & 255)
+	b.append((v >> 16) & 255)
 
 
-# ---------------------------------------------------------------- GIF
-# cores que sempre entram na paleta (bolas, branco, preto, dourado da interface)
-const FIXED := ["000000", "ffffff", "f4f4ee", "141414", "f4c51e", "1f5fd1", "d8262c", "6a2aa8", "f07a12", "12904a", "8a1f1f", "f4c542", "ffe066", "808080", "404040", "c0c0c0"]
+static func _u32(b: PackedByteArray, v: int) -> void:
+	b.append(v & 255)
+	b.append((v >> 8) & 255)
+	b.append((v >> 16) & 255)
+	b.append((v >> 24) & 255)
 
 
-# 112 cores escolhidas da tela (corte pela mediana num histograma de 15 bits) + 16 fixas
-static func make_palette(img: Image) -> PackedByteArray:
-	img.convert(Image.FORMAT_RGB8)
-	var d := img.get_data()
-	var hist := {}
-	for i in range(0, d.size() - 2, 3):
-		var key: int = ((d[i] >> 3) << 10) | ((d[i + 1] >> 3) << 5) | (d[i + 2] >> 3)
-		hist[key] = int(hist.get(key, 0)) + 1
-	var items: Array = []
-	for k in hist.keys():
-		var kk: int = k
-		items.append([float(((kk >> 10) & 31) * 8 + 4), float(((kk >> 5) & 31) * 8 + 4), float((kk & 31) * 8 + 4), sqrt(float(hist[kk]))])
-	var boxes: Array = [items]
-	while boxes.size() < 112:
-		var best := -1
-		var bscore := -1.0
-		var bch := 0
-		for bi in boxes.size():
-			var box: Array = boxes[bi]
-			if box.size() < 2:
-				continue
-			var mn := [255.0, 255.0, 255.0]
-			var mx := [0.0, 0.0, 0.0]
-			var wsum := 0.0
-			for it in box:
-				for c in 3:
-					mn[c] = minf(mn[c], it[c])
-					mx[c] = maxf(mx[c], it[c])
-				wsum += float(it[3])
-			for c in 3:
-				var sc: float = (float(mx[c]) - float(mn[c])) * sqrt(wsum)
-				if sc > bscore:
-					bscore = sc
-					best = bi
-					bch = c
-		if best < 0 or bscore <= 0.0:
-			break
-		var bx: Array = boxes[best]
-		var ch := bch
-		bx.sort_custom(func(a, b): return float(a[ch]) < float(b[ch]))
-		var tot := 0.0
-		for it in bx:
-			tot += float(it[3])
-		var acc2 := 0.0
-		var cut := 1
-		for i in bx.size():
-			acc2 += float(bx[i][3])
-			if acc2 >= tot * 0.5:
-				cut = clampi(i + 1, 1, bx.size() - 1)
-				break
-		boxes[best] = bx.slice(0, cut)
-		boxes.append(bx.slice(cut))
-	var p := PackedByteArray()
-	for box in boxes:
-		var r := 0.0
-		var g := 0.0
-		var b := 0.0
-		var w := 0.0
-		for it in box:
-			r += float(it[0]) * float(it[3])
-			g += float(it[1]) * float(it[3])
-			b += float(it[2]) * float(it[3])
-			w += float(it[3])
-		w = maxf(w, 0.0001)
-		p.append(clampi(int(round(r / w)), 0, 255))
-		p.append(clampi(int(round(g / w)), 0, 255))
-		p.append(clampi(int(round(b / w)), 0, 255))
-	for hx in FIXED:
-		var cc := Color(hx)
-		p.append(cc.r8)
-		p.append(cc.g8)
-		p.append(cc.b8)
-	while p.size() < 384:
-		p.append(0)
-	return p.slice(0, 384)
+static func _chunk(b: PackedByteArray, tag: String, data: PackedByteArray) -> void:
+	b.append_array(tag.to_ascii_buffer())
+	_u32(b, data.size())
+	b.append_array(data)
+	if data.size() % 2 == 1:
+		b.append(0)
 
 
-# paleta antiga (cubo 4x8x4), usada antes da primeira amostra e em replays velhos
+# junta WebPs prontos (um por quadro) num WebP animado: VP8X + ANIM + um ANMF por quadro
+static func build_webp(fr: Array, w: int, h: int, dur_ms: int) -> PackedByteArray:
+	var body := PackedByteArray()
+	body.append_array("WEBP".to_ascii_buffer())
+	var vp8x := PackedByteArray([0x02, 0, 0, 0])   # bit de animação
+	_u24(vp8x, w - 1)
+	_u24(vp8x, h - 1)
+	_chunk(body, "VP8X", vp8x)
+	_chunk(body, "ANIM", PackedByteArray([0, 0, 0, 255, 0, 0]))  # fundo preto, repetir para sempre
+	for k in fr.size():
+		var still: PackedByteArray = fr[k]
+		if still.size() < 20 or still.slice(0, 4).get_string_from_ascii() != "RIFF":
+			continue
+		# dentro do WebP parado: "RIFF" tamanho "WEBP" e depois os blocos da imagem (VP8 ...)
+		var an := PackedByteArray()
+		_u24(an, 0)
+		_u24(an, 0)
+		_u24(an, w - 1)
+		_u24(an, h - 1)
+		_u24(an, dur_ms if k < fr.size() - 1 else 1500)
+		an.append(0x02)  # não mistura com o quadro anterior
+		an.append_array(still.slice(12))
+		_chunk(body, "ANMF", an)
+	var out := PackedByteArray()
+	out.append_array("RIFF".to_ascii_buffer())
+	_u32(out, body.size())
+	out.append_array(body)
+	return out
+
+
+# ---------------------------------------------------------------- replays antigos (GIF de 128 cores)
 static func cube_palette() -> PackedByteArray:
 	var p := PackedByteArray()
 	for i in 128:
@@ -465,11 +422,10 @@ static func build_gif(fr: Array, rs: Array, ps: Array, w: int, h: int, delay_cs:
 	out.append_array("GIF89a".to_ascii_buffer())
 	_u16(out, w)
 	_u16(out, h)
-	out.append(0xE6)  # tabela de cores global com 128 cores
+	out.append(0xE6)
 	out.append(0)
 	out.append(0)
 	out.append_array(ps[0] if ps.size() > 0 else cube_palette())
-	# repetir para sempre
 	out.append_array(PackedByteArray([0x21, 0xFF, 0x0B]))
 	out.append_array("NETSCAPE2.0".to_ascii_buffer())
 	out.append_array(PackedByteArray([3, 1, 0, 0, 0]))
@@ -485,11 +441,9 @@ static func build_gif(fr: Array, rs: Array, ps: Array, w: int, h: int, delay_cs:
 		_u16(out, 0)
 		_u16(out, w)
 		_u16(out, h)
-		# cada quadro leva a sua tabela de 128 cores (a paleta muda a cada 5s)
 		out.append(0x86)
 		out.append_array(ps[k] if k < ps.size() else cube_palette())
-		out.append(7)  # tamanho mínimo do código LZW: 7 bits -> códigos de 8 bits (1 byte)
-		# fluxo "sem compressão": limpa o dicionário a cada 120 pixels para o código continuar com 8 bits
+		out.append(7)
 		var st := PackedByteArray()
 		var i := 0
 		while i < n:
