@@ -224,10 +224,13 @@ func _cancel() -> void:
 
 
 # ---------------------------------------------------------------- tela
+const AV = preload("res://avatars.gd")
 var _my_list: HFlowContainer
 var _their_list: HFlowContainer
-var _my_head: Label
-var _their_head: Label
+var _my_scroll: ScrollContainer
+var _their_scroll: ScrollContainer
+var _top: Control
+var _bal: Control
 var _coin_lbl: Label
 var _fair_lbl: Label
 var _ready_btn: Button
@@ -236,47 +239,61 @@ var _add_btn: Button
 var _coin_btns: Array = []
 var _anim: Control
 var _cards: Array = []
+var _scroll_end := false
+var _sig := ""
+var _pick_cat := ""
+var _pick_row: HBoxContainer
+var _pick_scroll: ScrollContainer
+var _pick_tabs: Array = []
 
 
 func _build() -> void:
 	if is_open():
 		root.queue_free()
 	picker = null
+	_sig = ""
+	_cards.clear()
 	root = Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	layer.add_child(root)
-	var bg := ColorRect.new()
-	bg.color = Color(0.01, 0.03, 0.06, 0.94)
+	var bg := Control.new()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(bg)
-	_anim = Control.new()
-	_anim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_anim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(_anim)
-	_anim.draw.connect(func():
+	_anim = bg
+	bg.draw.connect(func():
 		var t := Time.get_ticks_msec() / 1000.0
-		var sz := _anim.size
-		for k in 14:
-			var x := fposmod(k * 97.0 + t * 18.0 * (1 + k % 3), sz.x)
-			var y := fposmod(k * 53.0 - t * 12.0, sz.y)
-			_anim.draw_circle(Vector2(x, y), 1.5 + k % 3, Color(1, 0.85, 0.3, 0.08)))
+		var sz := bg.size
+		bg.draw_rect(Rect2(Vector2.ZERO, sz), Color(0.012, 0.025, 0.05, 0.97))
+		bg.draw_circle(Vector2(sz.x * 0.25, sz.y * 0.55), sz.y * 0.75, Color(0.1, 0.8, 0.45, 0.035))
+		bg.draw_circle(Vector2(sz.x * 0.75, sz.y * 0.55), sz.y * 0.75, Color(0.2, 0.5, 1.0, 0.035))
+		for k in 22:
+			var x := fposmod(k * 97.0 + t * 14.0 * (1 + k % 3), sz.x)
+			var y := fposmod(k * 53.0 - t * 10.0 * (1 + k % 2), sz.y)
+			bg.draw_circle(Vector2(x, y), 1.2 + k % 3, Color(1, 0.85, 0.3, 0.07 + 0.05 * sin(t * 2 + k))))
 	var mc := MarginContainer.new()
 	mc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for k in ["left", "right"]:
-		mc.add_theme_constant_override("margin_" + k, 30)
-	mc.add_theme_constant_override("margin_top", 18)
-	mc.add_theme_constant_override("margin_bottom", 16)
+		mc.add_theme_constant_override("margin_" + k, 26)
+	mc.add_theme_constant_override("margin_top", 10)
+	mc.add_theme_constant_override("margin_bottom", 12)
 	root.add_child(mc)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 10)
+	vb.add_theme_constant_override("separation", 8)
 	mc.add_child(vb)
-	vb.add_child(ui.mk_lbl("⇄  NEGOCIAÇÃO COM  %s" % with_name.to_upper(), 34, Color("f4c542"), 7))
+	# cabeçalho: você  ⇄  ele
+	_top = Control.new()
+	_top.custom_minimum_size = Vector2(0, 92)
+	_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(_top)
+	_top.draw.connect(_draw_top)
 	if waiting:
 		var sp := Control.new()
 		sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		vb.add_child(sp)
-		vb.add_child(ui.mk_lbl("Esperando %s aceitar a negociação..." % with_name, 26, Color.WHITE, 4))
+		vb.add_child(ui.mk_lbl("Esperando %s aceitar a negociação..." % with_name, 28, Color.WHITE, 5))
+		vb.add_child(ui.mk_lbl("Ele recebe um aviso na tela para ABRIR ou RECUSAR.", 18, Color(1, 1, 1, 0.6), 3))
 		var sp2 := Control.new()
 		sp2.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		vb.add_child(sp2)
@@ -285,56 +302,52 @@ func _build() -> void:
 		vb.add_child(cb)
 		return
 	var cols := HBoxContainer.new()
-	cols.add_theme_constant_override("separation", 18)
+	cols.add_theme_constant_override("separation", 16)
 	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vb.add_child(cols)
 	# --- você
 	var lp := _col_panel(Color("3ddc84"))
 	cols.add_child(lp)
 	var lv: VBoxContainer = lp.get_child(0).get_child(0)
-	_my_head = ui.mk_lbl("", 22, Color("3ddc84"), 4)
-	lv.add_child(_my_head)
-	var ls := ScrollContainer.new()
-	ls.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	ls.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	lv.add_child(ls)
-	_my_list = HFlowContainer.new()
-	_my_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_my_list.add_theme_constant_override("h_separation", 8)
-	_my_list.add_theme_constant_override("v_separation", 8)
-	ls.add_child(_my_list)
+	_my_scroll = _mk_scroll()
+	lv.add_child(_my_scroll)
+	_my_list = _my_scroll.get_child(0)
 	var crow := HBoxContainer.new()
 	crow.alignment = BoxContainer.ALIGNMENT_CENTER
-	crow.add_theme_constant_override("separation", 6)
+	crow.add_theme_constant_override("separation", 5)
 	lv.add_child(crow)
 	_coin_btns.clear()
 	for dv in [-1000, -100]:
 		crow.add_child(_coin_btn(dv))
-	_coin_lbl = ui.mk_lbl("0", 24, Color("ffd34a"), 4)
-	_coin_lbl.custom_minimum_size = Vector2(130, 0)
-	crow.add_child(_coin_lbl)
+	var cbox := PanelContainer.new()
+	cbox.custom_minimum_size = Vector2(124, 44)
+	cbox.add_theme_stylebox_override("panel", ui.sbox(Color(0.14, 0.1, 0.02, 0.95), 14, Color("ffd34a"), 2))
+	_coin_lbl = ui.mk_lbl("0", 22, Color("ffd34a"), 4)
+	cbox.add_child(_coin_lbl)
+	crow.add_child(cbox)
 	for dv in [100, 1000, 10000]:
 		crow.add_child(_coin_btn(dv))
-	_add_btn = ui.mk_btn("+ COLOCAR ITEM", 300, 52, Color("2f7fd6"), 20)
+	_add_btn = ui.mk_btn("+  COLOCAR ITEM", 320, 52, Color("2f7fd6"), 21)
 	_add_btn.pressed.connect(_open_picker)
 	lv.add_child(_add_btn)
 	# --- ele
 	var rp := _col_panel(Color("5aa9ff"))
 	cols.add_child(rp)
 	var rv: VBoxContainer = rp.get_child(0).get_child(0)
-	_their_head = ui.mk_lbl("", 22, Color("8fd0ff"), 4)
-	rv.add_child(_their_head)
-	var rs := ScrollContainer.new()
-	rs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	rs.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	rv.add_child(rs)
-	_their_list = HFlowContainer.new()
-	_their_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_their_list.add_theme_constant_override("h_separation", 8)
-	_their_list.add_theme_constant_override("v_separation", 8)
-	rs.add_child(_their_list)
-	# --- rodapé
-	_fair_lbl = ui.mk_lbl("", 18, Color.WHITE, 3)
+	_their_scroll = _mk_scroll()
+	rv.add_child(_their_scroll)
+	_their_list = _their_scroll.get_child(0)
+	var hint: Label = ui.mk_lbl("O que %s colocar aparece aqui na hora.\nToque num item seu para tirar da troca." % with_name, 15, Color(1, 1, 1, 0.45), 2)
+	hint.custom_minimum_size = Vector2(0, 110)
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rv.add_child(hint)
+	# --- balança (justa / desigual)
+	_bal = Control.new()
+	_bal.custom_minimum_size = Vector2(0, 26)
+	_bal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(_bal)
+	_bal.draw.connect(_draw_bal)
+	_fair_lbl = ui.mk_lbl("", 17, Color.WHITE, 3)
 	vb.add_child(_fair_lbl)
 	var brow := HBoxContainer.new()
 	brow.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -343,14 +356,93 @@ func _build() -> void:
 	var cb2: Button = ui.mk_btn("CANCELAR", 220, 62, ui.GRAY, 20)
 	cb2.pressed.connect(func(): _ask("CANCELAR?", "Sair da negociação?", "SAIR", _cancel))
 	brow.add_child(cb2)
-	_ready_btn = ui.mk_btn("PRONTO", 240, 62, Color("1b8f4c"), 22)
+	_ready_btn = ui.mk_btn("✓  PRONTO", 250, 62, Color("1b8f4c"), 22)
 	_ready_btn.pressed.connect(func():
 		game.net.world_send({"t": "trade_ready", "id": tid, "v": not bool(st.get("ready", false))}))
 	brow.add_child(_ready_btn)
-	_conf_btn = ui.mk_btn("CONFIRMAR TROCA", 300, 62, Color("d68a10"), 22)
+	_conf_btn = ui.mk_btn("⇄  CONFIRMAR TROCA", 320, 62, Color("d68a10"), 22)
 	_conf_btn.pressed.connect(_confirm)
 	brow.add_child(_conf_btn)
 	_refresh()
+
+
+func _mk_scroll() -> ScrollContainer:
+	var sc := ScrollContainer.new()
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var fl := HFlowContainer.new()
+	fl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fl.add_theme_constant_override("h_separation", 8)
+	fl.add_theme_constant_override("v_separation", 8)
+	sc.add_child(fl)
+	return sc
+
+
+func _status(rdy: bool, conf: bool) -> Array:
+	if conf:
+		return ["✓ CONFIRMOU", Color("ffd34a")]
+	if rdy:
+		return ["✓ PRONTO", Color("3ddc84")]
+	return ["montando a oferta...", Color(1, 1, 1, 0.5)]
+
+
+func _draw_top() -> void:
+	var c := _top
+	var f: Font = ThemeDB.fallback_font
+	var t := Time.get_ticks_msec() / 1000.0
+	var w := c.size.x
+	var cx := w / 2.0
+	c.draw_style_box(ui.sbox(Color(0.03, 0.07, 0.11, 0.9), 22, Color(1, 0.83, 0.3, 0.35), 2), Rect2(0, 4, w, 84))
+	var me := [str(game.save.get("av", "b8")), str(game.save.get("frame", "simples"))]
+	AV.draw(c, Vector2(52, 46), 32, me[0], me[1], t)
+	c.draw_string(f, Vector2(96, 40), "VOCÊ", HORIZONTAL_ALIGNMENT_LEFT, 300, 24, Color("3ddc84"))
+	var s1: Array = _status(bool(st.get("ready", false)), bool(st.get("conf", false))) if not waiting else ["", Color.WHITE]
+	c.draw_string(f, Vector2(96, 66), str(s1[0]), HORIZONTAL_ALIGNMENT_LEFT, 300, 16, s1[1])
+	AV.draw(c, Vector2(w - 52, 46), 32, str(st.get("withAv", "b8")), str(st.get("withFr", "simples")), t)
+	c.draw_string(f, Vector2(w - 396, 40), with_name.to_upper(), HORIZONTAL_ALIGNMENT_RIGHT, 300, 24, Color("8fd0ff"))
+	var s2: Array = _status(bool(st.get("theirReady", false)), bool(st.get("theirConf", false))) if not waiting else ["esperando aceitar...", Color(1, 1, 1, 0.5)]
+	c.draw_string(f, Vector2(w - 396, 66), str(s2[0]), HORIZONTAL_ALIGNMENT_RIGHT, 300, 16, s2[1])
+	# medalhão do meio com as setas girando
+	var mc := Vector2(cx, 46)
+	c.draw_circle(mc, 40, Color(1, 0.8, 0.2, 0.12 + 0.05 * sin(t * 3)))
+	c.draw_circle(mc, 33, Color("2a1c04"))
+	c.draw_arc(mc, 33, 0, TAU, 40, Color("ffd34a"), 3.0)
+	for k in 2:
+		var a0 := t * 1.6 + k * PI
+		c.draw_arc(mc, 24, a0, a0 + 2.2, 18, Color("ffe08a"), 4.0)
+		var tip := mc + Vector2.from_angle(a0 + 2.2) * 24
+		var dir := Vector2.from_angle(a0 + 2.2 + PI / 2)
+		var nrm := Vector2.from_angle(a0 + 2.2)
+		c.draw_colored_polygon(PackedVector2Array([tip + dir * 8, tip + nrm * 7, tip - nrm * 7]), Color("ffe08a"))
+	c.draw_string(f, Vector2(cx - 250, 54), "NEGOCIAÇÃO", HORIZONTAL_ALIGNMENT_RIGHT, 190, 22, Color("f4c542"))
+	c.draw_string(f, Vector2(cx + 56, 54), "TROCA SEGURA", HORIZONTAL_ALIGNMENT_LEFT, 200, 15, Color(1, 0.85, 0.4, 0.75))
+
+
+func _vals() -> Array:
+	var th: Dictionary = st.get("theirs", {})
+	return [offer_value(my_items, my_coins), offer_value(th.get("items", []), int(th.get("coins", 0)))]
+
+
+func _draw_bal() -> void:
+	var c := _bal
+	var f: Font = ThemeDB.fallback_font
+	var v := _vals()
+	var mv: int = v[0]
+	var tv: int = v[1]
+	var w := c.size.x
+	var bx := 230.0
+	var bw := w - bx * 2
+	c.draw_string(f, Vector2(0, 19), "VOCÊ DÁ  %s" % fmt(mv), HORIZONTAL_ALIGNMENT_RIGHT, bx - 14, 17, Color("3ddc84"))
+	c.draw_string(f, Vector2(w - bx + 14, 19), "%s  VOCÊ RECEBE" % fmt(tv), HORIZONTAL_ALIGNMENT_LEFT, bx, 17, Color("8fd0ff"))
+	c.draw_style_box(ui.sbox(Color(0.08, 0.1, 0.14), 8), Rect2(bx, 6, bw, 14))
+	var tot := float(mv + tv)
+	var fr := 0.5 if tot <= 0 else float(mv) / tot
+	# zona justa: cada lado recebe ≥25% do que dá  =>  fr entre 0.2 e 0.8
+	c.draw_style_box(ui.sbox(Color(0.2, 0.75, 0.4, 0.28), 6), Rect2(bx + bw * 0.2, 6, bw * 0.6, 14))
+	var ok := fair_msg(mv, tv) == ""
+	var mx := bx + bw * fr
+	c.draw_circle(Vector2(mx, 13), 11, Color("3ddc84") if ok else Color("ff6a4a"))
+	c.draw_circle(Vector2(mx, 13), 6, Color.WHITE)
 
 
 func _process(_d: float) -> void:
@@ -358,6 +450,8 @@ func _process(_d: float) -> void:
 		ui.fx_t += _d
 		if _anim != null and is_instance_valid(_anim):
 			_anim.queue_redraw()
+		if _top != null and is_instance_valid(_top):
+			_top.queue_redraw()
 		var keep: Array = []
 		for c in _cards:
 			if is_instance_valid(c):
@@ -370,21 +464,22 @@ func _col_panel(col: Color) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	p.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	p.add_theme_stylebox_override("panel", ui.sbox(Color(0.03, 0.06, 0.1, 0.95), 22, Color(col.r, col.g, col.b, 0.6), 3, 10))
+	p.add_theme_stylebox_override("panel", ui.sbox(Color(0.025, 0.05, 0.085, 0.96), 22, Color(col.r, col.g, col.b, 0.55), 3, 12))
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
-	p.add_child(ui.margin(v, 14))
+	p.add_child(ui.margin(v, 12))
 	return p
 
 
 func _coin_btn(dv: int) -> Button:
-	var b: Button = ui.mk_btn(("+" if dv > 0 else "−") + (str(absi(dv) / 1000) + "k" if absi(dv) >= 1000 else str(absi(dv))), 78, 46, Color("8a6a10") if dv > 0 else Color("5a3a3a"), 17)
+	var b: Button = ui.mk_btn(("+" if dv > 0 else "−") + (str(absi(dv) / 1000) + "k" if absi(dv) >= 1000 else str(absi(dv))), 70, 44, Color("8a6a10") if dv > 0 else Color("5a3a3a"), 17)
 	b.pressed.connect(func():
 		var nv := clampi(my_coins + dv, 0, int(game.save.coins))
 		if dv > 0 and my_coins + dv > int(game.save.coins):
 			ui.say("Você só tem %s moedas." % fmt(int(game.save.coins)))
 		if nv != my_coins:
 			my_coins = nv
+			_scroll_end = true
 			_send_offer())
 	_coin_btns.append(b)
 	return b
@@ -395,36 +490,56 @@ func _send_offer() -> void:
 	_refresh()
 
 
-func _item_card(id: String, mine: bool) -> Control:
-	var b := Button.new()
-	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(200, 238)
-	var rc := rare_col(id)
-	b.add_theme_stylebox_override("normal", ui.sbox(Color(0.06, 0.1, 0.16, 0.95), 16, Color(rc.r, rc.g, rc.b, 0.75), 2, 4))
-	b.add_theme_stylebox_override("hover", ui.sbox(Color(0.09, 0.14, 0.22, 0.95), 16, rc, 3, 4))
-	b.add_theme_stylebox_override("pressed", ui.sbox(Color(0.04, 0.07, 0.12, 0.95), 16, rc, 2, 0))
-	b.add_theme_stylebox_override("disabled", ui.sbox(Color(0.06, 0.1, 0.16, 0.95), 16, Color(rc.r, rc.g, rc.b, 0.75), 2, 4))
+# toque sem arrastar (deixa a lista rolar com o dedo sem escolher item sem querer)
+func _tap(c: Control, cb: Callable) -> void:
+	c.mouse_filter = Control.MOUSE_FILTER_PASS
+	c.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			var mb := e as InputEventMouseButton
+			if mb.pressed:
+				c.set_meta("tp", mb.global_position)
+				c.set_meta("tt", Time.get_ticks_msec())
+			elif c.has_meta("tp"):
+				var d: float = (mb.global_position - (c.get_meta("tp") as Vector2)).length()
+				var dt: int = Time.get_ticks_msec() - int(c.get_meta("tt"))
+				c.remove_meta("tp")
+				if d < 16.0 and dt < 700:
+					game.play("click", 0.6)
+					cb.call())
+
+
+# prévia igual à da loja (taco com o efeito, mesa com a borda e brilho, baralho, efeito de vitória)
+func preview(id: String, w: float, h: float) -> Control:
 	var i := info(id)
 	var d: Dictionary = i.get("d", {})
-	var nm := str(d.get("name", id))
-	var cat := str(i.get("cat", ""))
-	var v := value(id)
-	# mesmo desenho da loja (com os efeitos animados)
+	var rc := rare_col(id)
+	var box := Control.new()
+	box.custom_minimum_size = Vector2(w, h)
+	box.size = Vector2(w, h)
+	box.clip_contents = true
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var glow := Control.new()
+	glow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(glow)
+	glow.draw.connect(func():
+		var t := Time.get_ticks_msec() / 1000.0
+		glow.draw_style_box(ui.sbox(Color(0.01, 0.02, 0.05, 0.85), 12), Rect2(Vector2.ZERO, Vector2(w, h)))
+		var pulse := 0.08 + 0.04 * sin(t * 2.4)
+		glow.draw_circle(Vector2(w * 0.62, h * 0.4), h * 0.62, Color(rc.r, rc.g, rc.b, pulse))
+		glow.draw_circle(Vector2(w * 0.62, h * 0.4), h * 0.36, Color(rc.r, rc.g, rc.b, pulse)))
+	_cards.append(glow)
 	var pv := Control.new()
-	pv.position = Vector2(8, 24)
 	pv.size = Vector2(184, 150)
-	pv.custom_minimum_size = Vector2(184, 150)
-	pv.clip_contents = true
 	pv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(pv)
+	var k := minf(w / 184.0, h / 150.0)
+	pv.scale = Vector2(k, k)
+	pv.position = Vector2((w - 184 * k) / 2.0, (h - 150 * k) / 2.0)
+	box.add_child(pv)
 	var store: Array = []
 	match str(i.get("k", "")):
 		"cue":
-			ui._cue_preview(pv, d, Vector2(60, 100), 140.0, -40.0, 22.0, 0.85, store)
-			if d.has("rare"):
-				var rt: Label = ui.mk_lbl(str(d.rare), 14, ui.rare_color(str(d.rare)), 4)
-				rt.position = Vector2(4, 2)
-				pv.add_child(rt)
+			ui._cue_preview(pv, d, Vector2(84, 86), 148.0, -32.0, 22.0, 0.8, store)
 		"deck":
 			ui._deck_preview(pv, str(d.deck))
 		"wfx":
@@ -437,75 +552,130 @@ func _item_card(id: String, mine: bool) -> Control:
 		if ch is Control:
 			(ch as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 			_cards.append(ch)
-	var cv := Control.new()
-	cv.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(cv)
-	cv.draw.connect(func():
-		var f: Font = ThemeDB.fallback_font
-		cv.draw_string(f, Vector2(0, 18), cat, HORIZONTAL_ALIGNMENT_CENTER, 200, 13, Color(rc.r, rc.g, rc.b, 0.95))
-		cv.draw_string(f, Vector2(4, 200), nm, HORIZONTAL_ALIGNMENT_CENTER, 192, 18, Color.WHITE)
-		cv.draw_string(f, Vector2(0, 224), "valor %s" % fmt(v), HORIZONTAL_ALIGNMENT_CENTER, 200, 14, Color("ffd34a"))
-		if mine:
-			cv.draw_circle(Vector2(186, 14), 11, Color("c94444"))
-			cv.draw_line(Vector2(181, 9), Vector2(191, 19), Color.WHITE, 2.5)
-			cv.draw_line(Vector2(191, 9), Vector2(181, 19), Color.WHITE, 2.5))
+	if d.has("rare"):
+		var rt: Label = ui.mk_lbl(str(d.rare), 13, ui.rare_color(str(d.rare)), 4)
+		rt.position = Vector2(6, 2)
+		box.add_child(rt)
+	return box
+
+
+func _item_card(id: String, mine: bool, w: float = 136.0, h: float = 168.0) -> Control:
+	var rc := rare_col(id)
+	var i := info(id)
+	var d: Dictionary = i.get("d", {})
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(w, h)
+	card.add_theme_stylebox_override("panel", ui.sbox(Color(0.05, 0.08, 0.14, 0.97), 14, Color(rc.r, rc.g, rc.b, 0.85), 2, 4))
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 2)
+	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(ui.margin(vb, 5))
+	var cat: Label = ui.mk_lbl(str(i.get("cat", "")), 11 if w < 180 else 13, Color(rc.r, rc.g, rc.b, 0.95), 2)
+	cat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(cat)
+	var pw := w - 10
+	var ph := h - 70 if w < 180 else 200.0
+	vb.add_child(preview(id, pw, ph))
+	var nm: Label = ui.mk_lbl(str(d.get("name", id)), 14 if w < 180 else 19, Color.WHITE, 3)
+	nm.clip_text = true
+	nm.custom_minimum_size = Vector2(pw, 0)
+	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(nm)
+	var vl: Label = ui.mk_lbl("valor " + fmt(value(id)), 12 if w < 180 else 15, Color("ffd34a"), 2)
+	vl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(vl)
+	if w >= 180:
+		if str(i.get("k", "")) == "cue":
+			for sr in [["Mira", "aim"], ["Força", "pow"], ["Precisão", "prec"], ["Efeito", "spin"]]:
+				var row: Control = ui._stat_row(str(sr[0]), float(d.get(sr[1], 0)))
+				row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				vb.add_child(row)
+		else:
+			var tg: Label = ui.mk_lbl(str(d.get("tag", "")), 15, Color(1, 1, 1, 0.65), 2)
+			tg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			tg.custom_minimum_size = Vector2(pw, 0)
+			tg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			vb.add_child(tg)
 	if mine:
-		b.pressed.connect(func():
+		var x := Control.new()
+		x.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		x.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		x.draw.connect(func():
+			var p := Vector2(w - 14, 14)
+			x.draw_circle(p, 11, Color("c94444"))
+			x.draw_line(p + Vector2(-5, -5), p + Vector2(5, 5), Color.WHITE, 2.5)
+			x.draw_line(p + Vector2(5, -5), p + Vector2(-5, 5), Color.WHITE, 2.5))
+		card.add_child(x)
+		_tap(card, func():
 			my_items.erase(id)
 			_send_offer())
-	return b
+	else:
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+	return card
 
 
 func _coin_card(n: int) -> Control:
 	var p := PanelContainer.new()
-	p.custom_minimum_size = Vector2(200, 238)
-	p.add_theme_stylebox_override("panel", ui.sbox(Color(0.16, 0.12, 0.02, 0.95), 16, Color("ffd34a"), 2, 4))
+	p.custom_minimum_size = Vector2(136, 168)
+	p.mouse_filter = Control.MOUSE_FILTER_PASS
+	p.add_theme_stylebox_override("panel", ui.sbox(Color(0.16, 0.12, 0.02, 0.97), 14, Color("ffd34a"), 2, 4))
 	var cv := Control.new()
 	cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(cv)
 	cv.draw.connect(func():
 		var f: Font = ThemeDB.fallback_font
+		var t := Time.get_ticks_msec() / 1000.0
+		cv.draw_circle(Vector2(68, 64), 52, Color(1, 0.8, 0.2, 0.1 + 0.05 * sin(t * 3)))
 		for k in 3:
-			var c := Vector2(76 + k * 22, 100 - k * 12)
-			cv.draw_circle(c, 30, Color("b8860b"))
-			cv.draw_circle(c, 25, Color("ffd34a"))
-			cv.draw_string(f, c + Vector2(-8, 9), "$", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("8a5c0c"))
-		cv.draw_string(f, Vector2(0, 200), fmt(n), HORIZONTAL_ALIGNMENT_CENTER, 200, 24, Color.WHITE)
-		cv.draw_string(f, Vector2(0, 224), "moedas", HORIZONTAL_ALIGNMENT_CENTER, 200, 14, Color("ffd34a")))
+			var c := Vector2(48 + k * 18, 76 - k * 12 + sin(t * 2 + k) * 2)
+			cv.draw_circle(c, 25, Color("b8860b"))
+			cv.draw_circle(c, 21, Color("ffd34a"))
+			cv.draw_arc(c, 16, PI * 1.1, PI * 1.7, 8, Color(1, 1, 1, 0.6), 2.0)
+			cv.draw_string(f, c + Vector2(-7, 8), "$", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("8a5c0c"))
+		cv.draw_string(f, Vector2(0, 136), fmt(n), HORIZONTAL_ALIGNMENT_CENTER, 136, 22, Color.WHITE)
+		cv.draw_string(f, Vector2(0, 156), "MOEDAS", HORIZONTAL_ALIGNMENT_CENTER, 136, 12, Color("ffd34a")))
+	_cards.append(cv)
 	return p
 
 
 func _refresh() -> void:
 	if not is_open() or waiting or _my_list == null or not is_instance_valid(_my_list):
 		return
-	for ch in _my_list.get_children():
-		ch.queue_free()
-	for ch in _their_list.get_children():
-		ch.queue_free()
-	for it in my_items:
-		_my_list.add_child(_item_card(str(it), true))
-	if my_coins > 0:
-		_my_list.add_child(_coin_card(my_coins))
-	if my_items.is_empty() and my_coins == 0:
-		_my_list.add_child(ui.mk_lbl("Toque em + COLOCAR ITEM\nou coloque moedas", 16, Color(1, 1, 1, 0.45), 2))
 	var th: Dictionary = st.get("theirs", {})
 	var t_items: Array = th.get("items", [])
 	var t_coins := int(th.get("coins", 0))
-	for it in t_items:
-		_their_list.add_child(_item_card(str(it), false))
-	if t_coins > 0:
-		_their_list.add_child(_coin_card(t_coins))
-	if t_items.is_empty() and t_coins == 0:
-		_their_list.add_child(ui.mk_lbl("%s ainda não colocou nada" % with_name, 16, Color(1, 1, 1, 0.45), 2))
-	var mv := offer_value(my_items, my_coins)
-	var tv := offer_value(t_items, t_coins)
+	# só redesenha as listas quando mudam (assim a animação e a rolagem não pulam)
+	var sig := JSON.stringify([my_items, my_coins, t_items, t_coins])
+	if sig != _sig:
+		var grew_t := t_items.size() + (1 if t_coins > 0 else 0) > _their_list.get_child_count() and _sig != ""
+		_sig = sig
+		for ch in _my_list.get_children():
+			ch.queue_free()
+		for ch in _their_list.get_children():
+			ch.queue_free()
+		for it in my_items:
+			_my_list.add_child(_item_card(str(it), true))
+		if my_coins > 0:
+			_my_list.add_child(_coin_card(my_coins))
+		if my_items.is_empty() and my_coins == 0:
+			_my_list.add_child(_empty_lbl("Toque em  + COLOCAR ITEM\nou coloque moedas"))
+		for it in t_items:
+			_their_list.add_child(_item_card(str(it), false))
+		if t_coins > 0:
+			_their_list.add_child(_coin_card(t_coins))
+		if t_items.is_empty() and t_coins == 0:
+			_their_list.add_child(_empty_lbl("%s ainda não colocou nada" % with_name))
+		if _scroll_end:
+			_scroll_end = false
+			_to_end.call_deferred(_my_scroll)
+		if grew_t:
+			_to_end.call_deferred(_their_scroll)
+	var v := _vals()
+	var mv: int = v[0]
+	var tv: int = v[1]
 	var rdy := bool(st.get("ready", false))
 	var trdy := bool(st.get("theirReady", false))
 	var conf := bool(st.get("conf", false))
-	var tconf := bool(st.get("theirConf", false))
-	_my_head.text = "VOCÊ OFERECE  •  valor %s%s" % [fmt(mv), "   ✓ PRONTO" if rdy else ""]
-	_their_head.text = "%s OFERECE  •  valor %s%s" % [with_name.to_upper(), fmt(tv), ("   ✓ CONFIRMOU" if tconf else ("   ✓ PRONTO" if trdy else ""))]
 	_coin_lbl.text = fmt(my_coins)
 	var why := fair_msg(mv, tv)
 	if why != "":
@@ -518,14 +688,33 @@ func _refresh() -> void:
 		_fair_lbl.text = "Os dois estão prontos! Confira tudo e toque em CONFIRMAR TROCA."
 		_fair_lbl.add_theme_color_override("font_color", Color("3ddc84"))
 	else:
-		_fair_lbl.text = "Montem a troca e toquem em PRONTO. Mudou alguma coisa? O PRONTO dos dois sai."
-		_fair_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
-	_ready_btn.text = "TIRAR PRONTO" if rdy else "PRONTO"
+		_fair_lbl.text = "Montem a troca e toquem em PRONTO. Se alguém mudar algo, o PRONTO dos dois sai."
+		_fair_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
+	_ready_btn.text = "TIRAR PRONTO" if rdy else "✓  PRONTO"
 	_ready_btn.disabled = why != "" or conf
 	_conf_btn.disabled = not (rdy and trdy) or conf or why != ""
 	_add_btn.disabled = conf
 	for b in _coin_btns:
 		(b as Button).disabled = conf
+	if _bal != null:
+		_bal.queue_redraw()
+
+
+func _empty_lbl(t: String) -> Label:
+	var l: Label = ui.mk_lbl(t, 16, Color(1, 1, 1, 0.42), 2)
+	l.custom_minimum_size = Vector2(520, 150)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_PASS
+	return l
+
+
+func _to_end(sc: ScrollContainer) -> void:
+	if sc == null or not is_instance_valid(sc):
+		return
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if is_instance_valid(sc):
+		sc.scroll_vertical = int(sc.get_v_scroll_bar().max_value)
 
 
 func fair_msg(mv: int, tv: int) -> String:
@@ -597,6 +786,9 @@ func _ask(title: String, msg: String, yes: String, cb: Callable) -> void:
 
 
 # ---------------------------------------------------------------- escolher item
+const PICK_CATS := [["", "TODOS"], ["cue", "TACOS"], ["felt", "MESAS"], ["rail", "BORDAS"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"]]
+
+
 func _open_picker() -> void:
 	if picker != null and is_instance_valid(picker):
 		picker.queue_free()
@@ -605,63 +797,112 @@ func _open_picker() -> void:
 	picker.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.add_child(picker)
 	var dimr := ColorRect.new()
-	dimr.color = Color(0, 0, 0, 0.75)
+	dimr.color = Color(0, 0, 0, 0.8)
 	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	picker.add_child(dimr)
 	var mc := MarginContainer.new()
 	mc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for k in ["left", "right", "top", "bottom"]:
-		mc.add_theme_constant_override("margin_" + k, 40)
+	for k in ["left", "right"]:
+		mc.add_theme_constant_override("margin_" + k, 30)
+	for k in ["top", "bottom"]:
+		mc.add_theme_constant_override("margin_" + k, 24)
 	picker.add_child(mc)
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", ui.sbox(Color(0.02, 0.05, 0.08, 0.98), 24, Color("5aa9ff"), 3, 16))
+	p.add_theme_stylebox_override("panel", ui.sbox(Color(0.02, 0.045, 0.08, 0.98), 24, Color("5aa9ff"), 3, 16))
 	mc.add_child(p)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 10)
+	vb.add_theme_constant_override("separation", 12)
 	p.add_child(ui.margin(vb, 16))
-	vb.add_child(ui.mk_lbl("ESCOLHA O QUE OFERECER", 28, Color("8fd0ff"), 5))
-	var sc := ScrollContainer.new()
-	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vb.add_child(sc)
-	var fl := HFlowContainer.new()
-	fl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	fl.add_theme_constant_override("h_separation", 10)
-	fl.add_theme_constant_override("v_separation", 10)
-	sc.add_child(fl)
+	vb.add_child(ui.mk_lbl("ESCOLHA O QUE OFERECER", 30, Color("8fd0ff"), 6))
+	var tabs := HBoxContainer.new()
+	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+	tabs.add_theme_constant_override("separation", 8)
+	vb.add_child(tabs)
+	_pick_tabs.clear()
+	for c in PICK_CATS:
+		var n := _count_cat(str(c[0]))
+		var tb: Button = ui.mk_btn("%s (%d)" % [c[1], n], 160, 46, Color("2f7fd6"), 17)
+		var key := str(c[0])
+		tb.set_meta("k", key)
+		tb.disabled = n == 0
+		tb.pressed.connect(func(): _pick_show(key))
+		tabs.add_child(tb)
+		_pick_tabs.append(tb)
+	_pick_scroll = ScrollContainer.new()
+	_pick_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_pick_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_pick_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	vb.add_child(_pick_scroll)
+	_pick_row = HBoxContainer.new()
+	_pick_row.add_theme_constant_override("separation", 14)
+	_pick_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_pick_scroll.add_child(_pick_row)
+	var foot := HBoxContainer.new()
+	foot.alignment = BoxContainer.ALIGNMENT_CENTER
+	foot.add_theme_constant_override("separation", 16)
+	vb.add_child(foot)
+	foot.add_child(ui.mk_lbl("Arraste para o lado para ver mais  •  toque no item para colocar", 15, Color(1, 1, 1, 0.5), 2))
+	var bc: Button = ui.mk_btn("VOLTAR", 200, 54, ui.GRAY, 20)
+	bc.pressed.connect(func():
+		picker.queue_free()
+		picker = null)
+	foot.add_child(bc)
+	_pick_show(_pick_cat if _count_cat(_pick_cat) > 0 else "")
+
+
+func _count_cat(k: String) -> int:
+	var n := 0
+	for id in tradable():
+		if my_items.has(id):
+			continue
+		if k == "" or str(info(id).get("k", "")) == k:
+			n += 1
+	return n
+
+
+func _pick_show(k: String) -> void:
+	_pick_cat = k
+	for tb in _pick_tabs:
+		var on: bool = str((tb as Button).get_meta("k")) == k
+		var col := Color("e3a928") if on else Color("23364f")
+		(tb as Button).add_theme_stylebox_override("normal", ui.sbox(col, 20, col.lightened(0.35), 3, 6))
+	for ch in _pick_row.get_children():
+		ch.queue_free()
+	_pick_scroll.scroll_horizontal = 0
 	var has: Array = st.get("theirHas", [])
 	var n := 0
 	for id in tradable():
 		if my_items.has(id):
 			continue
+		if k != "" and str(info(id).get("k", "")) != k:
+			continue
 		n += 1
-		var card := _item_card(id, false) as Button
 		var sid := str(id)
+		var card := _item_card(sid, false, 228.0, 330.0)
 		if has.has(sid):
-			card.disabled = true
-			card.tooltip_text = "%s já tem" % with_name
 			var dim := ColorRect.new()
-			dim.color = Color(0, 0, 0, 0.55)
+			dim.color = Color(0, 0, 0, 0.6)
 			dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			card.add_child(dim)
-			var tag: Label = ui.mk_lbl("ELE JÁ TEM", 15, Color("ff8a6a"), 5)
-			tag.position = Vector2(0, 86)
-			tag.size = Vector2(200, 26)
+			var tag: Label = ui.mk_lbl("%s JÁ TEM" % with_name.to_upper(), 17, Color("ff8a6a"), 5)
+			tag.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+			tag.position = Vector2(0, 140)
+			tag.size = Vector2(228, 30)
 			card.add_child(tag)
 		else:
-			card.pressed.connect(func():
-				if my_items.size() >= 30:
+			_tap(card, func():
+				if my_items.size() >= 30 or my_items.has(sid):
 					return
 				my_items.append(sid)
-				picker.queue_free()
+				_scroll_end = true
+				if picker != null and is_instance_valid(picker):
+					picker.queue_free()
 				picker = null
 				_send_offer())
-		fl.add_child(card)
+		_pick_row.add_child(card)
 	if n == 0:
-		fl.add_child(ui.mk_lbl("Você não tem mais itens para oferecer.\n(Itens grátis como a mesa verde e o taco clássico não entram.)", 18, Color(1, 1, 1, 0.6), 2))
-	var bc: Button = ui.mk_btn("VOLTAR", 220, 56, ui.GRAY, 20)
-	bc.pressed.connect(func():
-		picker.queue_free()
-		picker = null)
-	vb.add_child(bc)
+		var l: Label = ui.mk_lbl("Você não tem mais itens para oferecer aqui.\n(Itens grátis, como a mesa verde e o taco clássico, não entram.)", 18, Color(1, 1, 1, 0.6), 2)
+		l.custom_minimum_size = Vector2(900, 300)
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_pick_row.add_child(l)

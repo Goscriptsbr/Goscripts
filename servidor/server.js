@@ -276,7 +276,8 @@ function tradeSend(t, extra) {
     if (!cl) continue;
     sendJ(cl, Object.assign({ t: "trade", id: t.id, with: ot, withName: (clients.get(ot) || {}).name || (players.get(ot) || {}).name || ot,
       mine: t.offer[sd], theirs: t.offer[sd === "a" ? "b" : "a"], ready: t.ready[sd], theirReady: t.ready[sd === "a" ? "b" : "a"],
-      conf: t.conf[sd], theirConf: t.conf[sd === "a" ? "b" : "a"], stage: t.stage, theirHas: t.has[sd === "a" ? "b" : "a"] || [] }, extra || {}));
+      conf: t.conf[sd], theirConf: t.conf[sd === "a" ? "b" : "a"], stage: t.stage, theirHas: t.has[sd === "a" ? "b" : "a"] || [],
+      withAv: ((players.get(ot) || {}).prof || {}).av || "b8", withFr: ((players.get(ot) || {}).prof || {}).fr || "simples" }, extra || {}));
   }
 }
 function tradeEnd(t, why) {
