@@ -231,7 +231,7 @@ var _my_scroll: ScrollContainer
 var _their_scroll: ScrollContainer
 var _top: Control
 var _bal: Control
-var _coin_lbl: Label
+var _coin_edit: LineEdit
 var _fair_lbl: Label
 var _ready_btn: Button
 var _conf_btn: Button
@@ -319,12 +319,22 @@ func _build() -> void:
 	_coin_btns.clear()
 	for dv in [-1000, -100]:
 		crow.add_child(_coin_btn(dv))
-	var cbox := PanelContainer.new()
-	cbox.custom_minimum_size = Vector2(124, 44)
-	cbox.add_theme_stylebox_override("panel", ui.sbox(Color(0.14, 0.1, 0.02, 0.95), 14, Color("ffd34a"), 2))
-	_coin_lbl = ui.mk_lbl("0", 22, Color("ffd34a"), 4)
-	cbox.add_child(_coin_lbl)
-	crow.add_child(cbox)
+	# campo para digitar o valor (abre o teclado de números)
+	_coin_edit = LineEdit.new()
+	_coin_edit.custom_minimum_size = Vector2(150, 46)
+	_coin_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_coin_edit.max_length = 9
+	_coin_edit.placeholder_text = "digite"
+	_coin_edit.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_NUMBER
+	_coin_edit.select_all_on_focus = true
+	_coin_edit.add_theme_font_size_override("font_size", 22)
+	_coin_edit.add_theme_color_override("font_color", Color("ffd34a"))
+	_coin_edit.add_theme_color_override("font_placeholder_color", Color(1, 0.85, 0.3, 0.4))
+	_coin_edit.add_theme_stylebox_override("normal", ui.sbox(Color(0.14, 0.1, 0.02, 0.95), 14, Color("ffd34a"), 2))
+	_coin_edit.add_theme_stylebox_override("focus", ui.sbox(Color(0.2, 0.15, 0.03, 0.98), 14, Color.WHITE, 3))
+	_coin_edit.text_submitted.connect(func(_t: String): _coin_typed())
+	_coin_edit.focus_exited.connect(_coin_typed)
+	crow.add_child(_coin_edit)
 	for dv in [100, 1000, 10000]:
 		crow.add_child(_coin_btn(dv))
 	_add_btn = ui.mk_btn("+  COLOCAR ITEM", 320, 52, Color("2f7fd6"), 21)
@@ -483,6 +493,25 @@ func _coin_btn(dv: int) -> Button:
 			_send_offer())
 	_coin_btns.append(b)
 	return b
+
+
+func _coin_typed() -> void:
+	if _coin_edit == null or not is_instance_valid(_coin_edit):
+		return
+	var digits := ""
+	for ch in _coin_edit.text:
+		if ch >= "0" and ch <= "9":
+			digits += ch
+	var want := int(digits) if digits != "" else 0
+	var nv := clampi(want, 0, int(game.save.coins))
+	if want > int(game.save.coins):
+		ui.say("Você só tem %s moedas." % fmt(int(game.save.coins)))
+	_coin_edit.release_focus()
+	_coin_edit.text = fmt(nv) if nv > 0 else ""
+	if nv != my_coins:
+		my_coins = nv
+		_scroll_end = true
+		_send_offer()
 
 
 func _send_offer() -> void:
@@ -676,7 +705,9 @@ func _refresh() -> void:
 	var rdy := bool(st.get("ready", false))
 	var trdy := bool(st.get("theirReady", false))
 	var conf := bool(st.get("conf", false))
-	_coin_lbl.text = fmt(my_coins)
+	if not _coin_edit.has_focus():
+		_coin_edit.text = fmt(my_coins) if my_coins > 0 else ""
+	_coin_edit.editable = not conf
 	var why := fair_msg(mv, tv)
 	if why != "":
 		_fair_lbl.text = "⚠ " + why
