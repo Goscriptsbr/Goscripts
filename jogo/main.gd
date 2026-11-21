@@ -35,7 +35,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 93  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 94  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -4460,6 +4460,16 @@ func pack_pool(max_price: int, min_price: int) -> Array:
 	return out
 
 
+# itens que ainda podem sair do pacote (os que a pessoa não tem)
+func pack_items(tier: int) -> Array:
+	if tier == 0:
+		return pack_pool(1000, 1)
+	if tier == 1:
+		return pack_pool(2600, 600)
+	var p := pack_pool(99999, 1000)
+	return p if not p.is_empty() else pack_pool(99999, 1)
+
+
 func open_pack(id: String) -> Dictionary:
 	var pk: Dictionary = {}
 	for p in PACKS:
@@ -4469,24 +4479,17 @@ func open_pack(id: String) -> Dictionary:
 		return {}
 	var tier := int(pk.tier)
 	var roll := randf()
-	var pool: Array = []
+	var pool: Array = pack_items(tier)
 	var coins := 0
+	# moedas valem MENOS que o preço do pacote na média (pacote é para ganhar itens, não moedas)
 	if tier == 0:
-		if roll < 0.6:
-			coins = [150, 200, 250, 300, 400, 500, 700][randi() % 7]
-		else:
-			pool = pack_pool(1000, 1)
+		if roll < 0.55 or pool.is_empty():
+			coins = [100, 150, 200, 250, 300, 350, 600][randi() % 7]
 	elif tier == 1:
-		if roll < 0.35:
-			coins = [600, 800, 1000, 1300, 1600, 2000][randi() % 6]
-		else:
-			pool = pack_pool(2600, 600)
-	else:
-		pool = pack_pool(99999, 1000)
-		if pool.is_empty():
-			pool = pack_pool(99999, 1)
-	if coins == 0 and pool.is_empty():
-		coins = [500, 1500, 4000][tier]
+		if roll < 0.35 or pool.is_empty():
+			coins = [400, 500, 700, 900, 1100, 1600][randi() % 6]
+	if tier == 2 and pool.is_empty():
+		coins = 1500
 	if coins > 0:
 		save.coins += coins
 		eco(coins, 0, "pacote")

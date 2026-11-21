@@ -5600,6 +5600,9 @@ func _pack_buy(id: String) -> void:
 	for p in game.PACKS:
 		if str(p.id) == id:
 			pk = p
+	if game.pack_items(int(pk.tier)).is_empty() and int(pk.tier) < 2:
+		say("Você já tem todos os itens deste pacote! Experimente outro pacote.")
+		return
 	if int(pk.grana) > 0:
 		if int(game.save.grana) < int(pk.grana):
 			say("Grana insuficiente! Ganhe Grana no Passe, na Roleta e no prêmio do 7º dia.")

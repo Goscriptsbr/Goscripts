@@ -165,6 +165,19 @@ function withLock(code, fn) {
   ecoLocks.set(code, next.catch(() => {}));
   return next;
 }
+function ecoDay(eco) {
+  if (eco.day !== dayBR()) { eco.day = dayBR(); eco.ec = 0; eco.eg = 0; eco.sc = 0; eco.sg = 0; }
+}
+// devoluções feitas à mão (quando um bug tirou moedas de alguém): código -> saldo mínimo, aplicado uma vez
+const ECO_GRANTS = {};
+function ecoGrant(code, eco) {
+  const g = ECO_GRANTS[code];
+  if (!g || (eco.grants || []).includes(g.id)) return false;
+  eco.grants = (eco.grants || []).concat([g.id]);
+  if (g.coins && eco.coins < g.coins) eco.coins = g.coins;
+  if (g.grana && eco.grana < g.grana) eco.grana = g.grana;
+  return true;
+}
 function ecoApply(code, eco, tx) {
   const dc = Math.trunc(Number(tx.c) || 0), dg = Math.trunc(Number(tx.g) || 0);
   const why = String(tx.w || "");
@@ -186,11 +199,18 @@ function ecoApply(code, eco, tx) {
       tourPrize.delete(code);
       gc = 0;
     } else {
-      if (eco.day !== dayBR()) { eco.day = dayBR(); eco.ec = 0; eco.eg = 0; }
-      if (eco.ec + gc > ECO_DAY_MAX.coins || eco.eg + gg > ECO_DAY_MAX.grana) return false;
+      ecoDay(eco);
+      // limite do dia é pelo LUCRO (ganhou - gastou): apostar contra a IA ou abrir pacotes gasta e
+      // ganha de volta, e isso não pode estourar o limite de quem está jogando normalmente
+      if ((eco.ec + gc) - (eco.sc || 0) > ECO_DAY_MAX.coins || (eco.eg + gg) - (eco.sg || 0) > ECO_DAY_MAX.grana) return false;
       eco.ec += gc;
       eco.eg += gg;
     }
+  }
+  if (dc < 0 || dg < 0) {
+    ecoDay(eco);
+    eco.sc = (eco.sc || 0) - Math.min(0, dc);
+    eco.sg = (eco.sg || 0) - Math.min(0, dg);
   }
   eco.coins += dc;
   eco.grana += dg;
@@ -221,8 +241,10 @@ function ecoMsg(c, m) {
       if (!ecoApply(code, eco, tx)) rej.push(sq);
       eco.seq = sq;
     }
+    const granted = ecoGrant(code, eco);
     await putSave(code, { tok: m.tok, eco });
     c.coins = eco.coins;
+    if (granted) sendJ(c, { t: "toast", msg: "Suas moedas foram devolvidas!" });
     sendJ(c, { t: "eco_r", seq: eco.seq, coins: eco.coins, grana: eco.grana, rej, migrated });
   });
 }

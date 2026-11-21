@@ -490,6 +490,9 @@ func _world_msg(m: Dictionary) -> void:
 			game.tour_update(m)
 		"eco_r":
 			game.eco_result(m)
+		"toast":
+			if game.ui != null:
+				game.ui.say(str(m.get("msg", "")))
 		"csave_ok":
 			cloud_ok = bool(m.get("ok", false))
 			cloud_pass = bool(m.get("pass", false)) or cloud_pass
