@@ -251,6 +251,143 @@ function ecoMsg(c, m) {
   });
 }
 
+// ------------------------------------------------------------ NEGOCIAÇÃO entre jogadores
+// Os dois montam a oferta (itens + moedas), marcam PRONTO e depois CONFIRMAR. As moedas passam de uma
+// conta para a outra aqui no servidor (com a senha do aparelho de cada um); os itens o servidor manda
+// cada celular tirar/colocar. Qualquer mudança na oferta desmarca o PRONTO dos dois.
+const trades = new Map(); // id -> trade
+let ITEM_VAL = {};
+try { ITEM_VAL = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "itens.json"), "utf8")); } catch (e) { console.log("itens.json:", e.message); }
+const TRADE_MIN = 0.25; // cada lado precisa receber pelo menos 25% do valor do que dá (item de 20k sai por no mínimo 5k)
+function offerVal(o) { return o.coins + o.items.reduce((a, it) => a + (ITEM_VAL[it] || 0), 0); }
+function tradeFair(t) {
+  const va = offerVal(t.offer.a), vb = offerVal(t.offer.b);
+  if (va === 0 && vb === 0) return "Coloque alguma coisa na troca.";
+  if (vb < Math.ceil(va * TRADE_MIN) || va < Math.ceil(vb * TRADE_MIN)) return "Troca muito desigual: cada lado precisa receber pelo menos 25% do valor do que está dando.";
+  return "";
+}
+let tradeSeq = 0;
+function tradeOf(c) { return c.tradeId ? trades.get(c.tradeId) : null; }
+function tradeSide(t, code) { return t.a === code ? "a" : t.b === code ? "b" : ""; }
+function tradeSend(t, extra) {
+  for (const sd of ["a", "b"]) {
+    const me = sd === "a" ? t.a : t.b, ot = sd === "a" ? t.b : t.a;
+    const cl = clients.get(me);
+    if (!cl) continue;
+    sendJ(cl, Object.assign({ t: "trade", id: t.id, with: ot, withName: (clients.get(ot) || {}).name || (players.get(ot) || {}).name || ot,
+      mine: t.offer[sd], theirs: t.offer[sd === "a" ? "b" : "a"], ready: t.ready[sd], theirReady: t.ready[sd === "a" ? "b" : "a"],
+      conf: t.conf[sd], theirConf: t.conf[sd === "a" ? "b" : "a"], stage: t.stage, theirHas: t.has[sd === "a" ? "b" : "a"] || [] }, extra || {}));
+  }
+}
+function tradeEnd(t, why) {
+  trades.delete(t.id);
+  for (const code of [t.a, t.b]) {
+    const cl = clients.get(code);
+    if (cl && cl.tradeId === t.id) { cl.tradeId = null; sendJ(cl, { t: "trade_end", id: t.id, why }); }
+  }
+}
+function cleanOffer(o) {
+  const items = Array.isArray(o && o.items) ? [...new Set(o.items.map((x) => String(x).slice(0, 24)))].filter((x) => ITEM_VAL[x] > 0).slice(0, 30) : [];
+  const coins = Math.max(0, Math.min(10000000, Math.trunc(Number(o && o.coins) || 0)));
+  return { items, coins };
+}
+async function tradeExec(t) {
+  t.stage = "exec";
+  const codes = [t.a, t.b].sort();
+  await withLock(codes[0], () => withLock(codes[1], async () => {
+    const ra = await getSave(t.a), rb = await getSave(t.b);
+    const ok = (r, tok) => r && r.eco && r.tok === tok;
+    if (!ok(ra, t.tok.a) || !ok(rb, t.tok.b)) return tradeEnd(t, "Não deu para conferir as contas (as duas precisam estar na versão nova).");
+    const ca = t.offer.a.coins, cb = t.offer.b.coins;
+    if (ra.eco.coins < ca || rb.eco.coins < cb) return tradeEnd(t, "Moedas insuficientes para a troca.");
+    // itens: cada um precisa ter o que oferece (conferido pela lista que o próprio celular mandou ao confirmar)
+    for (const [sd, owned] of [["a", t.owned.a], ["b", t.owned.b]]) {
+      for (const it of t.offer[sd].items) if (!owned.includes(it)) return tradeEnd(t, "Um dos itens não está mais disponível.");
+      for (const it of t.offer[sd === "a" ? "b" : "a"].items) if (owned.includes(it)) return tradeEnd(t, "Um dos jogadores já tem um dos itens.");
+    }
+    const unfair = tradeFair(t);
+    if (unfair) return tradeEnd(t, unfair);
+    ra.eco.coins += cb - ca;
+    rb.eco.coins += ca - cb;
+    await putSave(t.a, { tok: ra.tok, eco: ra.eco });
+    await putSave(t.b, { tok: rb.tok, eco: rb.eco });
+    trades.delete(t.id);
+    for (const [code, mine, theirs, eco] of [[t.a, t.offer.a, t.offer.b, ra.eco], [t.b, t.offer.b, t.offer.a, rb.eco]]) {
+      const cl = clients.get(code);
+      if (!cl) continue;
+      cl.tradeId = null;
+      cl.coins = eco.coins;
+      sendJ(cl, { t: "trade_done", give: mine.items, get: theirs.items, coins: eco.coins, grana: eco.grana, seq: eco.seq || 0 });
+    }
+    console.log("troca " + t.a + " <-> " + t.b + ": " + JSON.stringify(t.offer));
+  }));
+}
+function tradeDrop(c) {
+  for (const t of [...trades.values()]) {
+    if ((t.a === c.code || t.b === c.code) && t.stage !== "exec" && clients.get(c.code) === c) tradeEnd(t, (c.name || "O outro jogador") + " saiu.");
+  }
+}
+function tradeMsg(c, m) {
+  if (!c.code) return;
+  if (m.t === "trade_req") {
+    const to = String(m.to || "").toUpperCase();
+    const f = clients.get(to);
+    if (!f || f === c) return sendJ(c, { t: "trade_end", why: "Seu amigo não está online." });
+    if (tradeOf(c) || tradeOf(f)) return sendJ(c, { t: "trade_end", why: "Alguém já está numa negociação." });
+    if (c.room || f.room) return sendJ(c, { t: "trade_end", why: "Não dá para negociar durante uma partida." });
+    const id = "T" + (++tradeSeq);
+    const t = { id, a: c.code, b: to, offer: { a: { items: [], coins: 0 }, b: { items: [], coins: 0 } }, ready: { a: false, b: false }, conf: { a: false, b: false }, tok: {}, owned: {}, has: {}, stage: "invite", at: Date.now() };
+    trades.set(id, t);
+    c.tradeId = id;
+    sendJ(f, { t: "trade_invite", id, from: c.code, name: c.name || c.code });
+    sendJ(c, { t: "trade_wait", id, name: f.name || to });
+    return;
+  }
+  const t = trades.get(String(m.id || ""));
+  if (!t) return sendJ(c, { t: "trade_end", why: "Essa negociação já acabou." });
+  const sd = tradeSide(t, c.code);
+  if (!sd) return;
+  const os = sd === "a" ? "b" : "a";
+  switch (m.t) {
+    case "trade_resp":
+      if (sd !== "b" || t.stage !== "invite") return;
+      if (!m.ok) return tradeEnd(t, (c.name || "O amigo") + " recusou a negociação.");
+      c.tradeId = t.id;
+      t.stage = "open";
+      tradeSend(t);
+      break;
+    case "trade_set":
+      if (t.stage !== "open") return;
+      t.offer[sd] = cleanOffer(m);
+      t.ready.a = t.ready.b = false;
+      t.conf.a = t.conf.b = false;
+      tradeSend(t);
+      break;
+    case "trade_ready":
+      if (t.stage !== "open") return;
+      if (m.v) { const why = tradeFair(t); if (why) return sendJ(c, { t: "toast", msg: why }); }
+      t.ready[sd] = !!m.v;
+      if (!t.ready[sd]) t.conf.a = t.conf.b = false;
+      tradeSend(t);
+      break;
+    case "trade_confirm":
+      if (t.stage !== "open" || !t.ready.a || !t.ready.b) return;
+      if (typeof m.tok !== "string" || m.tok.length < 16) return;
+      t.conf[sd] = true;
+      t.tok[sd] = m.tok;
+      t.owned[sd] = Array.isArray(m.owned) ? m.owned.map(String) : [];
+      if (t.conf[os]) tradeExec(t); else tradeSend(t);
+      break;
+    case "trade_has":
+      t.has[sd] = Array.isArray(m.owned) ? m.owned.map((x) => String(x).slice(0, 24)).filter((x) => ITEM_VAL[x] > 0).slice(0, 300) : [];
+      tradeSend(t);
+      break;
+    case "trade_cancel":
+      tradeEnd(t, (c.name || "O outro jogador") + " cancelou a negociação.");
+      break;
+  }
+}
+
 function passHash(code, pass, salt) {
   return salt + "$" + crypto.createHash("sha256").update(salt + ":" + code + ":" + pass).digest("hex");
 }
@@ -375,6 +512,9 @@ function onMsg(c, op, payload) {
       break;
     }
     case "eco": ecoMsg(c, m); break;
+    case "trade_req": case "trade_resp": case "trade_set": case "trade_ready": case "trade_confirm": case "trade_cancel": case "trade_has":
+      tradeMsg(c, m);
+      break;
     case "csave": { // backup do save do celular
       if (!c.code || typeof m.tok !== "string" || m.tok.length < 16 || !m.save || typeof m.save !== "object") return;
       const js = JSON.stringify(m.save);
@@ -962,6 +1102,7 @@ function drop(c) {
   unqueue(c);
   leaveParty(c);
   leaveRoom(c);
+  if (c.code) tradeDrop(c);
   if (c.code && clients.get(c.code) === c) remember(c);
   if (c.code && clients.get(c.code) === c) clients.delete(c.code);
   try { c.socket.destroy(); } catch (e) {}

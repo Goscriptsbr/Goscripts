@@ -946,6 +946,11 @@ func _glyph(c: Control, kind: String, p: Vector2, col: Color = Color.WHITE, k: f
 		"copy":
 			c.draw_style_box(sbox(Color(0, 0, 0, 0), 3, col, 2), Rect2(p + Vector2(-8, -6) * k, Vector2(12, 14) * k))
 			c.draw_style_box(sbox(Color(0, 0, 0, 0), 3, col, 2), Rect2(p + Vector2(-3, -10) * k, Vector2(12, 14) * k))
+		"trade":
+			c.draw_line(p + Vector2(-10, -5) * k, p + Vector2(8, -5) * k, col, 3.0 * k)
+			c.draw_colored_polygon(PackedVector2Array([p + Vector2(12, -5) * k, p + Vector2(5, -11) * k, p + Vector2(5, 1) * k]), col)
+			c.draw_line(p + Vector2(10, 6) * k, p + Vector2(-8, 6) * k, col, 3.0 * k)
+			c.draw_colored_polygon(PackedVector2Array([p + Vector2(-12, 6) * k, p + Vector2(-5, 0) * k, p + Vector2(-5, 12) * k]), col)
 		"search":
 			c.draw_arc(p + Vector2(-2, -2) * k, 7 * k, 0, TAU, 20, col, 2.5 * k)
 			c.draw_line(p + Vector2(3, 3) * k, p + Vector2(9, 9) * k, col, 3.0 * k)
@@ -2678,6 +2683,9 @@ func _friends_render(list: Array) -> void:
 			var lb := round_btn("check" if inl else "lobby", GRAY if inl else Color("8e44ad"), "NO LOBBY" if inl else "LOBBY")
 			lb.disabled = inl
 			hb.add_child(_fr_btn(lb, _invite.bind(str(f.code), "", true)))
+			var tcode := str(f.code)
+			var tnm := nm
+			hb.add_child(_fr_btn(round_btn("trade", Color("d68a10"), "NEGOCIAR"), func(): game.trade.start_with(tcode, tnm)))
 		elif status == "jogando":
 			hb.add_child(mk_lbl("em partida...", 15, Color("ffb020"), 2))
 		# conversa (funciona até com o amigo offline: ele recebe quando entrar)
@@ -5334,6 +5342,12 @@ func profile_remote(m: Dictionary) -> void:
 	var fb := _prof_friend_btn(pcode, nm)
 	if fb != null:
 		brow.add_child(fb)
+	if online and _has("friends", pcode):
+		var tb := mk_btn("⇄ NEGOCIAR", 220, 58, Color("d68a10"), 22)
+		tb.pressed.connect(func():
+			close_modal()
+			game.trade.start_with(pcode, nm))
+		brow.add_child(tb)
 	var ok := mk_btn("FECHAR", 220, 58, GRAY, 22)
 	ok.pressed.connect(close_modal)
 	brow.add_child(ok)
