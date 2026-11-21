@@ -6,7 +6,6 @@ extends Node
 
 const MIN_PCT := 0.25
 const DEFAULTS := {"felt": "verde", "rail": "rb_padrao", "cue": "classico", "deck": "classico", "wfx": "wf_confete"}
-const DECK_COL := {"classico": Color("2f6fd6"), "esmeralda": Color("1f8a55"), "neon": Color("ff3df0"), "preto": Color("222228"), "ouro": Color("e3b341")}
 
 var game: Node
 var ui
@@ -104,62 +103,6 @@ func fmt(n: int) -> String:
 		o = "." + s.substr(s.length() - 3) + o
 		s = s.substr(0, s.length() - 3)
 	return ("-" if n < 0 else "") + s + o
-
-
-# desenho pequeno do item (mesa, borda, taco, baralho, efeito)
-func swatch(c: Control, id: String, r: Rect2, t: float) -> void:
-	var i := info(id)
-	if i.is_empty():
-		return
-	var d: Dictionary = i.d
-	var cen := r.get_center()
-	match str(i.k):
-		"felt":
-			var l: Color = d.get("light", Color("22a553"))
-			var dk: Color = d.get("dark", Color("06512b"))
-			c.draw_style_box(ui.sbox(Color("4a2a14"), 8), r)
-			var inner := r.grow(-5)
-			c.draw_style_box(ui.sbox(dk, 5), inner)
-			c.draw_circle(inner.get_center(), inner.size.y * 0.42, l.lerp(dk, 0.25))
-			c.draw_circle(inner.get_center(), inner.size.y * 0.25, l)
-			if d.has("anim"):
-				for k in 3:
-					var a := t * 1.4 + k * 2.1
-					c.draw_circle(inner.get_center() + Vector2(cos(a) * inner.size.x * 0.32, sin(a * 1.3) * inner.size.y * 0.3), 2.0, Color(1, 1, 1, 0.8))
-		"rail":
-			var c1: Color = d.get("c1", Color("6b4226"))
-			var tr: Color = d.get("trim", Color("d9b36a"))
-			c.draw_style_box(ui.sbox(c1, 9, tr, 3), r)
-			c.draw_style_box(ui.sbox(Color("1a7a45"), 5), r.grow(-9))
-			if d.has("edge"):
-				var a2 := fposmod(t * 0.6, 1.0)
-				var pp := r.position + Vector2(r.size.x * a2, 2)
-				c.draw_circle(pp, 3.0, tr.lightened(0.4))
-		"cue":
-			var y := cen.y
-			var x0 := r.position.x + 4
-			var x1 := r.end.x - 4
-			var glow: Color = d.get("glow", Color(0, 0, 0, 0))
-			if glow.a > 0:
-				c.draw_line(Vector2(x0, y), Vector2(x1, y), Color(glow.r, glow.g, glow.b, 0.25 + 0.15 * sin(t * 3)), 12.0)
-			c.draw_line(Vector2(x0, y), Vector2(x0 + (x1 - x0) * 0.55, y), d.get("shaft", Color("ecd29c")), 5.0)
-			c.draw_line(Vector2(x0 + (x1 - x0) * 0.55, y), Vector2(x1, y), d.get("butt", Color("5a2e14")), 8.0)
-			if d.has("butt2"):
-				c.draw_line(Vector2(x0 + (x1 - x0) * 0.72, y), Vector2(x0 + (x1 - x0) * 0.86, y), d.butt2, 8.0)
-			c.draw_line(Vector2(x0 + (x1 - x0) * 0.55, y - 4), Vector2(x0 + (x1 - x0) * 0.55, y + 4), d.get("ring", Color("c9a24a")), 3.0)
-			c.draw_line(Vector2(x0, y), Vector2(x0 + 4, y), Color("4aa3ff"), 5.0)
-		"deck":
-			var col: Color = DECK_COL.get(str(d.get("deck", "")), Color("2f6fd6"))
-			for k in 2:
-				var rr := Rect2(cen + Vector2(-14 + k * 10, -20 + k * 2), Vector2(24, 34))
-				c.draw_style_box(ui.sbox(Color.WHITE, 4, Color(0, 0, 0, 0.3), 1), rr)
-				c.draw_style_box(ui.sbox(col, 3), rr.grow(-3))
-		"wfx":
-			for k in 5:
-				var a3 := t * 2.0 + k * TAU / 5.0
-				var pc := cen + Vector2(cos(a3), sin(a3)) * r.size.y * 0.3
-				c.draw_circle(pc, 3.5, Color.from_hsv(fposmod(k * 0.2 + t * 0.2, 1.0), 0.6, 1.0))
-			c.draw_circle(cen, 6, Color("ffe066"))
 
 
 # ---------------------------------------------------------------- iniciar
@@ -412,6 +355,7 @@ func _build() -> void:
 
 func _process(_d: float) -> void:
 	if is_open():
+		ui.fx_t += _d
 		if _anim != null and is_instance_valid(_anim):
 			_anim.queue_redraw()
 		var keep: Array = []
@@ -454,33 +398,58 @@ func _send_offer() -> void:
 func _item_card(id: String, mine: bool) -> Control:
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(150, 118)
+	b.custom_minimum_size = Vector2(200, 238)
 	var rc := rare_col(id)
-	b.add_theme_stylebox_override("normal", ui.sbox(Color(0.06, 0.1, 0.16, 0.95), 14, Color(rc.r, rc.g, rc.b, 0.75), 2, 4))
-	b.add_theme_stylebox_override("hover", ui.sbox(Color(0.09, 0.14, 0.22, 0.95), 14, rc, 3, 4))
-	b.add_theme_stylebox_override("pressed", ui.sbox(Color(0.04, 0.07, 0.12, 0.95), 14, rc, 2, 0))
-	b.add_theme_stylebox_override("disabled", ui.sbox(Color(0.06, 0.1, 0.16, 0.95), 14, Color(rc.r, rc.g, rc.b, 0.75), 2, 4))
+	b.add_theme_stylebox_override("normal", ui.sbox(Color(0.06, 0.1, 0.16, 0.95), 16, Color(rc.r, rc.g, rc.b, 0.75), 2, 4))
+	b.add_theme_stylebox_override("hover", ui.sbox(Color(0.09, 0.14, 0.22, 0.95), 16, rc, 3, 4))
+	b.add_theme_stylebox_override("pressed", ui.sbox(Color(0.04, 0.07, 0.12, 0.95), 16, rc, 2, 0))
+	b.add_theme_stylebox_override("disabled", ui.sbox(Color(0.06, 0.1, 0.16, 0.95), 16, Color(rc.r, rc.g, rc.b, 0.75), 2, 4))
 	var i := info(id)
-	var nm := str(i.get("d", {}).get("name", id))
+	var d: Dictionary = i.get("d", {})
+	var nm := str(d.get("name", id))
 	var cat := str(i.get("cat", ""))
 	var v := value(id)
+	# mesmo desenho da loja (com os efeitos animados)
+	var pv := Control.new()
+	pv.position = Vector2(8, 24)
+	pv.size = Vector2(184, 150)
+	pv.custom_minimum_size = Vector2(184, 150)
+	pv.clip_contents = true
+	pv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(pv)
+	var store: Array = []
+	match str(i.get("k", "")):
+		"cue":
+			ui._cue_preview(pv, d, Vector2(60, 100), 140.0, -40.0, 22.0, 0.85, store)
+			if d.has("rare"):
+				var rt: Label = ui.mk_lbl(str(d.rare), 14, ui.rare_color(str(d.rare)), 4)
+				rt.position = Vector2(4, 2)
+				pv.add_child(rt)
+		"deck":
+			ui._deck_preview(pv, str(d.deck))
+		"wfx":
+			ui._wfx_preview(pv, str(d.wfx))
+		"rail":
+			ui._rail_preview(pv, d, game.felt_def())
+		"felt":
+			ui._rail_preview(pv, game.rail_for(str(d.get("rail", ""))), d)
+	for ch in pv.get_children():
+		if ch is Control:
+			(ch as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_cards.append(ch)
 	var cv := Control.new()
 	cv.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(cv)
 	cv.draw.connect(func():
 		var f: Font = ThemeDB.fallback_font
-		var t := Time.get_ticks_msec() / 1000.0
-		cv.draw_string(f, Vector2(0, 16), cat, HORIZONTAL_ALIGNMENT_CENTER, 150, 11, Color(rc.r, rc.g, rc.b, 0.9))
-		swatch(cv, id, Rect2(25, 22, 100, 46), t)
-		cv.draw_string(f, Vector2(4, 88), nm, HORIZONTAL_ALIGNMENT_CENTER, 142, 15, Color.WHITE)
-		cv.draw_string(f, Vector2(0, 108), "valor %s" % fmt(v), HORIZONTAL_ALIGNMENT_CENTER, 150, 12, Color("ffd34a"))
+		cv.draw_string(f, Vector2(0, 18), cat, HORIZONTAL_ALIGNMENT_CENTER, 200, 13, Color(rc.r, rc.g, rc.b, 0.95))
+		cv.draw_string(f, Vector2(4, 200), nm, HORIZONTAL_ALIGNMENT_CENTER, 192, 18, Color.WHITE)
+		cv.draw_string(f, Vector2(0, 224), "valor %s" % fmt(v), HORIZONTAL_ALIGNMENT_CENTER, 200, 14, Color("ffd34a"))
 		if mine:
-			cv.draw_circle(Vector2(138, 12), 9, Color("c94444"))
-			cv.draw_line(Vector2(134, 8), Vector2(142, 16), Color.WHITE, 2.0)
-			cv.draw_line(Vector2(142, 8), Vector2(134, 16), Color.WHITE, 2.0)
-		pass)
-	_cards.append(cv)
+			cv.draw_circle(Vector2(186, 14), 11, Color("c94444"))
+			cv.draw_line(Vector2(181, 9), Vector2(191, 19), Color.WHITE, 2.5)
+			cv.draw_line(Vector2(191, 9), Vector2(181, 19), Color.WHITE, 2.5))
 	if mine:
 		b.pressed.connect(func():
 			my_items.erase(id)
@@ -490,20 +459,20 @@ func _item_card(id: String, mine: bool) -> Control:
 
 func _coin_card(n: int) -> Control:
 	var p := PanelContainer.new()
-	p.custom_minimum_size = Vector2(150, 118)
-	p.add_theme_stylebox_override("panel", ui.sbox(Color(0.16, 0.12, 0.02, 0.95), 14, Color("ffd34a"), 2, 4))
+	p.custom_minimum_size = Vector2(200, 238)
+	p.add_theme_stylebox_override("panel", ui.sbox(Color(0.16, 0.12, 0.02, 0.95), 16, Color("ffd34a"), 2, 4))
 	var cv := Control.new()
 	cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(cv)
 	cv.draw.connect(func():
 		var f: Font = ThemeDB.fallback_font
 		for k in 3:
-			var c := Vector2(60 + k * 14, 46 - k * 6)
-			cv.draw_circle(c, 18, Color("b8860b"))
-			cv.draw_circle(c, 15, Color("ffd34a"))
-			cv.draw_string(f, c + Vector2(-5, 6), "$", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("8a5c0c"))
-		cv.draw_string(f, Vector2(0, 92), fmt(n), HORIZONTAL_ALIGNMENT_CENTER, 150, 20, Color.WHITE)
-		cv.draw_string(f, Vector2(0, 110), "moedas", HORIZONTAL_ALIGNMENT_CENTER, 150, 12, Color("ffd34a")))
+			var c := Vector2(76 + k * 22, 100 - k * 12)
+			cv.draw_circle(c, 30, Color("b8860b"))
+			cv.draw_circle(c, 25, Color("ffd34a"))
+			cv.draw_string(f, c + Vector2(-8, 9), "$", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("8a5c0c"))
+		cv.draw_string(f, Vector2(0, 200), fmt(n), HORIZONTAL_ALIGNMENT_CENTER, 200, 24, Color.WHITE)
+		cv.draw_string(f, Vector2(0, 224), "moedas", HORIZONTAL_ALIGNMENT_CENTER, 200, 14, Color("ffd34a")))
 	return p
 
 
@@ -671,10 +640,14 @@ func _open_picker() -> void:
 		if has.has(sid):
 			card.disabled = true
 			card.tooltip_text = "%s já tem" % with_name
-			card.modulate = Color(1, 1, 1, 0.55)
+			var dim := ColorRect.new()
+			dim.color = Color(0, 0, 0, 0.55)
+			dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			card.add_child(dim)
 			var tag: Label = ui.mk_lbl("ELE JÁ TEM", 15, Color("ff8a6a"), 5)
-			tag.position = Vector2(0, 34)
-			tag.size = Vector2(150, 22)
+			tag.position = Vector2(0, 86)
+			tag.size = Vector2(200, 26)
 			card.add_child(tag)
 		else:
 			card.pressed.connect(func():
