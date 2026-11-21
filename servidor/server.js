@@ -169,7 +169,9 @@ function ecoDay(eco) {
   if (eco.day !== dayBR()) { eco.day = dayBR(); eco.ec = 0; eco.eg = 0; eco.sc = 0; eco.sg = 0; }
 }
 // devoluções feitas à mão (quando um bug tirou moedas de alguém): código -> saldo mínimo, aplicado uma vez
-const ECO_GRANTS = {};
+const ECO_GRANTS = {
+  LP34RB: { id: "g20261121", coins: 200000 }, // dono do jogo (devolução do bug das moedas de 21/11)
+};
 function ecoGrant(code, eco) {
   const g = ECO_GRANTS[code];
   if (!g || (eco.grants || []).includes(g.id)) return false;
