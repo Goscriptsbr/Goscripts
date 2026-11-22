@@ -3974,7 +3974,7 @@ func _build_settings() -> void:
 	var sv := mk_btn("SALVAR", 130, 60, GREEN, 24)
 	sv.pressed.connect(_save_name)
 	nr.add_child(sv)
-	var gg := mk_btn("☁  BACKUP NA NUVEM / SENHA", 440, 60, BLUE, 22)
+	var gg := mk_btn("☁  CONTA GOOGLE / BACKUP", 440, 60, BLUE, 22)
 	gg.pressed.connect(open_cloud)
 	av.add_child(gg)
 	var tg := HBoxContainer.new()
@@ -4025,6 +4025,20 @@ func _build_settings() -> void:
 	var back := mk_btn("VOLTAR", 240, 64, GRAY, 28)
 	back.pressed.connect(show_screen.bind("main"))
 	brow.add_child(back)
+	var lrow := HBoxContainer.new()
+	lrow.add_theme_constant_override("separation", 24)
+	lrow.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_child(lrow)
+	for lk in [["Termos de Uso", "https://goscripts.com.br/sinucou/termos/"], ["Política de Privacidade", "https://goscripts.com.br/sinucou/privacidade/"], ["Excluir conta", "https://goscripts.com.br/sinucou/excluir-conta/"]]:
+		var lb := LinkButton.new()
+		lb.text = str(lk[0])
+		lb.underline = LinkButton.UNDERLINE_MODE_ALWAYS
+		lb.add_theme_font_size_override("font_size", 18)
+		lb.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
+		lb.add_theme_color_override("font_hover_color", Color("f4c542"))
+		var url := str(lk[1])
+		lb.pressed.connect(func(): OS.shell_open(url))
+		lrow.add_child(lb)
 	_settings_refresh()
 
 
@@ -4093,7 +4107,7 @@ func _modal_box(title: String) -> VBoxContainer:
 
 func open_cloud() -> void:
 	game.net.connect_server()
-	cloud_box = _modal_box("☁  BACKUP NA NUVEM")
+	cloud_box = _modal_box("☁  CONTA GOOGLE / BACKUP")
 	cloud_refresh()
 
 
@@ -4107,11 +4121,25 @@ func cloud_refresh() -> void:
 	var n = game.net
 	var st := "✓ Seu progresso está guardado na nuvem (último: %s)" % n.cloud_last if n.cloud_ok else ("⚠ Esta conta está sendo usada em outro celular." if n.cloud_fail else "Conectando ao servidor...")
 	cloud_box.add_child(mk_lbl("Seu código:  %s" % game.my_code(), 26, Color("f4c542"), 4))
+	# conta Google (o jeito mais fácil de nunca perder a conta)
+	if n.g_mail != "":
+		cloud_box.add_child(mk_lbl("✓ Conectado ao Google:  %s" % n.g_mail, 20, Color("7dffa8"), 3))
+	else:
+		var gb := mk_btn("G   CONECTAR COM GOOGLE", 420, 60, Color("4285f4"), 22)
+		gb.pressed.connect(func():
+			game.net.send_glink("link")
+			say("Abrindo o Google... escolha sua conta e depois volte para o jogo."))
+		cloud_box.add_child(gb)
 	cloud_box.add_child(mk_lbl(st, 18, Color("7dffa8") if n.cloud_ok else Color(1, 0.85, 0.5), 2))
-	cloud_box.add_child(mk_lbl("Senha: " + ("criada ✓ (você pode entrar em outro celular)" if n.cloud_pass else "ainda não criada — crie uma para não perder a conta"), 18, Color(1, 1, 1, 0.85), 2))
-	var pe := _edit("Nova senha (4 a 20 letras/números)", true, 20)
-	cloud_box.add_child(pe)
-	var b1 := mk_btn("TROCAR SENHA" if n.cloud_pass else "CRIAR SENHA", 360, 58, GREEN, 22)
+	cloud_box.add_child(mk_lbl("Senha: " + ("criada ✓" if n.cloud_pass else "ainda não criada (opcional se conectou o Google)"), 17, Color(1, 1, 1, 0.8), 2))
+	var prow := HBoxContainer.new()
+	prow.add_theme_constant_override("separation", 10)
+	prow.alignment = BoxContainer.ALIGNMENT_CENTER
+	cloud_box.add_child(prow)
+	var pe := _edit("Nova senha (4 a 20)", true, 20)
+	pe.custom_minimum_size = Vector2(300, 54)
+	prow.add_child(pe)
+	var b1 := mk_btn("TROCAR SENHA" if n.cloud_pass else "CRIAR SENHA", 220, 54, GREEN, 20)
 	b1.pressed.connect(func():
 		var pw := pe.text.strip_edges()
 		if pw.length() < 4:
@@ -4119,19 +4147,25 @@ func cloud_refresh() -> void:
 			return
 		game.net.send_setpass(pw)
 		say("Salvando senha..."))
-	cloud_box.add_child(b1)
+	prow.add_child(b1)
 	cloud_box.add_child(mk_lbl("— Celular novo? Entre na sua conta antiga —", 18, Color(1, 1, 1, 0.6), 2))
+	var gl := mk_btn("G   ENTRAR COM GOOGLE", 420, 58, Color("4285f4"), 22)
+	gl.pressed.connect(func():
+		game.net.send_glink("login")
+		say("Abrindo o Google... escolha a conta e depois volte para o jogo."))
+	cloud_box.add_child(gl)
+	cloud_box.add_child(mk_lbl("ou com código e senha:", 16, Color(1, 1, 1, 0.5), 2))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	cloud_box.add_child(row)
 	var ce := _edit("Código", false, 8)
-	ce.custom_minimum_size = Vector2(170, 58)
+	ce.custom_minimum_size = Vector2(150, 54)
 	row.add_child(ce)
 	var cpe := _edit("Senha", true, 20)
-	cpe.custom_minimum_size = Vector2(190, 58)
+	cpe.custom_minimum_size = Vector2(160, 54)
 	row.add_child(cpe)
-	var b2 := mk_btn("ENTRAR NA CONTA", 360, 58, BLUE, 22)
+	var b2 := mk_btn("ENTRAR", 200, 54, BLUE, 20)
 	b2.pressed.connect(func():
 		var cd := ce.text.strip_edges().to_upper()
 		var pw2 := cpe.text
@@ -4143,7 +4177,7 @@ func cloud_refresh() -> void:
 			return
 		game.net.send_recover(cd, pw2)
 		say("Procurando a conta..."))
-	cloud_box.add_child(b2)
+	row.add_child(b2)
 	var b3 := mk_btn("FECHAR", 200, 52, GRAY, 20)
 	b3.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	b3.pressed.connect(close_modal)

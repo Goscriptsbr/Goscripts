@@ -28,12 +28,13 @@ const fs = require("fs");
 const DATA_FILE = process.env.DATA_FILE || __dirname + "/dados.json";
 const players = new Map(); // code -> {name, seen, wk, pts, prof}
 const playersDir = players;
-const saves = new Map(); // (modo arquivo) code -> {tok, pass, save, at}
+const saves = new Map(); // (modo arquivo) code -> {tok, pass, save, at, gsub, gmail}
+const gIndex = new Map(); // conta Google (sub) -> código do jogador
 try {
   const d = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
   for (const [k, v] of d.players || []) players.set(k, v);
   for (const [k, v] of d.mailbox || []) mailbox.set(k, v);
-  for (const [k, v] of d.saves || []) saves.set(k, v);
+  for (const [k, v] of d.saves || []) { saves.set(k, v); if (v && v.gsub) gIndex.set(v.gsub, k); }
   console.log("cadastro carregado: " + players.size + " jogadores");
 } catch (e) {}
 
@@ -389,6 +390,68 @@ function tradeMsg(c, m) {
   }
 }
 
+// ------------------------------------------------------------ CONTA GOOGLE
+// O jogo abre goscripts.com.br/sinucou/login/?n=NONCE no navegador; a página faz o login oficial do
+// Google e manda o token para POST /glink. O servidor confere o token com o Google e liga a conta
+// (modo "link") ou devolve a conta já ligada (modo "login"). O celular fica perguntando "glink_poll".
+const GCLIENT = process.env.GOOGLE_CLIENT_ID || "";
+const gNonce = new Map(); // n -> {mode, code, st, msg, res, at}
+function gMask(email) {
+  const [u, d] = String(email || "").split("@");
+  if (!d) return "";
+  return (u.length <= 2 ? u[0] + "*" : u.slice(0, 2) + "***") + "@" + d;
+}
+setInterval(() => { const now = Date.now(); for (const [k, v] of gNonce) if (now - v.at > 15 * 60 * 1000) gNonce.delete(k); }, 60 * 1000);
+function gVerify(cred) {
+  return new Promise((resolve) => {
+    if (!GCLIENT || typeof cred !== "string" || cred.length > 5000) return resolve(null);
+    https.get("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(cred), (r) => {
+      let b = "";
+      r.on("data", (d) => { b += d; if (b.length > 20000) r.destroy(); });
+      r.on("end", () => {
+        try {
+          const j = JSON.parse(b);
+          const okIss = j.iss === "accounts.google.com" || j.iss === "https://accounts.google.com";
+          if (r.statusCode === 200 && j.aud === GCLIENT && okIss && j.sub && Number(j.exp) * 1000 > Date.now()) return resolve(j);
+        } catch (e) {}
+        resolve(null);
+      });
+    }).on("error", () => resolve(null));
+  });
+}
+async function gHandle(n, cred) {
+  const g = gNonce.get(String(n || ""));
+  if (!g || g.st !== "wait") return { ok: false, msg: "Esse link expirou. Volte ao jogo e toque no botão do Google de novo." };
+  const j = await gVerify(cred);
+  if (!j) return { ok: false, msg: "Não consegui confirmar sua conta Google. Tente de novo." };
+  const sub = String(j.sub), mail = gMask(j.email);
+  if (g.mode === "link") {
+    const other = gIndex.get(sub);
+    if (other && other !== g.code) { g.st = "fail"; g.msg = "Essa conta Google já está ligada a outro jogador (" + other + ")."; return { ok: false, msg: g.msg }; }
+    const ok = await withLock(g.code, async () => {
+      const row = await getSave(g.code);
+      if (!row || row.tok !== g.tok) return false;
+      if (row.gsub && row.gsub !== sub) gIndex.delete(row.gsub);
+      await putSave(g.code, { gsub: sub, gmail: mail });
+      gIndex.set(sub, g.code);
+      return true;
+    });
+    if (!ok) { g.st = "fail"; g.msg = "Não deu para ligar a conta agora. Tente de novo."; return { ok: false, msg: g.msg }; }
+    g.st = "linked"; g.msg = mail;
+    console.log("google ligado: " + g.code);
+    return { ok: true, msg: "Pronto! Sua conta do Sinucou agora está ligada ao Google " + mail + ". Pode voltar para o jogo." };
+  }
+  // login: achar a conta ligada a esse Google
+  const code = gIndex.get(sub);
+  if (!code) { g.st = "fail"; g.msg = "Nenhuma conta do Sinucou está ligada a esse Google ainda. No celular antigo, abra AJUSTES e toque em CONECTAR COM GOOGLE."; return { ok: false, msg: g.msg }; }
+  const row = await getSave(code);
+  if (!row) { g.st = "fail"; g.msg = "Não achei os dados dessa conta."; return { ok: false, msg: g.msg }; }
+  g.st = "login"; g.msg = mail;
+  g.res = { code, tok: row.tok, save: row.save, eco: row.eco || null, name: (players.get(code) || {}).name || "" };
+  console.log("google login: " + code);
+  return { ok: true, msg: "Achei sua conta! Volte para o jogo para entrar." };
+}
+
 function passHash(code, pass, salt) {
   return salt + "$" + crypto.createHash("sha256").update(salt + ":" + code + ":" + pass).digest("hex");
 }
@@ -541,6 +604,34 @@ function onMsg(c, op, payload) {
         const ok = await putSave(code, { tok: m.tok, pass: passHash(code, m.pass, salt), save: m.save || (row ? row.save : {}) });
         sendJ(c, { t: "setpass_r", ok, msg: ok ? "Senha criada!" : "Não consegui salvar, tente de novo." });
       })();
+      break;
+    }
+    case "glink_start": { // ligar (link) ou entrar (login) com a conta Google
+      const mode = m.mode === "login" ? "login" : "link";
+      if (!GCLIENT) return sendJ(c, { t: "glink_r", st: "fail", msg: "Login com Google ainda não está ativado no servidor." });
+      if (mode === "link" && (!c.code || typeof m.tok !== "string" || m.tok.length < 16)) return;
+      (async () => {
+        if (mode === "link") {
+          const row = await getSave(c.code);
+          if (!row || row.tok !== m.tok) return sendJ(c, { t: "glink_r", st: "fail", msg: "Espere o jogo terminar de salvar sua conta e tente de novo." });
+        }
+        const n = crypto.randomBytes(18).toString("base64url");
+        gNonce.set(n, { mode, code: c.code, tok: m.tok, st: "wait", at: Date.now() });
+        sendJ(c, { t: "glink_url", n, mode, url: "https://goscripts.com.br/sinucou/login/?n=" + n + "&m=" + mode });
+      })();
+      break;
+    }
+    case "glink_poll": {
+      const g = gNonce.get(String(m.n || ""));
+      if (!g) return sendJ(c, { t: "glink_r", n: m.n, st: "gone" });
+      if (g.st === "wait") return sendJ(c, { t: "glink_r", n: m.n, st: "wait" });
+      gNonce.delete(String(m.n));
+      sendJ(c, Object.assign({ t: "glink_r", n: m.n, st: g.st, msg: g.msg }, g.res || {}));
+      break;
+    }
+    case "glink_info": {
+      if (!c.code) return;
+      (async () => { const row = await getSave(c.code); sendJ(c, { t: "glink_info", mail: row && row.gsub ? row.gmail || "conectado" : "", on: !!GCLIENT }); })();
       break;
     }
     case "recover": { // entrar na conta em outro celular: código + senha
@@ -1216,6 +1307,24 @@ const server = http.createServer((req, res) => {
     // ainda baixando do GitHub: manda direto para lá
     res.writeHead(302, { Location: v.apk || "https://github.com/Goscriptsbr/Goscripts" });
     return res.end();
+  }
+  if (req.url.startsWith("/gconfig") || req.url.startsWith("/glink")) {
+    const origin = req.headers.origin || "";
+    const okOrigin = /^https:\/\/(www\.)?goscripts\.com\.br$/.test(origin) ? origin : "https://goscripts.com.br";
+    const hd = { "Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": okOrigin, "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", "Cache-Control": "no-store" };
+    if (req.method === "OPTIONS") { res.writeHead(204, hd); return res.end(); }
+    if (req.url.startsWith("/gconfig")) { res.writeHead(200, hd); return res.end(JSON.stringify({ client_id: GCLIENT })); }
+    if (req.method !== "POST") { res.writeHead(405, hd); return res.end("{}"); }
+    let body = "";
+    req.on("data", (d) => { body += d; if (body.length > 10000) req.destroy(); });
+    req.on("end", async () => {
+      let j = {};
+      try { j = JSON.parse(body); } catch (e) {}
+      const r = await gHandle(j.n, j.cred);
+      res.writeHead(200, hd);
+      res.end(JSON.stringify(r));
+    });
+    return;
   }
   if (req.url === "/versao") {
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });

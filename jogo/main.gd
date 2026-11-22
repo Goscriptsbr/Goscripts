@@ -4171,7 +4171,11 @@ func _league_after() -> void:
 	if not bool(save.get("tut_done", false)) and int(save.get("played", 0)) == 0 and int(save.get("truco_wins", 0)) + int(save.get("truco_losses", 0)) == 0 and not net_auto:
 		get_tree().create_timer(1.2).timeout.connect(func():
 			if ui != null and not ui.has_modal() and st == St.MENU:
-				tutorial.start_full())
+				# celular novo / versão da loja: dá a chance de trazer a conta antiga pelo Google
+				ui.confirm("BEM-VINDO AO SINUCOU!", "Já jogava o Sinucou em outro celular?\nEntre com o Google para trazer suas moedas, itens e progresso.", "ENTRAR COM GOOGLE", func():
+					net.send_glink("login")
+					ui.say("Abrindo o Google... escolha a conta e depois volte para o jogo."), "SOU NOVO", func():
+					tutorial.start_full()))
 	elif news != null and news.should_show() and not net_auto and not bot:
 		# novidade da atualização (uma vez só)
 		get_tree().create_timer(1.0).timeout.connect(func():

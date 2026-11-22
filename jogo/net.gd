@@ -251,6 +251,13 @@ func eco_tick(delta: float) -> void:
 var csave_dirty := true
 var csave_t := 99.0
 var cloud_ok := false
+# conta Google
+var glink_n := ""
+var glink_mode := ""
+var glink_t := 0.0
+var glink_age := 0.0
+var g_mail := ""
+var g_on := false
 var cloud_pass := false
 var cloud_fail := false
 var cloud_last := ""
@@ -278,6 +285,55 @@ func send_setpass(pw: String) -> void:
 	for k in ["chats", "tok", "server", "eco_q", "eco_seq", "eco_ok", "eco_srv_c", "eco_srv_g"]:
 		s2.erase(k)
 	world_send({"t": "setpass", "tok": game.my_tok(), "pass": pw, "save": s2})
+
+
+func send_glink(mode: String) -> void:
+	connect_server()
+	if mode == "link":
+		send_csave()
+	glink_n = ""
+	world_send({"t": "glink_start", "mode": mode, "tok": game.my_tok()})
+
+
+func _glink_tick(delta: float) -> void:
+	if glink_n == "":
+		return
+	glink_age += delta
+	glink_t += delta
+	if glink_age > 900.0:
+		glink_n = ""
+		return
+	if glink_t >= 2.0:
+		glink_t = 0.0
+		world_send({"t": "glink_poll", "n": glink_n})
+
+
+func _glink_result(m: Dictionary) -> void:
+	var st := str(m.get("st", ""))
+	if st == "wait":
+		return
+	if st == "gone":
+		glink_n = ""
+		return
+	if m.has("n") and str(m.n) != glink_n and glink_n != "":
+		return
+	glink_n = ""
+	var ui = game.ui
+	if ui == null:
+		return
+	match st:
+		"linked":
+			g_mail = str(m.get("msg", ""))
+			ui.cloud_refresh()
+			ui.confirm("GOOGLE CONECTADO ✓", "Sua conta do Sinucou agora está ligada ao Google %s.\nEm outro celular (ou na versão da Play Store), é só tocar em ENTRAR COM GOOGLE para trazer suas moedas, itens e progresso." % g_mail, "LEGAL!", func(): pass, "", Callable())
+		"login":
+			if str(m.get("code", "")) == game.my_code():
+				ui.say("Esse Google já está ligado a ESTA conta.")
+				return
+			m["ok"] = true
+			ui.cloud_recover_result(m)
+		_:
+			ui.say(str(m.get("msg", "Não deu certo, tente de novo.")))
 
 
 func send_recover(code: String, pw: String) -> void:
@@ -389,6 +445,7 @@ func _world_msg(m: Dictionary) -> void:
 			was_ok = true
 			send_eco()
 			send_csave()
+			world_send({"t": "glink_info"})
 			if game.ui != null and m.has("app"):
 				game.ui.check_update(m.app)
 			# reenvia pedidos de amizade pendentes (o servidor não guarda nada)
@@ -514,6 +571,19 @@ func _world_msg(m: Dictionary) -> void:
 		"recover_r":
 			if game.ui != null:
 				game.ui.cloud_recover_result(m)
+		"glink_url":
+			glink_n = str(m.get("n", ""))
+			glink_mode = str(m.get("mode", ""))
+			glink_age = 0.0
+			glink_t = 0.0
+			OS.shell_open(str(m.get("url", "")))
+		"glink_r":
+			_glink_result(m)
+		"glink_info":
+			g_mail = str(m.get("mail", ""))
+			g_on = bool(m.get("on", false))
+			if game.ui != null:
+				game.ui.cloud_refresh()
 		"rank":
 			if game.ui != null:
 				game.ui.rank_update(m)
@@ -530,6 +600,7 @@ func _world_msg(m: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	_world_poll(delta)
+	_glink_tick(delta)
 	if not searching or disc == null:
 		return
 	beacon_t += delta
