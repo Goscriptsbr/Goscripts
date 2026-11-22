@@ -3472,6 +3472,7 @@ func _shop_nudge(dir: int) -> void:
 
 func _process(delta: float) -> void:
 	anim_t += delta
+	_process_settings(delta)
 	if cur == "roleta" and wheel_rim != null:
 		wheel_rays.rotation += delta * 0.15
 		# ponteiro bate em cada divisão da roleta
@@ -3941,105 +3942,236 @@ func _stats_refresh() -> void:
 
 
 func _build_settings() -> void:
-	var v := mk_screen("settings", 16)
-	v.add_child(mk_lbl("AJUSTES", 60, Color("f4c542"), 12))
-	sfx_btn = mk_btn("", 420, 76, GREEN, 30)
-	sfx_btn.pressed.connect(_toggle.bind("sfx"))
-	vib_btn = mk_btn("", 420, 76, GREEN, 30)
-	vib_btn.pressed.connect(_toggle.bind("vib"))
-	hear_btn = mk_btn("", 300, 64, GREEN, 22)
-	hear_btn.pressed.connect(_toggle.bind("voice_hear"))
-	micb_btn = mk_btn("", 300, 64, GREEN, 22)
-	micb_btn.pressed.connect(_toggle.bind("voice_mic"))
-	var acc := PanelContainer.new()
-	acc.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	acc.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.09, 0.86), 24, Color(1, 1, 1, 0.22), 2, 8))
-	v.add_child(acc)
-	var av := VBoxContainer.new()
-	av.add_theme_constant_override("separation", 10)
-	acc.add_child(margin(av, 16))
-	av.add_child(mk_lbl("CONTA", 26, Color("f4c542"), 4))
+	var v := mk_screen("settings", 12)
+	v.add_child(mk_lbl("AJUSTES", 52, Color("f4c542"), 10))
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 22)
+	cols.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_child(cols)
+	# ---------- cartão CONTA
+	var lc := _set_card("CONTA", Color("5aa9ff"), "person")
+	cols.add_child(lc)
+	var lv: VBoxContainer = lc.get_meta("body")
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 14)
+	lv.add_child(top)
+	var avc := Control.new()
+	avc.custom_minimum_size = Vector2(92, 92)
+	avc.draw.connect(func():
+		AV.draw(avc, Vector2(46, 46), 40, str(game.save.get("av", "b8")), str(game.save.get("frame", "simples")), Time.get_ticks_msec() / 1000.0))
+	top.add_child(avc)
+	set_avc = avc
+	var nv := VBoxContainer.new()
+	nv.add_theme_constant_override("separation", 6)
+	nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(nv)
 	var nr := HBoxContainer.new()
-	nr.add_theme_constant_override("separation", 10)
-	av.add_child(nr)
+	nr.add_theme_constant_override("separation", 8)
+	nv.add_child(nr)
 	name_edit = LineEdit.new()
-	name_edit.placeholder_text = "Seu nome (até 15 letras)"
+	name_edit.placeholder_text = "Seu nome"
 	name_edit.max_length = 15
-	name_edit.custom_minimum_size = Vector2(300, 60)
-	name_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_edit.add_theme_font_size_override("font_size", 28)
-	name_edit.add_theme_stylebox_override("normal", sbox(Color(0.02, 0.05, 0.09, 0.95), 16, Color(1, 1, 1, 0.35), 2, 0))
-	name_edit.add_theme_stylebox_override("focus", sbox(Color(0.02, 0.05, 0.09, 0.95), 16, Color("5aa9ff"), 3, 0))
+	name_edit.custom_minimum_size = Vector2(270, 54)
+	name_edit.add_theme_font_size_override("font_size", 24)
+	name_edit.add_theme_stylebox_override("normal", sbox(Color(0.02, 0.05, 0.09, 0.95), 14, Color(1, 1, 1, 0.25), 2, 10))
+	name_edit.add_theme_stylebox_override("focus", sbox(Color(0.02, 0.05, 0.09, 0.95), 14, Color("5aa9ff"), 3, 10))
 	nr.add_child(name_edit)
-	var sv := mk_btn("SALVAR", 130, 60, GREEN, 24)
+	var sv := mk_btn("SALVAR", 120, 54, GREEN, 20)
 	sv.pressed.connect(_save_name)
 	nr.add_child(sv)
-	var gg := mk_btn("☁  CONTA GOOGLE / BACKUP", 440, 60, BLUE, 22)
+	set_code_lbl = mk_lbl("", 17, Color(1, 1, 1, 0.65), 2)
+	set_code_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	nv.add_child(set_code_lbl)
+	# status da conta Google
+	set_g_chip = PanelContainer.new()
+	lv.add_child(set_g_chip)
+	set_g_lbl = mk_lbl("", 18, Color.WHITE, 2)
+	set_g_chip.add_child(margin(set_g_lbl, 8))
+	var gg := mk_btn("G   CONTA GOOGLE E BACKUP", 520, 58, Color("4285f4"), 21)
 	gg.pressed.connect(open_cloud)
-	av.add_child(gg)
-	var tg := HBoxContainer.new()
-	tg.add_theme_constant_override("separation", 16)
-	tg.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_child(tg)
-	sfx_btn.custom_minimum_size = Vector2(300, 64)
-	vib_btn.custom_minimum_size = Vector2(300, 64)
-	sfx_btn.add_theme_font_size_override("font_size", 24)
-	vib_btn.add_theme_font_size_override("font_size", 24)
-	tg.add_child(sfx_btn)
-	tg.add_child(vib_btn)
-	tfx_btn = mk_btn("", 330, 64, GREEN, 22)
-	tfx_btn.pressed.connect(_toggle.bind("table_fx"))
-	tg.add_child(tfx_btn)
-	var tg2 := HBoxContainer.new()
-	tg2.add_theme_constant_override("separation", 16)
-	tg2.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_child(tg2)
-	tg2.add_child(hear_btn)
-	tg2.add_child(micb_btn)
-	var mt := mk_btn("TESTAR MIC", 230, 64, Color("16897f"), 20)
+	lv.add_child(gg)
+	var br := HBoxContainer.new()
+	br.add_theme_constant_override("separation", 12)
+	lv.add_child(br)
+	var tub := mk_btn("?  COMO JOGAR", 254, 56, Color("1fa85a"), 20)
+	tub.pressed.connect(open_tutorial_menu)
+	br.add_child(tub)
+	var rpb := mk_btn("●  MEUS REPLAYS", 254, 56, Color("b8323a"), 20)
+	rpb.pressed.connect(open_replays)
+	br.add_child(rpb)
+	# ---------- cartão SOM E JOGO
+	var rc := _set_card("SOM E JOGO", Color("3ddc84"), "gear")
+	cols.add_child(rc)
+	var rv: VBoxContainer = rc.get_meta("body")
+	sfx_btn = _set_row(rv, "sfx", "Sons do jogo", "Tacadas, cartas e efeitos", "snd")
+	vib_btn = _set_row(rv, "vib", "Vibração", "Treme ao acertar e ganhar", "vib")
+	tfx_btn = _set_row(rv, "table_fx", "Animação da mesa", "Efeitos das mesas animadas", "fx")
+	hear_btn = _set_row(rv, "voice_hear", "Ouvir a voz dos outros", "Chat de voz nas partidas", "ear")
+	var mrow := HBoxContainer.new()
+	mrow.add_theme_constant_override("separation", 8)
+	rv.add_child(mrow)
+	micb_btn = _set_row(mrow, "voice_mic", "Meu microfone", "Falar com a mesa", "mic")
+	micb_btn.custom_minimum_size = Vector2(390, 60)
+	var mt := mk_btn("TESTAR", 130, 52, Color("16897f"), 18)
+	mt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	mt.button_down.connect(func():
 		if game.chat.mic_test_start():
-			mt.text = "GRAVANDO..."
+			mt.text = "FALE..."
 		else:
 			say("Permita o MICROFONE para o Sinucou e tente de novo."))
 	mt.button_up.connect(func():
 		var pk: float = game.chat.mic_test_stop()
-		mt.text = "TESTAR MIC"
+		mt.text = "TESTAR"
 		if pk < 0.0:
 			return
 		if pk < 0.003:
 			say("O microfone não captou som. Confira a permissão de MICROFONE do Sinucou nas configurações do Android.")
 		else:
 			say("Microfone OK! Você deve ouvir sua voz agora."))
-	tg2.add_child(mt)
-	var brow := HBoxContainer.new()
-	brow.add_theme_constant_override("separation", 16)
-	brow.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_child(brow)
-	var tub := mk_btn("? COMO JOGAR", 260, 64, Color("1fa85a"), 24)
-	tub.pressed.connect(open_tutorial_menu)
-	brow.add_child(tub)
-	var rpb := mk_btn("● MEUS REPLAYS", 300, 64, Color("b8323a"), 24)
-	rpb.pressed.connect(open_replays)
-	brow.add_child(rpb)
-	var back := mk_btn("VOLTAR", 240, 64, GRAY, 28)
+	mrow.add_child(mt)
+	# ---------- rodapé
+	var back := mk_btn("VOLTAR", 260, 60, GRAY, 26)
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(show_screen.bind("main"))
-	brow.add_child(back)
+	v.add_child(back)
 	var lrow := HBoxContainer.new()
-	lrow.add_theme_constant_override("separation", 24)
+	lrow.add_theme_constant_override("separation", 26)
 	lrow.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(lrow)
 	for lk in [["Termos de Uso", "https://goscripts.com.br/sinucou/termos/"], ["Política de Privacidade", "https://goscripts.com.br/sinucou/privacidade/"], ["Excluir conta", "https://goscripts.com.br/sinucou/excluir-conta/"]]:
 		var lb := LinkButton.new()
 		lb.text = str(lk[0])
-		lb.underline = LinkButton.UNDERLINE_MODE_ALWAYS
-		lb.add_theme_font_size_override("font_size", 18)
-		lb.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
+		lb.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
+		lb.add_theme_font_size_override("font_size", 17)
+		lb.add_theme_color_override("font_color", Color(1, 1, 1, 0.5))
 		lb.add_theme_color_override("font_hover_color", Color("f4c542"))
 		var url := str(lk[1])
 		lb.pressed.connect(func(): OS.shell_open(url))
 		lrow.add_child(lb)
 	_settings_refresh()
+
+
+var set_avc: Control
+var set_code_lbl: Label
+var set_g_chip: PanelContainer
+var set_g_lbl: Label
+
+
+# cartão com título e ícone
+func _set_card(title: String, col: Color, icon: String) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.custom_minimum_size = Vector2(580, 430)
+	p.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.045, 0.08, 0.93), 26, Color(col.r, col.g, col.b, 0.45), 2, 18))
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 12)
+	p.add_child(vb)
+	var hd := Control.new()
+	hd.custom_minimum_size = Vector2(0, 40)
+	hd.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		hd.draw_circle(Vector2(20, 20), 19, Color(col.r, col.g, col.b, 0.18))
+		_glyph(hd, icon, Vector2(20, 20), col, 0.75)
+		hd.draw_string(f, Vector2(50, 29), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, col)
+		hd.draw_line(Vector2(50 + f.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x + 14, 21), Vector2(hd.size.x, 21), Color(col.r, col.g, col.b, 0.25), 2.0))
+	vb.add_child(hd)
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 12)
+	vb.add_child(body)
+	p.set_meta("body", body)
+	return p
+
+
+# linha com ícone, texto e chave liga/desliga (a linha toda é clicável)
+func _set_row(parent: Container, key: String, title: String, sub: String, icon: String) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(540, 60)
+	b.add_theme_stylebox_override("normal", sbox(Color(1, 1, 1, 0.03), 14))
+	b.add_theme_stylebox_override("hover", sbox(Color(1, 1, 1, 0.07), 14))
+	b.add_theme_stylebox_override("pressed", sbox(Color(1, 1, 1, 0.1), 14))
+	b.set_meta("k", key)
+	b.set_meta("anim", 1.0 if bool(game.save.get(key, true)) else 0.0)
+	b.pressed.connect(func():
+		_toggle(key)
+		game.play("click", 0.6))
+	var cv := Control.new()
+	cv.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(cv)
+	cv.draw.connect(func():
+		var f: Font = ThemeDB.fallback_font
+		var on := bool(game.save.get(key, true))
+		var t: float = b.get_meta("anim")
+		var w := cv.size.x
+		var h := cv.size.y
+		var ic := Color("3ddc84") if on else Color(1, 1, 1, 0.35)
+		_set_icon(cv, icon, Vector2(30, h / 2), ic, on)
+		cv.draw_string(f, Vector2(62, h / 2 - 3), title, HORIZONTAL_ALIGNMENT_LEFT, w - 150, 20, Color.WHITE if on else Color(1, 1, 1, 0.6))
+		cv.draw_string(f, Vector2(62, h / 2 + 18), sub, HORIZONTAL_ALIGNMENT_LEFT, w - 150, 14, Color(1, 1, 1, 0.42))
+		# chave
+		var sw := Rect2(w - 82, h / 2 - 15, 62, 30)
+		var track := Color(0.25, 0.28, 0.34).lerp(Color("1fa85a"), t)
+		cv.draw_style_box(sbox(track, 15), sw)
+		var kx := lerpf(sw.position.x + 15, sw.end.x - 15, t)
+		cv.draw_circle(Vector2(kx, sw.get_center().y + 1.5), 12, Color(0, 0, 0, 0.25))
+		cv.draw_circle(Vector2(kx, sw.get_center().y), 12, Color.WHITE))
+	b.set_meta("cv", cv)
+	parent.add_child(b)
+	set_rows.append(b)
+	return b
+
+
+var set_rows: Array = []
+
+
+func _set_icon(c: Control, kind: String, p: Vector2, col: Color, on: bool) -> void:
+	match kind:
+		"snd":
+			c.draw_colored_polygon(PackedVector2Array([p + Vector2(-10, -5), p + Vector2(-4, -5), p + Vector2(4, -12), p + Vector2(4, 12), p + Vector2(-4, 5), p + Vector2(-10, 5)]), col)
+			if on:
+				c.draw_arc(p + Vector2(6, 0), 7, -0.9, 0.9, 10, col, 2.5)
+				c.draw_arc(p + Vector2(6, 0), 13, -0.9, 0.9, 12, col, 2.5)
+			else:
+				c.draw_line(p + Vector2(8, -6), p + Vector2(18, 6), col, 2.5)
+				c.draw_line(p + Vector2(18, -6), p + Vector2(8, 6), col, 2.5)
+		"vib":
+			c.draw_style_box(sbox(Color(0, 0, 0, 0), 4, col, 2), Rect2(p + Vector2(-6, -12), Vector2(12, 24)))
+			if on:
+				for sd in [-1, 1]:
+					c.draw_line(p + Vector2(11 * sd, -6), p + Vector2(14 * sd, -2), col, 2.0)
+					c.draw_line(p + Vector2(14 * sd, -2), p + Vector2(11 * sd, 2), col, 2.0)
+					c.draw_line(p + Vector2(11 * sd, 2), p + Vector2(14 * sd, 6), col, 2.0)
+		"fx":
+			for k in 4:
+				var a := k * PI / 2 + PI / 4
+				c.draw_line(p, p + Vector2.from_angle(a) * 12, col, 2.5)
+			c.draw_circle(p, 5, col)
+			c.draw_circle(p + Vector2(11, -10), 2.5, col)
+		"ear":
+			c.draw_arc(p + Vector2(0, -2), 9, PI, TAU + 0.6, 16, col, 3.0)
+			c.draw_line(p + Vector2(7, 3), p + Vector2(1, 12), col, 3.0)
+			c.draw_arc(p + Vector2(0, -2), 4, PI, TAU, 10, col, 2.0)
+		"mic":
+			c.draw_style_box(sbox(col, 6), Rect2(p + Vector2(-5, -13), Vector2(10, 17)))
+			c.draw_arc(p + Vector2(0, -2), 9, 0.2, PI - 0.2, 12, col, 2.5)
+			c.draw_line(p + Vector2(0, 7), p + Vector2(0, 12), col, 2.5)
+			if not on:
+				c.draw_line(p + Vector2(-11, -12), p + Vector2(11, 12), Color("ff6a4a"), 2.5)
+
+
+func _process_settings(delta: float) -> void:
+	if not screens.has("settings") or not screens["settings"].visible:
+		return
+	for b in set_rows:
+		if not is_instance_valid(b):
+			continue
+		var want := 1.0 if bool(game.save.get(str(b.get_meta("k")), true)) else 0.0
+		var cur: float = b.get_meta("anim")
+		if absf(cur - want) > 0.001:
+			b.set_meta("anim", move_toward(cur, want, delta * 6.0))
+			(b.get_meta("cv") as Control).queue_redraw()
+	if set_avc != null and is_instance_valid(set_avc):
+		set_avc.queue_redraw()
 
 
 # ---------------------------------------------------------------- tutorial
@@ -4112,6 +4244,7 @@ func open_cloud() -> void:
 
 
 func cloud_refresh() -> void:
+	_settings_refresh()
 	if cloud_box == null or not is_instance_valid(cloud_box) or not has_modal():
 		return
 	while cloud_box.get_child_count() > 1:
@@ -4334,18 +4467,20 @@ func _toggle(k: String) -> void:
 
 
 func _settings_refresh() -> void:
-	if name_edit != null:
+	if name_edit != null and not name_edit.has_focus():
 		name_edit.text = str(game.save.get("name", ""))
-	sfx_btn.text = "SOM: " + ("LIGADO" if game.save.sfx else "DESLIGADO")
-	vib_btn.text = "VIBRAÇÃO: " + ("LIGADA" if game.save.vib else "DESLIGADA")
-	hear_btn.text = "OUVIR VOZ: " + ("SIM" if game.save.get("voice_hear", true) else "NÃO")
-	micb_btn.text = "MEU MICROFONE: " + ("SIM" if game.save.get("voice_mic", true) else "NÃO")
-	tfx_btn.text = "ANIMAÇÃO DA MESA: " + ("SIM" if game.save.get("table_fx", true) else "NÃO")
-	for pair in [[tfx_btn, game.save.get("table_fx", true)], [sfx_btn, game.save.sfx], [vib_btn, game.save.vib], [hear_btn, game.save.get("voice_hear", true)], [micb_btn, game.save.get("voice_mic", true)]]:
-		var b: Button = pair[0]
-		var col: Color = GREEN if pair[1] else GRAY
-		b.add_theme_stylebox_override("normal", sbox(col, 20, col.lightened(0.35), 3, 8))
-		b.add_theme_stylebox_override("hover", sbox(col.lightened(0.12), 20, Color.WHITE, 3, 8))
+	for b in set_rows:
+		if is_instance_valid(b):
+			(b.get_meta("cv") as Control).queue_redraw()
+	if set_code_lbl != null:
+		set_code_lbl.text = "Seu código:  " + game.my_code()
+	if set_g_chip != null:
+		var gm: String = game.net.g_mail if game.net != null else ""
+		var ok := gm != ""
+		var col := Color("1fa85a") if ok else Color("c98a12")
+		set_g_chip.add_theme_stylebox_override("panel", sbox(Color(col.r, col.g, col.b, 0.16), 14, Color(col.r, col.g, col.b, 0.6), 2))
+		set_g_lbl.text = ("✓  Conta Google conectada:  " + gm) if ok else "⚠  Google não conectado — conecte e não perca nada"
+		set_g_lbl.add_theme_color_override("font_color", Color("7dffa8") if ok else Color("ffd27a"))
 
 
 # ---------------------------------------------------------------- pausa / fim
@@ -5468,6 +5603,7 @@ func _build_ranking() -> void:
 	rk_box.add_theme_constant_override("separation", 6)
 	rk_box.custom_minimum_size = Vector2(620, 0)
 	sc.add_child(rk_box)
+	rv.add_child(mk_lbl("Toque num jogador para ver o perfil e pedir amizade", 15, Color(1, 1, 1, 0.5), 2))
 	var back := mk_btn("◀  VOLTAR", 220, 54, GRAY, 24)
 	back.pressed.connect(show_screen.bind("main"))
 	v.add_child(back)
@@ -5575,6 +5711,25 @@ func _rank_render() -> void:
 			_div_badge(dc, Vector2(452, 27), 17, dv)
 			dc.draw_string(f, Vector2(476, 33), str(game.DIVS[dv].name).left(4), HORIZONTAL_ALIGNMENT_LEFT, 60, 13, game.DIVS[dv].col)
 			dc.draw_string(f, Vector2(500, 35), str(int(e.pts)), HORIZONTAL_ALIGNMENT_RIGHT, 100, 22, Color("ffe066")))
+		# tocar no jogador abre o perfil (estatísticas + pedir amizade); arrastar continua rolando a lista
+		var pcode := str(e.code)
+		row.mouse_filter = Control.MOUSE_FILTER_PASS
+		dc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		row.gui_input.connect(func(ev: InputEvent):
+			if ev is InputEventMouseButton and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+				var mb := ev as InputEventMouseButton
+				if mb.pressed:
+					row.set_meta("tp", mb.global_position)
+				elif row.has_meta("tp"):
+					var d: float = (mb.global_position - (row.get_meta("tp") as Vector2)).length()
+					row.remove_meta("tp")
+					if d < 16.0:
+						game.play("click", 0.6)
+						if mine:
+							show_screen("perfil")
+						else:
+							open_player(pcode, nm))
 
 
 
