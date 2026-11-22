@@ -295,6 +295,7 @@ function cleanOffer(o) {
 }
 async function tradeExec(t) {
   t.stage = "exec";
+  tradeSend(t); // os dois celulares mostram "enviando itens..."
   const codes = [t.a, t.b].sort();
   await withLock(codes[0], () => withLock(codes[1], async () => {
     const ra = await getSave(t.a), rb = await getSave(t.b);

@@ -191,19 +191,157 @@ func _done(m: Dictionary) -> void:
 	game.net.send_hello()
 	game.net.send_csave()
 	ui.refresh_top()
+	var gc := int(st.get("theirs", {}).get("coins", 0))
+	await _transfer_anim(give, got, my_coins, gc)
 	close()
-	game.play_victory()
 	var names: Array = []
 	for it in got:
 		names.append(str(info(str(it)).get("d", {}).get("name", it)))
-	var gc := int(st.get("theirs", {}).get("coins", 0))
 	if gc > 0:
 		names.append("%s moedas" % fmt(gc))
 	var msg := "Você recebeu: " + (", ".join(names) if not names.is_empty() else "nada") + "\nOs itens novos já estão no seu inventário."
 	ui.confirm("TROCA FEITA! ✓", msg, "LEGAL!", func(): pass, "", Callable())
 
 
+# ---------------------------------------------------------------- transição: enviando itens
+var _exec_ov: Control
+var _exec_lbl: Label
+var _exec_sub: Label
+var _exec_t0 := 0
+
+
+func _show_exec() -> void:
+	if not is_open() or (_exec_ov != null and is_instance_valid(_exec_ov)):
+		return
+	_exec_t0 = Time.get_ticks_msec()
+	_exec_ov = Control.new()
+	_exec_ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_exec_ov.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(_exec_ov)
+	var dimr := ColorRect.new()
+	dimr.color = Color(0, 0, 0, 0.0)
+	dimr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_exec_ov.add_child(dimr)
+	dimr.create_tween().tween_property(dimr, "color:a", 0.72, 0.3)
+	var spin := Control.new()
+	spin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	spin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_exec_ov.add_child(spin)
+	spin.draw.connect(func():
+		var t := Time.get_ticks_msec() / 1000.0
+		var c := Vector2(spin.size.x / 2, spin.size.y * 0.36)
+		spin.draw_circle(c, 62 + 4 * sin(t * 3), Color(1, 0.8, 0.2, 0.1))
+		spin.draw_circle(c, 52, Color("2a1c04"))
+		spin.draw_arc(c, 52, 0, TAU, 48, Color(1, 0.83, 0.3, 0.35), 3.0)
+		for k in 2:
+			var a0 := t * 3.2 + k * PI
+			spin.draw_arc(c, 38, a0, a0 + 2.0, 20, Color("ffe08a"), 6.0)
+			var tip := c + Vector2.from_angle(a0 + 2.0) * 38
+			var nrm := Vector2.from_angle(a0 + 2.0)
+			var dir := Vector2.from_angle(a0 + 2.0 + PI / 2)
+			spin.draw_colored_polygon(PackedVector2Array([tip + dir * 11, tip + nrm * 9, tip - nrm * 9]), Color("ffe08a")))
+	_cards.append(spin)
+	var vb := VBoxContainer.new()
+	vb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_exec_ov.add_child(vb)
+	var sp := Control.new()
+	sp.custom_minimum_size = Vector2(0, 150)
+	vb.add_child(sp)
+	_exec_lbl = ui.mk_lbl("ENVIANDO ITENS...", 38, Color("ffd34a"), 8)
+	vb.add_child(_exec_lbl)
+	_exec_sub = ui.mk_lbl("Os dois confirmaram. Conferindo as duas contas com segurança.", 19, Color(1, 1, 1, 0.75), 3)
+	vb.add_child(_exec_sub)
+
+
+func _fly_card(id: String, coins: int, from: Vector2, to: Vector2, delay: float) -> void:
+	var box: Control
+	if id != "":
+		box = preview(id, 130, 96)
+	else:
+		box = Control.new()
+		box.custom_minimum_size = Vector2(130, 96)
+		box.size = Vector2(130, 96)
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var cv := Control.new()
+		cv.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(cv)
+		cv.draw.connect(func():
+			var f: Font = ThemeDB.fallback_font
+			cv.draw_style_box(ui.sbox(Color(0.16, 0.12, 0.02, 0.95), 12, Color("ffd34a"), 2), Rect2(Vector2.ZERO, Vector2(130, 96)))
+			for k in 3:
+				var c := Vector2(48 + k * 14, 44 - k * 6)
+				cv.draw_circle(c, 18, Color("b8860b"))
+				cv.draw_circle(c, 15, Color("ffd34a"))
+			cv.draw_string(f, Vector2(0, 86), fmt(coins), HORIZONTAL_ALIGNMENT_CENTER, 130, 18, Color.WHITE))
+	box.position = from - box.size / 2
+	box.pivot_offset = box.size / 2
+	box.modulate.a = 0.0
+	_exec_ov.add_child(box)
+	var tw := box.create_tween()
+	tw.tween_interval(delay)
+	tw.tween_property(box, "modulate:a", 1.0, 0.2)
+	var mid := (from + to) / 2 + Vector2(0, -90 if to.x > from.x else 70)
+	tw.tween_method(func(k: float):
+		var a := from.lerp(mid, k)
+		var b := mid.lerp(to, k)
+		box.position = a.lerp(b, k) - box.size / 2
+		box.scale = Vector2.ONE * (1.0 + 0.25 * sin(k * PI))
+		box.rotation = 0.25 * sin(k * TAU), 0.0, 1.0, 1.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(box, "scale", Vector2.ONE * 1.15, 0.12)
+	tw.tween_property(box, "scale", Vector2.ONE, 0.12)
+
+
+func _transfer_anim(give: Array, got: Array, gave_coins: int, got_coins: int) -> void:
+	if not is_open():
+		return
+	_show_exec()
+	# deixa o "enviando" na tela pelo menos um pouquinho
+	var el := (Time.get_ticks_msec() - _exec_t0) / 1000.0
+	if el < 1.2:
+		await get_tree().create_timer(1.2 - el).timeout
+	if not is_open():
+		return
+	var sz := root.size
+	var lx := sz.x * 0.22
+	var rx := sz.x * 0.78
+	var mine: Array = give.duplicate()
+	if gave_coins > 0:
+		mine.append("$")
+	var theirs: Array = got.duplicate()
+	if got_coins > 0:
+		theirs.append("$")
+	# cada lado numa fileira (os seus em cima, os dele embaixo), espaçados
+	var i := 0
+	for it in mine:
+		var off := (i % 4 - (mini(mine.size(), 4) - 1) / 2.0) * 145.0
+		var y := sz.y * 0.56 + int(i / 4) * 30.0
+		_fly_card("" if str(it) == "$" else str(it), gave_coins, Vector2(lx + off, y), Vector2(rx + off, y), i * 0.12)
+		i += 1
+	var j := 0
+	for it in theirs:
+		var off2 := (j % 4 - (mini(theirs.size(), 4) - 1) / 2.0) * 145.0
+		var y2 := sz.y * 0.80 + int(j / 4) * 30.0
+		_fly_card("" if str(it) == "$" else str(it), got_coins, Vector2(rx + off2, y2), Vector2(lx + off2, y2), 0.06 + j * 0.12)
+		j += 1
+	await get_tree().create_timer(1.5 + 0.12 * maxi(i, j)).timeout
+	if not is_open():
+		return
+	_exec_lbl.text = "TROCA CONCLUÍDA! ✓"
+	_exec_lbl.add_theme_color_override("font_color", Color("3ddc84"))
+	_exec_sub.text = "Os itens já estão no inventário de vocês dois."
+	_exec_lbl.pivot_offset = _exec_lbl.size / 2
+	var tw := _exec_lbl.create_tween()
+	tw.tween_property(_exec_lbl, "scale", Vector2.ONE * 1.25, 0.15)
+	tw.tween_property(_exec_lbl, "scale", Vector2.ONE, 0.2)
+	game.play_victory()
+	await get_tree().create_timer(1.6).timeout
+
+
 func close() -> void:
+	_exec_ov = null
 	if root != null and is_instance_valid(root):
 		root.queue_free()
 	root = null
@@ -670,6 +808,8 @@ func _coin_card(n: int) -> Control:
 func _refresh() -> void:
 	if not is_open() or waiting or _my_list == null or not is_instance_valid(_my_list):
 		return
+	if str(st.get("stage", "")) == "exec":
+		_show_exec()
 	var th: Dictionary = st.get("theirs", {})
 	var t_items: Array = th.get("items", [])
 	var t_coins := int(th.get("coins", 0))
