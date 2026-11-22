@@ -1,8 +1,8 @@
 extends CanvasLayer
 # Tela de NOVIDADES que aparece uma vez depois de atualizar (marca em save.news_seen).
-# Esta: conectar a conta Google + negociação entre amigos.
+# Esta: conectar a conta Google + tacos do mês mais fortes + negociação entre amigos.
 
-const NEWS_ID := "google1"
+const NEWS_ID := "google2"
 const AV = preload("res://avatars.gd")
 
 var game: Node
@@ -59,8 +59,9 @@ func show_news() -> void:
 	card.add_child(_art)
 	_art.draw.connect(_draw_art)
 	# itens de verdade no cartão da negociação
-	_item(_art, "e_zeus", Vector2(660, 178))
-	_item(_art, "aurora_m", Vector2(930, 178))
+	_item(_art, str(game.month_cue().get("id", "m_aurora")), Vector2(507, 228))
+	_item(_art, "e_zeus", Vector2(812, 240), 0.62)
+	_item(_art, "aurora_m", Vector2(1000, 240), 0.62)
 	var vb := VBoxContainer.new()
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(vb)
@@ -72,27 +73,27 @@ func show_news() -> void:
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", 0)
 	vb.add_child(row)
-	var lbox := CenterContainer.new()
-	lbox.custom_minimum_size = Vector2(600, 70)
-	lbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(lbox)
 	var connected: bool = game.net != null and str(game.net.g_mail) != ""
-	_gbtn = ui.mk_btn("✓  GOOGLE JÁ CONECTADO" if connected else "G   CONECTAR AGORA", 400, 64, Color("1b8f4c") if connected else Color("4285f4"), 23)
+	_gbtn = ui.mk_btn("✓  JÁ CONECTADO" if connected else "G   CONECTAR AGORA", 330, 62, Color("1b8f4c") if connected else Color("4285f4"), 21)
 	_gbtn.disabled = connected
 	_gbtn.pressed.connect(func():
 		close()
 		game.net.send_glink("link")
 		ui.say("Abrindo o Google... escolha sua conta e depois volte para o jogo."))
-	lbox.add_child(_gbtn)
-	var rbox := CenterContainer.new()
-	rbox.custom_minimum_size = Vector2(600, 70)
-	rbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(rbox)
-	var bf: Button = ui.mk_btn("VER MEUS AMIGOS", 400, 64, Color("d68a10"), 23)
+	var mb: Button = ui.mk_btn("VER O TACO DO MÊS", 330, 62, Color("b8323a"), 21)
+	mb.pressed.connect(func():
+		close()
+		ui.show_screen("main"))
+	var bf: Button = ui.mk_btn("VER MEUS AMIGOS", 330, 62, Color("d68a10"), 21)
 	bf.pressed.connect(func():
 		close()
 		ui.show_screen("amigos"))
-	rbox.add_child(bf)
+	for bt in [_gbtn, mb, bf]:
+		var bx := CenterContainer.new()
+		bx.custom_minimum_size = Vector2(400, 70)
+		bx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(bx)
+		bx.add_child(bt)
 	var okc := CenterContainer.new()
 	okc.custom_minimum_size = Vector2(0, 100)
 	okc.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -120,10 +121,11 @@ func _process(d: float) -> void:
 			(n as CanvasItem).queue_redraw()
 
 
-func _item(parent: Control, id: String, pos: Vector2) -> void:
+func _item(parent: Control, id: String, pos: Vector2, k: float = 1.0) -> void:
 	var box := Control.new()
 	box.position = pos
 	box.size = Vector2(184, 110)
+	box.scale = Vector2(k, k)
 	box.clip_contents = true
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(box)
@@ -164,7 +166,7 @@ func _bullet(c: Control, f: Font, p: Vector2, txt: String, col: Color) -> void:
 	c.draw_circle(p + Vector2(8, -6), 9, Color(col.r, col.g, col.b, 0.25))
 	c.draw_line(p + Vector2(3, -6), p + Vector2(7, -2), col, 2.5)
 	c.draw_line(p + Vector2(7, -2), p + Vector2(13, -11), col, 2.5)
-	c.draw_string(f, p + Vector2(26, 0), txt, HORIZONTAL_ALIGNMENT_LEFT, 500, 19, Color(1, 1, 1, 0.9))
+	c.draw_string(f, p + Vector2(26, 0), txt, HORIZONTAL_ALIGNMENT_LEFT, 310, 17, Color(1, 1, 1, 0.9))
 
 
 func _draw_art() -> void:
@@ -185,36 +187,54 @@ func _draw_art() -> void:
 	c.draw_string_outline(f, Vector2(-500, 0), "ATUALIZAÇÃO DO SINUCOU", HORIZONTAL_ALIGNMENT_CENTER, 1000, 40, 10, Color(0, 0, 0, 0.7))
 	c.draw_string(f, Vector2(-500, 0), "ATUALIZAÇÃO DO SINUCOU", HORIZONTAL_ALIGNMENT_CENTER, 1000, 40, Color("ffd34a"))
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	# ---- cartão Google (esquerda)
-	var lr := Rect2(30, 128, 560, 418)
-	c.draw_style_box(ui.sbox(Color(0.04, 0.08, 0.16, 0.95), 24, Color(0.26, 0.52, 0.96, 0.7), 3), lr)
-	c.draw_circle(Vector2(100, 200), 44 + 3 * sin(t * 2.5), Color(1, 1, 1, 0.08))
-	c.draw_circle(Vector2(100, 200), 40, Color.WHITE)
-	_gee(c, Vector2(100, 200), 22)
-	c.draw_string(f, Vector2(160, 190), "CONECTE SUA", HORIZONTAL_ALIGNMENT_LEFT, 400, 26, Color("8fc1ff"))
-	c.draw_string(f, Vector2(160, 224), "CONTA GOOGLE", HORIZONTAL_ALIGNMENT_LEFT, 400, 30, Color.WHITE)
+	var cw := 370.0
+	var xs := [30.0, 415.0, 800.0]
+	var cy := 128.0
+	var chh := 418.0
+	# ---- 1) Google
+	var x0: float = xs[0]
+	c.draw_style_box(ui.sbox(Color(0.04, 0.08, 0.16, 0.95), 24, Color(0.26, 0.52, 0.96, 0.7), 3), Rect2(x0, cy, cw, chh))
+	var gc := Vector2(x0 + cw / 2, cy + 70)
+	c.draw_circle(gc, 44 + 3 * sin(t * 2.5), Color(1, 1, 1, 0.08))
+	c.draw_circle(gc, 40, Color.WHITE)
+	_gee(c, gc, 22)
+	c.draw_string(f, Vector2(x0, cy + 148), "CONECTE SUA", HORIZONTAL_ALIGNMENT_CENTER, cw, 22, Color("8fc1ff"))
+	c.draw_string(f, Vector2(x0, cy + 178), "CONTA GOOGLE", HORIZONTAL_ALIGNMENT_CENTER, cw, 28, Color.WHITE)
 	var gb := Color("8fc1ff")
-	_bullet(c, f, Vector2(60, 300), "Nunca perca suas moedas e itens", gb)
-	_bullet(c, f, Vector2(60, 340), "Trocou de celular? Entre com o Google", gb)
-	_bullet(c, f, Vector2(60, 380), "e tudo volta: nível, tacos, mesas...", gb)
-	_bullet(c, f, Vector2(60, 420), "O Sinucou vai chegar na Play Store!", gb)
-	c.draw_string(f, Vector2(60, 456), "Conecte agora para levar sua conta pra lá.", HORIZONTAL_ALIGNMENT_LEFT, 520, 16, Color(1, 1, 1, 0.55))
-	# ---- cartão Negociação (direita)
-	var rr := Rect2(610, 128, 560, 418)
-	c.draw_style_box(ui.sbox(Color(0.1, 0.07, 0.02, 0.95), 24, Color(0.96, 0.77, 0.26, 0.7), 3), rr)
-	c.draw_string(f, Vector2(610, 164), "NEGOCIE COM OS AMIGOS", HORIZONTAL_ALIGNMENT_CENTER, 560, 28, Color("ffd34a"))
-	for r in [Rect2(654, 172, 196, 122), Rect2(924, 172, 196, 122)]:
-		c.draw_style_box(ui.sbox(Color(0.03, 0.06, 0.1, 0.9), 14, Color(1, 0.83, 0.3, 0.5), 2), r)
-	var mc := Vector2(887, 233)
-	c.draw_circle(mc, 30, Color("2a1c04"))
-	c.draw_arc(mc, 30, 0, TAU, 32, Color("ffd34a"), 3.0)
+	_bullet(c, f, Vector2(x0 + 26, cy + 222), "Nunca perca moedas e itens", gb)
+	_bullet(c, f, Vector2(x0 + 26, cy + 256), "Trocou de celular? É só entrar", gb)
+	_bullet(c, f, Vector2(x0 + 26, cy + 290), "Leve sua conta pra Play Store", gb)
+	c.draw_string(f, Vector2(x0, cy + 324), "O Sinucou vai chegar na Play Store!", HORIZONTAL_ALIGNMENT_CENTER, cw, 15, Color(1, 1, 1, 0.55))
+	# ---- 2) Tacos do mês
+	var x1: float = xs[1]
+	c.draw_style_box(ui.sbox(Color(0.12, 0.03, 0.05, 0.95), 24, Color(1, 0.35, 0.4, 0.7), 3), Rect2(x1, cy, cw, chh))
+	c.draw_string(f, Vector2(x1, cy + 36), "TACOS DO MÊS", HORIZONTAL_ALIGNMENT_CENTER, cw, 28, Color("ff8a8a"))
+	c.draw_string(f, Vector2(x1, cy + 64), "MAIS FORTES!", HORIZONTAL_ALIGNMENT_CENTER, cw, 22, Color.WHITE)
+	c.draw_style_box(ui.sbox(Color(0.03, 0.03, 0.06, 0.9), 14, Color(1, 0.5, 0.5, 0.5), 2), Rect2(x1 + 86, cy + 92, 198, 116))
+	var pct := 100 + int(10 * (0.5 + 0.5 * sin(t * 2.0)))
+	c.draw_string(f, Vector2(x1 + 86, cy + 116), "%d%%" % pct, HORIZONTAL_ALIGNMENT_RIGHT, 190, 18, Color("ffd34a"))
+	var rb := Color("ff9a9a")
+	_bullet(c, f, Vector2(x1 + 26, cy + 222), "Todos com 100% ou mais", rb)
+	_bullet(c, f, Vector2(x1 + 26, cy + 256), "Alguns chegam a 110%", rb)
+	_bullet(c, f, Vector2(x1 + 26, cy + 290), "Um taco novo todo mês", rb)
+	c.draw_string(f, Vector2(x1, cy + 324), "Corra: a oferta do mês é por tempo limitado.", HORIZONTAL_ALIGNMENT_CENTER, cw, 15, Color(1, 1, 1, 0.55))
+	# ---- 3) Negociação
+	var x2: float = xs[2]
+	c.draw_style_box(ui.sbox(Color(0.1, 0.07, 0.02, 0.95), 24, Color(0.96, 0.77, 0.26, 0.7), 3), Rect2(x2, cy, cw, chh))
+	c.draw_string(f, Vector2(x2, cy + 36), "NEGOCIE COM", HORIZONTAL_ALIGNMENT_CENTER, cw, 22, Color("ffd34a"))
+	c.draw_string(f, Vector2(x2, cy + 66), "OS AMIGOS", HORIZONTAL_ALIGNMENT_CENTER, cw, 28, Color.WHITE)
+	for r in [Rect2(x2 + 8, cy + 108, 122, 76), Rect2(x2 + 196, cy + 108, 122, 76)]:
+		c.draw_style_box(ui.sbox(Color(0.03, 0.06, 0.1, 0.9), 12, Color(1, 0.83, 0.3, 0.5), 2), r)
+	var mc := Vector2(x2 + 163, cy + 146)
+	c.draw_circle(mc, 24, Color("2a1c04"))
+	c.draw_arc(mc, 24, 0, TAU, 32, Color("ffd34a"), 3.0)
 	for k in 2:
-		var y := mc.y - 8 + k * 16
+		var y := mc.y - 6 + k * 12
 		var dx := 1.0 if k == 0 else -1.0
-		c.draw_line(Vector2(mc.x - 14 * dx, y), Vector2(mc.x + 12 * dx, y), Color("ffe08a"), 4.0)
-		c.draw_colored_polygon(PackedVector2Array([Vector2(mc.x + 18 * dx, y), Vector2(mc.x + 10 * dx, y - 6), Vector2(mc.x + 10 * dx, y + 6)]), Color("ffe08a"))
+		c.draw_line(Vector2(mc.x - 11 * dx, y), Vector2(mc.x + 9 * dx, y), Color("ffe08a"), 3.0)
+		c.draw_colored_polygon(PackedVector2Array([Vector2(mc.x + 14 * dx, y), Vector2(mc.x + 8 * dx, y - 5), Vector2(mc.x + 8 * dx, y + 5)]), Color("ffe08a"))
 	var yb := Color("ffd34a")
-	_bullet(c, f, Vector2(640, 340), "Troque tacos, mesas, bordas, efeitos", yb)
-	_bullet(c, f, Vector2(640, 380), "e moedas com quem é seu amigo", yb)
-	_bullet(c, f, Vector2(640, 420), "Em AMIGOS, toque no botão NEGOCIAR", yb)
-	c.draw_string(f, Vector2(640, 456), "Os dois confirmam e a troca é segura.", HORIZONTAL_ALIGNMENT_LEFT, 520, 16, Color(1, 1, 1, 0.55))
+	_bullet(c, f, Vector2(x2 + 26, cy + 222), "Tacos, mesas, bordas e moedas", yb)
+	_bullet(c, f, Vector2(x2 + 26, cy + 256), "Em AMIGOS, toque em NEGOCIAR", yb)
+	_bullet(c, f, Vector2(x2 + 26, cy + 290), "Os dois confirmam: é seguro", yb)
+	c.draw_string(f, Vector2(x2, cy + 324), "Itens voando de um lado pro outro!", HORIZONTAL_ALIGNMENT_CENTER, cw, 15, Color(1, 1, 1, 0.55))
