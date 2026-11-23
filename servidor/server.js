@@ -30,11 +30,14 @@ const players = new Map(); // code -> {name, seen, wk, pts, prof}
 const playersDir = players;
 const saves = new Map(); // (modo arquivo) code -> {tok, pass, save, at, gsub, gmail}
 const gIndex = new Map(); // conta Google (sub) -> código do jogador
+let reports = []; // denúncias de jogadores (o dono vê dentro do jogo)
+const OWNER_CODE = "LP34RB";
 try {
   const d = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
   for (const [k, v] of d.players || []) players.set(k, v);
   for (const [k, v] of d.mailbox || []) mailbox.set(k, v);
   for (const [k, v] of d.saves || []) { saves.set(k, v); if (v && v.gsub) gIndex.set(v.gsub, k); }
+  if (Array.isArray(d.reports)) reports = d.reports;
   console.log("cadastro carregado: " + players.size + " jogadores");
 } catch (e) {}
 
@@ -335,7 +338,7 @@ function tradeMsg(c, m) {
   if (m.t === "trade_req") {
     const to = String(m.to || "").toUpperCase();
     const f = clients.get(to);
-    if (!f || f === c) return sendJ(c, { t: "trade_end", why: "Seu amigo não está online." });
+    if (!f || f === c || blockedBy(f, c.code)) return sendJ(c, { t: "trade_end", why: "Seu amigo não está online." });
     if (tradeOf(c) || tradeOf(f)) return sendJ(c, { t: "trade_end", why: "Alguém já está numa negociação." });
     if (c.room || f.room) return sendJ(c, { t: "trade_end", why: "Não dá para negociar durante uma partida." });
     const id = "T" + (++tradeSeq);
@@ -453,6 +456,42 @@ async function gHandle(n, cred) {
   return { ok: true, msg: "Achei sua conta! Volte para o jogo para entrar." };
 }
 
+// ------------------------------------------------------------ FILTRO DE PALAVRÕES (chat, mensagens e nomes)
+const BAD = ["porra","caralho","carai","krl","crl","buceta","boceta","bct","xoxota","xereca","piroca","pica","cacete","foder","foda","fode","fodase","fudido","fdp","filhodaputa","puta","putinha","puto","viado","viadinho","veado","bicha","baitola","traveco","arrombado","arrombada","arombado","cu","cuzao","cuzão","bosta","merda","otario","otaria","babaca","corno","corna","vagabunda","vagabundo","vadia","safada","safado","punheta","punheteiro","siririca","boquete","chupa","xupa","piru","pinto","rapariga","quenga","escroto","escrota","desgracado","desgraçado","retardado","mongol","macaco","negrinho","nazista","hitler","estupro","estuprador","pedofilo","pedófilo","suicida","vtnc","vsf","pqp","tnc","fds"];
+const BAD_SET = new Set(BAD.map((w) => w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/(.)\1+/g, "$1")));
+function _fold(w) {
+  return w.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[4@]/g, "a").replace(/3/g, "e").replace(/[1!]/g, "i").replace(/0/g, "o").replace(/[5$]/g, "s").replace(/7/g, "t")
+    .replace(/[^a-z]/g, "").replace(/(.)\1+/g, "$1");
+}
+function cleanText(t) {
+  return String(t || "").replace(/[\p{L}\p{N}@$]+/gu, (w) => {
+    const f = _fold(w);
+    if (f.length >= 2 && (BAD_SET.has(f) || BAD_SET.has(f.replace(/s$/, "")) || BAD_SET.has(f.replace(/(inho|inha|ao|oes)$/, "")))) return "*".repeat(Math.min(6, w.length));
+    return w;
+  });
+}
+function blockedBy(target, fromCode) { return !!(target && target.blocks && target.blocks.has(fromCode)); }
+
+// ------------------------------------------------------------ EXCLUIR CONTA
+async function deleteAccount(code) {
+  const row = await getSave(code);
+  if (row && row.gsub) gIndex.delete(row.gsub);
+  saves.delete(code);
+  players.delete(code);
+  mailbox.delete(code);
+  lastPl.delete(code);
+  betOpen.delete(code);
+  tourPrize.delete(code);
+  if (SB) {
+    await sb("DELETE", "sinucou_saves?code=eq." + encodeURIComponent(code));
+    await sb("DELETE", "sinucou_players?code=eq." + encodeURIComponent(code));
+    await sb("DELETE", "sinucou_mailbox?code=eq." + encodeURIComponent(code));
+  }
+  saveSoon();
+  console.log("conta excluída: " + code);
+}
+
 function passHash(code, pass, salt) {
   return salt + "$" + crypto.createHash("sha256").update(salt + ":" + code + ":" + pass).digest("hex");
 }
@@ -470,7 +509,7 @@ function saveSoon() {
   saveTimer = setTimeout(() => {
     saveTimer = null;
     if (SB) { sbFlush(); return; }
-    const d = JSON.stringify({ players: [...players], mailbox: [...mailbox], saves: [...saves] });
+    const d = JSON.stringify({ players: [...players], mailbox: [...mailbox], saves: [...saves], reports });
     fs.writeFile(DATA_FILE + ".tmp", d, (err) => { if (!err) fs.rename(DATA_FILE + ".tmp", DATA_FILE, () => {}); });
   }, 3000);
 }
@@ -558,7 +597,8 @@ function onMsg(c, op, payload) {
       const old = clients.get(code);
       if (old && old !== c) drop(old);
       c.code = code;
-      c.name = String(m.name || "Jogador").slice(0, 15);
+      c.name = cleanText(String(m.name || "Jogador").slice(0, 15));
+      c.blocks = new Set(Array.isArray(m.blk) ? m.blk.map((x) => String(x).toUpperCase().slice(0, 8)).slice(0, 300) : []);
       c.coins = Math.max(0, Number(m.coins) || 0);
       c.felt = String(m.felt || "").slice(0, 24);
       c.wfx = String(m.wfx || "").slice(0, 16);
@@ -622,6 +662,25 @@ function onMsg(c, op, payload) {
       })();
       break;
     }
+    case "glink_token": { // login nativo do Android: o celular já manda o token do Google
+      const mode = m.mode === "login" ? "login" : "link";
+      if (!GCLIENT) return sendJ(c, { t: "glink_r", st: "fail", msg: "Login com Google ainda não está ativado no servidor." });
+      if (mode === "link" && (!c.code || typeof m.tok !== "string" || m.tok.length < 16)) return;
+      (async () => {
+        if (mode === "link") {
+          const row = await getSave(c.code);
+          if (!row || row.tok !== m.tok) return sendJ(c, { t: "glink_r", st: "fail", msg: "Espere o jogo terminar de salvar sua conta e tente de novo." });
+        }
+        const n = crypto.randomBytes(18).toString("base64url");
+        gNonce.set(n, { mode, code: c.code, tok: m.tok, st: "wait", at: Date.now() });
+        await gHandle(n, String(m.cred || ""));
+        const g = gNonce.get(n) || { st: "fail", msg: "Não deu certo, tente de novo." };
+        gNonce.delete(n);
+        if (g.st === "wait") return sendJ(c, { t: "glink_r", st: "fail", msg: "Não consegui confirmar sua conta Google. Tente de novo." });
+        sendJ(c, Object.assign({ t: "glink_r", st: g.st, msg: g.msg }, g.res || {}));
+      })();
+      break;
+    }
     case "glink_poll": {
       const g = gNonce.get(String(m.n || ""));
       if (!g) return sendJ(c, { t: "glink_r", n: m.n, st: "gone" });
@@ -632,7 +691,7 @@ function onMsg(c, op, payload) {
     }
     case "glink_info": {
       if (!c.code) return;
-      (async () => { const row = await getSave(c.code); sendJ(c, { t: "glink_info", mail: row && row.gsub ? row.gmail || "conectado" : "", on: !!GCLIENT }); })();
+      (async () => { const row = await getSave(c.code); sendJ(c, { t: "glink_info", mail: row && row.gsub ? row.gmail || "conectado" : "", on: !!GCLIENT, cid: GCLIENT }); })();
       break;
     }
     case "recover": { // entrar na conta em outro celular: código + senha
@@ -885,6 +944,7 @@ function onMsg(c, op, payload) {
       if (!["req", "acc", "dec", "rem"].includes(kind) || !c.code) return;
       const f = clients.get(String(m.to || "").toUpperCase());
       const to = String(m.to || "").toUpperCase();
+      if (blockedBy(f, c.code)) return sendJ(c, { t: "fsent", kind, to, delivered: true });
       if (f && f !== c) sendJ(f, { t: "fmsg", kind, from: c.code, name: c.name });
       else if (/^[A-Z0-9]{4,8}$/.test(to) && to !== c.code) {
         const box = (mailbox.get(to) || []).filter((x) => x.from !== c.code);
@@ -898,13 +958,14 @@ function onMsg(c, op, payload) {
     }
     case "pm": { // mensagem para um amigo (se estiver offline, fica guardada)
       const to = String(m.to || "").toUpperCase();
-      const txt = String(m.txt || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120);
+      const txt = cleanText(String(m.txt || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 120));
       if (!c.code || !txt || !/^[A-Z0-9]{4,8}$/.test(to) || to === c.code) return;
       const now = Date.now();
       if (c.pmT && now - c.pmT < 700) return; // sem flood
       c.pmT = now;
       const f = clients.get(to);
       const msg = { from: c.code, name: c.name, txt, ts: now };
+      if (blockedBy(f, c.code)) return sendJ(c, { t: "pm_ok", to, delivered: true, ts: now });
       if (f) sendJ(f, { t: "pm", ...msg });
       else {
         const box = mailbox.get(to) || [];
@@ -918,7 +979,7 @@ function onMsg(c, op, payload) {
     }
     case "invite": {
       const f = clients.get(String(m.code || "").toUpperCase());
-      if (!f || f === c) return sendJ(c, { t: "invite_fail", msg: "Amigo offline" });
+      if (!f || f === c || blockedBy(f, c.code)) return sendJ(c, { t: "invite_fail", msg: "Amigo offline" });
       if (f.room) return sendJ(c, { t: "invite_fail", msg: "Amigo está jogando" });
       if (m.lobby && c.party && c.party.members.length >= partyMax(c.party)) return sendJ(c, { t: "invite_fail", msg: "O lobby já está cheio" });
       const ist = m.lobby ? 0 : stakeOf(m.stake);
@@ -974,6 +1035,49 @@ function onMsg(c, op, payload) {
     }
     case "leave": leaveRoom(c); break;
     case "ping": sendJ(c, { t: "pong" }); break;
+    case "block": { // bloquear / desbloquear alguém
+      if (!c.code) return;
+      const who = String(m.code || "").toUpperCase().slice(0, 8);
+      if (!/^[A-Z0-9]{4,8}$/.test(who) || who === c.code) return;
+      if (!c.blocks) c.blocks = new Set();
+      if (m.on) c.blocks.add(who); else c.blocks.delete(who);
+      sendJ(c, { t: "block_ok", code: who, on: !!m.on });
+      break;
+    }
+    case "report": { // denúncia: guarda para o dono do jogo ver
+      if (!c.code) return;
+      const who = String(m.code || "").toUpperCase().slice(0, 8);
+      if (!/^[A-Z0-9]{4,8}$/.test(who) || who === c.code) return;
+      const now = Date.now();
+      if (c.repT && now - c.repT < 20000) return sendJ(c, { t: "report_ok", dup: true });
+      c.repT = now;
+      reports.push({ at: now, from: c.code, fromName: c.name, code: who, name: String(m.name || "").slice(0, 20), reason: String(m.reason || "").slice(0, 40), note: String(m.note || "").replace(/[\u0000-\u001f]/g, " ").slice(0, 200), ctx: Array.isArray(m.ctx) ? m.ctx.slice(-10).map((x) => String(x).slice(0, 140)) : [] });
+      while (reports.length > 500) reports.shift();
+      saveSoon();
+      console.log("denúncia: " + c.code + " -> " + who + " (" + m.reason + ")");
+      sendJ(c, { t: "report_ok" });
+      break;
+    }
+    case "reports_get": { // só o dono do jogo
+      if (c.code !== OWNER_CODE || typeof m.tok !== "string") return;
+      (async () => {
+        const row = await getSave(c.code);
+        if (!row || row.tok !== m.tok) return sendJ(c, { t: "reports", list: [], err: "Senha do aparelho não confere." });
+        if (m.clear) { reports = []; saveSoon(); }
+        sendJ(c, { t: "reports", list: reports.slice(-100).reverse() });
+      })();
+      break;
+    }
+    case "delete_acc": { // excluir minha conta
+      if (!c.code || typeof m.tok !== "string") return;
+      (async () => {
+        const row = await getSave(c.code);
+        if (row && row.tok && row.tok !== m.tok) return sendJ(c, { t: "delete_r", ok: false, msg: "Não deu para confirmar que a conta é sua neste aparelho." });
+        await deleteAccount(c.code);
+        sendJ(c, { t: "delete_r", ok: true });
+      })();
+      break;
+    }
   }
 }
 

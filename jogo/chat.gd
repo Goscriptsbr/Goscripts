@@ -251,6 +251,8 @@ func send(txt: String) -> void:
 		return
 	last_send = clock
 	txt = txt.left(40)
+	if game.safety != null:
+		txt = game.safety.clean(txt)
 	game.net.send_chat(txt)
 	add(multiplayer.get_unique_id(), txt, false)
 
@@ -265,6 +267,13 @@ func abs_seat(peer: int) -> int:
 
 
 func add(peer: int, txt: String, voice: bool) -> void:
+	if game.safety != null and peer != multiplayer.get_unique_id():
+		var pc: String = game.safety.code_of_peer(peer)
+		if game.safety.is_blocked(pc):
+			return  # bloqueado: não aparece texto, emote nem o balão de voz
+		if not voice and not txt.begins_with(":e:"):
+			txt = game.safety.clean(txt)
+			game.safety.log_chat(pc, txt)
 	var a := abs_seat(peer)
 	if txt.begins_with(":e:"):
 		var eid := txt.substr(3)
@@ -557,6 +566,8 @@ func _flush_voice() -> void:
 
 func got_voice(peer: int, data: PackedByteArray) -> void:
 	if not bool(game.save.get("voice_hear", true)):
+		return
+	if game.safety != null and game.safety.is_blocked(game.safety.code_of_peer(peer)):
 		return
 	add(peer, "", true)
 	if listeners.has(peer):

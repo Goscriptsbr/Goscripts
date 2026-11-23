@@ -171,7 +171,7 @@ func connect_server() -> void:
 
 func send_hello() -> void:
 	if ws != null and ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx()}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else []}))
 
 
 func world_send(d: Dictionary) -> void:
@@ -287,12 +287,42 @@ func send_setpass(pw: String) -> void:
 	world_send({"t": "setpass", "tok": game.my_tok(), "pass": pw, "save": s2})
 
 
+const G_WEB_ID := "555286434372-qbsj13u6rl46fteg264r5lkpcc551b56.apps.googleusercontent.com"
+var g_cid := ""
+var g_native_mode := ""
+var g_native_ok := true  # se o nativo falhar por configuração, usa o navegador
+
+
 func send_glink(mode: String) -> void:
 	connect_server()
 	if mode == "link":
 		send_csave()
 	glink_n = ""
+	# versão da Play Store: janelinha do Google dentro do jogo (sem navegador)
+	if g_native_ok and Engine.has_singleton("SinucouGoogle"):
+		var sg = Engine.get_singleton("SinucouGoogle")
+		if not sg.is_connected("google_ok", _g_native_ok):
+			sg.connect("google_ok", _g_native_ok)
+			sg.connect("google_fail", _g_native_fail)
+		g_native_mode = mode
+		sg.signIn(g_cid if g_cid != "" else G_WEB_ID)
+		return
 	world_send({"t": "glink_start", "mode": mode, "tok": game.my_tok()})
+
+
+func _g_native_ok(id_token: String, _email: String) -> void:
+	if game.ui != null:
+		game.ui.say("Conferindo sua conta Google...")
+	world_send({"t": "glink_token", "mode": g_native_mode, "cred": id_token, "tok": game.my_tok()})
+
+
+func _g_native_fail(kind: String, detail: String) -> void:
+	print("google nativo: ", kind, " ", detail)
+	if kind == "cancelado":
+		return
+	# não configurado / sem serviços do Google: cai para o login pelo navegador
+	g_native_ok = false
+	world_send({"t": "glink_start", "mode": g_native_mode, "tok": game.my_tok()})
 
 
 func _glink_tick(delta: float) -> void:
@@ -399,7 +429,7 @@ func _world_poll(delta: float) -> void:
 	var stt := ws.get_ready_state()
 	if stt == WebSocketPeer.STATE_OPEN and not hello_sent:
 		hello_sent = true
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx()}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else []}))
 	if stt == WebSocketPeer.STATE_CONNECTING:
 		world_t += delta
 	cloud_tick(delta)
@@ -510,6 +540,8 @@ func _world_msg(m: Dictionary) -> void:
 			if game.ui != null:
 				game.ui.search_results(str(m.get("q", "")), m.get("list", []))
 		"fmsg":
+			if game.safety != null and game.safety.is_blocked(str(m.get("from", ""))):
+				return
 			if game.ui != null:
 				game.ui.friend_msg(str(m.get("kind", "")), str(m.get("from", "")), str(m.get("name", "")))
 		"fsent":
@@ -519,6 +551,9 @@ func _world_msg(m: Dictionary) -> void:
 			if game.ui != null:
 				game.ui.friends_update(m.get("list", []))
 		"invited":
+			if game.safety != null and game.safety.is_blocked(str(m.get("from", ""))):
+				world_send({"t": "decline", "code": str(m.get("from", ""))})
+				return
 			if game.ui != null:
 				game.ui.show_invite(str(m.get("from", "")), str(m.get("name", "")), str(m.get("game", "sinuca")), bool(m.get("lobby", false)), int(m.get("stake", 0)), bool(m.get("tour", false)))
 		"invite_ok":
@@ -531,8 +566,14 @@ func _world_msg(m: Dictionary) -> void:
 			if game.ui != null:
 				game.ui.lobby_update(m)
 		"pm":
+			if game.safety != null and game.safety.is_blocked(str(m.get("from", ""))):
+				return
 			if game.ui != null:
-				game.ui.got_pm(str(m.get("from", "")), str(m.get("name", "")), str(m.get("txt", "")).left(120), int(m.get("ts", 0)))
+				var ptxt := str(m.get("txt", "")).left(120)
+				if game.safety != null:
+					ptxt = game.safety.clean(ptxt)
+					game.safety.log_chat(str(m.get("from", "")).to_upper(), ptxt)
+				game.ui.got_pm(str(m.get("from", "")), str(m.get("name", "")), ptxt, int(m.get("ts", 0)))
 		"invite_fail":
 			if game.ui != null:
 				game.ui.say(str(m.get("msg", "Convite não deu certo")))
@@ -547,7 +588,13 @@ func _world_msg(m: Dictionary) -> void:
 			game.tour_update(m)
 		"eco_r":
 			game.eco_result(m)
+		"reports", "delete_r", "report_ok", "block_ok":
+			if game.safety != null:
+				game.safety.on_msg(m)
 		"trade_invite", "trade_wait", "trade", "trade_end", "trade_done":
+			if str(m.t) == "trade_invite" and game.safety != null and game.safety.is_blocked(str(m.get("from", ""))):
+				world_send({"t": "trade_resp", "id": str(m.get("id", "")), "ok": false})
+				return
 			if game.trade != null:
 				game.trade.on_msg(m)
 		"toast":
@@ -582,6 +629,7 @@ func _world_msg(m: Dictionary) -> void:
 		"glink_info":
 			g_mail = str(m.get("mail", ""))
 			g_on = bool(m.get("on", false))
+			g_cid = str(m.get("cid", ""))
 			if game.ui != null:
 				game.ui.cloud_refresh()
 		"rank":

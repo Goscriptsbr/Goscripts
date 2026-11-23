@@ -28,6 +28,21 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /tmp/sdk.log 2>&1 || (tail -30 /tmp/sdk.log; true)
           ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
 
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Plugin Android (login Google nativo)
+        timeout-minutes: 15
+        run: |
+          cd android_plugin
+          gradle assembleRelease --no-daemon > /tmp/plugin.log 2>&1 || (tail -60 /tmp/plugin.log; true)
+          mkdir -p ../jogo/addons/sinucou_google/bin
+          cp build/outputs/aar/*-release.aar ../jogo/addons/sinucou_google/bin/sinucou-google.aar && echo "AAR ok" || echo "AAR FALHOU"
+          if [ -f ../jogo/addons/sinucou_google/bin/sinucou-google.aar ]; then
+            printf '\n[editor_plugins]\n\nenabled=PackedStringArray("res://addons/sinucou_google/plugin.cfg")\n' >> ../jogo/project.godot
+          fi
+
       - name: Godot + export templates
         timeout-minutes: 15
         run: |

@@ -14,6 +14,7 @@ var replay: Node
 var tutorial: Node
 var trade: Node
 var news: Node
+var safety: Node
 # baralhos do truco (estilo das cartas); o "classico" é de graça
 const DECKS := [
 	{"id": "dk_classico", "deck": "classico", "name": "Clássico", "price": 0, "tag": "O baralho azul de sempre"},
@@ -37,7 +38,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 102  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 103  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -375,6 +376,9 @@ func _ready() -> void:
 	news = load("res://news.gd").new()
 	add_child(news)
 	news.setup(self)
+	safety = load("res://safety.gd").new()
+	add_child(safety)
+	safety.setup(self)
 	rack()
 	attract_kick()
 	var args := OS.get_cmdline_user_args()

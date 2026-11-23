@@ -4040,7 +4040,10 @@ func _build_settings() -> void:
 	lrow.add_theme_constant_override("separation", 26)
 	lrow.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(lrow)
-	for lk in [["Termos de Uso", "https://goscripts.com.br/sinucou/termos/"], ["Política de Privacidade", "https://goscripts.com.br/sinucou/privacidade/"], ["Excluir conta", "https://goscripts.com.br/sinucou/excluir-conta/"]]:
+	var lks: Array = [["Termos de Uso", "https://goscripts.com.br/sinucou/termos/"], ["Política de Privacidade", "https://goscripts.com.br/sinucou/privacidade/"], ["Bloqueados", "#blk"], ["Excluir minha conta", "#del"]]
+	if game.safety != null and game.safety.is_owner():
+		lks.append(["Denúncias", "#rep"])
+	for lk in lks:
 		var lb := LinkButton.new()
 		lb.text = str(lk[0])
 		lb.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
@@ -4048,12 +4051,24 @@ func _build_settings() -> void:
 		lb.add_theme_color_override("font_color", Color(1, 1, 1, 0.5))
 		lb.add_theme_color_override("font_hover_color", Color("f4c542"))
 		var url := str(lk[1])
-		lb.pressed.connect(func(): OS.shell_open(url))
+		lb.pressed.connect(_settings_link.bind(url))
 		lrow.add_child(lb)
 	_settings_refresh()
 
 
 var set_avc: Control
+
+
+func _settings_link(url: String) -> void:
+	if url == "#blk":
+		game.safety.open_blocked()
+	elif url == "#del":
+		game.safety.delete_flow()
+	elif url == "#rep":
+		game.safety.open_reports()
+	else:
+		OS.shell_open(url)
+
 var set_code_lbl: Label
 var set_g_chip: PanelContainer
 var set_g_lbl: Label
@@ -5522,6 +5537,22 @@ func profile_remote(m: Dictionary) -> void:
 	var ok := mk_btn("FECHAR", 220, 58, GRAY, 22)
 	ok.pressed.connect(close_modal)
 	brow.add_child(ok)
+	if pcode != "" and pcode != game.my_code() and game.safety != null:
+		var srow := HBoxContainer.new()
+		srow.add_theme_constant_override("separation", 14)
+		srow.alignment = BoxContainer.ALIGNMENT_CENTER
+		vb.add_child(srow)
+		var isb: bool = game.safety.is_blocked(pcode)
+		var bb := mk_btn("DESBLOQUEAR" if isb else "⊘ BLOQUEAR", 220, 50, Color("3b4556") if isb else Color("5a3a3a"), 18)
+		bb.pressed.connect(func():
+			close_modal()
+			game.safety.toggle_block(pcode, nm))
+		srow.add_child(bb)
+		var rb := mk_btn("⚑ DENUNCIAR", 220, 50, Color("7a2a2a"), 18)
+		rb.pressed.connect(func():
+			close_modal()
+			game.safety.open_report(pcode, nm))
+		srow.add_child(rb)
 
 
 # conquista nova: aviso que desce do topo
