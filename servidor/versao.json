@@ -1,5 +1,5 @@
 {
-  "versao": 103,
-  "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/f62e173cb95f13eb4bd98ee3e85d8ac25eec3d28/Sinucou.apk",
-  "notas": "Agora dá para BLOQUEAR e DENUNCIAR jogadores (no perfil), filtro de palavrões no chat e excluir conta nos Ajustes."
+  "versao": 104,
+  "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/d5dfe5ba6ec7292db14b7f6dc3f760ba56c9201d/Sinucou.apk",
+  "notas": "Novo: botão SAIR DA CONTA (em Ajustes > Conta Google e Backup) para trocar de conta Google. Suas moedas e itens ficam guardados na nuvem."
 }

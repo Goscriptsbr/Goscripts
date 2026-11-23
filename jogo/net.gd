@@ -606,9 +606,13 @@ func _world_msg(m: Dictionary) -> void:
 			cloud_fail = false
 			if cloud_ok:
 				cloud_last = Time.get_time_string_from_system().substr(0, 5)
+			if game.safety != null:
+				game.safety.on_csave_ok(cloud_ok)
 		"csave_fail":
 			cloud_ok = false
 			cloud_fail = true
+			if game.safety != null:
+				game.safety.on_csave_ok(false)
 		"setpass_r":
 			if bool(m.get("ok", false)):
 				cloud_pass = true

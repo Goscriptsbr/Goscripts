@@ -4328,6 +4328,10 @@ func cloud_refresh() -> void:
 		game.net.send_recover(cd, pw2)
 		say("Procurando a conta..."))
 	row.add_child(b2)
+	var lo := mk_btn("SAIR DA CONTA (trocar de conta)", 420, 54, Color("8a3b3b"), 19)
+	lo.pressed.connect(func(): game.safety.logout_flow())
+	cloud_box.add_child(mk_lbl(" ", 8, Color(1, 1, 1, 0), 1))
+	cloud_box.add_child(lo)
 	var b3 := mk_btn("FECHAR", 200, 52, GRAY, 20)
 	b3.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	b3.pressed.connect(close_modal)

@@ -322,3 +322,50 @@ func on_msg(m: Dictionary) -> void:
 		"report_ok":
 			if bool(m.get("dup", false)):
 				ui.say("Espere um pouco para mandar outra denúncia.")
+
+
+# ---------------------------------------------------------------- sair da conta (trocar de conta)
+var _logout_wait := false
+
+
+func logout_flow() -> void:
+	var n = game.net
+	if n == null or not n.server_ok:
+		ui.confirm("SEM CONEXÃO", "Conecte na internet para sair da conta.\nAssim o jogo guarda tudo na nuvem antes.", "OK", func(): pass, "", Callable())
+		return
+	if n.g_mail == "" and not n.cloud_pass:
+		ui.confirm("CONECTE O GOOGLE ANTES", "Esta conta ainda não está ligada ao Google e não tem senha.\nSe sair agora, você NÃO vai conseguir voltar pra ela (moedas e itens).\n\nConecte com o Google primeiro, aqui mesmo nesta tela.", "ENTENDI", func(): pass, "", Callable())
+		return
+	var como: String = ("o Google " + n.g_mail) if n.g_mail != "" else ("o código %s e a sua senha" % game.my_code())
+	ui.confirm("SAIR DA CONTA", "Suas moedas e itens ficam guardados na nuvem.\nPara voltar depois, é só entrar com " + como + ".\n\nO jogo vai fechar. Ao abrir de novo, escolha ENTRAR COM GOOGLE (outra conta) ou SOU NOVO.", "SAIR", _logout_now, "CANCELAR", Callable())
+
+
+func _logout_now() -> void:
+	var q: Array = game.save.get("eco_q", [])
+	if not q.is_empty():
+		ui.say("Sincronizando moedas... tente de novo em alguns segundos.")
+		return
+	_logout_wait = true
+	game.net.send_csave()
+	ui.say("Guardando tudo na nuvem...")
+	get_tree().create_timer(12.0).timeout.connect(func():
+		if _logout_wait:
+			_logout_wait = false
+			ui.confirm("NÃO DEU", "Não consegui confirmar o backup agora.\nVerifique a internet e tente de novo.", "OK", func(): pass, "", Callable()))
+
+
+func on_csave_ok(ok: bool) -> void:
+	if not _logout_wait:
+		return
+	_logout_wait = false
+	if not ok:
+		ui.confirm("NÃO DEU", "O backup não foi aceito (a conta pode estar em outro celular).\nNada foi apagado.", "OK", func(): pass, "", Callable())
+		return
+	game.bot = true
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.cfg"))
+	var d := DirAccess.open("user://replays")
+	if d != null:
+		for f in d.get_files():
+			d.remove(f)
+	ui.confirm("VOCÊ SAIU DA CONTA", "Tudo ficou guardado na nuvem.\nAbra o jogo de novo para entrar com outra conta Google ou começar do zero.", "OK", func():
+		get_tree().quit(), "", Callable())
