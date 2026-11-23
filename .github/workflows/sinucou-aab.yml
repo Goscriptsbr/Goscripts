@@ -66,7 +66,7 @@ jobs:
         working-directory: jogo
         run: |
           mkdir -p build
-          timeout 840 godot --headless --path . --export-release "Android Loja" build/Sinucou.aab > /tmp/export.log 2>&1 || true
+          timeout 840 godot --headless --path . --install-android-build-template --export-release "Android Loja" build/Sinucou.aab > /tmp/export.log 2>&1 || true
           tail -50 /tmp/export.log
           ls -la build
 
