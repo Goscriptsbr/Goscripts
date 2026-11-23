@@ -1489,6 +1489,8 @@ var update_seen := false
 
 # o servidor diz qual é a versão mais nova; se for maior que a nossa, oferece baixar
 func check_update(info: Dictionary) -> void:
+	if OS.has_feature("store"):
+		return  # versão da Play Store: quem atualiza é a própria loja
 	var nv: int = int(info.get("versao", 0))
 	if nv <= game.APP_VERSION or update_seen or str(info.get("url", "")) == "":
 		return

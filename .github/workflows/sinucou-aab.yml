@@ -1,0 +1,76 @@
+name: Sinucou AAB (Play Store)
+
+on:
+  push:
+    branches: [sinucou-aab-src]
+
+permissions:
+  contents: write
+
+jobs:
+  aab:
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VER: 4.7.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android SDK (platform 36)
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0" "cmake;3.10.2.4988404" > /dev/null
+          ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
+
+      - name: Godot + export templates
+        run: |
+          cd /tmp
+          curl -sL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot
+          curl -sL -o tpl.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_export_templates.tpz"
+          unzip -q tpl.tpz
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VER}.stable
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VER}.stable/
+          godot --version
+
+      - name: Editor settings + chave temporária (o AAB é reassinado com a chave de upload depois)
+        run: |
+          MAJ=$(echo $GODOT_VER | cut -d. -f1-2)
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-${MAJ}.tres <<EOT
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          EOT
+          sed -i 's/^ *//' ~/.config/godot/editor_settings-${MAJ}.tres
+          keytool -genkeypair -keystore /tmp/ci_release.keystore -alias ci -keyalg RSA -keysize 2048 -validity 10000 -storepass cipassword -keypass cipassword -dname "CN=ci" -noprompt
+
+      - name: Importar projeto e instalar template Android
+        working-directory: jogo
+        run: |
+          timeout 600 godot --headless --path . --import || true
+          godot --headless --path . --install-android-build-template || true
+          ls android/build | head
+
+      - name: Exportar AAB
+        working-directory: jogo
+        run: |
+          mkdir -p build
+          godot --headless --path . --export-release "Android Loja" build/Sinucou.aab 2>&1 | tee /tmp/export.log
+          ls -la build
+
+      - name: Publicar o AAB no branch sinucou-aab
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cd /tmp/out
+          cp $GITHUB_WORKSPACE/jogo/build/Sinucou.aab . 2>/dev/null || true
+          cp /tmp/export.log . 2>/dev/null || true
+          git init -q -b sinucou-aab
+          git config user.email "actions@github.com"; git config user.name "GitHub Actions"
+          git add -A && git commit -qm "AAB ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:sinucou-aab
