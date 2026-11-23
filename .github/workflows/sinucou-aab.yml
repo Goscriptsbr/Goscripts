@@ -10,6 +10,7 @@ permissions:
 jobs:
   aab:
     runs-on: ubuntu-latest
+    timeout-minutes: 50
     env:
       GODOT_VER: 4.7.1
     steps:
@@ -21,12 +22,14 @@ jobs:
           java-version: "17"
 
       - name: Android SDK (platform 36)
+        timeout-minutes: 15
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0" "cmake;3.10.2.4988404" > /dev/null
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /tmp/sdk.log 2>&1 || (tail -30 /tmp/sdk.log; true)
           ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
 
       - name: Godot + export templates
+        timeout-minutes: 15
         run: |
           cd /tmp
           curl -sL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_linux.x86_64.zip"
@@ -51,17 +54,20 @@ jobs:
           keytool -genkeypair -keystore /tmp/ci_release.keystore -alias ci -keyalg RSA -keysize 2048 -validity 10000 -storepass cipassword -keypass cipassword -dname "CN=ci" -noprompt
 
       - name: Importar projeto e instalar template Android
+        timeout-minutes: 15
         working-directory: jogo
         run: |
-          timeout 600 godot --headless --path . --import || true
-          godot --headless --path . --install-android-build-template || true
+          timeout 600 godot --headless --path . --import > /tmp/import.log 2>&1 || true
+          timeout 300 godot --headless --path . --install-android-build-template > /tmp/tpl.log 2>&1 || true
           ls android/build | head
 
       - name: Exportar AAB
+        timeout-minutes: 15
         working-directory: jogo
         run: |
           mkdir -p build
-          godot --headless --path . --export-release "Android Loja" build/Sinucou.aab 2>&1 | tee /tmp/export.log
+          timeout 840 godot --headless --path . --export-release "Android Loja" build/Sinucou.aab > /tmp/export.log 2>&1 || true
+          tail -50 /tmp/export.log
           ls -la build
 
       - name: Publicar o AAB no branch sinucou-aab
@@ -69,7 +75,7 @@ jobs:
         run: |
           mkdir -p /tmp/out && cd /tmp/out
           cp $GITHUB_WORKSPACE/jogo/build/Sinucou.aab . 2>/dev/null || true
-          cp /tmp/export.log . 2>/dev/null || true
+          cp /tmp/*.log . 2>/dev/null || true
           git init -q -b sinucou-aab
           git config user.email "actions@github.com"; git config user.name "GitHub Actions"
           git add -A && git commit -qm "AAB ${GITHUB_SHA::7}"
