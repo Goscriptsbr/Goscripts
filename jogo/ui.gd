@@ -4304,7 +4304,7 @@ func cloud_refresh() -> void:
 		var gb := mk_btn("G   CONECTAR COM GOOGLE", 420, 60 if game.player_level() > 1 else 48, Color("4285f4"), 22 if game.player_level() > 1 else 18)
 		gb.pressed.connect(func():
 			game.net.send_glink("link")
-			say("Abrindo o Google... escolha sua conta e depois volte para o jogo."))
+			say("Abrindo o Google... escolha sua conta."))
 		cloud_box.add_child(gb)
 	cloud_box.add_child(mk_lbl(st, 18, Color("7dffa8") if n.cloud_ok else Color(1, 0.85, 0.5), 2))
 	cloud_box.add_child(mk_lbl("Senha: " + ("criada ✓" if n.cloud_pass else "ainda não criada (opcional se conectou o Google)"), 17, Color(1, 1, 1, 0.8), 2))

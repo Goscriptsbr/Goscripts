@@ -333,6 +333,7 @@ func send_glink(mode: String) -> void:
 
 # manda para o servidor; se ele ainda estiver acordando, guarda e manda assim que conectar
 var g_pending: Dictionary = {}
+var g_last_err := ""
 var g_wait := 0.0
 var g_busy := false
 func _g_send(d: Dictionary) -> void:
@@ -366,13 +367,19 @@ func _g_native_ok(id_token: String, _email: String) -> void:
 
 func _g_native_fail(kind: String, detail: String) -> void:
 	print("google nativo: ", kind, " ", detail)
-	if kind == "cancelado":
+	# o Android às vezes devolve "cancelado" quando na verdade deu erro (ex.: "[16] Account reauth failed").
+	# Só é cancelamento de verdade quando a mensagem diz que foi o usuário que fechou.
+	var dl := detail.to_lower()
+	if kind == "cancelado" and (dl.find("user") >= 0 or dl.find("usuário") >= 0) and dl.find("[16]") < 0 and dl.find("reauth") < 0:
 		g_busy = false
+		if game.ui != null:
+			game.ui.say("Login com Google cancelado.")
 		return
-	# não deu na janelinha (sem conta no aparelho, serviços do Google etc.): tenta pelo navegador
+	# não deu na janelinha: tenta pelo navegador (e mostra o motivo, para sabermos o que foi)
 	g_native_ok = false
+	g_last_err = detail.left(90)
 	if game.ui != null:
-		game.ui.say("Abrindo o login do Google pelo navegador...", 4.0)
+		game.ui.say("Abrindo o login do Google pelo navegador... (%s)" % detail.left(60), 6.0)
 	_g_send({"t": "glink_start", "mode": g_native_mode, "tok": game.my_tok()})
 
 
