@@ -363,7 +363,13 @@ func _glink_result(m: Dictionary) -> void:
 			m["ok"] = true
 			ui.cloud_recover_result(m)
 		_:
-			ui.say(str(m.get("msg", "Não deu certo, tente de novo.")))
+			var msg := str(m.get("msg", "Não deu certo, tente de novo."))
+			if msg.find("já está ligada a outro jogador") >= 0:
+				# o Google já tem uma conta: em vez de erro, oferece entrar nela
+				ui.close_modal()
+				ui.confirm("VOCÊ JÁ TEM UMA CONTA!", "Esse Google já está ligado a uma conta do Sinucou.\nQuer ENTRAR nela? Suas moedas, itens e nível voltam.\n\n(Escolha o mesmo Google de novo na próxima tela.)", "ENTRAR NA MINHA CONTA", func(): send_glink("login"), "CANCELAR", Callable())
+			else:
+				ui.say(msg)
 
 
 func send_recover(code: String, pw: String) -> void:

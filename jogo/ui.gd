@@ -4275,6 +4275,15 @@ func cloud_refresh() -> void:
 	if n.g_mail != "":
 		cloud_box.add_child(mk_lbl("✓ Conectado ao Google:  %s" % n.g_mail, 20, Color("7dffa8"), 3))
 	else:
+		if game.player_level() <= 1:
+			# conta nova: o mais provável é que a pessoa já jogava e quer ENTRAR
+			cloud_box.add_child(mk_lbl("Já jogava em outro celular ou no APK antigo?", 18, Color(1, 1, 1, 0.75), 2))
+			var gt := mk_btn("G   ENTRAR NA MINHA CONTA (GOOGLE)", 420, 60, GREEN, 21)
+			gt.pressed.connect(func():
+				game.net.send_glink("login")
+				say("Abrindo o Google... escolha a conta e depois volte para o jogo."))
+			cloud_box.add_child(gt)
+			cloud_box.add_child(mk_lbl("— ou, se é novo, guarde esta conta —", 16, Color(1, 1, 1, 0.5), 2))
 		var gb := mk_btn("G   CONECTAR COM GOOGLE", 420, 60, Color("4285f4"), 22)
 		gb.pressed.connect(func():
 			game.net.send_glink("link")
@@ -4500,7 +4509,7 @@ func _settings_refresh() -> void:
 		var ok := gm != ""
 		var col := Color("1fa85a") if ok else Color("c98a12")
 		set_g_chip.add_theme_stylebox_override("panel", sbox(Color(col.r, col.g, col.b, 0.16), 14, Color(col.r, col.g, col.b, 0.6), 2))
-		set_g_lbl.text = ("✓  Conta Google conectada:  " + gm) if ok else "⚠  Google não conectado — conecte e não perca nada"
+		set_g_lbl.text = ("✓  Conta Google conectada:  " + gm) if ok else ("⚠  Já jogava? Toque abaixo e ENTRE COM GOOGLE" if game.player_level() <= 1 else "⚠  Google não conectado — conecte e não perca nada")
 		set_g_lbl.add_theme_color_override("font_color", Color("7dffa8") if ok else Color("ffd27a"))
 
 
