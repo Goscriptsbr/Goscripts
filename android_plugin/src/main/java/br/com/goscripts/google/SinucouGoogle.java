@@ -1,6 +1,10 @@
 package br.com.goscripts.google;
 
 import android.app.Activity;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import java.security.MessageDigest;
 import android.os.CancellationSignal;
 
 import androidx.annotation.NonNull;
@@ -38,6 +42,31 @@ public class SinucouGoogle extends GodotPlugin {
         s.add(new SignalInfo("google_ok", String.class, String.class));
         s.add(new SignalInfo("google_fail", String.class, String.class));
         return s;
+    }
+
+    // SHA-1 do certificado que assinou este app (para o servidor saber se o jogo foi modificado)
+    @UsedByGodot
+    public String sigHash() {
+        try {
+            Activity a = getActivity();
+            if (a == null) return "";
+            PackageManager pm = a.getPackageManager();
+            Signature[] sigs;
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                PackageInfo pi = pm.getPackageInfo(a.getPackageName(), PackageManager.GET_SIGNING_CERTIFICATES);
+                sigs = pi.signingInfo.hasMultipleSigners() ? pi.signingInfo.getApkContentsSigners() : pi.signingInfo.getSigningCertificateHistory();
+            } else {
+                PackageInfo pi = pm.getPackageInfo(a.getPackageName(), PackageManager.GET_SIGNATURES);
+                sigs = pi.signatures;
+            }
+            if (sigs == null || sigs.length == 0) return "";
+            byte[] d = MessageDigest.getInstance("SHA-1").digest(sigs[sigs.length - 1].toByteArray());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : d) { if (sb.length() > 0) sb.append(':'); sb.append(String.format("%02X", b)); }
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     @UsedByGodot

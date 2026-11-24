@@ -267,7 +267,7 @@ func open_reports(clear := false) -> void:
 
 
 func _show_reports(m: Dictionary) -> void:
-	var vb: VBoxContainer = ui._modal_box("DENÚNCIAS")
+	var vb: VBoxContainer = ui._modal_box("DENÚNCIAS E ANTI-TRAPAÇA")
 	var list: Array = m.get("list", [])
 	if str(m.get("err", "")) != "":
 		vb.add_child(ui.mk_lbl(str(m.err), 18, Color("ff8a6a"), 2))
@@ -319,6 +319,8 @@ func on_msg(m: Dictionary) -> void:
 				_wipe_local()
 			else:
 				ui.say(str(m.get("msg", "Não deu certo.")))
+		"modded":
+			ui.confirm("JOGO MODIFICADO", "Este Sinucou foi alterado e não pode jogar online.\nBaixe o jogo original pela Play Store para jogar com outras pessoas.", "OK", func(): pass, "", Callable())
 		"report_ok":
 			if bool(m.get("dup", false)):
 				ui.say("Espere um pouco para mandar outra denúncia.")

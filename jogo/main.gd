@@ -38,7 +38,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 105  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 106  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -2806,17 +2806,54 @@ func net_remote_shot(d: Dictionary) -> void:
 		return
 	net_tgt = {}
 	var cue := get_ball(0)
+	# ANTI-TRAPAÇA: tudo que vem de quem tacou é conferido contra o taco dele e o estado da mesa
+	# daqui. Se passar do limite, a tacada é corrigida para o máximo permitido e a conta é marcada.
+	var bad: Array = []
+	var cdef := turn_cue_def()
+	var max_p := float(cdef.pow)
+	var max_s := float(cdef.spin)
+	var sps := float(d.get("sps", max_p))
+	var sss := float(d.get("sss", max_s))
+	if sps > max_p + 0.001 or sss > max_s + 0.001:
+		bad.append("força/efeito acima do taco")
+	var pw := float(d.get("pw", 0.0))
+	if pw < -0.001 or pw > 1.001 or is_nan(pw):
+		bad.append("força inválida")
+	pw = clampf(pw if not is_nan(pw) else 0.0, 0.0, 1.0)
+	var spv: Vector2 = d.get("sp", Vector2.ZERO) if d.get("sp") is Vector2 else Vector2.ZERO
+	if spv.length() > 1.05:
+		bad.append("efeito inválido")
+		spv = spv.limit_length(1.0)
+	var cp: Vector2 = d.get("cp", cue.pos) if d.get("cp") is Vector2 else cue.pos
+	if not (bool(d.get("h", false)) and ball_in_hand) and cp.distance_to(cue.pos) > 6.0:
+		# sem bola na mão a branca não pode "pular" de lugar
+		bad.append("moveu a branca")
+		cp = cue.pos
 	aim_angle = float(d.a)
-	power = float(d.p)
-	spin = d.sp
-	# a posição da branca vem sempre de quem tacou (bola na mão, saída etc.)
-	cue.pos = d.cp
+	power = clampf(float(d.get("p", 0.0)), 0.0, 1.0)
+	spin = spv
+	# a posição da branca vem de quem tacou (bola na mão, saída etc.)
+	cue.pos = cp
 	touches.clear()
-	shot_pow = float(d.sps)
-	shot_spin = float(d.sss)
-	shoot(float(d.pw), true)
-	if d.has("lv"):
-		launch_pre = {"v": d.lv, "t": float(d.lt), "s": float(d.ls), "ang": float(d.get("la", d.a))}
+	shot_pow = minf(sps, max_p)
+	shot_spin = minf(sss, max_s)
+	shoot(pw, true)
+	# confere a velocidade pronta que veio junto com o que o taco permite
+	var lp := launch_params()
+	if d.has("lv") and d.lv is Vector2:
+		var lv: Vector2 = d.lv
+		var vmax := Vector2(lp.v).length() * 1.02 + 3.0
+		var tmax := absf(float(lp.t)) + 0.05
+		var smax := absf(float(lp.s)) + 0.05
+		if lv.length() > vmax or absf(float(d.get("lt", 0.0))) > tmax or absf(float(d.get("ls", 0.0))) > smax:
+			bad.append("velocidade acima do taco")
+			launch_pre = lp
+		else:
+			launch_pre = {"v": lv, "t": float(d.lt), "s": float(d.ls), "ang": float(d.get("la", d.a))}
+	if not bad.is_empty():
+		print("anti-trapaça: ", bad)
+		if safety != null and net != null:
+			net.send_cheat(safety.code_of_peer(int(d.get("_from", 0))), ", ".join(bad))
 
 
 func net_remote_aim(d: Dictionary) -> void:

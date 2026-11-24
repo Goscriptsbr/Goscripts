@@ -585,11 +585,31 @@ function onData(c, d) {
   }
 }
 
+// ------------------------------------------------------------ anti-trapaça
+const PLAY_SIG = "03:0E:8F:3F:B0:2A:F9:BF:D1:F3:F3:A6:5F:15:A7:89:CF:97:C9:A6"; // chave de assinatura da Play
+const MODDED_BLOCK = new Set(["queue", "lcreate", "lstart", "tcreate", "invite", "accept", "rematch"]);
+const cheatSeen = new Map(); // código+motivo -> último aviso (não encher a lista)
+function cheatFlag(code, name, why) {
+  const k = code + "|" + why.slice(0, 20);
+  const now = Date.now();
+  if (now - (cheatSeen.get(k) || 0) < 3600000) return;
+  cheatSeen.set(k, now);
+  reports.push({ at: now, from: "SISTEMA", fromName: "Anti-trapaça", code, name: String(name || "").slice(0, 20), reason: "Possível trapaça", note: why, ctx: [] });
+  while (reports.length > 500) reports.shift();
+  saveSoon();
+  console.log("anti-trapaça: " + code + " — " + why);
+}
+
 // ------------------------------------------------------------ lógica
 function onMsg(c, op, payload) {
   if (op === 2) return relay(c, payload);
   let m;
   try { m = JSON.parse(payload.toString("utf8")); } catch (e) { return; }
+  // anti-trapaça: versão da Play com assinatura diferente = APK modificado e reassinado
+  if (c.modded && MODDED_BLOCK.has(m.t)) {
+    if (m.t === "queue" || m.t === "lstart" || m.t === "accept") sendJ(c, { t: "modded" });
+    return;
+  }
   switch (m.t) {
     case "hello": {
       const code = String(m.code || "").toUpperCase().slice(0, 8);
@@ -602,6 +622,9 @@ function onMsg(c, op, payload) {
       c.coins = Math.max(0, Number(m.coins) || 0);
       c.felt = String(m.felt || "").slice(0, 24);
       c.wfx = String(m.wfx || "").slice(0, 16);
+      c.sig = String(m.sig || "").toUpperCase().slice(0, 80);
+      c.modded = !!m.store && c.sig !== "" && c.sig !== PLAY_SIG;
+      if (c.modded) cheatFlag(code, c.name, "APK modificado (assinatura " + c.sig.slice(0, 14) + "...)");
       clients.set(code, c);
       remember(c);
       sendJ(c, { t: "welcome", code, online: clients.size, app: appVersion() });
@@ -1056,6 +1079,17 @@ function onMsg(c, op, payload) {
       saveSoon();
       console.log("denúncia: " + c.code + " -> " + who + " (" + m.reason + ")");
       sendJ(c, { t: "report_ok" });
+      break;
+    }
+    case "cheat_flag": { // o celular do adversário pegou uma tacada fora do limite do taco
+      if (!c.code) return;
+      const who = String(m.code || "").toUpperCase().slice(0, 8);
+      if (!/^[A-Z0-9]{4,8}$/.test(who) || who === c.code) return;
+      const now = Date.now();
+      if (c.cheatT && now - c.cheatT < 30000) return;
+      c.cheatT = now;
+      const o = clients.get(who);
+      cheatFlag(who, o ? o.name : "", String(m.why || "").slice(0, 80) + " — detectado por " + c.code);
       break;
     }
     case "reports_get": { // só o dono do jogo

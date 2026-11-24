@@ -171,7 +171,7 @@ func connect_server() -> void:
 
 func send_hello() -> void:
 	if ws != null and ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else []}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else [], "sig": app_sig(), "store": OS.has_feature("store")}))
 
 
 func world_send(d: Dictionary) -> void:
@@ -291,6 +291,24 @@ const G_WEB_ID := "555286434372-qbsj13u6rl46fteg264r5lkpcc551b56.apps.googleuser
 var g_cid := ""
 var g_native_mode := ""
 var g_native_ok := true  # se o nativo falhar por configuração, usa o navegador
+
+
+# assinatura do app (só a versão da Play tem o plugin que lê isso)
+var _sig := "?"
+func app_sig() -> String:
+	if _sig == "?":
+		_sig = ""
+		if Engine.has_singleton("SinucouGoogle"):
+			var sg = Engine.get_singleton("SinucouGoogle")
+			if sg.has_method("sigHash"):
+				_sig = str(sg.sigHash())
+	return _sig
+
+
+# anti-trapaça: avisa o servidor (vai para a lista de denúncias do dono)
+func send_cheat(code: String, why: String) -> void:
+	if server_ok and code != "":
+		world_send({"t": "cheat_flag", "code": code, "why": why})
 
 
 func send_glink(mode: String) -> void:
@@ -435,7 +453,7 @@ func _world_poll(delta: float) -> void:
 	var stt := ws.get_ready_state()
 	if stt == WebSocketPeer.STATE_OPEN and not hello_sent:
 		hello_sent = true
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else []}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else [], "sig": app_sig(), "store": OS.has_feature("store")}))
 	if stt == WebSocketPeer.STATE_CONNECTING:
 		world_t += delta
 	cloud_tick(delta)
@@ -594,7 +612,7 @@ func _world_msg(m: Dictionary) -> void:
 			game.tour_update(m)
 		"eco_r":
 			game.eco_result(m)
-		"reports", "delete_r", "report_ok", "block_ok":
+		"reports", "delete_r", "report_ok", "block_ok", "modded":
 			if game.safety != null:
 				game.safety.on_msg(m)
 		"trade_invite", "trade_wait", "trade", "trade_end", "trade_done":
@@ -858,6 +876,7 @@ func r_state(snap: Dictionary) -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func r_shot(d: Dictionary) -> void:
+	d["_from"] = multiplayer.get_remote_sender_id()
 	game.net_remote_shot(d)
 
 

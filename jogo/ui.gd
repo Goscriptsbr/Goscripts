@@ -4041,8 +4041,7 @@ func _build_settings() -> void:
 	lrow.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(lrow)
 	var lks: Array = [["Termos de Uso", "https://goscripts.com.br/sinucou/termos/"], ["Política de Privacidade", "https://goscripts.com.br/sinucou/privacidade/"], ["Bloqueados", "#blk"], ["Excluir minha conta", "#del"]]
-	if game.safety != null and game.safety.is_owner():
-		lks.append(["Denúncias", "#rep"])
+	lks.append(["Denúncias", "#rep"])  # só aparece para o dono (ver _settings_refresh)
 	for lk in lks:
 		var lb := LinkButton.new()
 		lb.text = str(lk[0])
@@ -4053,10 +4052,13 @@ func _build_settings() -> void:
 		var url := str(lk[1])
 		lb.pressed.connect(_settings_link.bind(url))
 		lrow.add_child(lb)
+		if url == "#rep":
+			set_rep_lb = lb
 	_settings_refresh()
 
 
 var set_avc: Control
+var set_rep_lb: LinkButton
 
 
 func _settings_link(url: String) -> void:
@@ -4497,6 +4499,8 @@ func _toggle(k: String) -> void:
 
 
 func _settings_refresh() -> void:
+	if set_rep_lb != null and is_instance_valid(set_rep_lb):
+		set_rep_lb.visible = game.safety != null and game.safety.is_owner()
 	if name_edit != null and not name_edit.has_focus():
 		name_edit.text = str(game.save.get("name", ""))
 	for b in set_rows:
