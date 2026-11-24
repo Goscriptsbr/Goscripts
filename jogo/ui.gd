@@ -212,16 +212,31 @@ func build() -> void:
 	toast = mk_lbl("", 28, Color("ffe066"), 8)
 	toast.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	toast.position = Vector2(-300, -90)
+	var tsb := StyleBoxFlat.new()
+	tsb.bg_color = Color(0.02, 0.04, 0.08, 0.88)
+	tsb.set_corner_radius_all(14)
+	tsb.content_margin_left = 18
+	tsb.content_margin_right = 18
+	tsb.content_margin_top = 6
+	tsb.content_margin_bottom = 6
+	toast.add_theme_stylebox_override("normal", tsb)
 	toast.size = Vector2(600, 50)
 	toast.modulate.a = 0.0
 	root.add_child(toast)
 
 
-func say(t: String) -> void:
+var _say_tw: Tween
+func say(t: String, secs: float = 0.0) -> void:
 	toast.text = t
 	toast.modulate.a = 1.0
+	# por cima de qualquer janela (antes ficava escondido atrás da janela aberta)
+	toast.z_index = 100
+	toast.get_parent().move_child(toast, -1)
+	if _say_tw != null and _say_tw.is_valid():
+		_say_tw.kill()
 	var tw := create_tween()
-	tw.tween_interval(1.4)
+	_say_tw = tw
+	tw.tween_interval(secs if secs > 0.0 else clampf(1.4 + t.length() * 0.035, 1.4, 6.0))
 	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
 
 
@@ -4283,10 +4298,10 @@ func cloud_refresh() -> void:
 			var gt := mk_btn("G   ENTRAR NA MINHA CONTA (GOOGLE)", 420, 60, GREEN, 21)
 			gt.pressed.connect(func():
 				game.net.send_glink("login")
-				say("Abrindo o Google... escolha a conta e depois volte para o jogo."))
+				say("Abrindo o Google... escolha a conta."))
 			cloud_box.add_child(gt)
-			cloud_box.add_child(mk_lbl("— ou, se é novo, guarde esta conta —", 16, Color(1, 1, 1, 0.5), 2))
-		var gb := mk_btn("G   CONECTAR COM GOOGLE", 420, 60, Color("4285f4"), 22)
+			cloud_box.add_child(mk_lbl("É novo? Guarde esta conta no seu Google:", 16, Color(1, 1, 1, 0.5), 2))
+		var gb := mk_btn("G   CONECTAR COM GOOGLE", 420, 60 if game.player_level() > 1 else 48, Color("4285f4"), 22 if game.player_level() > 1 else 18)
 		gb.pressed.connect(func():
 			game.net.send_glink("link")
 			say("Abrindo o Google... escolha sua conta e depois volte para o jogo."))
@@ -4309,13 +4324,15 @@ func cloud_refresh() -> void:
 		game.net.send_setpass(pw)
 		say("Salvando senha..."))
 	prow.add_child(b1)
-	cloud_box.add_child(mk_lbl("— Celular novo? Entre na sua conta antiga —", 18, Color(1, 1, 1, 0.6), 2))
-	var gl := mk_btn("G   ENTRAR COM GOOGLE", 420, 58, Color("4285f4"), 22)
-	gl.pressed.connect(func():
-		game.net.send_glink("login")
-		say("Abrindo o Google... escolha a conta e depois volte para o jogo."))
-	cloud_box.add_child(gl)
-	cloud_box.add_child(mk_lbl("ou com código e senha:", 16, Color(1, 1, 1, 0.5), 2))
+	if n.g_mail != "" or game.player_level() > 1:
+		# o botão verde de cima já faz isso na conta nova; aqui só aparece para quem já tem progresso
+		cloud_box.add_child(mk_lbl("— Quer entrar em outra conta? —", 18, Color(1, 1, 1, 0.6), 2))
+		var gl := mk_btn("G   ENTRAR COM GOOGLE", 420, 58, Color("4285f4"), 22)
+		gl.pressed.connect(func():
+			game.net.send_glink("login")
+			say("Abrindo o Google... escolha a conta."))
+		cloud_box.add_child(gl)
+	cloud_box.add_child(mk_lbl("Entrar com código e senha:", 16, Color(1, 1, 1, 0.5), 2))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER

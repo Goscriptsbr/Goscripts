@@ -316,34 +316,68 @@ func send_glink(mode: String) -> void:
 	if mode == "link":
 		send_csave()
 	glink_n = ""
+	g_native_mode = mode
+	g_wait = 0.0
+	g_busy = true
 	# versão da Play Store: janelinha do Google dentro do jogo (sem navegador)
 	if g_native_ok and Engine.has_singleton("SinucouGoogle"):
 		var sg = Engine.get_singleton("SinucouGoogle")
 		if not sg.is_connected("google_ok", _g_native_ok):
-			sg.connect("google_ok", _g_native_ok)
-			sg.connect("google_fail", _g_native_fail)
-		g_native_mode = mode
+			# o Android avisa de outra thread: CONNECT_DEFERRED traz a resposta para o jogo com segurança
+			sg.connect("google_ok", _g_native_ok, CONNECT_DEFERRED)
+			sg.connect("google_fail", _g_native_fail, CONNECT_DEFERRED)
 		sg.signIn(g_cid if g_cid != "" else G_WEB_ID)
 		return
-	world_send({"t": "glink_start", "mode": mode, "tok": game.my_tok()})
+	_g_send({"t": "glink_start", "mode": mode, "tok": game.my_tok()})
+
+
+# manda para o servidor; se ele ainda estiver acordando, guarda e manda assim que conectar
+var g_pending: Dictionary = {}
+var g_wait := 0.0
+var g_busy := false
+func _g_send(d: Dictionary) -> void:
+	connect_server()
+	if server_ok:
+		world_send(d)
+	else:
+		g_pending = d
+		if game.ui != null:
+			game.ui.say("Conectando ao servidor... (pode levar até 1 minuto)")
+
+
+func _g_watch(delta: float) -> void:
+	if not g_pending.is_empty() and server_ok:
+		world_send(g_pending)
+		g_pending = {}
+	if g_busy:
+		g_wait += delta
+		if g_wait > 75.0:
+			g_busy = false
+			g_pending = {}
+			if game.ui != null:
+				game.ui.say("O Google não respondeu. Confira a internet e tente de novo.", 5.0)
 
 
 func _g_native_ok(id_token: String, _email: String) -> void:
 	if game.ui != null:
 		game.ui.say("Conferindo sua conta Google...")
-	world_send({"t": "glink_token", "mode": g_native_mode, "cred": id_token, "tok": game.my_tok()})
+	_g_send({"t": "glink_token", "mode": g_native_mode, "cred": id_token, "tok": game.my_tok()})
 
 
 func _g_native_fail(kind: String, detail: String) -> void:
 	print("google nativo: ", kind, " ", detail)
 	if kind == "cancelado":
+		g_busy = false
 		return
-	# não configurado / sem serviços do Google: cai para o login pelo navegador
+	# não deu na janelinha (sem conta no aparelho, serviços do Google etc.): tenta pelo navegador
 	g_native_ok = false
-	world_send({"t": "glink_start", "mode": g_native_mode, "tok": game.my_tok()})
+	if game.ui != null:
+		game.ui.say("Abrindo o login do Google pelo navegador...", 4.0)
+	_g_send({"t": "glink_start", "mode": g_native_mode, "tok": game.my_tok()})
 
 
 func _glink_tick(delta: float) -> void:
+	_g_watch(delta)
 	if glink_n == "":
 		return
 	glink_age += delta
@@ -360,6 +394,7 @@ func _glink_result(m: Dictionary) -> void:
 	var st := str(m.get("st", ""))
 	if st == "wait":
 		return
+	g_busy = false
 	if st == "gone":
 		glink_n = ""
 		return
@@ -387,7 +422,8 @@ func _glink_result(m: Dictionary) -> void:
 				ui.close_modal()
 				ui.confirm("VOCÊ JÁ TEM UMA CONTA!", "Esse Google já está ligado a uma conta do Sinucou.\nQuer ENTRAR nela? Suas moedas, itens e nível voltam.\n\n(Escolha o mesmo Google de novo na próxima tela.)", "ENTRAR NA MINHA CONTA", func(): send_glink("login"), "CANCELAR", Callable())
 			else:
-				ui.say(msg)
+				ui.close_modal()
+				ui.confirm("GOOGLE", msg, "OK", func(): pass, "", Callable())
 
 
 func send_recover(code: String, pw: String) -> void:
@@ -647,6 +683,7 @@ func _world_msg(m: Dictionary) -> void:
 			if game.ui != null:
 				game.ui.cloud_recover_result(m)
 		"glink_url":
+			g_busy = false
 			glink_n = str(m.get("n", ""))
 			glink_mode = str(m.get("mode", ""))
 			glink_age = 0.0
