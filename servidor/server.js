@@ -586,7 +586,12 @@ function onData(c, d) {
 }
 
 // ------------------------------------------------------------ anti-trapaça
-const PLAY_SIG = "03:0E:8F:3F:B0:2A:F9:BF:D1:F3:F3:A6:5F:15:A7:89:CF:97:C9:A6"; // chave de assinatura da Play
+// SHA-1 dos certificados oficiais: chave de assinatura da Play (clássica e pós-quântica) e chave de upload
+const PLAY_SIGS = new Set([
+  "79:A6:11:E0:E0:E4:65:C5:09:2D:96:AA:24:54:B0:31:1D:A9:54:9E",
+  "D4:34:11:90:D1:74:F5:11:78:4A:4A:CD:2A:2A:75:CF:F3:BC:85:66",
+  "3C:71:D2:E0:72:E6:E2:B9:4A:9F:7A:BD:19:6C:81:19:60:E9:24:17",
+]);
 const MODDED_BLOCK = new Set(["queue", "lcreate", "lstart", "tcreate", "invite", "accept", "rematch"]);
 const cheatSeen = new Map(); // código+motivo -> último aviso (não encher a lista)
 function cheatFlag(code, name, why) {
@@ -623,7 +628,7 @@ function onMsg(c, op, payload) {
       c.felt = String(m.felt || "").slice(0, 24);
       c.wfx = String(m.wfx || "").slice(0, 16);
       c.sig = String(m.sig || "").toUpperCase().slice(0, 80);
-      c.modded = !!m.store && c.sig !== "" && c.sig !== PLAY_SIG;
+      c.modded = !!m.store && c.sig !== "" && !PLAY_SIGS.has(c.sig);
       if (c.modded) cheatFlag(code, c.name, "APK modificado (assinatura " + c.sig.slice(0, 14) + "...)");
       clients.set(code, c);
       remember(c);
