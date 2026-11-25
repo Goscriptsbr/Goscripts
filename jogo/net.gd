@@ -377,7 +377,9 @@ func _g_native_fail(kind: String, detail: String) -> void:
 		return
 	# não deu na janelinha: tenta pelo navegador (e mostra o motivo, para sabermos o que foi)
 	g_native_ok = false
-	g_last_err = detail.left(90)
+	g_last_err = (kind + ": " + detail).left(140)
+	# registra no servidor (aparece na lista de Denúncias do dono) para sabermos o motivo exato
+	world_send({"t": "gdiag", "why": g_last_err, "v": game.APP_VERSION})
 	if game.ui != null:
 		game.ui.say("Abrindo o login do Google pelo navegador... (%s)" % detail.left(60), 6.0)
 	_g_send({"t": "glink_start", "mode": g_native_mode, "tok": game.my_tok()})

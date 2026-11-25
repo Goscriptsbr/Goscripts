@@ -4324,6 +4324,11 @@ func cloud_refresh() -> void:
 		game.net.send_setpass(pw)
 		say("Salvando senha..."))
 	prow.add_child(b1)
+	if n.g_last_err != "":
+		var el := mk_lbl("Login rápido falhou: " + n.g_last_err, 14, Color(1, 0.45, 0.45), 2)
+		el.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		el.custom_minimum_size.x = 440
+		cloud_box.add_child(el)
 	if n.g_mail != "" or game.player_level() > 1:
 		# o botão verde de cima já faz isso na conta nova; aqui só aparece para quem já tem progresso
 		cloud_box.add_child(mk_lbl("— Quer entrar em outra conta? —", 18, Color(1, 1, 1, 0.6), 2))

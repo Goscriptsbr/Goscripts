@@ -1081,6 +1081,18 @@ function onMsg(c, op, payload) {
       sendJ(c, { t: "report_ok" });
       break;
     }
+    case "gdiag": { // erro do login rápido do Google no celular (diagnóstico para o dono)
+      if (!c.code) return;
+      const now = Date.now();
+      if (c.gdiagT && now - c.gdiagT < 60000) return;
+      c.gdiagT = now;
+      const why = String(m.why || "").slice(0, 160);
+      console.log("gdiag " + c.code + " v" + (m.v | 0) + ": " + why);
+      reports.push({ at: now, from: "SISTEMA", fromName: "Login Google", code: c.code, name: String(c.name || "").slice(0, 20), reason: "Erro no login rápido", note: "v" + (m.v | 0) + " " + why, ctx: [] });
+      while (reports.length > 500) reports.shift();
+      saveSoon();
+      break;
+    }
     case "cheat_flag": { // o celular do adversário pegou uma tacada fora do limite do taco
       if (!c.code) return;
       const who = String(m.code || "").toUpperCase().slice(0, 8);
