@@ -589,6 +589,7 @@ function onData(c, d) {
 // SHA-1 dos certificados oficiais: chave de assinatura da Play (clássica e pós-quântica) e chave de upload
 const PLAY_SIGS = new Set([
   "79:A6:11:E0:E0:E4:65:C5:09:2D:96:AA:24:54:B0:31:1D:A9:54:9E",
+  "B1:F0:5C:60:35:E2:C7:D7:DB:EE:11:D1:77:19:82:82:8F:35:B2:E4", // chave de assinatura anterior (23/11)
   "D4:34:11:90:D1:74:F5:11:78:4A:4A:CD:2A:2A:75:CF:F3:BC:85:66",
   "3C:71:D2:E0:72:E6:E2:B9:4A:9F:7A:BD:19:6C:81:19:60:E9:24:17",
 ]);
