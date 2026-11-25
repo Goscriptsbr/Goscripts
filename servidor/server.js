@@ -1092,8 +1092,8 @@ function onMsg(c, op, payload) {
       if (c.gdiagT && now - c.gdiagT < 60000) return;
       c.gdiagT = now;
       const why = String(m.why || "").slice(0, 160);
-      console.log("gdiag " + c.code + " v" + (m.v | 0) + ": " + why);
-      reports.push({ at: now, from: "SISTEMA", fromName: "Login Google", code: c.code, name: String(c.name || "").slice(0, 20), reason: "Erro no login rápido", note: "v" + (m.v | 0) + " " + why, ctx: [] });
+      console.log("gdiag " + c.code + " v" + (m.v | 0) + ": " + why + " sig=" + (c.sig || "?"));
+      reports.push({ at: now, from: "SISTEMA", fromName: "Login Google", code: c.code, name: String(c.name || "").slice(0, 20), reason: "Erro no login rápido", note: "v" + (m.v | 0) + " " + why + " | assinatura do app: " + (c.sig || "?"), ctx: [] });
       while (reports.length > 500) reports.shift();
       saveSoon();
       break;
