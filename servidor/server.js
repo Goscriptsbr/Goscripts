@@ -629,6 +629,7 @@ function onMsg(c, op, payload) {
       c.felt = String(m.felt || "").slice(0, 24);
       c.wfx = String(m.wfx || "").slice(0, 16);
       c.sig = String(m.sig || "").toUpperCase().slice(0, 80);
+      c.rule = ruleOf(m.rule);
       c.modded = !!m.store && c.sig !== "" && !PLAY_SIGS.has(c.sig);
       if (c.modded) cheatFlag(code, c.name, "APK modificado (assinatura " + c.sig.slice(0, 14) + "...)");
       clients.set(code, c);
@@ -756,7 +757,7 @@ function onMsg(c, op, payload) {
         p.four = g.endsWith("4");
         if (!p.four) {
           // 1x1 com a dupla do lobby: joga um contra o outro
-          if (p.members.length === 2) { const ms = p.members.slice(); matchN(ms, g, stake); return; }
+          if (p.members.length === 2) { const ms = p.members.slice(); matchN(ms, g, stake, p.leader && p.leader.rule); return; }
           sendLobby(p, "No 1 contra 1 o lobby precisa ter só 2 jogadores.");
           return;
         }
@@ -825,11 +826,11 @@ function onMsg(c, op, payload) {
       if (!p.four) {
         if (p.members.length !== 2) return sendLobby(p, "Para o 1 contra 1 precisa ter 2 no lobby.");
         const ms = p.members.slice();
-        matchN(ms, p.game, stakeOf(p.stake));
+        matchN(ms, p.game, stakeOf(p.stake), p.leader && p.leader.rule);
         break;
       }
       if (p.members.length < 2) return sendLobby(p, "Chame pelo menos 1 amigo para jogar junto.");
-      matchSeats(seatUnits([c]), p.game + "4", stakeOf(p.stake));
+      matchSeats(seatUnits([c]), p.game + "4", stakeOf(p.stake), null, p.leader && p.leader.rule);
       break;
     }
     case "lset": { // líder trocou jogo/mesa no lobby (sem procurar ainda)
@@ -932,7 +933,7 @@ function onMsg(c, op, payload) {
       // revanche: troca o anfitrião e a mesa passa para quem não era o dono da última
       const nseats = [c, o];
       const own = nseats.findIndex((x) => x.code !== r.ownerCode);
-      matchSeats(nseats, gameOf(r.game), r.stake || 0, own < 0 ? null : own);
+      matchSeats(nseats, gameOf(r.game), r.stake || 0, own < 0 ? null : own, r.rule);
       break;
     }
     case "friends": {
@@ -1054,7 +1055,7 @@ function onMsg(c, op, payload) {
       }
       leaveParty(f); leaveParty(c);
       unqueue(f); unqueue(c);
-      matchN([f, c], m.game === "truco" ? "truco" : "sinuca", ast);
+      matchN([f, c], m.game === "truco" ? "truco" : "sinuca", ast, f.rule);
       break;
     }
     case "decline": {
@@ -1085,6 +1086,10 @@ function onMsg(c, op, payload) {
       saveSoon();
       console.log("denúncia: " + c.code + " -> " + who + " (" + m.reason + ")");
       sendJ(c, { t: "report_ok" });
+      break;
+    }
+    case "rule": { // regra de sinuca escolhida no aparelho
+      c.rule = ruleOf(m.rule);
       break;
     }
     case "gdiag": { // erro do login rápido do Google no celular (diagnóstico para o dono)
@@ -1138,11 +1143,15 @@ function norm(t) {
 }
 
 // sala com 2 a 4 jogadores; o primeiro é o anfitrião (peer 1), os outros são 2, 3, 4
-function matchN(list, game, stake) { matchSeats(list, game, stake); }
+function matchN(list, game, stake, rule) { matchSeats(list, game, stake, null, rule); }
+// regras de sinuca: oficial, de bar e bola cantada (fila e torneio usam sempre a oficial)
+const RULES = ["classic", "bar", "cantada"];
+function ruleOf(r) { return RULES.includes(r) ? r : "classic"; }
 
 // seats[i] = jogador no lugar i (ou null = IA). Lugar i usa peer i+1; times: 0 e 2 contra 1 e 3
-function matchSeats(seats, game, stake, ownerSeat) {
+function matchSeats(seats, game, stake, ownerSeat, rule) {
   stake = stakeOf(stake);
+  rule = game.startsWith("truco") ? "classic" : ruleOf(rule);
   const list = seats.filter((p) => p);
   if (seats[0] == null) { // o lugar 0 (anfitrião) precisa ser gente
     const i = seats.findIndex((p) => p);
@@ -1150,7 +1159,7 @@ function matchSeats(seats, game, stake, ownerSeat) {
   }
   // o lobby continua existindo durante a partida: no fim todos voltam para ele
   for (const p of list) unqueue(p);
-  const room = { id: nextRoom++, members: list.slice(), game, seats: game.endsWith("4") ? 4 : 2, stake };
+  const room = { id: nextRoom++, members: list.slice(), game, seats: game.endsWith("4") ? 4 : 2, stake, rule };
   // dono da mesa da partida (a mesa dele é a usada e ele quebra): no lobby vai revezando, senão sorteia
   const humans = [];
   seats.forEach((p, i) => { if (p) humans.push(i); });
@@ -1164,7 +1173,7 @@ function matchSeats(seats, game, stake, ownerSeat) {
   seats.forEach((p, i) => { if (p) { p.room = room; p.peer = i + 1; p.status = "jogando"; const e = playersDir.get(p.code); players.push({ peer: i + 1, name: p.name, code: p.code, felt: p.felt || "", wfx: p.wfx || "", av: e && e.prof ? e.prof.av : "b8", fr: e && e.prof ? e.prof.fr : "" }); } });
   for (const p of list) {
     const opp = list.find((o) => o !== p) || p;
-    sendJ(p, { t: "match", role: p.peer === 1 ? "host" : "guest", peer: p.peer, game, seats: room.seats, players, opp: { name: opp.name, code: opp.code }, stake, owner });
+    sendJ(p, { t: "match", role: p.peer === 1 ? "host" : "guest", peer: p.peer, game, seats: room.seats, players, opp: { name: opp.name, code: opp.code }, stake, owner, rule });
   }
 }
 

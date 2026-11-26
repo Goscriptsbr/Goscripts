@@ -27,6 +27,13 @@ var over_title: Label
 var over_sub: Label
 var over_reward: Label
 var diff_btns: Array = []
+var rule_cards: Array = []
+var rule_online_box: Control   # [ {"r": regra, "b": Button} ] (tela da sinuca e tela online)
+const RULE_INFO := {
+	"classic": ["CLÁSSICA", "Regra oficial da bola 8", "8"],
+	"bar": ["REGRA DE BAR", "Preta + bola do outro = chance  •  falta = 2 tacadas", "🍺"],
+	"cantada": ["BOLA CANTADA", "Toque na caçapa: a preta tem que cair nela", "🎯"],
+}
 var diff_desc: Label
 var inv_sub := "cue"
 var hero_nodes: Array = []
@@ -1120,17 +1127,18 @@ func _build_play() -> void:
 		var f: Font = ThemeDB.fallback_font
 		hd.draw_string_outline(f, Vector2(0, 54), "SINUCA", HORIZONTAL_ALIGNMENT_CENTER, 700, 58, 10, Color("3a2402"))
 		hd.draw_string(f, Vector2(0, 54), "SINUCA", HORIZONTAL_ALIGNMENT_CENTER, 700, 58, Color("f7c33a"))
-		hd.draw_string(f, Vector2(0, 82), "ESCOLHA COMO VOCÊ QUER JOGAR", HORIZONTAL_ALIGNMENT_CENTER, 700, 18, Color(1, 1, 1, 0.75)))
+		hd.draw_string(f, Vector2(0, 82), "ESCOLHA A REGRA E COMO VOCÊ QUER JOGAR", HORIZONTAL_ALIGNMENT_CENTER, 700, 18, Color(1, 1, 1, 0.75)))
 	v.add_child(hd)
+	v.add_child(rule_row())
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 24)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(row)
-	var c1 := hero_btn("CONTRA A IA", "Desafie a IA GoScripts", "res://assets/mode_ai.png", Color("3ddc84"), Vector2(330, 290), 34, "GANHE MOEDAS")
+	var c1 := hero_btn("CONTRA A IA", "Desafie a IA GoScripts", "res://assets/mode_ai.png", Color("3ddc84"), Vector2(300, 236), 34, "GANHE MOEDAS")
 	c1.pressed.connect(_start.bind(game.Mode.AI))
-	var c2 := hero_btn("2 JOGADORES", "Revezando no mesmo celular", "res://assets/mode_2p.png", Color("6fb4ff"), Vector2(330, 290), 34, "DUELO LOCAL")
+	var c2 := hero_btn("2 JOGADORES", "Revezando no mesmo celular", "res://assets/mode_2p.png", Color("6fb4ff"), Vector2(300, 236), 34, "DUELO LOCAL")
 	c2.pressed.connect(_start.bind(game.Mode.TWO))
-	var c3 := hero_btn("TREINO LIVRE", "Sem regras e sem tempo", "res://assets/mode_train.png", Color("ffd35a"), Vector2(330, 290), 34, "PRATIQUE")
+	var c3 := hero_btn("TREINO LIVRE", "Sem regras e sem tempo", "res://assets/mode_train.png", Color("ffd35a"), Vector2(300, 236), 34, "PRATIQUE")
 	c3.pressed.connect(_start.bind(game.Mode.TRAIN))
 	row.add_child(c1)
 	row.add_child(c2)
@@ -1186,6 +1194,62 @@ func _build_play() -> void:
 	_set_diff(diff_sel)
 
 
+# cartões de regra da sinuca: Clássica, Regra de Bar e Bola Cantada
+func rule_row(compact: bool = false) -> Control:
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 12)
+	hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	for r in game.RULES:
+		var info: Array = RULE_INFO[r]
+		var b := Button.new()
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(250, 58) if compact else Vector2(300, 76)
+		b.text = ""
+		var vb := VBoxContainer.new()
+		vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vb.alignment = BoxContainer.ALIGNMENT_CENTER
+		vb.add_theme_constant_override("separation", 0)
+		vb.set_anchors_preset(Control.PRESET_FULL_RECT)
+		var t := mk_lbl(str(info[0]), 18 if compact else 21, Color.WHITE, 3)
+		t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vb.add_child(t)
+		var d := mk_lbl(str(info[1]), 12 if compact else 13, Color(1, 1, 1, 0.78), 2)
+		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		d.custom_minimum_size.x = b.custom_minimum_size.x - 20
+		d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vb.add_child(d)
+		b.add_child(vb)
+		b.pressed.connect(_set_rule.bind(r))
+		rule_cards.append({"r": r, "b": b})
+		hb.add_child(b)
+	call_deferred("_paint_rules")
+	return hb
+
+
+func _set_rule(r: String) -> void:
+	game.save["rule"] = r
+	game.write_save()
+	if game.net != null:
+		game.net.send_rule()
+	game.play("click", 0.6)
+	_paint_rules()
+
+
+func _paint_rules() -> void:
+	var cur := str(game.save.get("rule", "classic"))
+	var cols := {"classic": Color("1f8f4e"), "bar": Color("b5651d"), "cantada": Color("2e6fd8")}
+	for e in rule_cards:
+		var b: Button = e.b
+		if not is_instance_valid(b):
+			continue
+		var on: bool = str(e.r) == cur
+		var col: Color = cols[e.r] if on else Color(0.07, 0.1, 0.16, 0.92)
+		b.add_theme_stylebox_override("normal", sbox(col, 18, Color(1, 0.88, 0.35) if on else Color(1, 1, 1, 0.16), 3 if on else 2, 8 if on else 0))
+		b.add_theme_stylebox_override("hover", sbox(col.lightened(0.1), 18, Color.WHITE, 3, 8))
+		b.add_theme_stylebox_override("pressed", sbox(col.darkened(0.1), 18, Color.WHITE, 3, 4))
+
+
 func _build_online() -> void:
 	var v := mk_screen("online", 10)
 	add_bg("online", "res://assets/menu_bg.jpg", 0.2)
@@ -1214,9 +1278,9 @@ func _build_online() -> void:
 	lp.add_theme_stylebox_override("panel", sbox(Color(0.02, 0.05, 0.08, 0.88), 26, Color(1, 1, 1, 0.18), 2, 12))
 	body.add_child(lp)
 	var lv := VBoxContainer.new()
-	lv.add_theme_constant_override("separation", 10)
+	lv.add_theme_constant_override("separation", 6)
 	lv.alignment = BoxContainer.ALIGNMENT_CENTER
-	lp.add_child(margin(lv, 16))
+	lp.add_child(margin(lv, 12))
 	lv.add_child(_section("JOGO"))
 	var gs := HBoxContainer.new()
 	gs.add_theme_constant_override("separation", 10)
@@ -1235,6 +1299,20 @@ func _build_online() -> void:
 		tb.pressed.connect(_online_team.bind(k[0]))
 		team_btns[k[0]] = tb
 		ts.add_child(tb)
+	# regra da sinuca (vale para salas e convites com amigos; partida rápida é sempre a clássica)
+	rule_online_box = VBoxContainer.new()
+	rule_online_box.add_theme_constant_override("separation", 4)
+	lv.add_child(rule_online_box)
+	rule_online_box.add_child(_section("REGRA  (SALAS COM AMIGOS)"))
+	var rs := HBoxContainer.new()
+	rs.add_theme_constant_override("separation", 8)
+	rule_online_box.add_child(rs)
+	for r in game.RULES:
+		var rb := mk_btn({"classic": "CLÁSSICA", "bar": "DE BAR", "cantada": "CANTADA"}[r], 124, 40, GRAY, 17)
+		rb.pressed.connect(_set_rule.bind(r))
+		rule_cards.append({"r": r, "b": rb})
+		rs.add_child(rb)
+	call_deferred("_paint_rules")
 	lv.add_child(_section("CONEXÃO"))
 	var cs := HBoxContainer.new()
 	cs.add_theme_constant_override("separation", 10)
@@ -1874,6 +1952,8 @@ func _online_game(g: String) -> void:
 	game.net_game = g
 	if online_bg_truco != null:
 		online_bg_truco.visible = g == "truco"
+	if rule_online_box != null:
+		rule_online_box.visible = g != "truco"
 	for k in online_game_btns.keys():
 		var b: Button = online_game_btns[k]
 		var col: Color = (GREEN if k == "sinuca" else Color("b8323a")) if k == g else GRAY

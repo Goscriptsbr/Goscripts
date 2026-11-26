@@ -38,7 +38,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 109  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 110  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -203,6 +203,16 @@ var pocketed: Array = []
 var cue_pocketed := false
 var rem_before := 0
 var shot_by := 0
+# ---- regras da sinuca: "classic" (oficial), "bar" (regra de bar), "cantada" (bola cantada)
+const RULES := ["classic", "bar", "cantada"]
+var regra := "classic"
+var net_rule := "classic"   # regra da partida online (vem do servidor)
+var chance_team := -1       # Regra de Bar: time que está na "chance" de matar todas
+var chance_owner := -1      # Regra de Bar: quem derrubou a preta (ganha se o outro errar)
+var bonus_visit := false    # Regra de Bar: falta dá 2 tacadas para o adversário
+var called_pocket := -1     # Bola Cantada: caçapa cantada para a preta nesta tacada
+var user_call := -1         # Bola Cantada: caçapa que o jogador tocou (senão vale a da mira)
+var net_call := -1
 var cue_ids: Array = ["", ""]
 var felt_override := ""
 var net_peer_cue := "classico"
@@ -1517,6 +1527,19 @@ func start_game(m: Mode, d: int = 1, names: Array = []) -> void:
 	banner_turn = turn
 	banner_ms = Time.get_ticks_msec()
 	groups = [-1, -1]
+	if m == Mode.ONLINE:
+		regra = net_rule if RULES.has(net_rule) else "classic"
+	elif m == Mode.TRAIN:
+		regra = "classic"
+	else:
+		regra = str(save.get("rule", "classic"))
+		if not RULES.has(regra):
+			regra = "classic"
+	chance_team = -1
+	chance_owner = -1
+	bonus_visit = false
+	called_pocket = -1
+	user_call = -1
 	break_shot = true
 	ball_in_hand = false
 	winner = -1
@@ -1649,6 +1672,7 @@ func begin_turn() -> void:
 		banner_ms = Time.get_ticks_msec()
 	turn_left = float(TURN_TIME)
 	tick_last = -1
+	user_call = -1
 	hard_cands = []
 	hard_i = 0
 	ai_phase = 0
@@ -1684,6 +1708,13 @@ func shoot(pw: float, remote: bool = false) -> void:
 	shot_by = turn
 	var g: int = groups[turn]
 	rem_before = remaining(g) if g != -1 else 99
+	called_pocket = -1
+	if regra == "cantada" and g != -1 and rem_before == 0:
+		if remote:
+			called_pocket = net_call if net_call >= 0 else predicted_pocket()
+		else:
+			called_pocket = user_call if user_call >= 0 else predicted_pocket()
+	net_call = -1
 	ball_in_hand = false
 	bot_shots += 1
 	strike_pw = pw
@@ -1699,7 +1730,7 @@ func shoot(pw: float, remote: bool = false) -> void:
 		launch_pre = launch_params()
 		var c0 := get_ball(0)
 		net.send_shot({"a": shot_ang, "pw": pw, "p": strike_pull / 130.0, "sp": shot_spv, "cp": c0.pos, "h": h0, "sps": shot_pow, "sss": shot_spin,
-			"lv": launch_pre.v, "lt": launch_pre.t, "ls": launch_pre.s, "la": launch_pre.ang})
+			"lv": launch_pre.v, "lt": launch_pre.t, "ls": launch_pre.s, "la": launch_pre.ang, "ck": called_pocket})
 	if bot:
 		launch()
 	else:
@@ -1792,10 +1823,19 @@ func timer_update() -> void:
 		touches.clear()
 		power = 0.0
 		var who: String = players[turn]
+		if chance_team >= 0 and turn == chance_team:
+			var cw := chance_owner
+			chance_team = -1
+			say("Tempo esgotado na chance! Vitória de %s." % players[cw], 3.5)
+			end_game(cw)
+			if mode == Mode.ONLINE:
+				net_send_state()
+			return
 		turn = 1 - turn
 		ball_in_hand = true
+		bonus_visit = regra == "bar"
 		begin_turn()
-		say("Tempo esgotado para %s! Bola na mão para %s." % [who, players[turn]], 3.5)
+		say("Tempo esgotado para %s! Bola na mão para %s.%s" % [who, players[turn], " Ele tem 2 tacadas." if regra == "bar" else ""], 3.5)
 		if mode == Mode.ONLINE:
 			net_send_state()
 
@@ -2247,7 +2287,8 @@ func save_match() -> void:
 	for b in balls:
 		bl.append([b.n, b.on, b.pos.x, b.pos.y])
 	var d := {"mode": int(mode), "diff": diff, "players": players, "turn": turn, "groups": groups, "hand": ball_in_hand,
-		"brk": break_shot, "cues": cue_ids, "balls": bl, "bet": bet_cur}
+		"brk": break_shot, "cues": cue_ids, "balls": bl, "bet": bet_cur,
+		"rg": regra, "ch": [chance_team, chance_owner], "bv": bonus_visit}
 	var f := FileAccess.open(MATCH_FILE, FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(d))
@@ -2285,6 +2326,13 @@ func resume_match() -> void:
 	groups = [int(d.groups[0]), int(d.groups[1])]
 	ball_in_hand = bool(d.hand)
 	break_shot = bool(d.brk)
+	if RULES.has(str(d.get("rg", ""))):
+		regra = str(d.rg)
+	var rch: Array = d.get("ch", [-1, -1])
+	if rch.size() == 2:
+		chance_team = int(rch[0])
+		chance_owner = int(rch[1])
+	bonus_visit = bool(d.get("bv", false))
 	cue_ids = d.cues
 	for e in d.balls:
 		var b := get_ball(int(e[0]))
@@ -2524,6 +2572,26 @@ func _resolve_core() -> void:
 			pocketed.erase(BLACK)
 		else:
 			var legal := g != -1 and rem_before == 0 and not foul
+			if legal and regra == "cantada" and called_pocket >= 0:
+				var bk2 := get_ball(BLACK)
+				if nearest_pocket(bk2.dpos) != called_pocket:
+					legal = false
+					say("A preta caiu em outra caçapa! Não era a cantada.", 4.0)
+			if legal and regra == "bar" and chance_team < 0:
+				# Regra de Bar: derrubou a preta junto com bola do adversário = ele ganha uma chance
+				var opp_in := false
+				for n in pocketed:
+					if n != BLACK and n != 0 and group_of(n) == 1 - g:
+						opp_in = true
+				if opp_in and remaining(1 - g) > 0:
+					chance_owner = me
+					chance_team = 1 - me
+					bonus_visit = false
+					break_shot = false
+					turn = 1 - me
+					say("CHANCE! A preta caiu junto com bola de %s. Agora %s precisa matar TODAS as suas sem errar!" % [players[1 - me], players[1 - me]], 5.0)
+					begin_turn()
+					return
 			end_game(me if legal else 1 - me)
 			return
 	if g == -1 and not foul:
@@ -2544,6 +2612,22 @@ func _resolve_core() -> void:
 		cue.drop = -1.0
 		cue.pos = Vector2(-250, 0)
 		cue.vel = Vector2.ZERO
+	if chance_team >= 0 and me == chance_team:
+		# Regra de Bar: na chance, errou ou fez falta = perde; matou todas = ganha
+		if foul or not scored:
+			var w := chance_owner
+			say("%s errou na chance! Vitória de %s." % [players[me], players[w]], 4.0)
+			chance_team = -1
+			end_game(w)
+			return
+		if remaining(g) == 0:
+			say("%s matou todas na chance e virou o jogo!" % players[me], 4.0)
+			chance_team = -1
+			end_game(me)
+			return
+		say("Boa! Continua na chance: faltam %d" % remaining(g), 2.0)
+		begin_turn()
+		return
 	if foul:
 		turn = 1 - me
 		var extra := ""
@@ -2566,11 +2650,19 @@ func _resolve_core() -> void:
 				low.drop = 0.0
 				low.dpos = bp
 				extra += " Sai a bola %d de %s." % [low.n, players[turn]]
+		if regra == "bar":
+			bonus_visit = true
+			extra += " %s tem 2 tacadas." % players[turn]
 		say("Falta: %s%s" % [why, extra], 4.5)
 	elif scored:
 		if msg_t <= 0.0:
 			say("Boa! Joga de novo", 2.0)
+	elif regra == "bar" and bonus_visit:
+		# Regra de Bar: errou, mas ainda tinha a 2ª tacada da falta do adversário
+		bonus_visit = false
+		say("%s ainda tem a 2ª tacada!" % players[me], 2.5)
 	else:
+		bonus_visit = false
 		turn = 1 - me
 	if net_auto and net4:
 		print("RES4 shooter=", shooter(), " bot=", bot_seats.has(shooter()), " team=", me, " g=", g, " pk=", pocketed, " first=", first_hit, " foul=", foul, " scored=", scored, " -> turn=", turn)
@@ -2583,7 +2675,8 @@ func net_snapshot() -> Dictionary:
 	for b in balls:
 		arr.append([b.n, b.on, b.pos, b.drop, b.dpos])
 	return {"b": arr, "turn": turn, "g": groups, "h": ball_in_hand, "bs": break_shot, "msg": msg if msg_t > 0.0 else "", "mt": msg_t, "over": st == St.OVER, "w": winner,
-		"mem": tm_member, "lt": last_team, "cues": cue_ids, "sn": seat_names, "bots": bot_seats}
+		"mem": tm_member, "lt": last_team, "cues": cue_ids, "sn": seat_names, "bots": bot_seats,
+		"rg": regra, "ch": [chance_team, chance_owner], "bv": bonus_visit}
 
 
 func net_checksum() -> float:
@@ -2637,6 +2730,13 @@ func net_apply(s: Dictionary) -> void:
 	groups = s.g
 	ball_in_hand = s.h
 	break_shot = s.bs
+	if s.has("rg") and RULES.has(str(s.rg)):
+		regra = str(s.rg)
+	var ch: Array = s.get("ch", [-1, -1])
+	if ch.size() == 2:
+		chance_team = int(ch[0])
+		chance_owner = int(ch[1])
+	bonus_visit = bool(s.get("bv", false))
 	net_wait = false
 	net_pending = {}
 	if str(s.msg) != "":
@@ -2837,6 +2937,7 @@ func net_remote_shot(d: Dictionary) -> void:
 	touches.clear()
 	shot_pow = minf(sps, max_p)
 	shot_spin = minf(sss, max_s)
+	net_call = clampi(int(d.get("ck", -1)), -1, POCK.size() - 1)
 	shoot(pw, true)
 	# confere a velocidade pronta que veio junto com o que o taco permite
 	var lp := launch_params()
@@ -3351,6 +3452,13 @@ func touch_down(i: int, p: Vector2) -> void:
 		return
 	var lp := to_local(p)
 	var cue := get_ball(0)
+	if cantada_needed():
+		var pk := nearest_pocket(lp)
+		if lp.distance_to(POCK[pk]) < 46.0:
+			user_call = pk
+			play("click", 0.8)
+			say("Preta cantada nessa caçapa!", 1.6)
+			return
 	if ball_in_hand and lp.distance_to(cue.pos) < 75.0:
 		touches[i] = {"m": "place"}
 	else:
@@ -3510,6 +3618,56 @@ func _process(delta: float) -> void:
 
 
 # ---------------------------------------------------------------- desenho
+func rule_name(r: String = "") -> String:
+	match (r if r != "" else regra):
+		"bar":
+			return "REGRA DE BAR"
+		"cantada":
+			return "BOLA CANTADA"
+	return "CLÁSSICA"
+
+
+func nearest_pocket(p: Vector2) -> int:
+	var best := 0
+	for k in POCK.size():
+		if p.distance_to(POCK[k]) < p.distance_to(POCK[best]):
+			best = k
+	return best
+
+
+# Bola Cantada: a vez é da preta?
+func cantada_needed(only_me: bool = true) -> bool:
+	if regra != "cantada" or mode == Mode.TRAIN or st != St.AIM:
+		return false
+	if only_me and not human_turn():
+		return false
+	var g: int = groups[turn]
+	return g != -1 and remaining(g) == 0
+
+
+# caçapa para onde a mira está mandando a preta (vale como cantada se o jogador não tocar em outra)
+func predicted_pocket() -> int:
+	var cue := get_ball(0)
+	var bk := get_ball(BLACK)
+	if bk.is_empty() or not bk.on or cue.is_empty():
+		return -1
+	var dir := Vector2.from_angle(aim_angle)
+	var h := ray_hit(cue.pos, dir)
+	var tdir := Vector2.ZERO
+	if h.ball != null and int(h.ball.n) == BLACK:
+		var endp: Vector2 = cue.pos + dir * float(h.t)
+		tdir = (bk.pos - endp).normalized()
+	var best := 0
+	var bs := -INF
+	for k in POCK.size():
+		var v: Vector2 = (POCK[k] as Vector2) - (bk.pos as Vector2)
+		var sc := v.normalized().dot(tdir) * 1000.0 - v.length() * 0.05 if tdir != Vector2.ZERO else -v.length()
+		if sc > bs:
+			bs = sc
+			best = k
+	return best
+
+
 func ray_hit(origin: Vector2, dir: Vector2) -> Dictionary:
 	var best_t := 1e9
 	var hit: Variant = null
@@ -3670,6 +3828,14 @@ func _draw_overlay() -> void:
 			var cd := dir - tdir * dir.dot(tdir)
 			if cd.length() > 0.05:
 				overlay.draw_line(endp, endp + cd.normalized() * (24.0 + 10.0 * ast), Color(1, 1, 1, 0.5), 2.0)
+	if st == St.AIM and cantada_needed(false):
+		var ck := user_call if (user_call >= 0 and human_turn()) else predicted_pocket()
+		if ck >= 0:
+			var pc: Vector2 = POCK[ck]
+			var pp := 0.5 + 0.5 * sin(sim_t * 5.0)
+			overlay.draw_arc(pc, 30.0 + pp * 5.0, 0, TAU, 32, Color(1.0, 0.85, 0.2, 0.95), 4.0)
+			overlay.draw_arc(pc, 42.0 + pp * 5.0, 0, TAU, 32, Color(1.0, 0.85, 0.2, 0.35), 2.0)
+			overlay.draw_string(font, pc + Vector2(-60, (-48.0 if pc.y < 0 else 62.0)), "CANTADA", HORIZONTAL_ALIGNMENT_CENTER, 120, 18, Color("ffe066"))
 	if ball_in_hand:
 		var pul := 0.5 + 0.5 * sin(sim_t * 6.0 * 1.0)
 		overlay.draw_arc(cue.pos, R + 10.0 + pul * 6.0, 0, TAU, 32, Color(1.0, 0.88, 0.4, 0.9), 3.0)
@@ -3961,6 +4127,18 @@ func _draw_hud() -> void:
 		hud.draw_circle(vc, 18, Color("141a26"))
 		hud.draw_arc(vc, 18, 0, TAU, 32, Color("f4c542"), 2.5)
 		hud.draw_string(font, vc + Vector2(-18, 6), "VS", HORIZONTAL_ALIGNMENT_CENTER, 36, 15, Color("f4c542"))
+		# regra da partida (só aparece quando não é a clássica) + situação especial
+		if regra != "classic":
+			var tag := rule_name()
+			if chance_team >= 0:
+				tag = "CHANCE: %s PRECISA MATAR TODAS" % str(players[chance_team]).to_upper()
+			elif bonus_visit and st == St.AIM:
+				tag = "%s  •  2 TACADAS" % tag
+			var tw := font.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 26.0
+			var tr := Rect2(vc.x - tw / 2.0, 62, tw, 24)
+			var tcol := Color("e74c3c") if chance_team >= 0 else Color("f4c542")
+			hud.draw_style_box(ui.sbox(Color(0.04, 0.07, 0.12, 0.9), 12, tcol, 2, 4), tr)
+			hud.draw_string(font, tr.position + Vector2(0, 17), tag, HORIZONTAL_ALIGNMENT_CENTER, tw, 14, tcol)
 	else:
 		ctext("Treino livre", cx, 44, 28, Color.WHITE)
 	if mode != Mode.TRAIN and st != St.OVER:

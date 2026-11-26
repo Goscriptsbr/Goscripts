@@ -171,7 +171,7 @@ func connect_server() -> void:
 
 func send_hello() -> void:
 	if ws != null and ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else [], "sig": app_sig(), "store": OS.has_feature("store")}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else [], "sig": app_sig(), "store": OS.has_feature("store"), "rule": str(game.save.get("rule", "classic"))}))
 
 
 func world_send(d: Dictionary) -> void:
@@ -300,9 +300,17 @@ func app_sig() -> String:
 		_sig = ""
 		if Engine.has_singleton("SinucouGoogle"):
 			var sg = Engine.get_singleton("SinucouGoogle")
-			if sg.has_method("sigHash"):
-				_sig = str(sg.sigHash())
+			# (has_method não enxerga os métodos do plugin Android: chama direto)
+			var r = sg.call("sigHash")
+			if r != null:
+				_sig = str(r)
 	return _sig
+
+
+# regra de sinuca escolhida (salas com amigos e convites usam a regra de quem criou/convidou)
+func send_rule() -> void:
+	if server_ok:
+		world_send({"t": "rule", "rule": str(game.save.get("rule", "classic"))})
 
 
 # anti-trapaça: avisa o servidor (vai para a lista de denúncias do dono)
@@ -498,7 +506,7 @@ func _world_poll(delta: float) -> void:
 	var stt := ws.get_ready_state()
 	if stt == WebSocketPeer.STATE_OPEN and not hello_sent:
 		hello_sent = true
-		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else [], "sig": app_sig(), "store": OS.has_feature("store")}))
+		ws.send_text(JSON.stringify({"t": "hello", "code": game.my_code(), "name": game.my_name(), "coins": int(game.save.coins), "felt": game.my_felt_tag(), "wfx": game.my_wfx(), "blk": game.safety.blocked_codes() if game.safety != null else [], "sig": app_sig(), "store": OS.has_feature("store"), "rule": str(game.save.get("rule", "classic"))}))
 	if stt == WebSocketPeer.STATE_CONNECTING:
 		world_t += delta
 	cloud_tick(delta)
@@ -578,6 +586,7 @@ func _world_msg(m: Dictionary) -> void:
 			game.net_peer_name = str(opp.get("name", "Adversário"))
 			# aposta: as moedas saem agora; quem sair no meio perde, quem ganhar leva a mesa
 			game.net_owner = int(m.get("owner", -1))
+			game.net_rule = str(m.get("rule", "classic"))
 			game.bet_begin(int(m.get("stake", 0)), true)
 			game.match_stake = game.bet_cur
 			multiplayer.multiplayer_peer = relay
