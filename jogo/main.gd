@@ -38,7 +38,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 112  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 113  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -273,9 +273,12 @@ var wood_s: Sprite2D
 var felt_s: Sprite2D
 var felt_vp: SubViewport
 var felt_rect: ColorRect
-var rails: Node2D
+var rails: CanvasItem
 var felt_fx: Node2D
-var edge_node: Node2D
+var edge_node: CanvasItem
+var pv_felt := {}  # usados só ao desenhar a miniatura da loja/inventário/troca
+var pv_rail := {}
+var pv_boost := 1.0
 var tray: Array = []  # bolas encaçapadas na ordem em que caíram (canaleta do lado da mesa)
 var tray_y := {}
 var ball_layer: Node2D
@@ -985,6 +988,8 @@ func write_save() -> void:
 
 
 func felt_def() -> Dictionary:
+	if not pv_felt.is_empty():
+		return pv_felt
 	var fid: String = felt_override if felt_override != "" else str(save.felt)
 	fid = fid.get_slice("~", 0)
 	for f in FELTS:
@@ -995,6 +1000,8 @@ func felt_def() -> Dictionary:
 
 # borda: a escolhida pelo jogador (ou pelo dono da mesa no online); "rb_padrao" = a da própria mesa
 func rail_def() -> Dictionary:
+	if not pv_rail.is_empty():
+		return pv_rail
 	var rid: String = str(save.get("rail", "rb_padrao"))
 	if felt_override != "":
 		rid = felt_override.get_slice("~", 1) if felt_override.contains("~") else "rb_padrao"
@@ -3961,6 +3968,26 @@ func _draw_overlay() -> void:
 		overlay.draw_arc(cue.pos, R + 22.0 + pul * 6.0, 0, TAU, 32, Color(1.0, 0.88, 0.4, 0.35), 2.0)
 
 
+# miniatura fiel da mesa (loja, inventário, troca, novidades): usa o MESMO desenho da partida
+# (tabelas, caçapas com enfeite de prata, marcações e luz na madeira), só que em escala pequena.
+# Quem chama já pôs o transform de escala no canvas.
+func draw_table_preview(c: CanvasItem, rd: Dictionary, felt: Dictionary) -> void:
+	var old_r := rails
+	var old_e := edge_node
+	pv_felt = felt
+	pv_rail = rd
+	pv_boost = 2.6
+	rails = c
+	edge_node = c
+	_draw_edge_fx()
+	_draw_rails()
+	rails = old_r
+	edge_node = old_e
+	pv_felt = {}
+	pv_rail = {}
+	pv_boost = 1.0
+
+
 func edge_mode() -> String:
 	var m := str(rail_def().get("edge", ""))
 	if m == "":
@@ -4019,9 +4046,9 @@ func _draw_edge_fx() -> void:
 					var on := FxScript.hsh(floor(s2 / 36.0) + zap * 7.7)
 					pulse = 0.25 + (0.75 if on > 0.78 else 0.0)
 					col = Color(0.45, 0.85, 1.0, 0.9 * pulse)
-			c.draw_line(p0, p1, Color(col.r, col.g, col.b, 0.16 * pulse), 13.0)
-			c.draw_line(p0, p1, Color(col.r, col.g, col.b, 0.32 * pulse), 7.0)
-			c.draw_line(p0, p1, col.lightened(0.3), 2.6)
+			c.draw_line(p0, p1, Color(col.r, col.g, col.b, 0.16 * pulse), 13.0 * pv_boost)
+			c.draw_line(p0, p1, Color(col.r, col.g, col.b, 0.32 * pulse), 7.0 * pv_boost)
+			c.draw_line(p0, p1, col.lightened(0.3), 2.6 * pv_boost)
 		dist += ln
 
 

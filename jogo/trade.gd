@@ -458,6 +458,8 @@ var _my_scroll: ScrollContainer
 var _their_scroll: ScrollContainer
 var _top: Control
 var _bal: Control
+var _lp: Control
+var _rp: Control
 var _coin_edit: LineEdit
 var _fair_lbl: Label
 var _ready_btn: Button
@@ -533,7 +535,8 @@ func _build() -> void:
 	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vb.add_child(cols)
 	# --- você
-	var lp := _col_panel(Color("3ddc84"))
+	var lp := _col_panel(Color("3ddc84"), "VOCÊ DÁ")
+	_lp = lp
 	cols.add_child(lp)
 	var lv: VBoxContainer = lp.get_child(0).get_child(0)
 	_my_scroll = _mk_scroll()
@@ -568,19 +571,20 @@ func _build() -> void:
 	_add_btn.pressed.connect(_open_picker)
 	lv.add_child(_add_btn)
 	# --- ele
-	var rp := _col_panel(Color("5aa9ff"))
+	var rp := _col_panel(Color("5aa9ff"), "%s DÁ  (VOCÊ RECEBE)" % with_name.to_upper())
+	_rp = rp
 	cols.add_child(rp)
 	var rv: VBoxContainer = rp.get_child(0).get_child(0)
 	_their_scroll = _mk_scroll()
 	rv.add_child(_their_scroll)
 	_their_list = _their_scroll.get_child(0)
 	var hint: Label = ui.mk_lbl("O que %s colocar aparece aqui na hora.\nToque num item seu para tirar da troca." % with_name, 15, Color(1, 1, 1, 0.45), 2)
-	hint.custom_minimum_size = Vector2(0, 60)
+	hint.custom_minimum_size = Vector2(0, 44)
 	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rv.add_child(hint)
 	# --- balança (justa / desigual)
 	_bal = Control.new()
-	_bal.custom_minimum_size = Vector2(0, 26)
+	_bal.custom_minimum_size = Vector2(0, 48)
 	_bal.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(_bal)
 	_bal.draw.connect(_draw_bal)
@@ -668,19 +672,44 @@ func _draw_bal() -> void:
 	var mv: int = v[0]
 	var tv: int = v[1]
 	var w := c.size.x
-	var bx := 230.0
-	var bw := w - bx * 2
-	c.draw_string(f, Vector2(0, 19), "VOCÊ DÁ  %s" % fmt(mv), HORIZONTAL_ALIGNMENT_RIGHT, bx - 14, 17, Color("3ddc84"))
-	c.draw_string(f, Vector2(w - bx + 14, 19), "%s  VOCÊ RECEBE" % fmt(tv), HORIZONTAL_ALIGNMENT_LEFT, bx, 17, Color("8fd0ff"))
-	c.draw_style_box(ui.sbox(Color(0.08, 0.1, 0.14), 8), Rect2(bx, 6, bw, 14))
+	var ok := fair_msg(mv, tv) == ""
 	var tot := float(mv + tv)
 	var fr := 0.5 if tot <= 0 else float(mv) / tot
-	# zona justa: cada lado recebe ≥25% do que dá  =>  fr entre 0.2 e 0.8
-	c.draw_style_box(ui.sbox(Color(0.2, 0.75, 0.4, 0.28), 6), Rect2(bx + bw * 0.2, 6, bw * 0.6, 14))
-	var ok := fair_msg(mv, tv) == ""
+	var bx := 250.0
+	var bw := w - bx * 2
+	var cy := 18.0
+	# lados: o que você dá (verde) e o que recebe (azul), com moeda
+	for side in [0, 1]:
+		var col: Color = Color("3ddc84") if side == 0 else Color("8fd0ff")
+		var txt: String = ("VOCÊ DÁ" if side == 0 else "VOCÊ RECEBE")
+		var n: int = mv if side == 0 else tv
+		var r := Rect2(0 if side == 0 else w - bx + 12, 2, bx - 12, 32)
+		c.draw_style_box(ui.sbox(Color(col.r, col.g, col.b, 0.12), 16, Color(col.r, col.g, col.b, 0.5), 1), r)
+		c.draw_string(f, r.position + Vector2(12, 22), txt, HORIZONTAL_ALIGNMENT_LEFT, 120, 14, col)
+		ui.draw_coin(c, Vector2(r.end.x - 16 - f.get_string_size(fmt(n), HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x - 14, cy), 9)
+		c.draw_string(f, Vector2(r.position.x, r.position.y + 23), fmt(n), HORIZONTAL_ALIGNMENT_RIGHT, r.size.x - 12, 18, Color.WHITE)
+	# trilho: vermelho nas pontas (desigual), verde no meio (justo)
+	var tr := Rect2(bx, cy - 6, bw, 12)
+	c.draw_style_box(ui.sbox(Color(0.5, 0.15, 0.12, 0.45), 6), tr)
+	c.draw_style_box(ui.sbox(Color(0.2, 0.75, 0.4, 0.45), 6), Rect2(bx + bw * 0.2, cy - 6, bw * 0.6, 12))
+	c.draw_line(Vector2(bx + bw * 0.5, cy - 9), Vector2(bx + bw * 0.5, cy + 9), Color(1, 1, 1, 0.35), 2.0)
 	var mx := bx + bw * fr
-	c.draw_circle(Vector2(mx, 13), 11, Color("3ddc84") if ok else Color("ff6a4a"))
-	c.draw_circle(Vector2(mx, 13), 6, Color.WHITE)
+	var kc := Color("3ddc84") if ok else Color("ff6a4a")
+	c.draw_circle(Vector2(mx, cy), 15, Color(kc.r, kc.g, kc.b, 0.25))
+	c.draw_circle(Vector2(mx, cy), 11, kc)
+	c.draw_circle(Vector2(mx, cy), 5, Color.WHITE)
+	# veredito no meio
+	var vt := "TROCA JUSTA" if ok else "TROCA DESIGUAL"
+	if mv + tv == 0:
+		vt = "COLOQUEM ITENS OU MOEDAS"
+	elif ok and tv > mv:
+		vt = "JUSTA  •  você ganha +" + fmt(tv - mv)
+	elif ok and mv > tv:
+		vt = "JUSTA  •  você dá +" + fmt(mv - tv) + " a mais"
+	var vw2 := f.get_string_size(vt, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 24
+	var vr := Rect2(bx + bw / 2.0 - vw2 / 2.0, cy + 10, vw2, 20)
+	c.draw_style_box(ui.sbox(Color(0.03, 0.05, 0.09, 0.95), 10, Color(kc.r, kc.g, kc.b, 0.7), 1), vr)
+	c.draw_string(f, vr.position + Vector2(0, 15), vt, HORIZONTAL_ALIGNMENT_CENTER, vw2, 13, kc.lightened(0.25))
 
 
 func _process(_d: float) -> void:
@@ -698,7 +727,7 @@ func _process(_d: float) -> void:
 		_cards = keep
 
 
-func _col_panel(col: Color) -> PanelContainer:
+func _col_panel(col: Color, title: String = "") -> PanelContainer:
 	var p := PanelContainer.new()
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	p.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -706,7 +735,55 @@ func _col_panel(col: Color) -> PanelContainer:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
 	p.add_child(ui.margin(v, 12))
+	if title != "":
+		# faixa de título com o valor total do lado (o valor de cada item é o preço dele na loja)
+		var hd := PanelContainer.new()
+		hd.add_theme_stylebox_override("panel", ui.sbox(Color(col.r, col.g, col.b, 0.14), 14, Color(col.r, col.g, col.b, 0.35), 1, 0))
+		var hb := HBoxContainer.new()
+		hb.add_theme_constant_override("separation", 8)
+		hd.add_child(ui.margin(hb, 6))
+		var tl: Label = ui.mk_lbl(title, 18, col.lightened(0.2), 3)
+		tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		hb.add_child(tl)
+		hb.add_child(ui.mk_lbl("valor total", 13, Color(1, 1, 1, 0.55), 2))
+		var pill := val_pill(0, 18)
+		pill.name = "Pill"
+		hb.add_child(pill)
+		v.add_child(hd)
+		p.set_meta("pill", pill)
 	return p
+
+
+# selo de valor: moeda + número (valor real = preço do item na loja)
+func val_pill(n: int, fs: int = 15) -> PanelContainer:
+	var pc := PanelContainer.new()
+	pc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb: StyleBoxFlat = ui.sbox(Color(0.18, 0.13, 0.02, 0.95), 20, Color("ffd34a"), 1, 0)
+	sb.content_margin_left = 6
+	sb.content_margin_right = 10
+	sb.content_margin_top = 2
+	sb.content_margin_bottom = 2
+	pc.add_theme_stylebox_override("panel", sb)
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 5)
+	hb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pc.add_child(hb)
+	var ic: Control = ui.coin_icon(fs + 4)
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hb.add_child(ic)
+	var lb: Label = ui.mk_lbl(fmt(n), fs, Color("ffe08a"), 2)
+	lb.name = "N"
+	lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hb.add_child(lb)
+	pc.set_meta("lbl", lb)
+	return pc
+
+
+func _set_pill(p: Control, n: int) -> void:
+	if p != null and is_instance_valid(p) and p.has_meta("pill"):
+		var pill: Control = p.get_meta("pill")
+		(pill.get_meta("lbl") as Label).text = fmt(n)
 
 
 func _coin_btn(dv: int) -> Button:
@@ -838,9 +915,10 @@ func _item_card(id: String, mine: bool, w: float = 136.0, h: float = 168.0) -> C
 	nm.custom_minimum_size = Vector2(pw, 0)
 	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(nm)
-	var vl: Label = ui.mk_lbl("valor " + fmt(value(id)), 12 if w < 180 else 15, Color("ffd34a"), 2)
-	vl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vb.add_child(vl)
+	var vrow := CenterContainer.new()
+	vrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vrow.add_child(val_pill(value(id), 13 if w < 180 else 16))
+	vb.add_child(vrow)
 	if w >= 180:
 		if str(i.get("k", "")) == "cue":
 			for sr in [["Mira", "aim"], ["Força", "pow"], ["Precisão", "prec"], ["Efeito", "spin"]]:
@@ -957,6 +1035,8 @@ func _refresh() -> void:
 	_add_btn.disabled = conf
 	for b in _coin_btns:
 		(b as Button).disabled = conf
+	_set_pill(_lp, mv)
+	_set_pill(_rp, tv)
 	if _bal != null:
 		_bal.queue_redraw()
 

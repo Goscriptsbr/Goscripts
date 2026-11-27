@@ -3380,18 +3380,7 @@ func _pass_refresh() -> void:
 			if item.has("shaft"):
 				_cue_preview(ic, item, Vector2(56, 52), 120.0, -30.0, 16.0, 0.6, fx_nodes)
 			else:
-				var fr := ColorRect.new()
-				fr.position = Vector2(8, 12)
-				fr.size = Vector2(114, 66)
-				var fm := ShaderMaterial.new()
-				fm.shader = load("res://shaders/felt.gdshader")
-				fm.set_shader_parameter("c_light", item.light)
-				fm.set_shader_parameter("c_dark", item.dark)
-				fm.set_shader_parameter("pat", int(item.pat))
-				fm.set_shader_parameter("accent", item.get("accent", Color.WHITE))
-				fm.set_shader_parameter("accent2", item.get("accent2", Color.WHITE))
-				fr.material = fm
-				ic.add_child(fr)
+				_mini_table(ic, item, 130.0)
 		elif r.has("spins"):
 			ic = Control.new()
 			ic.custom_minimum_size = Vector2(64, 64)
@@ -3885,7 +3874,8 @@ func _shop_refresh() -> void:
 			vb.add_child(_stat_row("Efeito", float(it.spin)))
 		else:
 			var tg := mk_lbl(it.tag, 16, Color(1, 1, 1, 0.65))
-			tg.custom_minimum_size = Vector2(184, 0)
+			tg.custom_minimum_size = Vector2(184, 46)
+			tg.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 			tg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vb.add_child(tg)
 		var owned: bool = game.save.owned.has(it.id) or it.id == "dk_classico" or it.id == "wf_confete" or it.id == "rb_padrao"
@@ -3917,14 +3907,16 @@ func _shop_refresh() -> void:
 		vb.add_child(btn)
 
 
-# miniatura de mesa com a borda (madeira/laca/metal/carbono) e luz animada se tiver
+# miniatura de mesa: a mesa de verdade em escala pequena (mesmo pano, madeira, caçapas com prata e luz na madeira)
 func _rail_preview(pv: Control, rd: Dictionary, felt: Dictionary) -> void:
+	var k := 184.0 / 1104.0
+	var ctr := Vector2(92, 66)
 	var wood := ColorRect.new()
-	wood.position = Vector2(0, 8)
-	wood.size = Vector2(184, 112)
+	wood.size = Vector2(1104, 604) * k
+	wood.position = ctr - wood.size / 2.0
 	var wm := ShaderMaterial.new()
 	wm.shader = load("res://shaders/wood.gdshader")
-	wm.set_shader_parameter("size", Vector2(184, 112) * 2.6)
+	wm.set_shader_parameter("size", Vector2(1104, 604))
 	wm.set_shader_parameter("c1", rd.get("c1", Color(0.45, 0.25, 0.1)))
 	wm.set_shader_parameter("c2", rd.get("c2", Color(0.2, 0.1, 0.04)))
 	wm.set_shader_parameter("trim", rd.get("trim", Color(0.86, 0.68, 0.32)))
@@ -3932,10 +3924,11 @@ func _rail_preview(pv: Control, rd: Dictionary, felt: Dictionary) -> void:
 	wood.material = wm
 	pv.add_child(wood)
 	var fr := ColorRect.new()
-	fr.position = Vector2(8, 16)
-	fr.size = Vector2(168, 96)
+	fr.size = Vector2(1012, 512) * k
+	fr.position = ctr - fr.size / 2.0
 	var fm := ShaderMaterial.new()
 	fm.shader = load("res://shaders/felt.gdshader")
+	fm.set_shader_parameter("size", Vector2(1012, 512))
 	fm.set_shader_parameter("c_light", felt.light)
 	fm.set_shader_parameter("c_dark", felt.dark)
 	fm.set_shader_parameter("pat", int(felt.pat))
@@ -3950,49 +3943,41 @@ func _rail_preview(pv: Control, rd: Dictionary, felt: Dictionary) -> void:
 	var top := Control.new()
 	top.set_anchors_preset(Control.PRESET_FULL_RECT)
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var frect := Rect2(fr.position, fr.size)
 	var fnt := func():
 		var t := fx_t
 		if anim != "":
-			for i in 10:
+			for i in 12:
 				var hx := fposmod(sin(float(i) * 12.9898) * 43758.5453, 1.0)
 				var hy := fposmod(sin(float(i) * 78.233) * 43758.5453, 1.0)
 				var a := 0.5 + 0.5 * sin(t * 2.0 + float(i) * 1.7)
 				var col: Color = {"stars": Color(1, 0.95, 0.8), "aurora": Color(0.4, 1, 0.75), "matrix": Color(0.2, 1, 0.45), "lava": Color(1, 0.55, 0.15), "sakura": Color(1, 0.85, 0.9), "sea": Color(0.8, 1, 1), "storm": Color(0.75, 0.85, 1), "glints": Color(1, 1, 1)}.get(anim, Color.WHITE)
-				var p := Vector2(14 + hx * 156, 22 + fposmod(hy + (t * 0.08 if anim in ["matrix", "sakura", "storm"] else (-t * 0.06 if anim in ["lava", "sea"] else 0.0)), 1.0) * 84)
-				top.draw_circle(p, 1.2 + a * 1.2, Color(col.r, col.g, col.b, 0.35 + 0.5 * a))
-		for p in [Vector2(8, 16), Vector2(176, 16), Vector2(8, 112), Vector2(176, 112), Vector2(92, 16), Vector2(92, 112)]:
-			top.draw_circle(p, 7, Color("050505"))
-		if edge != "":
-			var per := [Vector2(14, 19), Vector2(170, 19), Vector2(173, 22), Vector2(173, 106), Vector2(170, 109), Vector2(14, 109), Vector2(11, 106), Vector2(11, 22)]
-			for k in 4:
-				var a0: Vector2 = per[k * 2]
-				var a1: Vector2 = per[k * 2 + 1]
-				for j in 8:
-					var q0 := a0.lerp(a1, float(j) / 8.0)
-					var q1 := a0.lerp(a1, float(j + 1) / 8.0)
-					var ph := float(k * 8 + j) / 32.0
-					var col2 := Color.WHITE
-					match edge:
-						"rainbow":
-							col2 = Color.from_hsv(fposmod(ph - t * 0.25, 1.0), 0.8, 1.0)
-						"fire":
-							col2 = Color(1.0, 0.4 + 0.4 * (0.5 + 0.5 * sin(ph * 40.0 + t * 8.0)), 0.05)
-						"ice":
-							col2 = Color(0.7, 0.95, 1.0, 0.6 + 0.4 * sin(ph * 20.0 - t * 3.0))
-						"gold":
-							col2 = Color(1.0, 0.82, 0.3, 0.3 + 0.7 * smoothstep(0.7, 1.0, fposmod(ph * 4.0 - t * 1.5, 1.0)))
-						"electric":
-							col2 = Color(0.45, 0.85, 1.0, 1.0 if fposmod(sin(floor(ph * 8.0) + floor(t * 12.0) * 7.7) * 43758.5, 1.0) > 0.7 else 0.25)
-					top.draw_line(q0, q1, Color(col2.r, col2.g, col2.b, col2.a * 0.35), 6.0)
-					top.draw_line(q0, q1, col2, 2.0)
-		top.draw_circle(Vector2(52, 66), 8, Color("f4f4ee"))
-		top.draw_circle(Vector2(112, 58), 8, Color("d12a1e"))
-		top.draw_circle(Vector2(129, 70), 8, Color("1a4fb4"))
-		top.draw_circle(Vector2(109, 55), 2.5, Color(1, 1, 1, 0.5))
+				var p := frect.position + Vector2(8 + hx * (frect.size.x - 16), 6 + fposmod(hy + (t * 0.08 if anim in ["matrix", "sakura", "storm"] else (-t * 0.06 if anim in ["lava", "sea"] else 0.0)), 1.0) * (frect.size.y - 12))
+				top.draw_circle(p, 0.8 + a, Color(col.r, col.g, col.b, 0.3 + 0.45 * a))
+		top.draw_set_transform(ctr, 0.0, Vector2(k, k))
+		game.draw_table_preview(top, rd, felt)
+		# bolas no tamanho de verdade (um pouco maiores para aparecer bem)
+		for b in [[Vector2(-250, 0), Color("f4f4ee")], [Vector2(150, -30), Color("d12a1e")], [Vector2(200, 25), Color("1a4fb4")], [Vector2(205, -45), Color("f2c230")]]:
+			top.draw_circle(b[0] + Vector2(0, 8), 34, Color(0, 0, 0, 0.35))
+			top.draw_circle(b[0], 32, b[1])
+			top.draw_circle(b[0] + Vector2(-10, -12), 9, Color(1, 1, 1, 0.55))
+		top.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	top.draw.connect(fnt)
 	pv.add_child(top)
 	if anim != "" or edge != "":
 		fx_nodes.append(top)
+
+
+# mesa de verdade em miniatura dentro de um espaço de largura w (prêmios do passe, janela de prêmio)
+func _mini_table(ic: Control, felt: Dictionary, w: float) -> void:
+	var pv := Control.new()
+	pv.size = Vector2(184, 132)
+	pv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var k := w / 184.0
+	pv.scale = Vector2(k, k)
+	pv.position = Vector2(0, -14.0 * k)
+	ic.add_child(pv)
+	_rail_preview(pv, game.rail_for(str(felt.get("rail", ""))), felt)
 
 
 func _deck_preview(pv: Control, style_id: String) -> void:
@@ -4771,23 +4756,7 @@ func reward_icon(r: Dictionary, sz: float) -> Control:
 		if item.has("shaft"):
 			_cue_preview(ic, item, Vector2(sz * 1.1, sz * 0.65), sz * 2.0, -24.0, sz * 0.22, 1.0, fx_nodes)
 		elif not item.is_empty():
-			var fr := ColorRect.new()
-			fr.position = Vector2(sz * 0.1, sz * 0.1)
-			fr.size = Vector2(sz * 2.0, sz * 1.1)
-			var fm := ShaderMaterial.new()
-			fm.shader = load("res://shaders/felt.gdshader")
-			fm.set_shader_parameter("c_light", item.light)
-			fm.set_shader_parameter("c_dark", item.dark)
-			fm.set_shader_parameter("pat", int(item.pat))
-			fm.set_shader_parameter("accent", item.get("accent", Color.WHITE))
-			fm.set_shader_parameter("accent2", item.get("accent2", Color.WHITE))
-			fr.material = fm
-			var fb := Panel.new()
-			fb.position = fr.position - Vector2(8, 8)
-			fb.size = fr.size + Vector2(16, 16)
-			fb.add_theme_stylebox_override("panel", sbox(Color("5a3418"), 14, Color("8a5a2a"), 3, 8))
-			ic.add_child(fb)
-			ic.add_child(fr)
+			_mini_table(ic, item, sz * 2.2)
 		return ic
 	if r.has("spins"):
 		var w := Control.new()
