@@ -120,8 +120,94 @@ func start_with(code: String, nm: String) -> void:
 	_build()
 
 
+# ---------------------------------------------------------------- conversa (texto e voz)
+var _chat_log: Label
+var _chat_edit: LineEdit
+var _chat_lines: Array = []
+var _mic_btn: Button
+
+
+func _chat_row() -> Control:
+	var pc := PanelContainer.new()
+	pc.add_theme_stylebox_override("panel", ui.sbox(Color(0.03, 0.06, 0.1, 0.92), 16, Color(1, 1, 1, 0.14), 2))
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 8)
+	pc.add_child(ui.margin(hb, 6))
+	_chat_log = ui.mk_lbl("", 15, Color(1, 1, 1, 0.85), 2)
+	_chat_log.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_chat_log.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_chat_log.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_chat_log.custom_minimum_size = Vector2(300, 44)
+	_chat_log.clip_text = true
+	hb.add_child(_chat_log)
+	_chat_edit = LineEdit.new()
+	_chat_edit.custom_minimum_size = Vector2(300, 46)
+	_chat_edit.max_length = 80
+	_chat_edit.placeholder_text = "Escreva para %s..." % with_name
+	_chat_edit.add_theme_font_size_override("font_size", 18)
+	_chat_edit.add_theme_stylebox_override("normal", ui.sbox(Color(0.08, 0.11, 0.17), 12, Color(1, 1, 1, 0.25), 2))
+	_chat_edit.add_theme_stylebox_override("focus", ui.sbox(Color(0.1, 0.14, 0.2), 12, Color.WHITE, 2))
+	_chat_edit.text_submitted.connect(func(_t: String): _chat_send())
+	hb.add_child(_chat_edit)
+	var sb: Button = ui.mk_btn("ENVIAR", 110, 46, Color("2f7fd6"), 17)
+	sb.pressed.connect(_chat_send)
+	hb.add_child(sb)
+	_mic_btn = ui.mk_btn("🎤 SEGURE P/ FALAR", 200, 46, Color("1b8f4c"), 15)
+	_mic_btn.button_down.connect(func():
+		if game.chat != null and game.chat.trade_talk_start():
+			_mic_btn.text = "🔴 FALANDO..."
+		elif game.chat != null:
+			_chat_add("", "Permita o microfone e segure de novo."))
+	_mic_btn.button_up.connect(func():
+		if game.chat != null:
+			game.chat.trade_talk_stop()
+		_mic_btn.text = "🎤 SEGURE P/ FALAR")
+	hb.add_child(_mic_btn)
+	_chat_paint()
+	return pc
+
+
+func _chat_send() -> void:
+	if _chat_edit == null:
+		return
+	var t := _chat_edit.text.strip_edges()
+	if t == "":
+		return
+	_chat_edit.text = ""
+	if game.safety != null:
+		t = game.safety.clean(t)
+	game.net.world_send({"t": "trade_chat", "id": tid, "txt": t})
+	_chat_add("Você", t)
+
+
+func _chat_add(who: String, txt: String) -> void:
+	_chat_lines.append(("%s: %s" % [who, txt]) if who != "" else txt)
+	while _chat_lines.size() > 2:
+		_chat_lines.pop_front()
+	_chat_paint()
+
+
+func _chat_paint() -> void:
+	if _chat_log == null or not is_instance_valid(_chat_log):
+		return
+	_chat_log.text = "\n".join(_chat_lines) if not _chat_lines.is_empty() else "💬 Converse aqui (texto ou voz)"
+
+
+func send_voice(data: PackedByteArray) -> void:
+	if tid != "" and not data.is_empty():
+		game.net.world_send({"t": "trade_voice", "id": tid, "d": Marshalls.raw_to_base64(data)})
+
+
 func on_msg(m: Dictionary) -> void:
 	match str(m.t):
+		"trade_chat":
+			_chat_add(str(m.get("from", with_name)), str(m.get("txt", "")))
+			game.play("click", 0.5)
+			return
+		"trade_voice":
+			if game.chat != null:
+				game.chat.got_trade_voice(Marshalls.base64_to_raw(str(m.get("d", ""))))
+			return
 		"trade_invite":
 			var id := str(m.id)
 			var nm := str(m.get("name", "?"))
@@ -341,6 +427,9 @@ func _transfer_anim(give: Array, got: Array, gave_coins: int, got_coins: int) ->
 
 
 func close() -> void:
+	if game != null and game.chat != null:
+		game.chat.trade_talk_stop()
+	_chat_lines.clear()
 	_exec_ov = null
 	if root != null and is_instance_valid(root):
 		root.queue_free()
@@ -486,7 +575,7 @@ func _build() -> void:
 	rv.add_child(_their_scroll)
 	_their_list = _their_scroll.get_child(0)
 	var hint: Label = ui.mk_lbl("O que %s colocar aparece aqui na hora.\nToque num item seu para tirar da troca." % with_name, 15, Color(1, 1, 1, 0.45), 2)
-	hint.custom_minimum_size = Vector2(0, 110)
+	hint.custom_minimum_size = Vector2(0, 60)
 	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rv.add_child(hint)
 	# --- balança (justa / desigual)
@@ -497,6 +586,7 @@ func _build() -> void:
 	_bal.draw.connect(_draw_bal)
 	_fair_lbl = ui.mk_lbl("", 17, Color.WHITE, 3)
 	vb.add_child(_fair_lbl)
+	vb.add_child(_chat_row())
 	var brow := HBoxContainer.new()
 	brow.alignment = BoxContainer.ALIGNMENT_CENTER
 	brow.add_theme_constant_override("separation", 16)

@@ -38,7 +38,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 110  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 111  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -1677,6 +1677,7 @@ func begin_turn() -> void:
 	hard_i = 0
 	ai_phase = 0
 	ai_t = 0.0
+	ai_total = 0.0
 	power = 0.0
 	spin = Vector2.ZERO
 	touches.clear()
@@ -1801,6 +1802,9 @@ func phys_step() -> void:
 
 
 func timer_active() -> bool:
+	# no online o relógio corre também na vez da IA (se ela empacar, a vez passa)
+	if mode == Mode.ONLINE:
+		return st == St.AIM
 	return st == St.AIM and not paused and mode != Mode.TRAIN and not cur_ai()
 
 
@@ -2606,6 +2610,12 @@ func _resolve_core() -> void:
 	for n in pocketed:
 		if n != BLACK and (g == -1 or group_of(n) == g):
 			scored = true
+	# Regra de Bar: derrubou bola do adversário (mesmo matando a sua) = passa a vez
+	var gave_opp := false
+	if regra == "bar" and g != -1 and not break_shot:
+		for n in pocketed:
+			if n != BLACK and n != 0 and group_of(n) == 1 - g:
+				gave_opp = true
 	break_shot = false
 	if cue_pocketed:
 		cue.on = true
@@ -2654,10 +2664,14 @@ func _resolve_core() -> void:
 			bonus_visit = true
 			extra += " %s tem 2 tacadas." % players[turn]
 		say("Falta: %s%s" % [why, extra], 4.5)
+	elif scored and gave_opp:
+		bonus_visit = false
+		turn = 1 - me
+		say("Derrubou bola de %s: passa a vez (regra de bar)" % players[1 - me], 3.0)
 	elif scored:
 		if msg_t <= 0.0:
 			say("Boa! Joga de novo", 2.0)
-	elif regra == "bar" and bonus_visit:
+	elif regra == "bar" and bonus_visit and not gave_opp:
 		# Regra de Bar: errou, mas ainda tinha a 2ª tacada da falta do adversário
 		bonus_visit = false
 		say("%s ainda tem a 2ª tacada!" % players[me], 2.5)
@@ -3305,10 +3319,53 @@ func cur_diff() -> int:
 	return diff
 
 
+var ai_total := 0.0
+
+
+# plano de emergência da IA: mira na bola dela mais perto e taca com força média
+func _ai_safe_plan() -> Dictionary:
+	var cue := get_ball(0)
+	var g: int = groups[turn]
+	var best_d := 1e9
+	var tgt: Vector2 = Vector2(1, 0) * 100.0 + (cue.pos as Vector2)
+	for b in balls:
+		if not b.on or b.n == 0:
+			continue
+		var mine: bool = (g == -1 and b.n != BLACK) or (g != -1 and remaining(g) > 0 and group_of(b.n) == g) or (g != -1 and remaining(g) == 0 and b.n == BLACK)
+		if not mine:
+			continue
+		var d: float = cue.pos.distance_to(b.pos)
+		if d < best_d:
+			best_d = d
+			tgt = b.pos as Vector2
+	return {"angle": (tgt - (cue.pos as Vector2)).angle(), "power": 0.6}
+
+
+func _ai_plan_ok() -> bool:
+	if not (ai_plan is Dictionary) or not ai_plan.has("angle") or not ai_plan.has("power"):
+		return false
+	return not is_nan(float(ai_plan.angle)) and not is_nan(float(ai_plan.power)) and not is_inf(float(ai_plan.angle))
+
+
 func ai_update() -> void:
-	if mode == Mode.TRAIN or not cur_ai() or paused:
+	if mode == Mode.TRAIN or not cur_ai() or (paused and mode != Mode.ONLINE):
 		return
 	ai_t += DT
+	ai_total += DT
+	# vigia: a IA nunca pode travar a partida. Passou de 14s sem tacar = tacada segura na hora
+	if ai_total > 14.0:
+		if ball_in_hand:
+			ball_in_hand = false
+		if not _ai_plan_ok():
+			ai_plan = _ai_safe_plan()
+		aim_angle = float(ai_plan.angle)
+		power = clampf(float(ai_plan.power), 0.3, 1.0)
+		print("IA: vigia forçou a tacada (fase ", ai_phase, ")")
+		shoot(power)
+		return
+	if ai_phase == 1 or ai_phase == 2:
+		if not _ai_plan_ok():
+			ai_plan = _ai_safe_plan()
 	var diff := cur_diff()
 	match ai_phase:
 		0:

@@ -633,7 +633,7 @@ func _world_msg(m: Dictionary) -> void:
 				world_send({"t": "decline", "code": str(m.get("from", ""))})
 				return
 			if game.ui != null:
-				game.ui.show_invite(str(m.get("from", "")), str(m.get("name", "")), str(m.get("game", "sinuca")), bool(m.get("lobby", false)), int(m.get("stake", 0)), bool(m.get("tour", false)))
+				game.ui.show_invite(str(m.get("from", "")), str(m.get("name", "")), str(m.get("game", "sinuca")), bool(m.get("lobby", false)), int(m.get("stake", 0)), bool(m.get("tour", false)), str(m.get("rule", "classic")))
 		"invite_ok":
 			if game.ui != null:
 				if bool(m.get("lobby", false)):
@@ -669,7 +669,7 @@ func _world_msg(m: Dictionary) -> void:
 		"reports", "delete_r", "report_ok", "block_ok", "modded":
 			if game.safety != null:
 				game.safety.on_msg(m)
-		"trade_invite", "trade_wait", "trade", "trade_end", "trade_done":
+		"trade_invite", "trade_wait", "trade", "trade_end", "trade_done", "trade_chat", "trade_voice":
 			if str(m.t) == "trade_invite" and game.safety != null and game.safety.is_blocked(str(m.get("from", ""))):
 				world_send({"t": "trade_resp", "id": str(m.get("id", "")), "ok": false})
 				return

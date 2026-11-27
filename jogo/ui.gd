@@ -28,10 +28,11 @@ var over_sub: Label
 var over_reward: Label
 var diff_btns: Array = []
 var rule_cards: Array = []
-var rule_online_box: Control   # [ {"r": regra, "b": Button} ] (tela da sinuca e tela online)
+var rule_online_box: Control
+var lobby_info: HBoxContainer   # [ {"r": regra, "b": Button} ] (tela da sinuca e tela online)
 const RULE_INFO := {
 	"classic": ["CLÁSSICA", "Regra oficial da bola 8", "8"],
-	"bar": ["REGRA DE BAR", "Preta + bola do outro = chance  •  falta = 2 tacadas", "🍺"],
+	"bar": ["REGRA DE BAR", "Bola do outro passa a vez  •  falta = 2 tacadas  •  preta + bola do outro = chance", "🍺"],
 	"cantada": ["BOLA CANTADA", "Toque na caçapa: a preta tem que cair nela", "🎯"],
 }
 var diff_desc: Label
@@ -1353,6 +1354,10 @@ func _build_online() -> void:
 	radar.custom_minimum_size = Vector2(600, 300)
 	radar.draw.connect(_draw_seats)
 	pv.add_child(radar)
+	lobby_info = HBoxContainer.new()
+	lobby_info.add_theme_constant_override("separation", 8)
+	lobby_info.alignment = BoxContainer.ALIGNMENT_CENTER
+	pv.add_child(lobby_info)
 	lobby_row = HBoxContainer.new()
 	lobby_row.add_theme_constant_override("separation", 8)
 	lobby_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -1732,7 +1737,36 @@ func _lobby_name(code: String) -> String:
 	return "amigo"
 
 
+func _pill(txt: String, col: Color, border: Color = Color(1, 1, 1, 0.25)) -> Control:
+	var pc := PanelContainer.new()
+	pc.add_theme_stylebox_override("panel", sbox(col, 14, border, 2, 0))
+	var l := mk_lbl(txt, 15, Color.WHITE, 2)
+	pc.add_child(margin(l, 5))
+	return pc
+
+
+func _lobby_info_paint() -> void:
+	if lobby_info == null:
+		return
+	for ch in lobby_info.get_children():
+		ch.queue_free()
+	lobby_info.visible = in_lobby()
+	if not in_lobby():
+		return
+	var is_t: bool = bool(lobby.get("tour", false))
+	var gname := "TRUCO" if str(lobby.get("game", "")) == "truco" else "SINUCA"
+	var mesa := "TORNEIO" if is_t else ("2 CONTRA 2" if bool(lobby.get("four", true)) else "1 CONTRA 1")
+	lobby_info.add_child(_pill("👥  LOBBY  •  %s  •  %s" % [gname, mesa], Color("5b2c83"), Color("c39bff")))
+	var r := str(lobby.get("rule", "classic"))
+	if gname == "SINUCA" and not is_t:
+		var rc := {"classic": Color("1f8f4e"), "bar": Color("b5651d"), "cantada": Color("2e6fd8")}
+		lobby_info.add_child(_pill("REGRA: %s" % {"classic": "CLÁSSICA", "bar": "DE BAR", "cantada": "CANTADA"}.get(r, "CLÁSSICA"), rc.get(r, Color("1f8f4e")), Color(1, 0.88, 0.35)))
+	var stv := int(lobby.get("stake", 0))
+	lobby_info.add_child(_pill("APOSTA: %s" % ("SEM" if stv <= 0 else str(stv)), Color("6b5210"), Color("ffd34a")))
+
+
 func _lobby_paint() -> void:
+	_lobby_info_paint()
 	if lobby_row == null:
 		return
 	for ch in lobby_row.get_children():
@@ -1746,7 +1780,6 @@ func _lobby_paint() -> void:
 		lobby_row.add_child(h)
 		return
 	var is_t: bool = bool(lobby.get("tour", false))
-	lobby_row.add_child(mk_lbl(("TORNEIO %s:" % ("TRUCO" if str(lobby.get("game", "")) == "truco" else "SINUCA")) if is_t else ("LOBBY %s %s:" % ["TRUCO" if str(lobby.get("game", "")) == "truco" else "SINUCA", "2x2" if bool(lobby.get("four", true)) else "1x1"]), 16, Color("ffe066"), 2))
 	for o in lobby.members:
 		var lead: bool = str(o.code) == str(lobby.leader)
 		var me: bool = str(o.code) == game.my_code()
@@ -1903,9 +1936,9 @@ func _draw_seats() -> void:
 			radar.draw_circle(p, 26, Color(0.1, 0.13, 0.18, 0.95))
 			radar.draw_arc(p, 26, 0, TAU, 32, Color(1, 1, 1, 0.25 + 0.4 * pul), 2.5)
 			radar.draw_string(f, p + Vector2(-26, 9), "?", HORIZONTAL_ALIGNMENT_CENTER, 52, 26, Color(1, 1, 1, 0.5 + 0.4 * pul))
-		var lab := "VOCÊ" if i == 0 else ("JOGADOR" if filled else "...")
+		var lab := "VOCÊ" if i == 0 else ("JOGADOR" if filled else ("VAGA (IA)" if in_lobby() else "..."))
 		if four and i == 2:
-			lab = "PARCEIRO" if filled else "PARCEIRO?"
+			lab = "PARCEIRO" if filled else ("VAGA (IA)" if in_lobby() else "PARCEIRO?")
 		if vfriend[i]:
 			lab = str(vnames[i]).substr(0, 12).to_upper()
 			radar.draw_arc(p, 31, 0, TAU, 36, Color("3ddc84"), 3.0)
@@ -2829,7 +2862,7 @@ func _invite(code: String, g: String, to_lobby: bool) -> void:
 	say("Enviando convite..." if stk <= 0 else "Enviando convite (valendo %d moedas)..." % stk)
 
 
-func show_invite(from: String, nm: String, g: String, to_lobby := false, stake := 0, is_tour := false) -> void:
+func show_invite(from: String, nm: String, g: String, to_lobby := false, stake := 0, is_tour := false, rule := "classic") -> void:
 	for c in invite_box.get_children():
 		c.queue_free()
 	invite_box.add_child(mk_lbl("CONVITE!", 34, Color("f4c542"), 6))
@@ -2845,6 +2878,8 @@ func show_invite(from: String, nm: String, g: String, to_lobby := false, stake :
 			invite_box.add_child(mk_lbl("APOSTA: %d moedas cada  •  quem ganhar leva %d" % [stake, stake * 2], 19, Color("ffe066"), 3))
 			if int(game.save.coins) < stake:
 				invite_box.add_child(mk_lbl("Você não tem moedas suficientes para essa aposta.", 16, Color("ff8a80"), 2))
+	if g != "truco" and not is_tour and rule != "classic" and RULE_INFO.has(rule):
+		invite_box.add_child(mk_lbl("REGRA: %s  —  %s" % [RULE_INFO[rule][0], RULE_INFO[rule][1]], 16, Color("ffb347"), 2))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER

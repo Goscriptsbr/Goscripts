@@ -355,6 +355,29 @@ function tradeMsg(c, m) {
   if (!sd) return;
   const os = sd === "a" ? "b" : "a";
   switch (m.t) {
+    case "trade_chat": { // conversa por texto durante a negociação
+      if (t.stage === "invite") return;
+      const now = Date.now();
+      if (c.tchatT && now - c.tchatT < 600) return;
+      c.tchatT = now;
+      const txt = cleanText(String(m.txt || "").slice(0, 80)).trim();
+      if (!txt) return;
+      const o = clients.get(os === "a" ? t.a : t.b);
+      if (o && !blockedBy(o, c.code)) sendJ(o, { t: "trade_chat", id: t.id, from: c.name || c.code, txt });
+      return;
+    }
+    case "trade_voice": { // voz (segura para falar): pedaços curtos de áudio µ-law em base64
+      if (t.stage === "invite") return;
+      const d = String(m.d || "");
+      if (!d || d.length > 4000) return;
+      const now = Date.now();
+      c.tvoiceN = (c.tvoiceT && now - c.tvoiceT < 1000) ? (c.tvoiceN || 0) + 1 : 1;
+      if (!c.tvoiceT || now - c.tvoiceT >= 1000) c.tvoiceT = now;
+      if (c.tvoiceN > 20) return;
+      const o = clients.get(os === "a" ? t.a : t.b);
+      if (o && !blockedBy(o, c.code)) sendJ(o, { t: "trade_voice", id: t.id, d });
+      return;
+    }
     case "trade_resp":
       if (sd !== "b" || t.stage !== "invite") return;
       if (!m.ok) return tradeEnd(t, (c.name || "O amigo") + " recusou a negociação.");
@@ -648,6 +671,7 @@ function onMsg(c, op, payload) {
     }
     case "eco": ecoMsg(c, m); break;
     case "trade_req": case "trade_resp": case "trade_set": case "trade_ready": case "trade_confirm": case "trade_cancel": case "trade_has":
+    case "trade_chat": case "trade_voice":
       tradeMsg(c, m);
       break;
     case "csave": { // backup do save do celular
@@ -1014,7 +1038,7 @@ function onMsg(c, op, payload) {
       if (m.lobby && c.party && c.party.members.length >= partyMax(c.party)) return sendJ(c, { t: "invite_fail", msg: "O lobby já está cheio" });
       const ist = m.lobby ? 0 : stakeOf(m.stake);
       if (ist && (c.coins || 0) < ist) return sendJ(c, { t: "invite_fail", msg: "Você não tem moedas para apostar " + ist + "." });
-      sendJ(f, { t: "invited", from: c.code, name: c.name, game: m.lobby && c.party ? c.party.game : (m.game === "truco" ? "truco" : "sinuca"), lobby: !!m.lobby, stake: m.lobby && c.party ? stakeOf(c.party.stake) : ist, tour: !!(m.lobby && c.party && c.party.tour) });
+      sendJ(f, { t: "invited", from: c.code, name: c.name, game: m.lobby && c.party ? c.party.game : (m.game === "truco" ? "truco" : "sinuca"), lobby: !!m.lobby, stake: m.lobby && c.party ? stakeOf(c.party.stake) : ist, tour: !!(m.lobby && c.party && c.party.tour), rule: ruleOf(c.rule) });
       sendJ(c, { t: "invite_ok", name: f.name, lobby: !!m.lobby });
       break;
     }
@@ -1090,6 +1114,7 @@ function onMsg(c, op, payload) {
     }
     case "rule": { // regra de sinuca escolhida no aparelho
       c.rule = ruleOf(m.rule);
+      if (c.party && c.party.leader === c) sendLobby(c.party);
       break;
     }
     case "gdiag": { // erro do login rápido do Google no celular (diagnóstico para o dono)
@@ -1195,6 +1220,7 @@ function sendLobby(p, msg) {
   const d = {
     t: "lobby", leader: p.leader.code, game: p.game, four: p.four, searching: !!q, stake: stakeOf(p.stake), tour: !!p.tour, touring: !!(p.tourRun && !p.tourRun.done),
     members: p.members.map((o) => ({ code: o.code, name: o.name, team: teamOf(p, o) })), msg: msg || "",
+    rule: p.game === "truco" || p.tour ? "classic" : ruleOf(p.leader.rule),
   };
   for (const o of p.members) sendJ(o, d);
 }

@@ -510,6 +510,8 @@ func _voice_pump(delta: float) -> void:
 		voice_send_t = 0.0
 		_flush_voice()
 	# meu balão de "falando" fica aceso enquanto seguro o botão
+	if trade_talk:
+		return
 	for b in bubbles:
 		if b.voice and b.abs == abs_seat(multiplayer.get_unique_id()):
 			b.t = 0.0
@@ -560,16 +562,54 @@ func _play_local(data: PackedByteArray) -> void:
 func _flush_voice() -> void:
 	if voice_buf.is_empty():
 		return
-	game.net.send_voice(voice_buf)
+	if trade_talk:
+		if game.trade != null:
+			game.trade.send_voice(voice_buf)
+	else:
+		game.net.send_voice(voice_buf)
 	voice_buf = PackedByteArray()
+
+
+# ---- voz na negociação (fora da partida): mesmo microfone, vai pelo servidor
+var trade_talk := false
+
+
+func trade_talk_start() -> bool:
+	if talking or mic_testing or not _mic_allowed():
+		return false
+	_ensure_mic()
+	capture.clear_buffer()
+	mic_frac = 0.0
+	voice_send_t = 0.0
+	voice_buf.clear()
+	mic_peak = 0.0
+	trade_talk = true
+	talking = true
+	talk_t0 = clock
+	return true
+
+
+func trade_talk_stop() -> void:
+	if not talking or not trade_talk:
+		return
+	_flush_voice()
+	talking = false
+	trade_talk = false
+
+
+func got_trade_voice(data: PackedByteArray) -> void:
+	if not bool(game.save.get("voice_hear", true)):
+		return
+	got_voice(-77, data)
 
 
 func got_voice(peer: int, data: PackedByteArray) -> void:
 	if not bool(game.save.get("voice_hear", true)):
 		return
-	if game.safety != null and game.safety.is_blocked(game.safety.code_of_peer(peer)):
+	if peer != -77 and game.safety != null and game.safety.is_blocked(game.safety.code_of_peer(peer)):
 		return
-	add(peer, "", true)
+	if peer != -77:
+		add(peer, "", true)
 	if listeners.has(peer):
 		var old: AudioStreamPlayer = listeners[peer].player
 		if not is_instance_valid(old) or not old.playing:
