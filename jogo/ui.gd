@@ -3445,8 +3445,8 @@ func _build_shop() -> void:
 		b.pressed.connect(_shop_tab.bind(k[0]))
 		tab_btns[k[0]] = b
 		tabs.add_child(b)
-	for k in [["cue", "TACOS"], ["felt", "MESAS"], ["rail", "BORDAS"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"]]:
-		var sb := mk_btn(k[1], 190, 54, GRAY, 22)
+	for k in [["cue", "TACOS"], ["felt", "MESAS"], ["rail", "BORDAS"], ["deck", "BARALHOS"], ["wfx", "EFEITOS"], ["gift", "PRESENTES"]]:
+		var sb := mk_btn(k[1], 168, 54, GRAY, 20)
 		sb.pressed.connect(_inv_sub.bind(k[0]))
 		inv_btns[k[0]] = sb
 		tabs.add_child(sb)
@@ -3757,6 +3757,11 @@ func _shop_tab(t: String) -> void:
 		sb.visible = t == "inv"
 		var sc: Color = Color("16897f") if k == inv_sub else GRAY
 		sb.add_theme_stylebox_override("normal", sbox(sc, 20, sc.lightened(0.35), 3, 8))
+		if k == "gift" and game.gift != null:
+			var ng: int = game.gift.pending().size()
+			sb.text = "PRESENTES" + (" (%d)" % ng if ng > 0 else "")
+			if ng > 0 and k != inv_sub:
+				sb.add_theme_stylebox_override("normal", sbox(Color("c2185b"), 20, Color("ff8ab8"), 3, 8))
 	for k in tab_btns.keys():
 		var tb: Button = tab_btns[k]
 		tb.visible = t != "inv"
@@ -3816,6 +3821,9 @@ func _shop_refresh() -> void:
 		_packs_render()
 		return
 	var srcmap := {"cue": game.CUES + game.MONTHLY + game.ELITE, "elite": game.ELITE, "rail": game.RAILS, "deck": game.DECKS, "felt": game.FELTS, "wfx": game.WFX}
+	if shop_tab == "inv" and inv_sub == "gift" and game.gift != null:
+		game.gift.render_tab(shop_row)
+		return
 	if shop_tab == "inv":
 		var src: Array = srcmap.get(inv_sub, game.FELTS)
 		for it in src:
@@ -3824,7 +3832,8 @@ func _shop_refresh() -> void:
 	else:
 		var src2: Array = game.CUES if shop_tab == "cue" else srcmap.get(shop_tab, game.FELTS)
 		for it in src2:
-			if not owned_l.has(it.id) and it.id != "dk_classico" and it.id != "wf_confete" and it.id != "rb_padrao":
+			# a loja mostra tudo (o que você já tem fica com "JÁ É SEU", mas dá para dar de presente)
+			if it.id != "dk_classico" and it.id != "wf_confete" and it.id != "rb_padrao" and (not owned_l.has(it.id) or (game.gift != null and game.gift.can_gift(it))):
 				items.append(it)
 	if items.is_empty():
 		var el := mk_lbl("Você já tem todos os itens desta aba!\nVeja tudo em INVENTÁRIO.", 26, Color(1, 1, 1, 0.8), 4)
@@ -3879,8 +3888,16 @@ func _shop_refresh() -> void:
 			tg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vb.add_child(tg)
 		var owned: bool = game.save.owned.has(it.id) or it.id == "dk_classico" or it.id == "wf_confete" or it.id == "rb_padrao"
+		if shop_tab != "inv" and game.gift != null and game.gift.can_gift(it):
+			# botão rosa de presente no canto da prévia
+			var gb: Button = game.gift.gift_btn(game.gift.open_send.bind(it))
+			gb.position = Vector2(132, 96)
+			pv.add_child(gb)
 		var btn: Button
-		if it.id == equipped:
+		if shop_tab != "inv" and owned:
+			btn = mk_btn("✓ JÁ É SEU", 184, 56, Color("24303f"), 22)
+			btn.disabled = true
+		elif it.id == equipped:
 			btn = mk_btn("EM USO", 184, 56, GREEN, 24)
 			btn.disabled = true
 		elif owned:
@@ -5139,6 +5156,8 @@ func show_screen(sname: String) -> void:
 	if sname == "main":
 		_month_refresh()
 		missions_badge()
+		if game.gift != null:
+			game.gift.on_menu()
 	elif sname == "shop":
 		if shop_tab == "inv":
 			shop_tab = "felt"

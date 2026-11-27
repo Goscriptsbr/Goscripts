@@ -199,6 +199,15 @@ function ecoApply(code, eco, tx) {
       if (!b || b.claimed || gc > lim || gg > 0) return false;
       b.claimed = true;
       gc = 0; gg = 0; // não conta no limite do dia
+    } else if (why === "gift_dup") {
+      // presente que chegou de um item que a pessoa já tinha: vira o valor em moedas (uma vez por presente)
+      const pl = players.get(code);
+      const gid = String(tx.gid || "");
+      const v = pl && pl.gin ? Number(pl.gin[gid]) || 0 : 0;
+      if (!v || gc > v || gg > 0) return false;
+      delete pl.gin[gid];
+      saveSoon();
+      gc = 0; // não conta no limite do dia
     } else if (why === "tour") {
       const pz = tourPrize.get(code) || 0;
       if (gc > pz || gg > 0) return false;
@@ -295,6 +304,60 @@ function cleanOffer(o) {
   const items = Array.isArray(o && o.items) ? [...new Set(o.items.map((x) => String(x).slice(0, 24)))].filter((x) => ITEM_VAL[x] > 0).slice(0, 30) : [];
   const coins = Math.max(0, Math.min(10000000, Math.trunc(Number(o && o.coins) || 0)));
   return { items, coins };
+}
+// ------------------------------------------------------------ PRESENTES
+// Quem dá paga (item da loja + embrulho) aqui no servidor; o pacote vai para quem recebe na hora
+// (se estiver online) ou fica guardado nos recados até ele abrir o jogo.
+let SHOP_PRICE = {};
+try { SHOP_PRICE = JSON.parse(fs.readFileSync(__dirname + "/loja.json", "utf8")); } catch (e) { console.log("loja.json:", e.message); }
+const WRAP_PRICE = { kraft: 0, laco: 150, festa: 300, ouro: 600, galaxia: 1200 };
+const giftRate = new Map(); // code -> [timestamps]
+function giftMsg(c, m) {
+  const fail = (msg) => sendJ(c, { t: "gift_fail", msg });
+  if (!c.code || typeof m.tok !== "string" || m.tok.length < 16) return fail("Entre na sua conta para mandar presentes.");
+  const to = String(m.to || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  const item = String(m.item || "").slice(0, 24);
+  const wrap = Object.prototype.hasOwnProperty.call(WRAP_PRICE, m.wrap) ? String(m.wrap) : "kraft";
+  const note = String(m.msg || "").replace(/[\u0000-\u001f]/g, " ").slice(0, 60);
+  if (to.length !== 6 || !players.has(to)) return fail("Não achei nenhum jogador com o código " + (to || "?") + ".");
+  if (to === c.code) return fail("Não dá para mandar presente para você mesmo.");
+  const price = SHOP_PRICE[item];
+  if (!price) return fail("Esse item não pode ser dado de presente.");
+  const now = Date.now();
+  const rl = (giftRate.get(c.code) || []).filter((x) => now - x < 60000);
+  if (rl.length >= 5) return fail("Calma! Espere um pouquinho para mandar outro presente.");
+  rl.push(now);
+  giftRate.set(c.code, rl);
+  const cost = price + WRAP_PRICE[wrap];
+  withLock(c.code, async () => {
+    const row = await getSave(c.code);
+    if (row === undefined) return fail("Não deu para conferir sua conta agora. Tente de novo.");
+    if (!row || !row.eco || (row.tok && row.tok !== m.tok)) return fail("Sua conta precisa estar na versão nova para mandar presentes.");
+    const rrow = await getSave(to);
+    const rOwned = rrow && rrow.save && Array.isArray(rrow.save.owned) ? rrow.save.owned : [];
+    if (rOwned.includes(item)) return fail((players.get(to).name || "Esse jogador") + " já tem esse item. Escolha outro!");
+    const eco = row.eco;
+    if (!ecoApply(c.code, eco, { c: -cost, g: 0, w: "gift" })) return fail("Moedas insuficientes para esse presente.");
+    if (!(await putSave(c.code, { tok: row.tok, eco }))) return fail("Não deu para salvar agora. Tente de novo.");
+    const gid = c.code + "-" + now.toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36);
+    const gift = { kind: "gift", gid, from: c.code, name: c.name || "Amigo", item, wrap, msg: note, ts: now };
+    const pl = players.get(to);
+    pl.gin = pl.gin || {};
+    pl.gin[gid] = price;
+    const keys = Object.keys(pl.gin);
+    if (keys.length > 60) delete pl.gin[keys[0]];
+    const cl = clients.get(to);
+    if (cl) sendJ(cl, Object.assign({ t: "gift" }, gift));
+    else {
+      const box = mailbox.get(to) || [];
+      box.push(gift);
+      mailbox.set(to, box);
+    }
+    saveSoon();
+    c.coins = eco.coins;
+    sendJ(c, { t: "gift_ok", coins: eco.coins, grana: eco.grana, seq: eco.seq || 0, to, name: pl.name || to, item, wrap });
+    console.log("presente " + c.code + " -> " + to + ": " + item + " (" + wrap + ", " + cost + ")");
+  });
 }
 async function tradeExec(t) {
   t.stage = "exec";
@@ -664,12 +727,14 @@ function onMsg(c, op, payload) {
         saveSoon();
         for (const x of box) {
           if (x.kind === "pm") sendJ(c, { t: "pm", from: x.from, name: x.name, txt: x.txt, ts: x.ts });
+          else if (x.kind === "gift") sendJ(c, Object.assign({ t: "gift" }, x));
           else sendJ(c, { t: "fmsg", kind: x.kind, from: x.from, name: x.name });
         }
       }
       break;
     }
     case "eco": ecoMsg(c, m); break;
+    case "gift_send": giftMsg(c, m); break;
     case "trade_req": case "trade_resp": case "trade_set": case "trade_ready": case "trade_confirm": case "trade_cancel": case "trade_has":
     case "trade_chat": case "trade_voice":
       tradeMsg(c, m);
@@ -1001,9 +1066,9 @@ function onMsg(c, op, payload) {
       if (blockedBy(f, c.code)) return sendJ(c, { t: "fsent", kind, to, delivered: true });
       if (f && f !== c) sendJ(f, { t: "fmsg", kind, from: c.code, name: c.name });
       else if (/^[A-Z0-9]{4,8}$/.test(to) && to !== c.code) {
-        const box = (mailbox.get(to) || []).filter((x) => x.from !== c.code);
+        const box = (mailbox.get(to) || []).filter((x) => x.from !== c.code || x.kind === "pm" || x.kind === "gift");
         box.push({ kind, from: c.code, name: c.name });
-        if (box.length > 50) box.shift();
+        if (box.length > 50) { const i = box.findIndex((x) => x.kind !== "gift"); if (i >= 0) box.splice(i, 1); }
         saveSoon();
         mailbox.set(to, box);
       }
@@ -1024,7 +1089,7 @@ function onMsg(c, op, payload) {
       else {
         const box = mailbox.get(to) || [];
         box.push({ kind: "pm", ...msg });
-        while (box.length > 80) box.shift();
+        while (box.length > 80) { const i = box.findIndex((x) => x.kind !== "gift"); if (i < 0) break; box.splice(i, 1); }
         mailbox.set(to, box);
         saveSoon();
       }

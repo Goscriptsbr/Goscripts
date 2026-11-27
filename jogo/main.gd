@@ -13,6 +13,7 @@ var chat: CanvasLayer
 var replay: Node
 var tutorial: Node
 var trade: Node
+var gift: Node
 var news: Node
 var safety: Node
 # baralhos do truco (estilo das cartas); o "classico" é de graça
@@ -38,7 +39,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 113  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 114  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -400,6 +401,9 @@ func _ready() -> void:
 	safety = load("res://safety.gd").new()
 	add_child(safety)
 	safety.setup(self)
+	gift = load("res://gift.gd").new()
+	add_child(gift)
+	gift.setup(self)
 	rack()
 	attract_kick()
 	var args := OS.get_cmdline_user_args()
@@ -1042,13 +1046,15 @@ func cur_ai() -> bool:
 # ---------------------------------------------------------------- moedas no servidor
 # Toda mudança de moedas/grana passa por aqui: muda na hora no celular e entra numa fila que vai
 # para o servidor conferir. O saldo que o servidor devolve é o que vale (editar o save não adianta).
-func eco(dc: int, dg: int, why: String) -> void:
+func eco(dc: int, dg: int, why: String, extra: Dictionary = {}) -> void:
 	if bot or (dc == 0 and dg == 0):
 		return
 	var q: Array = save.get("eco_q", [])
 	var sq := int(save.get("eco_seq", 0)) + 1
 	save["eco_seq"] = sq
-	q.append({"s": sq, "c": dc, "g": dg, "w": why})
+	var tx := {"s": sq, "c": dc, "g": dg, "w": why}
+	tx.merge(extra)
+	q.append(tx)
 	save["eco_q"] = q
 	if net != null:
 		net.eco_dirty = true

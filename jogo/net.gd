@@ -675,6 +675,9 @@ func _world_msg(m: Dictionary) -> void:
 				return
 			if game.trade != null:
 				game.trade.on_msg(m)
+		"gift_ok", "gift_fail", "gift":
+			if game.gift != null:
+				game.gift.on_msg(m)
 		"toast":
 			if game.ui != null:
 				game.ui.say(str(m.get("msg", "")))
