@@ -458,6 +458,8 @@ var _my_scroll: ScrollContainer
 var _their_scroll: ScrollContainer
 var _top: Control
 var _bal: Control
+var _frame := 0
+var _pick_tok := 0
 var _lp: Control
 var _rp: Control
 var _coin_edit: LineEdit
@@ -719,12 +721,15 @@ func _process(_d: float) -> void:
 			_anim.queue_redraw()
 		if _top != null and is_instance_valid(_top):
 			_top.queue_redraw()
-		var keep: Array = []
-		for c in _cards:
-			if is_instance_valid(c):
-				(c as Control).queue_redraw()
-				keep.append(c)
-		_cards = keep
+		_frame += 1
+		if _frame % 2 == 0:  # 30 quadros por segundo e só o que está na tela
+			var keep: Array = []
+			for c in _cards:
+				if is_instance_valid(c):
+					if ui.on_screen(c):
+						(c as Control).queue_redraw()
+					keep.append(c)
+			_cards = keep
 
 
 func _col_panel(col: Color, title: String = "") -> PanelContainer:
@@ -973,6 +978,33 @@ func _coin_card(n: int) -> Control:
 	return p
 
 
+# reaproveita os cartões que já estavam na lista (só cria os itens novos): trocar oferta não engasga
+func _sync_list(list: Control, ids: Array, mine: bool) -> void:
+	var old := {}
+	for ch in list.get_children():
+		if ch.has_meta("iid") and not ch.is_queued_for_deletion():
+			old[str(ch.get_meta("iid"))] = ch
+		else:
+			list.remove_child(ch)
+			ch.queue_free()
+	var idx := 0
+	for it in ids:
+		var sid := str(it)
+		var card: Control
+		if old.has(sid):
+			card = old[sid]
+			old.erase(sid)
+		else:
+			card = _item_card(sid, mine)
+			card.set_meta("iid", sid)
+			list.add_child(card)
+		list.move_child(card, idx)
+		idx += 1
+	for k in old.keys():
+		list.remove_child(old[k])
+		old[k].queue_free()
+
+
 func _refresh() -> void:
 	if not is_open() or waiting or _my_list == null or not is_instance_valid(_my_list):
 		return
@@ -986,18 +1018,12 @@ func _refresh() -> void:
 	if sig != _sig:
 		var grew_t := t_items.size() + (1 if t_coins > 0 else 0) > _their_list.get_child_count() and _sig != ""
 		_sig = sig
-		for ch in _my_list.get_children():
-			ch.queue_free()
-		for ch in _their_list.get_children():
-			ch.queue_free()
-		for it in my_items:
-			_my_list.add_child(_item_card(str(it), true))
+		_sync_list(_my_list, my_items, true)
 		if my_coins > 0:
 			_my_list.add_child(_coin_card(my_coins))
 		if my_items.is_empty() and my_coins == 0:
 			_my_list.add_child(_empty_lbl("Toque em  + COLOCAR ITEM\nou coloque moedas"))
-		for it in t_items:
-			_their_list.add_child(_item_card(str(it), false))
+		_sync_list(_their_list, t_items, false)
 		if t_coins > 0:
 			_their_list.add_child(_coin_card(t_coins))
 		if t_items.is_empty() and t_coins == 0:
@@ -1210,6 +1236,8 @@ func _pick_show(k: String) -> void:
 	for ch in _pick_row.get_children():
 		ch.queue_free()
 	_pick_scroll.scroll_horizontal = 0
+	_pick_tok += 1
+	var tok := _pick_tok
 	var has: Array = st.get("theirHas", [])
 	var n := 0
 	for id in tradable():
@@ -1218,6 +1246,11 @@ func _pick_show(k: String) -> void:
 		if k != "" and str(info(id).get("k", "")) != k:
 			continue
 		n += 1
+		# monta aos poucos: os primeiros na hora e o resto alguns por quadro (não engasga com muitos itens)
+		if n > 6 and n % 3 == 0:
+			await get_tree().process_frame
+			if tok != _pick_tok or _pick_row == null or not is_instance_valid(_pick_row):
+				return
 		var sid := str(id)
 		var card := _item_card(sid, false, 228.0, 330.0)
 		if has.has(sid):

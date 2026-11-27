@@ -1,8 +1,8 @@
 extends CanvasLayer
 # Tela de NOVIDADES que aparece uma vez depois de atualizar (marca em save.news_seen).
-# Esta: conectar a conta Google + tacos do mês mais fortes + negociação entre amigos.
+# Esta: conectar a conta Google + presentes para amigos + negociação entre amigos.
 
-const NEWS_ID := "google2"
+const NEWS_ID := "presentes1"
 const AV = preload("res://avatars.gd")
 
 var game: Node
@@ -59,7 +59,6 @@ func show_news() -> void:
 	card.add_child(_art)
 	_art.draw.connect(_draw_art)
 	# itens de verdade no cartão da negociação
-	_item(_art, str(game.month_cue().get("id", "m_aurora")), Vector2(507, 228))
 	_item(_art, "e_zeus", Vector2(812, 240), 0.62)
 	_item(_art, "aurora_m", Vector2(1000, 240), 0.62)
 	var vb := VBoxContainer.new()
@@ -80,10 +79,10 @@ func show_news() -> void:
 		close()
 		game.net.send_glink("link")
 		ui.say("Abrindo o Google... escolha sua conta e depois volte para o jogo."))
-	var mb: Button = ui.mk_btn("VER O TACO DO MÊS", 330, 62, Color("b8323a"), 21)
+	var mb: Button = ui.mk_btn("IR PARA A LOJA", 330, 62, Color("c2185b"), 21)
 	mb.pressed.connect(func():
 		close()
-		ui.show_screen("main"))
+		ui.show_screen("shop"))
 	var bf: Button = ui.mk_btn("VER MEUS AMIGOS", 330, 62, Color("d68a10"), 21)
 	bf.pressed.connect(func():
 		close()
@@ -204,20 +203,23 @@ func _draw_art() -> void:
 	_bullet(c, f, Vector2(x0 + 26, cy + 222), "Nunca perca moedas e itens", gb)
 	_bullet(c, f, Vector2(x0 + 26, cy + 256), "Trocou de celular? É só entrar", gb)
 	_bullet(c, f, Vector2(x0 + 26, cy + 290), "Leve sua conta pra Play Store", gb)
-	c.draw_string(f, Vector2(x0, cy + 324), "O Sinucou vai chegar na Play Store!", HORIZONTAL_ALIGNMENT_CENTER, cw, 15, Color(1, 1, 1, 0.55))
-	# ---- 2) Tacos do mês
+	c.draw_string(f, Vector2(x0, cy + 324), "O Sinucou já está na Play Store!", HORIZONTAL_ALIGNMENT_CENTER, cw, 15, Color(1, 1, 1, 0.55))
+	# ---- 2) Presentes
 	var x1: float = xs[1]
-	c.draw_style_box(ui.sbox(Color(0.12, 0.03, 0.05, 0.95), 24, Color(1, 0.35, 0.4, 0.7), 3), Rect2(x1, cy, cw, chh))
-	c.draw_string(f, Vector2(x1, cy + 36), "TACOS DO MÊS", HORIZONTAL_ALIGNMENT_CENTER, cw, 28, Color("ff8a8a"))
-	c.draw_string(f, Vector2(x1, cy + 64), "MAIS FORTES!", HORIZONTAL_ALIGNMENT_CENTER, cw, 22, Color.WHITE)
-	c.draw_style_box(ui.sbox(Color(0.03, 0.03, 0.06, 0.9), 14, Color(1, 0.5, 0.5, 0.5), 2), Rect2(x1 + 86, cy + 92, 198, 116))
-	var pct := 100 + int(10 * (0.5 + 0.5 * sin(t * 2.0)))
-	c.draw_string(f, Vector2(x1 + 86, cy + 116), "%d%%" % pct, HORIZONTAL_ALIGNMENT_RIGHT, 190, 18, Color("ffd34a"))
-	var rb := Color("ff9a9a")
-	_bullet(c, f, Vector2(x1 + 26, cy + 222), "Todos com 100% ou mais", rb)
-	_bullet(c, f, Vector2(x1 + 26, cy + 256), "Alguns chegam a 110%", rb)
-	_bullet(c, f, Vector2(x1 + 26, cy + 290), "Um taco novo todo mês", rb)
-	c.draw_string(f, Vector2(x1, cy + 324), "Corra: a oferta do mês é por tempo limitado.", HORIZONTAL_ALIGNMENT_CENTER, cw, 15, Color(1, 1, 1, 0.55))
+	c.draw_style_box(ui.sbox(Color(0.12, 0.03, 0.08, 0.95), 24, Color(1, 0.54, 0.72, 0.7), 3), Rect2(x1, cy, cw, chh))
+	c.draw_string(f, Vector2(x1, cy + 36), "PRESENTEIE", HORIZONTAL_ALIGNMENT_CENTER, cw, 22, Color("ff8ab8"))
+	c.draw_string(f, Vector2(x1, cy + 66), "UM AMIGO", HORIZONTAL_ALIGNMENT_CENTER, cw, 28, Color.WHITE)
+	if game.gift != null:
+		var wl: Array = game.gift.WRAPS
+		var bounce := absf(sin(t * 2.4)) * 8.0
+		game.gift.draw_box(c, Vector2(x1 + 100, cy + 170), 70, wl[2], t)
+		game.gift.draw_box(c, Vector2(x1 + cw / 2, cy + 160 - bounce), 96, wl[4], t, 0.0, 0.0)
+		game.gift.draw_box(c, Vector2(x1 + cw - 100, cy + 170), 70, wl[1], t)
+	var rb := Color("ff9ac4")
+	_bullet(c, f, Vector2(x1 + 26, cy + 222), "Qualquer item da loja", rb)
+	_bullet(c, f, Vector2(x1 + 26, cy + 256), "Escolha o embrulho e um recado", rb)
+	_bullet(c, f, Vector2(x1 + 26, cy + 290), "Ele abre no inventário", rb)
+	c.draw_string(f, Vector2(x1, cy + 324), "Na LOJA, toque no botão rosa de presente.", HORIZONTAL_ALIGNMENT_CENTER, cw, 15, Color(1, 1, 1, 0.55))
 	# ---- 3) Negociação
 	var x2: float = xs[2]
 	c.draw_style_box(ui.sbox(Color(0.1, 0.07, 0.02, 0.95), 24, Color(0.96, 0.77, 0.26, 0.7), 3), Rect2(x2, cy, cw, chh))

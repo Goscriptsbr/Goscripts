@@ -42,11 +42,16 @@ func setup(g: Node) -> void:
 		game.save["gifts"] = []
 
 
+var _frame := 0
 func _process(_d: float) -> void:
+	_frame += 1
+	if _frame % 2 != 0:
+		return
 	var keep: Array = []
 	for c in _anims:
 		if is_instance_valid(c):
-			(c as CanvasItem).queue_redraw()
+			if ui.on_screen(c):
+				(c as CanvasItem).queue_redraw()
 			keep.append(c)
 	_anims = keep
 

@@ -39,7 +39,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 114  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 115  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -3977,7 +3977,7 @@ func _draw_overlay() -> void:
 # miniatura fiel da mesa (loja, inventário, troca, novidades): usa o MESMO desenho da partida
 # (tabelas, caçapas com enfeite de prata, marcações e luz na madeira), só que em escala pequena.
 # Quem chama já pôs o transform de escala no canvas.
-func draw_table_preview(c: CanvasItem, rd: Dictionary, felt: Dictionary) -> void:
+func draw_table_preview(c: CanvasItem, rd: Dictionary, felt: Dictionary, lights: bool) -> void:
 	var old_r := rails
 	var old_e := edge_node
 	pv_felt = felt
@@ -3985,8 +3985,10 @@ func draw_table_preview(c: CanvasItem, rd: Dictionary, felt: Dictionary) -> void
 	pv_boost = 2.6
 	rails = c
 	edge_node = c
-	_draw_edge_fx()
-	_draw_rails()
+	if lights:
+		_draw_edge_fx()
+	else:
+		_draw_rails()
 	rails = old_r
 	edge_node = old_e
 	pv_felt = {}
@@ -4022,7 +4024,7 @@ func _draw_edge_fx() -> void:
 		var a0: Vector2 = sg[0]
 		var a1: Vector2 = sg[1]
 		var ln := a0.distance_to(a1)
-		var n := int(ln / 10.0)
+		var n := int(ln / (10.0 if pv_boost <= 1.0 else 26.0))
 		for k in n:
 			var p0 := a0.lerp(a1, float(k) / n)
 			var p1 := a0.lerp(a1, float(k + 1) / n)

@@ -3690,9 +3690,27 @@ func _process(delta: float) -> void:
 				n.queue_redraw()
 	if (cur == "shop" or cur == "inv") and shop_tab != "felt":
 		fx_t += delta
-		for n in fx_nodes:
-			if is_instance_valid(n):
-				n.queue_redraw()
+		_fx_frame += 1
+		if _fx_frame % 2 == 0:  # 30 quadros por segundo bastam para os brilhos das miniaturas
+			for n in fx_nodes:
+				if is_instance_valid(n) and on_screen(n):
+					n.queue_redraw()
+
+
+var _fx_frame := 0
+var _shop_tok := 0
+
+
+# só vale redesenhar o que está aparecendo na tela (cartões fora da rolagem não gastam nada)
+func on_screen(n: CanvasItem) -> bool:
+	if not n.is_visible_in_tree():
+		return false
+	if n is Control:
+		var c := n as Control
+		var xf := c.get_global_transform()
+		var r := Rect2(xf.origin, c.size * xf.get_scale())
+		return r.intersects(root.get_viewport_rect().grow(40))
+	return true
 
 
 var friends_scroll: ScrollContainer
@@ -3825,6 +3843,8 @@ func _stat_row(label: String, val: float) -> Control:
 
 
 func _shop_refresh() -> void:
+	_shop_tok += 1
+	var tok := _shop_tok
 	fx_nodes.clear()
 	for c in shop_row.get_children():
 		c.queue_free()
@@ -3854,7 +3874,14 @@ func _shop_refresh() -> void:
 		el.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		shop_row.add_child(el)
 		return
+	var built := 0
 	for it in items:
+		# monta os cartões aos poucos (os primeiros na hora, o resto alguns por quadro) para não engasgar
+		built += 1
+		if built > 6 and built % 4 == 3:
+			await get_tree().process_frame
+			if tok != _shop_tok or not is_instance_valid(shop_row):
+				return
 		var is_cue: bool = it.has("shaft")
 		var is_deck: bool = it.has("deck")
 		var is_wfx: bool = it.has("wfx")
@@ -3974,7 +4001,11 @@ func _rail_preview(pv: Control, rd: Dictionary, felt: Dictionary) -> void:
 	top.set_anchors_preset(Control.PRESET_FULL_RECT)
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var frect := Rect2(fr.position, fr.size)
-	var fnt := func():
+	# camada de baixo (anima): brilhos do pano e luz na madeira
+	var under := Control.new()
+	under.set_anchors_preset(Control.PRESET_FULL_RECT)
+	under.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fnu := func():
 		var t := fx_t
 		if anim != "":
 			for i in 12:
@@ -3983,9 +4014,17 @@ func _rail_preview(pv: Control, rd: Dictionary, felt: Dictionary) -> void:
 				var a := 0.5 + 0.5 * sin(t * 2.0 + float(i) * 1.7)
 				var col: Color = {"stars": Color(1, 0.95, 0.8), "aurora": Color(0.4, 1, 0.75), "matrix": Color(0.2, 1, 0.45), "lava": Color(1, 0.55, 0.15), "sakura": Color(1, 0.85, 0.9), "sea": Color(0.8, 1, 1), "storm": Color(0.75, 0.85, 1), "glints": Color(1, 1, 1)}.get(anim, Color.WHITE)
 				var p := frect.position + Vector2(8 + hx * (frect.size.x - 16), 6 + fposmod(hy + (t * 0.08 if anim in ["matrix", "sakura", "storm"] else (-t * 0.06 if anim in ["lava", "sea"] else 0.0)), 1.0) * (frect.size.y - 12))
-				top.draw_circle(p, 0.8 + a, Color(col.r, col.g, col.b, 0.3 + 0.45 * a))
+				under.draw_circle(p, 0.8 + a, Color(col.r, col.g, col.b, 0.3 + 0.45 * a))
+		if edge != "":
+			under.draw_set_transform(ctr, 0.0, Vector2(k, k))
+			game.draw_table_preview(under, rd, felt, true)
+			under.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	under.draw.connect(fnu)
+	pv.add_child(under)
+	# camada de cima (parada, desenha uma vez só): tabelas, caçapas com prata, marcações e bolas
+	var fnt := func():
 		top.draw_set_transform(ctr, 0.0, Vector2(k, k))
-		game.draw_table_preview(top, rd, felt)
+		game.draw_table_preview(top, rd, felt, false)
 		# bolas no tamanho de verdade (um pouco maiores para aparecer bem)
 		for b in [[Vector2(-250, 0), Color("f4f4ee")], [Vector2(150, -30), Color("d12a1e")], [Vector2(200, 25), Color("1a4fb4")], [Vector2(205, -45), Color("f2c230")]]:
 			top.draw_circle(b[0] + Vector2(0, 8), 34, Color(0, 0, 0, 0.35))
@@ -3995,7 +4034,7 @@ func _rail_preview(pv: Control, rd: Dictionary, felt: Dictionary) -> void:
 	top.draw.connect(fnt)
 	pv.add_child(top)
 	if anim != "" or edge != "":
-		fx_nodes.append(top)
+		fx_nodes.append(under)
 
 
 # mesa de verdade em miniatura dentro de um espaço de largura w (prêmios do passe, janela de prêmio)
