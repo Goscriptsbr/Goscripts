@@ -30,4 +30,5 @@ class SGExport extends EditorExportPlugin:
 			"androidx.credentials:credentials:1.3.0",
 			"androidx.credentials:credentials-play-services-auth:1.3.0",
 			"com.google.android.libraries.identity.googleid:googleid:1.1.1",
+			"com.google.android.play:app-update:2.1.0",
 		])

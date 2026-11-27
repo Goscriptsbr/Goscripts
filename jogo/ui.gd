@@ -1635,6 +1635,19 @@ func check_update(info: Dictionary) -> void:
 	show_update(nv, str(info.get("apk", info.url)), str(info.get("notas", "")))
 
 
+# versão da Play Store com atualização: botão abre a tela de atualizar da própria Play (sem sair do jogo)
+var _store_upd_pending := -1
+func show_store_update(vc: int) -> void:
+	if has_modal() or game.st != game.St.MENU or (game.trade != null and game.trade.is_open()):
+		# ocupado: mostra quando voltar ao menu
+		_store_upd_pending = vc
+		return
+	_store_upd_pending = -1
+	confirm("ATUALIZAÇÃO DISPONÍVEL!", "Tem uma versão nova do Sinucou na Play Store.\nAtualize para jogar online com todo mundo e ver as novidades.\n(seus tacos, moedas e amigos continuam)", "ATUALIZAR", func():
+		close_modal()
+		Engine.get_singleton("SinucouGoogle").call("startUpdate"), "DEPOIS", close_modal)
+
+
 func show_update(nv: int, url: String, notas: String) -> void:
 	close_modal()
 	modal_layer = Control.new()
@@ -5158,6 +5171,9 @@ func show_screen(sname: String) -> void:
 		missions_badge()
 		if game.gift != null:
 			game.gift.on_menu()
+		game.net.store_update_check()
+		if _store_upd_pending >= 0:
+			show_store_update.call_deferred(_store_upd_pending)
 	elif sname == "shop":
 		if shop_tab == "inv":
 			shop_tab = "felt"

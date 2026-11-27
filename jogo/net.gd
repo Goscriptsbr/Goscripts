@@ -307,6 +307,26 @@ func app_sig() -> String:
 	return _sig
 
 
+# versão da Play Store: pergunta para a própria Play se tem atualização (uma vez por abertura do jogo)
+var _upd_checked := false
+func store_update_check() -> void:
+	if _upd_checked or not OS.has_feature("store") or not Engine.has_singleton("SinucouGoogle"):
+		return
+	_upd_checked = true
+	var sg = Engine.get_singleton("SinucouGoogle")
+	if not sg.is_connected("update_info", _on_update_info):
+		sg.connect("update_info", _on_update_info, CONNECT_DEFERRED)
+	sg.call("checkUpdate")
+
+
+func _on_update_info(vc: int, status: int) -> void:
+	var sg = Engine.get_singleton("SinucouGoogle")
+	if status == 2:
+		sg.call("startUpdate")  # já tinha começado a atualizar: continua
+	elif status == 1 and game.ui != null:
+		game.ui.show_store_update(vc)
+
+
 # regra de sinuca escolhida (salas com amigos e convites usam a regra de quem criou/convidou)
 func send_rule() -> void:
 	if server_ok:

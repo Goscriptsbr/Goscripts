@@ -18,6 +18,14 @@ import androidx.credentials.exceptions.GetCredentialCancellationException;
 import androidx.credentials.exceptions.GetCredentialException;
 
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.appupdate.AppUpdateOptions;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.UpdateAvailability;
+import android.content.Intent;
+import android.net.Uri;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
 import org.godotengine.godot.Godot;
@@ -41,6 +49,7 @@ public class SinucouGoogle extends GodotPlugin {
         Set<SignalInfo> s = new HashSet<>();
         s.add(new SignalInfo("google_ok", String.class, String.class));
         s.add(new SignalInfo("google_fail", String.class, String.class));
+        s.add(new SignalInfo("update_info", Integer.class, Integer.class));
         return s;
     }
 
@@ -66,6 +75,68 @@ public class SinucouGoogle extends GodotPlugin {
             return sb.toString();
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    // ---------------- atualização pela Play Store (In-App Updates)
+    // update_info(versionCode, status): status 0 = está em dia, 1 = tem versão nova, 2 = atualização já começou, -1 = erro/não instalado pela Play
+    private AppUpdateManager upd;
+    private AppUpdateInfo updInfo;
+
+    private AppUpdateManager updMgr() {
+        if (upd == null && getActivity() != null) upd = AppUpdateManagerFactory.create(getActivity());
+        return upd;
+    }
+
+    @UsedByGodot
+    public void checkUpdate() {
+        final Activity act = getActivity();
+        if (act == null) { emitSignal("update_info", 0, -1); return; }
+        act.runOnUiThread(() -> {
+            try {
+                AppUpdateManager m = updMgr();
+                m.getAppUpdateInfo().addOnSuccessListener(info -> {
+                    updInfo = info;
+                    int a = info.updateAvailability();
+                    int st = 0;
+                    if (a == UpdateAvailability.UPDATE_AVAILABLE) st = 1;
+                    else if (a == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) st = 2;
+                    emitSignal("update_info", info.availableVersionCode(), st);
+                }).addOnFailureListener(e -> emitSignal("update_info", 0, -1));
+            } catch (Throwable t) {
+                emitSignal("update_info", 0, -1);
+            }
+        });
+    }
+
+    // abre a tela de atualização da própria Play Store (baixa, instala e reabre o jogo sozinha)
+    @UsedByGodot
+    public void startUpdate() {
+        final Activity act = getActivity();
+        if (act == null) return;
+        act.runOnUiThread(() -> {
+            try {
+                AppUpdateManager m = updMgr();
+                if (updInfo != null && (updInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                        || updInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS)
+                        && updInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                    m.startUpdateFlowForResult(updInfo, act, AppUpdateOptions.defaultOptions(AppUpdateType.IMMEDIATE), 7101);
+                    return;
+                }
+            } catch (Throwable t) { /* cai para a página da loja */ }
+            openStore();
+        });
+    }
+
+    @UsedByGodot
+    public void openStore() {
+        final Activity act = getActivity();
+        if (act == null) return;
+        String pkg = act.getPackageName();
+        try {
+            act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + pkg)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (Throwable t) {
+            act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + pkg)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         }
     }
 
