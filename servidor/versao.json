@@ -1,5 +1,5 @@
 {
-  "versao": 110,
-  "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/8e70ac1d138bdf38a8f3654795999c649fe1b57d/Sinucou.apk",
-  "notas": "Novas regras de sinuca: REGRA DE BAR (preta com bola do outro dá chance e falta vale 2 tacadas) e BOLA CANTADA (escolha a caçapa da preta). Escolha na tela da Sinuca."
+  "versao": 111,
+  "apk": "https://raw.githubusercontent.com/Goscriptsbr/Goscripts/e196917f85d3dce659a26f334c294e820c451817/Sinucou.apk",
+  "notas": "IA não trava mais no online, chat e voz na negociação, lobby mais bonito (mostra a regra) e na Regra de Bar derrubar bola do adversário passa a vez."
 }
