@@ -178,6 +178,14 @@ void fragment() {
 		col *= 0.86 + 0.22 * sh;
 		col += accent.rgb * smoothstep(0.9, 0.0, d) * 0.07;
 		col += accent.rgb * smoothstep(1.4, 0.3, abs(edge - 16.0)) * 0.5;
+	} else if (pat == 11) {
+		// neon calmo: pano liso escuro, só um leve tom da cor no centro (a luz fica na madeira)
+		col += accent.rgb * smoothstep(0.8, 0.0, d) * 0.05;
+		col += accent.rgb * smoothstep(1.2, 0.2, abs(length(q) - 110.0)) * 0.08;
+	} else if (pat == 12) {
+		// brasa: pano liso vermelho-escuro com calor suave no meio (sem chamas dentro da mesa)
+		col = mix(col, accent2.rgb * 0.5, smoothstep(0.9, 0.1, d) * 0.25);
+		col += accent.rgb * smoothstep(0.7, 0.0, d) * 0.04;
 	}
 	// textura de pano: fina e suave (sem chiado)
 	float mid = vnoise(px * 0.35) - 0.5;

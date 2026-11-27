@@ -217,25 +217,60 @@ func build() -> void:
 	_build_pause()
 	_build_over()
 	_build_topbar()
-	toast = mk_lbl("", 28, Color("ffe066"), 8)
+	toast = mk_lbl("", 22, Color.WHITE, 4)
 	toast.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	toast.position = Vector2(-300, -90)
-	var tsb := StyleBoxFlat.new()
-	tsb.bg_color = Color(0.02, 0.04, 0.08, 0.88)
-	tsb.set_corner_radius_all(14)
-	tsb.content_margin_left = 18
-	tsb.content_margin_right = 18
-	tsb.content_margin_top = 6
-	tsb.content_margin_bottom = 6
-	toast.add_theme_stylebox_override("normal", tsb)
-	toast.size = Vector2(600, 50)
+	toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_toast_sb = StyleBoxFlat.new()
+	_toast_sb.bg_color = Color(0.055, 0.07, 0.11, 0.96)
+	_toast_sb.set_corner_radius_all(22)
+	_toast_sb.set_border_width_all(2)
+	_toast_sb.border_color = Color("4aa3ff")
+	_toast_sb.shadow_color = Color(0, 0, 0, 0.45)
+	_toast_sb.shadow_size = 8
+	_toast_sb.shadow_offset = Vector2(0, 4)
+	_toast_sb.content_margin_left = 60
+	_toast_sb.content_margin_right = 22
+	_toast_sb.content_margin_top = 12
+	_toast_sb.content_margin_bottom = 12
+	toast.add_theme_stylebox_override("normal", _toast_sb)
+	toast.size = Vector2(640, 54)
+	toast.position = Vector2(-320, -110)
 	toast.modulate.a = 0.0
+	_toast_ic = Control.new()
+	_toast_ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	toast.add_child(_toast_ic)
+	_toast_ic.draw.connect(func(): game.kind_icon(_toast_ic, Vector2(0, 0), 15.0, _toast_kind, 1.0))
 	root.add_child(toast)
 
 
 var _say_tw: Tween
+var _toast_sb: StyleBoxFlat
+var _toast_ic: Control
+var _toast_kind := "info"
 func say(t: String, secs: float = 0.0) -> void:
 	toast.text = t
+	_toast_kind = game.msg_kind(t)
+	var l := t.to_lower()
+	if l.contains("erro") or l.contains("não foi") or l.contains("falhou") or l.contains("sem internet") or l.contains("sem conexão"):
+		_toast_kind = "err"
+	elif l.contains("conectad") or l.contains("salv") or l.contains("pronto") or l.contains("+"):
+		_toast_kind = "ok"
+	_toast_sb.border_color = game.kind_color(_toast_kind)
+	# largura conforme o texto (até 640) e altura conforme as linhas
+	var fnt := toast.get_theme_font("font")
+	var txw := fnt.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
+	var w := clampf(txw + 90.0, 260.0, 640.0)
+	var nl := maxi(1, int(ceil(txw / (w - 86.0))))
+	var th := 24.0 + 30.0 * nl
+	# âncora no meio de baixo da tela: usa offsets (position dentro da árvore já conta a âncora)
+	toast.offset_left = -w / 2.0
+	toast.offset_right = w / 2.0
+	toast.offset_top = -th - 72.0
+	toast.offset_bottom = -72.0
+	_toast_ic.position = Vector2(32, th / 2.0)
+	_toast_ic.queue_redraw()
 	toast.modulate.a = 1.0
 	# por cima de qualquer janela (antes ficava escondido atrás da janela aberta)
 	toast.z_index = 100

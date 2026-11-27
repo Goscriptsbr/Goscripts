@@ -38,7 +38,7 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 111  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 112  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
 const BLACK := 8
@@ -61,27 +61,28 @@ const FELTS := [
 	{"id": "azul", "name": "Azul Royal", "price": 250, "light": Color("3a7bd5"), "dark": Color("0d2f6b"), "pat": 0, "tag": "Liso"},
 	{"id": "vinho", "name": "Vinho", "price": 250, "light": Color("b8405a"), "dark": Color("5a1226"), "pat": 0, "tag": "Liso"},
 	{"id": "grafite", "name": "Grafite", "price": 400, "light": Color("6f7a88"), "dark": Color("23282f"), "pat": 0, "tag": "Liso"},
+	{"id": "vermelha", "name": "Vermelha Clássica", "price": 1500, "light": Color("c9252d"), "dark": Color("5c0a10"), "pat": 0, "tag": "Pano vermelho, cantos de prata"},
 	{"id": "camuflagem", "name": "Camuflada", "price": 450, "light": Color("5b6b3a"), "dark": Color("2e3a1e"), "pat": 4, "accent": Color("8a7a4a"), "accent2": Color("1f2a14"), "tag": "Estampa militar"},
 	{"id": "brasil", "name": "Brasil", "price": 500, "light": Color("22a553"), "dark": Color("06512b"), "pat": 3, "accent": Color("f2c200"), "accent2": Color("1a4fb4"), "tag": "Losango e esfera"},
-	{"id": "neon", "name": "Neon Cyber", "price": 600, "light": Color("1c2f5e"), "dark": Color("050918"), "pat": 1, "accent": Color("18e6ff"), "accent2": Color("ffffff"), "tag": "Grade luminosa"},
+	{"id": "neon", "name": "Neon Cyber", "price": 600, "light": Color("1c2f5e"), "dark": Color("050918"), "pat": 11, "accent": Color("18e6ff"), "accent2": Color("ffffff"), "edge": "neon", "tag": "Luz neon na madeira"},
 	{"id": "gelo", "name": "Gelo Polar", "price": 700, "light": Color("86d3f2"), "dark": Color("2a6fa0"), "pat": 6, "accent": Color("effcff"), "accent2": Color("ffffff"), "tag": "Cristais de gelo"},
 	{"id": "galaxia", "name": "Galáxia", "price": 750, "light": Color("34196a"), "dark": Color("090519"), "pat": 2, "accent": Color("b06bff"), "accent2": Color("3de0ff"), "tag": "Nebulosa e estrelas"},
-	{"id": "fogo", "name": "Inferno", "price": 800, "light": Color("5a1208"), "dark": Color("1a0605"), "pat": 5, "accent": Color("ffa31a"), "accent2": Color("c4200c"), "tag": "Chamas nas bordas"},
+	{"id": "fogo", "name": "Inferno", "price": 800, "light": Color("5a1208"), "dark": Color("1a0605"), "pat": 12, "accent": Color("ffa31a"), "accent2": Color("c4200c"), "edge": "fire", "tag": "Chamas na madeira"},
 	{"id": "campeao", "name": "Campeão", "price": 0, "pass": 10, "light": Color("16323a"), "dark": Color("04090c"), "pat": 7, "accent": Color("37e0ff"), "accent2": Color("ffd34a"), "tag": "Exclusiva do Passe"},
 	{"id": "esmeralda", "name": "Esmeralda", "price": 0, "pass": 40, "light": Color("0f5a3c"), "dark": Color("03170f"), "pat": 7, "accent": Color("d4af37"), "accent2": Color("ffffff"), "tag": "Exclusiva do Passe"},
 	{"id": "ametista", "name": "Cristal Ametista", "price": 0, "pass": 70, "light": Color("8a63e0"), "dark": Color("2a1260"), "pat": 6, "accent": Color("f3e8ff"), "accent2": Color("ffd6ff"), "tag": "Exclusiva do Passe"},
 	{"id": "pordosol", "name": "Pôr do Sol", "price": 850, "light": Color("3a1a3c"), "dark": Color("140818"), "pat": 8, "accent": Color("ff8a3d"), "accent2": Color("7b2f7a"), "tag": "Céu laranja e sol na água"},
 	{"id": "oceano_m", "name": "Oceano Profundo", "price": 900, "light": Color("0d5f86"), "dark": Color("031a2e"), "pat": 9, "accent": Color("9ff6ff"), "accent2": Color("0a3f66"), "tag": "Luz dançando na água"},
 	{"id": "carbono_m", "name": "Fibra de Carbono", "price": 650, "light": Color("3a3f47"), "dark": Color("101216"), "pat": 10, "accent": Color("e63946"), "accent2": Color("ffffff"), "tag": "Trama de carbono e borda vermelha"},
-	{"id": "arcoiris", "name": "Arco-Íris Neon", "price": 1500, "light": Color("1c1236"), "dark": Color("06040f"), "pat": 1, "accent": Color("ff4fd8"), "accent2": Color("ffffff"), "edge": "rainbow", "tag": "Luzes animadas nas bordas"},
+	{"id": "arcoiris", "name": "Arco-Íris Neon", "price": 1500, "light": Color("1c1236"), "dark": Color("06040f"), "pat": 11, "accent": Color("ff4fd8"), "accent2": Color("ffffff"), "edge": "rainbow", "tag": "Luzes coloridas na madeira"},
 	{"id": "royal", "name": "Ouro Real", "price": 1200, "light": Color("2a1540"), "dark": Color("0b0614"), "pat": 7, "accent": Color("e3b341"), "accent2": Color("ffffff"), "tag": "Treliça dourada"},
 	{"id": "estrelas_m", "name": "Céu Estrelado", "price": 1800, "light": Color("16205a"), "dark": Color("03051a"), "pat": 2, "accent": Color("ffe9a0"), "accent2": Color("9fc0ff"), "anim": "stars", "rail": "rb_azul", "tag": "Estrelas piscando e cadentes"},
 	{"id": "aurora_m", "name": "Aurora Boreal", "price": 2000, "light": Color("0f3a40"), "dark": Color("020c14"), "pat": 2, "accent": Color("6affc8"), "accent2": Color("8a7aff"), "anim": "aurora", "rail": "rb_piano", "tag": "Luzes do norte dançando"},
 	{"id": "matrix_m", "name": "Matrix", "price": 2000, "light": Color("06200e"), "dark": Color("010603"), "pat": 1, "accent": Color("1aff6a"), "accent2": Color("caffd8"), "anim": "matrix", "rail": "rb_piano", "tag": "Chuva de código verde"},
-	{"id": "lava_m", "name": "Lava Viva", "price": 2200, "light": Color("3a0c06"), "dark": Color("0c0302"), "pat": 5, "accent": Color("ff7a1a"), "accent2": Color("c4200c"), "anim": "lava", "rail": "rb_fogo", "tag": "Brasas subindo, borda em chamas"},
+	{"id": "lava_m", "name": "Lava Viva", "price": 2200, "light": Color("3a0c06"), "dark": Color("0c0302"), "pat": 12, "accent": Color("ff7a1a"), "accent2": Color("c4200c"), "rail": "rb_fogo", "tag": "Pano de brasa, madeira em chamas"},
 	{"id": "sakura_m", "name": "Sakura", "price": 2200, "light": Color("d9809a"), "dark": Color("6a2440"), "pat": 0, "anim": "sakura", "rail": "rb_marfim", "tag": "Pétalas de cerejeira caindo"},
 	{"id": "mar_m", "name": "Fundo do Mar", "price": 2400, "light": Color("0a6a8a"), "dark": Color("02203a"), "pat": 9, "accent": Color("9ff6ff"), "accent2": Color("0a3f66"), "anim": "sea", "rail": "rb_azul", "tag": "Bolhas e luz do mar"},
-	{"id": "tempest_m", "name": "Tempestade", "price": 2600, "light": Color("2a3040"), "dark": Color("080a10"), "pat": 0, "anim": "storm", "rail": "rb_raio", "tag": "Chuva, raios e borda elétrica"},
+	{"id": "tempest_m", "name": "Tempestade", "price": 2600, "light": Color("2a3040"), "dark": Color("080a10"), "pat": 0, "rail": "rb_raio", "tag": "Raios correndo na madeira"},
 	{"id": "diamante_m", "name": "Diamante Real", "price": 3500, "light": Color("c8d2e6"), "dark": Color("5a6a8a"), "pat": 6, "accent": Color("ffffff"), "accent2": Color("e8f0ff"), "anim": "glints", "rail": "rb_ouro", "tag": "Brilhos de diamante e ouro"},
 ]
 # Bordas (tabela de madeira em volta da mesa). "rb_padrao" usa a borda de cada mesa.
@@ -274,6 +275,9 @@ var felt_vp: SubViewport
 var felt_rect: ColorRect
 var rails: Node2D
 var felt_fx: Node2D
+var edge_node: Node2D
+var tray: Array = []  # bolas encaçapadas na ordem em que caíram (canaleta do lado da mesa)
+var tray_y := {}
 var ball_layer: Node2D
 var overlay: Node2D
 var ball_shader: Shader
@@ -325,6 +329,10 @@ func _ready() -> void:
 	felt_fx = Node2D.new()
 	add_child(felt_fx)
 	felt_fx.draw.connect(_draw_felt_fx)
+	# luzes das mesas/bordas especiais: só na madeira (fora do pano), embaixo das caçapas e marcações
+	edge_node = Node2D.new()
+	add_child(edge_node)
+	edge_node.draw.connect(_draw_edge_fx)
 	rails = Node2D.new()
 	add_child(rails)
 	rails.draw.connect(_draw_rails)
@@ -3663,6 +3671,10 @@ func _process(delta: float) -> void:
 	update_visuals(delta)
 	update_cue()
 	overlay.queue_redraw()
+	if edge_node != null:
+		edge_node.visible = edge_mode() != ""
+		if edge_node.visible:
+			edge_node.queue_redraw()
 	if felt_fx != null and str(felt_def().get("anim", "")) != "":
 		# durante a partida a animação fica bem fraquinha (para não atrapalhar a mira); forte só no menu
 		var on_fx: bool = bool(save.get("table_fx", true))
@@ -3830,15 +3842,66 @@ func _draw_rails() -> void:
 		# aro de latão só na parte de trás (embutida na madeira); a boca virada para a mesa fica aberta, onde a bola entra
 		var outa: float = pk.angle()
 		var half: float = deg_to_rad(78.0) if pi < 4 else deg_to_rad(80.0)
-		rails.draw_arc(pk, rr + 3.2, outa - half, outa + half, 40, Color("15100b"), 6.0)
-		rails.draw_arc(pk, rr + 3.6, outa - half, outa + half, 40, Color("8a6a2a"), 2.2)
-		rails.draw_arc(pk, rr + 3.6, outa - half * 0.45, outa + half * 0.45, 24, Color(1.0, 0.925, 0.667, 0.75), 2.2)
+		_pocket_cap(pk, rr, pi < 4, outa, half)
 		rails.draw_circle(pk, rr + 2.0, Color("1c130c"))
 		rails.draw_circle(pk, rr, Color("0d0a08"))
 		rails.draw_circle(pk, rr - 4.0, Color("070504"))
 		rails.draw_circle(pk, rr - 8.0, Color("030202"))
 		rails.draw_circle(pk, rr - 12.0, Color("000000"))
 		rails.draw_arc(pk, rr - 1.5, ain.x, ain.y, 20, Color(1, 1, 1, 0.1), 2.0)
+
+
+# enfeite de metal em volta de cada caçapa (estilo mesa de luxo): aro grosso com gravação
+# e duas "asas" pontudas deitadas na madeira; tudo fica na madeira, nada entra no pano
+func _pocket_cap(pk: Vector2, rr: float, corner: bool, outa: float, half: float) -> void:
+	var gold: bool = str(rail_def().get("id", "")) == "rb_ouro"
+	var mid: Color = Color("e0b84a") if gold else Color("c3c9d2")
+	var hi: Color = Color("fff1b8") if gold else Color("f6f8fb")
+	var lo: Color = Color("7a5a14") if gold else Color("6c727c")
+	var ink := Color("1a1c20")
+	var sy: float = signf(pk.y)
+	var sx: float = signf(pk.x)
+	var wings: Array = []
+	if corner:
+		# asa no trilho comprido (vai para o meio) e no trilho curto (vai para cima/baixo)
+		wings.append([Vector2(sx * 476.0, sy * 278.0), Vector2(sx * 476.0, sy * 300.0), Vector2(sx * 446.0, sy * 289.5)])
+		wings.append([Vector2(sx * 528.0, sy * 228.0), Vector2(sx * 550.0, sy * 228.0), Vector2(sx * 539.5, sy * 198.0)])
+	else:
+		for d in [-1.0, 1.0]:
+			wings.append([Vector2(d * 26.0, sy * 279.0), Vector2(d * 26.0, sy * 300.0), Vector2(d * 58.0, sy * 289.5)])
+	for w in wings:
+		var a0: Vector2 = w[0]
+		var a1: Vector2 = w[1]
+		var tip: Vector2 = w[2]
+		var cen := (a0 + a1) * 0.5
+		var dir := (tip - cen).normalized()
+		var nrm := dir.orthogonal()
+		var wd := a0.distance_to(a1) * 0.5
+		var shape := func(grow: float) -> PackedVector2Array:
+			return PackedVector2Array([cen - dir * 6.0 + nrm * (wd + grow), cen + dir * 12.0 + nrm * (wd * 0.55 + grow), tip + dir * grow * 1.5, cen + dir * 12.0 - nrm * (wd * 0.55 + grow), cen - dir * 6.0 - nrm * (wd + grow)])
+		rails.draw_colored_polygon(shape.call(2.0), ink)
+		rails.draw_colored_polygon(shape.call(0.0), mid)
+		var hl: PackedVector2Array = shape.call(0.0)
+		rails.draw_colored_polygon(PackedVector2Array([hl[0], hl[1], hl[2], cen + dir * 4.0]), Color(hi.r, hi.g, hi.b, 0.55))
+		rails.draw_line(cen + dir * 2.0, tip - dir * 6.0, Color(lo.r, lo.g, lo.b, 0.9), 1.2)
+		rails.draw_circle(cen + dir * 8.0, 2.2, lo)
+		rails.draw_circle(cen + dir * 7.6 - nrm * 0.5, 1.0, hi)
+	# aro grosso (só na parte de trás; a boca virada para a mesa fica aberta)
+	var th := 13.0 if corner else 10.0
+	var rc := rr + 3.0 + th * 0.5
+	var h2 := half + deg_to_rad(14.0)
+	rails.draw_arc(pk, rc, outa - h2, outa + h2, 48, ink, th + 3.0)
+	rails.draw_arc(pk, rc, outa - h2, outa + h2, 48, mid, th)
+	rails.draw_arc(pk, rc - th * 0.3, outa - h2 * 0.8, outa + h2 * 0.35, 32, Color(hi.r, hi.g, hi.b, 0.8), 2.2)
+	rails.draw_arc(pk, rc + th * 0.32, outa - h2 * 0.2, outa + h2 * 0.9, 32, Color(lo.r, lo.g, lo.b, 0.85), 2.0)
+	# gravação: arabesco fino e rebites
+	rails.draw_arc(pk, rc, outa - h2 * 0.85, outa + h2 * 0.85, 40, Color(lo.r, lo.g, lo.b, 0.7), 1.0)
+	for k in [-0.6, 0.0, 0.6]:
+		var pp: Vector2 = pk + Vector2.from_angle(outa + h2 * float(k)) * rc
+		rails.draw_circle(pp, 2.4, lo)
+		rails.draw_circle(pp + Vector2(-0.6, -0.6), 1.1, hi)
+	# borda escura fina por dentro, separando o metal do buraco
+	rails.draw_arc(pk, rr + 2.2, outa - h2, outa + h2, 40, Color(0, 0, 0, 0.8), 1.6)
 
 
 func _diamond(c: Vector2) -> void:
@@ -3857,7 +3920,6 @@ func quad(a: Vector2, b: Vector2, wa: float, wb: float, col: Color, off: Vector2
 
 
 func _draw_overlay() -> void:
-	_draw_edge_fx()
 	if st == St.AIM and mode != Mode.TRAIN and human_turn() and groups[turn] != -1:
 		# destaca as bolas que o jogador da vez pode acertar
 		var pul := 0.5 + 0.5 * sin(sim_t * 5.0)
@@ -3899,19 +3961,27 @@ func _draw_overlay() -> void:
 		overlay.draw_arc(cue.pos, R + 22.0 + pul * 6.0, 0, TAU, 32, Color(1.0, 0.88, 0.4, 0.35), 2.0)
 
 
-# mesa/borda decorativa: faixa de luz correndo pelas bordas (desviando das caçapas)
+func edge_mode() -> String:
+	var m := str(rail_def().get("edge", ""))
+	if m == "":
+		m = str(felt_def().get("edge", ""))
+	return m
+
+
+# mesa/borda decorativa: fita de luz correndo no meio da madeira (nunca dentro do pano),
+# parando antes dos enfeites de prata das caçapas
 func _draw_edge_fx() -> void:
-	var mode_e := str(rail_def().get("edge", ""))
-	if mode_e == "":
-		mode_e = str(felt_def().get("edge", ""))
+	var mode_e := edge_mode()
 	if mode_e == "":
 		return
-	var e := 7.0
+	var c := edge_node
+	var W := HW + 39.5
+	var H := HH + 39.5
 	var segs := [
-		[Vector2(-HW + 44, -HH + e), Vector2(-34, -HH + e)], [Vector2(34, -HH + e), Vector2(HW - 44, -HH + e)],
-		[Vector2(HW - e, -HH + 44), Vector2(HW - e, HH - 44)],
-		[Vector2(HW - 44, HH - e), Vector2(34, HH - e)], [Vector2(-34, HH - e), Vector2(-HW + 44, HH - e)],
-		[Vector2(-HW + e, HH - 44), Vector2(-HW + e, -HH + 44)],
+		[Vector2(-438, -H), Vector2(-64, -H)], [Vector2(64, -H), Vector2(438, -H)],
+		[Vector2(W, -190), Vector2(W, 190)],
+		[Vector2(438, H), Vector2(64, H)], [Vector2(-64, H), Vector2(-438, H)],
+		[Vector2(-W, 190), Vector2(-W, -190)],
 	]
 	var dist := 0.0
 	var zap: float = floor(fx_t * 14.0)
@@ -3919,36 +3989,39 @@ func _draw_edge_fx() -> void:
 		var a0: Vector2 = sg[0]
 		var a1: Vector2 = sg[1]
 		var ln := a0.distance_to(a1)
-		var n := int(ln / 12.0)
+		var n := int(ln / 10.0)
 		for k in n:
 			var p0 := a0.lerp(a1, float(k) / n)
 			var p1 := a0.lerp(a1, float(k + 1) / n)
 			var s2 := dist + ln * float(k) / n
-			var c := Color.WHITE
+			var col := Color.WHITE
 			var pulse := 1.0
 			match mode_e:
 				"rainbow":
 					pulse = 0.55 + 0.45 * sin(s2 * 0.035 - fx_t * 6.0)
-					c = Color.from_hsv(fposmod(s2 / 520.0 - fx_t * 0.22, 1.0), 0.85, 1.0, 0.85 * pulse)
+					col = Color.from_hsv(fposmod(s2 / 520.0 - fx_t * 0.22, 1.0), 0.85, 1.0, 0.9 * pulse)
+				"neon":
+					pulse = 0.5 + 0.5 * pow(0.5 + 0.5 * sin(s2 * 0.02 - fx_t * 4.0), 3.0)
+					col = Color(0.1, 0.9, 1.0, 0.9 * pulse)
 				"fire":
 					var fl := FxScript.hsh(floor(s2 / 12.0) * 1.3 + floor(fx_t * 10.0))
 					pulse = 0.45 + 0.55 * (0.5 + 0.5 * sin(s2 * 0.05 + fx_t * 7.0)) * (0.6 + 0.4 * fl)
-					c = Color(1.0, 0.35 + 0.45 * fl, 0.05, 0.9 * pulse)
+					col = Color(1.0, 0.35 + 0.45 * fl, 0.05, 0.9 * pulse)
 				"ice":
 					pulse = 0.5 + 0.5 * sin(s2 * 0.02 - fx_t * 2.0)
 					var gl := pow(maxf(0.0, sin(s2 * 0.013 - fx_t * 3.0)), 18.0)
-					c = Color(0.6 + 0.4 * gl, 0.9 + 0.1 * gl, 1.0, 0.55 + 0.4 * pulse)
+					col = Color(0.6 + 0.4 * gl, 0.9 + 0.1 * gl, 1.0, 0.55 + 0.4 * pulse)
 				"gold":
 					var ch := fposmod(s2 / 60.0 - fx_t * 1.5, 1.0)
 					pulse = 0.35 + 0.65 * smoothstep(0.75, 1.0, ch)
-					c = Color(1.0, 0.82, 0.3, 0.9 * pulse)
+					col = Color(1.0, 0.82, 0.3, 0.9 * pulse)
 				"electric":
 					var on := FxScript.hsh(floor(s2 / 36.0) + zap * 7.7)
 					pulse = 0.25 + (0.75 if on > 0.78 else 0.0)
-					c = Color(0.45, 0.85, 1.0, 0.9 * pulse)
-			overlay.draw_line(p0, p1, Color(c.r, c.g, c.b, 0.22 * pulse), 16.0)
-			overlay.draw_line(p0, p1, Color(c.r, c.g, c.b, 0.4 * pulse), 8.0)
-			overlay.draw_line(p0, p1, c.lightened(0.3), 3.5)
+					col = Color(0.45, 0.85, 1.0, 0.9 * pulse)
+			c.draw_line(p0, p1, Color(col.r, col.g, col.b, 0.16 * pulse), 13.0)
+			c.draw_line(p0, p1, Color(col.r, col.g, col.b, 0.32 * pulse), 7.0)
+			c.draw_line(p0, p1, col.lightened(0.3), 2.6)
 		dist += ln
 
 
@@ -4141,9 +4214,173 @@ func update_cue() -> void:
 		cue_fx_a.queue_redraw()
 
 
+# tipo do aviso pelo texto: falta/erro em vermelho, acerto em verde, chance em laranja, resto azul
+func msg_kind(t: String) -> String:
+	var l := t.to_lower()
+	if l.begins_with("chance") or l.contains("na chance") or l.contains("cantada"):
+		return "warn"
+	if l.begins_with("falta") or l.contains("errou") or l.contains("esgotado") or l.contains("passa a vez") or l.contains("não era") or l.contains("perdeu") or l.contains("saiu"):
+		return "err"
+	if l.begins_with("boa") or l.contains("joga de novo") or l.contains("matou todas") or l.contains("retomada") or l.contains("joga com as") or l.contains("tacada!"):
+		return "ok"
+	return "info"
+
+
+func kind_color(k: String) -> Color:
+	match k:
+		"err":
+			return Color("e5484d")
+		"ok":
+			return Color("30c46b")
+		"warn":
+			return Color("f5a524")
+		"hand":
+			return Color("f2f2ec")
+	return Color("4aa3ff")
+
+
+# ícone desenhado (não depende de a fonte ter o símbolo)
+func kind_icon(c: CanvasItem, ctr: Vector2, r: float, k: String, al: float) -> void:
+	var col := kind_color(k)
+	c.draw_circle(ctr, r, Color(col.r, col.g, col.b, al))
+	var ink := Color(0.06, 0.07, 0.1, al)
+	match k:
+		"ok":
+			c.draw_polyline(PackedVector2Array([ctr + Vector2(-r * 0.45, 0), ctr + Vector2(-r * 0.12, r * 0.35), ctr + Vector2(r * 0.48, -r * 0.35)]), ink, maxf(2.0, r * 0.22))
+		"err", "warn":
+			c.draw_line(ctr + Vector2(0, -r * 0.5), ctr + Vector2(0, r * 0.15), ink, maxf(2.0, r * 0.22))
+			c.draw_circle(ctr + Vector2(0, r * 0.45), r * 0.13, ink)
+		"hand":
+			c.draw_circle(ctr, r * 0.55, Color(1, 1, 1, al))
+			c.draw_arc(ctr, r * 0.55, 0, TAU, 20, ink, 1.5)
+		_:
+			c.draw_line(ctr + Vector2(0, -r * 0.1), ctr + Vector2(0, r * 0.5), ink, maxf(2.0, r * 0.22))
+			c.draw_circle(ctr + Vector2(0, -r * 0.45), r * 0.13, ink)
+
+
+# aviso em cartão: fundo escuro arredondado, ícone colorido e texto branco (quebra em 2 linhas se for comprido)
+func hud_card(t: String, cx: float, y: float, k: String, al: float, size: int = 22) -> void:
+	if al <= 0.01 or t == "":
+		return
+	var maxw := minf(vw - 260.0, 860.0)
+	var lines: Array = [t]
+	var fs := size
+	var tw := font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	if tw > maxw:
+		# divide no espaço mais perto do meio
+		var mid := t.length() / 2
+		var cut := -1
+		for d in t.length():
+			if mid + d < t.length() and t[mid + d] == " ":
+				cut = mid + d
+				break
+			if mid - d > 0 and t[mid - d] == " ":
+				cut = mid - d
+				break
+		if cut > 0:
+			lines = [t.substr(0, cut), t.substr(cut + 1)]
+		fs = size - 2
+		tw = 0.0
+		for ln in lines:
+			tw = maxf(tw, font.get_string_size(str(ln), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+		tw = minf(tw, maxw)
+	var lh := fs + 8.0
+	var h := 22.0 + lh * lines.size()
+	var w := tw + h * 0.5 + 64.0
+	var slide := (1.0 - al) * -10.0
+	var rect := Rect2(cx - w / 2.0, y + slide, w, h)
+	var col := kind_color(k)
+	var sb: StyleBoxFlat = ui.sbox(Color(0.055, 0.07, 0.11, 0.95 * al), int(minf(h * 0.5, 26.0)), Color(col.r, col.g, col.b, 0.75 * al), 2, 6)
+	sb.shadow_color = Color(0, 0, 0, 0.45 * al)
+	hud.draw_style_box(sb, rect)
+	var ir := minf(15.0, h * 0.5 - 7.0)
+	kind_icon(hud, Vector2(rect.position.x + 14.0 + ir, rect.get_center().y), ir, k, al)
+	var tx := rect.position.x + 24.0 + ir * 2.0
+	for i in lines.size():
+		var by := rect.position.y + 11.0 + lh * i + fs * 0.92
+		hud.draw_string(font, Vector2(tx, by), str(lines[i]), HORIZONTAL_ALIGNMENT_LEFT, rect.end.x - tx - 16.0, fs, Color(1, 1, 1, al))
+
+
+# faixa de "SUA VEZ": cartão central com a cor de quem joga (verde você, vermelho adversário, azul IA/parceiro)
+func _turn_banner(title: String, sub: String, col: Color, cx: float, al: float) -> void:
+	var fs := 46
+	var tw := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var w := maxf(tw + 120.0, 420.0)
+	var h := 96.0 if sub != "" else 80.0
+	var y := 262.0 - h / 2.0 + (1.0 - al) * 14.0
+	var rect := Rect2(cx - w / 2.0, y, w, h)
+	var sb: StyleBoxFlat = ui.sbox(Color(0.05, 0.065, 0.1, 0.93 * al), 22, Color(col.r, col.g, col.b, 0.9 * al), 3, 10)
+	sb.shadow_color = Color(0, 0, 0, 0.5 * al)
+	hud.draw_style_box(sb, rect)
+	# brilho da cor no topo do cartão
+	hud.draw_style_box(ui.sbox(Color(col.r, col.g, col.b, 0.16 * al), 20), Rect2(rect.position + Vector2(3, 3), Vector2(w - 6, h * 0.42)))
+	hud.draw_string(font, Vector2(rect.position.x, rect.position.y + (54.0 if sub != "" else 56.0)), title, HORIZONTAL_ALIGNMENT_CENTER, w, fs, Color(1, 1, 1, al))
+	if sub != "":
+		hud.draw_string(font, Vector2(rect.position.x, rect.position.y + 82.0), sub, HORIZONTAL_ALIGNMENT_CENTER, w, 20, Color(col.lightened(0.35).r, col.lightened(0.35).g, col.lightened(0.35).b, al))
+
+
 func ctext(s: String, cx: float, y: float, size: int, col: Color) -> void:
 	hud.draw_string_outline(font, Vector2(cx - 600.0, y), s, HORIZONTAL_ALIGNMENT_CENTER, 1200, size, 6, Color(0, 0, 0, 0.7))
 	hud.draw_string(font, Vector2(cx - 600.0, y), s, HORIZONTAL_ALIGNMENT_CENTER, 1200, size, col)
+
+
+# canaleta das bolas encaçapadas (igual às mesas de bar): fica entre a mesa e a barra de força,
+# as bolas descem rolando e empilham de baixo para cima na ordem em que caíram
+func _draw_tray() -> void:
+	if st == St.MENU or st == St.REPLAY:
+		tray.clear()
+		tray_y.clear()
+		return
+	var dt := get_process_delta_time()
+	var gone := {}
+	for b in balls:
+		if b.n != 0 and not b.on:
+			gone[int(b.n)] = true
+			if not tray.has(int(b.n)) and (float(b.drop) < 0.0 or float(b.drop) >= 0.2):
+				tray.append(int(b.n))
+	for n in tray.duplicate():
+		if not gone.has(n):
+			tray.erase(n)
+			tray_y.erase(n)
+	var s := scale.x
+	var wr := position.x + 552.0 * s
+	var bl := vw - 96.0
+	var gap := bl - wr
+	if gap < 30.0:
+		return
+	var tw := minf(30.0, gap - 8.0)
+	var r := tw * 0.5 - 3.0
+	var cx := (wr + bl) * 0.5
+	var top := 150.0
+	var bot := 600.0
+	var rect := Rect2(cx - tw * 0.5, top, tw, bot - top)
+	# tubo de vidro escuro com aro de metal
+	hud.draw_style_box(ui.sbox(Color(0, 0, 0, 0.45), int(tw * 0.5) + 3), rect.grow(4).grow_individual(0, 0, 0, 2))
+	hud.draw_style_box(ui.sbox(Color(0.05, 0.06, 0.08, 0.92), int(tw * 0.5), Color("aab1bb"), 2, 0), rect)
+	for i in tray.size():
+		var n: int = tray[i]
+		var ty := bot - 3.0 - r - float(i) * (r * 2.0 + 1.5)
+		var cy: float = tray_y.get(n, top + r)
+		cy = minf(ty, cy + dt * 700.0)
+		tray_y[n] = cy
+		_tray_ball(Vector2(cx, cy), r, n)
+	# reflexo do vidro por cima das bolas
+	hud.draw_line(Vector2(rect.position.x + 5, top + 12), Vector2(rect.position.x + 5, bot - 12), Color(1, 1, 1, 0.13), 3.0)
+
+
+func _tray_ball(c: Vector2, r: float, n: int) -> void:
+	var col: Color = BALL_COL[n if n <= 8 else n - 8]
+	var white := Color(0.96, 0.95, 0.9)
+	hud.draw_circle(c + Vector2(0, 1.5), r, Color(0, 0, 0, 0.4))
+	if n > 8:
+		hud.draw_circle(c, r, white)
+		hud.draw_rect(Rect2(c.x - r * 0.92, c.y - r * 0.45, r * 1.84, r * 0.9), col, true)
+	else:
+		hud.draw_circle(c, r, col)
+	hud.draw_circle(c, r * 0.48, white)
+	hud.draw_string(font, c + Vector2(-r, r * 0.3), str(n), HORIZONTAL_ALIGNMENT_CENTER, r * 2.0, int(r * 0.78), Color(0.05, 0.05, 0.05))
+	hud.draw_arc(c, r, 0, TAU, 20, Color(0, 0, 0, 0.5), 1.2)
+	hud.draw_circle(c + Vector2(-r * 0.35, -r * 0.4), r * 0.25, Color(1, 1, 1, 0.45))
 
 
 func mini_ball(c: Vector2, n: int, alpha: float) -> void:
@@ -4202,24 +4439,27 @@ func _draw_hud() -> void:
 		var el := float(Time.get_ticks_msec() - banner_ms) / 1000.0
 		if el >= 0.0 and el < 1.9:
 			var al := clampf(minf(el * 5.0, (1.9 - el) * 2.5), 0.0, 1.0)
-			var bw := 760.0
-			hud.draw_rect(Rect2(cx - bw / 2.0, 150, bw, 84), Color(0, 0, 0, 0.62 * al), true)
-			hud.draw_rect(Rect2(cx - bw / 2.0, 150, bw, 5), Color(1, 0.85, 0.2, al), true)
-			hud.draw_rect(Rect2(cx - bw / 2.0, 229, bw, 5), Color(1, 0.85, 0.2, al), true)
+			var vtxt := "SUA VEZ"
+			var vsub := ""
+			var vcol := Color("30c46b")
 			if mode == Mode.ONLINE:
-				var vtxt := "SUA VEZ" if shooter() == net_seat else "VEZ DO ADVERSÁRIO"
+				if shooter() != net_seat:
+					vtxt = "VEZ DO ADVERSÁRIO"
+					vcol = Color("e5484d")
 				if net4 and shooter() != net_seat:
-					vtxt = ("VEZ DO PARCEIRO: " if shooter() % 2 == net_seat % 2 else "VEZ DE ") + str(seat_names[shooter()]).to_upper()
-				ctext(vtxt, cx, 210, 44 if net4 else 54, Color(1, 0.9, 0.35, al))
+					var mate: bool = shooter() % 2 == net_seat % 2
+					vtxt = "VEZ DO PARCEIRO" if mate else "VEZ DO ADVERSÁRIO"
+					vsub = str(seat_names[shooter()])
+					vcol = Color("4aa3ff") if mate else Color("e5484d")
 			elif cur_ai() or (net4 and bot_seats.has(shooter())):
-				ctext("VEZ DA IA GOSCRIPTS", cx, 210, 54, Color(1, 0.9, 0.35, al))
+				vtxt = "VEZ DA IA"
+				vsub = "GoScripts"
+				vcol = Color("4aa3ff")
 			elif mode == Mode.TWO:
-				ctext("SUA VEZ", cx, 196, 50, Color(1, 0.9, 0.35, al))
-				ctext(String(players[turn]), cx, 224, 22, Color(1, 1, 1, al))
-			else:
-				ctext("SUA VEZ", cx, 210, 54, Color(1, 0.9, 0.35, al))
+				vsub = String(players[turn])
+			_turn_banner(vtxt, vsub, vcol, cx, al)
 	if msg_t > 0.0 and st != St.OVER:
-		ctext(msg, cx, 108, 30, Color("ffe066"))
+		hud_card(msg, cx, 104, msg_kind(msg), clampf(msg_t * 3.0, 0.0, 1.0))
 	if mode == Mode.ONLINE and net_wait_t > 3.0 and st == St.ROLL:
 		# a tacada já parou aqui, mas o resultado vem do anfitrião: deixa claro que é a conexão dele
 		var hn: String = str(seat_names[0]) if net4 and seat_names.size() > 0 else str(players[0])
@@ -4227,6 +4467,7 @@ func _draw_hud() -> void:
 		hud.draw_rect(Rect2(cx - 330, 300, 660, 70), Color(0, 0, 0, 0.7), true)
 		ctext("Aguardando %s%s" % [hn, dots], cx, 332, 26, Color.WHITE)
 		ctext("(conexão lenta ou o jogo dele foi minimizado)", cx, 360, 17, Color(1, 1, 1, 0.7))
+	_draw_tray()
 	if human_turn():
 		var br := bar_rect()
 		hud.draw_rect(br.grow(5), Color(0, 0, 0, 0.55), true)
@@ -4260,7 +4501,7 @@ func _draw_hud() -> void:
 		hud.draw_arc(sdot, 8, 0, TAU, 20, Color(0, 0, 0, 0.7), 2.0)
 		hud.draw_string(font, Vector2(sc.x - 50, 20), "EFEITO", HORIZONTAL_ALIGNMENT_CENTER, 100, 16, Color(1, 1, 1, 0.85))
 		if ball_in_hand:
-			ctext("BOLA NA MÃO: arraste a bola branca para onde quiser", cx, 690, 26, Color("ffe066"))
+			hud_card("BOLA NA MÃO: arraste a bola branca para onde quiser", cx, 669, "hand", 1.0, 18)
 		else:
 			hud.draw_string(font, Vector2(20, 706), "Arraste na mesa para mirar  •  EFEITO: toque na bola branca (canto superior)", HORIZONTAL_ALIGNMENT_LEFT, 900, 18, Color(1, 1, 1, 0.6))
 
