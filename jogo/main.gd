@@ -39,9 +39,10 @@ const PACKS := [
 	{"id": "pk_prata", "name": "Pacote Prata", "price": 1200, "grana": 0, "tier": 1, "tag": "Boa chance de item raro", "col": Color("c9d3dd")},
 	{"id": "pk_ouro", "name": "Pacote Ouro", "price": 0, "grana": 25, "tier": 2, "tag": "Item garantido, dos melhores", "col": Color("ffd34a")},
 ]
-const APP_VERSION := 115  # sobe a cada APK novo (igual ao versao.json do servidor)
+const APP_VERSION := 116  # sobe a cada APK novo (igual ao versao.json do servidor)
 const DT := 1.0 / 240.0
 const MAXV := 1750.0
+const PAIR_FAR2 := (2.0 * R + 80.0) * (2.0 * R + 80.0)
 const BLACK := 8
 const PR_CORNER := 23.0
 const HOLE_C := 25.0
@@ -271,6 +272,12 @@ var white_tex: ImageTexture
 var atlas_vp: SubViewport
 var atlas_ctrl: Control
 var wood_s: Sprite2D
+var wood_vp: SubViewport
+var wood_rect: ColorRect
+var rails_vp: SubViewport
+var rails_s: Sprite2D
+const RAILS_TEX := Vector2i(1144, 644)  # metade do tamanho da textura das tabelas (mesa + folga)
+var _fx_frame := 0
 var felt_s: Sprite2D
 var felt_vp: SubViewport
 var felt_rect: ColorRect
@@ -305,12 +312,23 @@ func _ready() -> void:
 	ball_shader = load("res://shaders/ball.gdshader")
 	_make_atlas()
 	_make_sounds()
-	wood_s = Sprite2D.new()
-	wood_s.texture = white_tex
-	wood_s.scale = Vector2(1104.0 / 64.0, 604.0 / 64.0)
+	# madeira da mesa: o shader roda UMA vez numa textura (2x) e depois é só uma imagem na tela
+	# (antes rodava a cada quadro na mesa inteira, o que pesava a GPU do celular)
+	wood_vp = SubViewport.new()
+	wood_vp.size = Vector2i(2208, 1208)
+	wood_vp.disable_3d = true
+	wood_vp.transparent_bg = true
+	wood_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	add_child(wood_vp)
+	wood_rect = ColorRect.new()
+	wood_rect.size = Vector2(2208, 1208)
 	var wm := ShaderMaterial.new()
 	wm.shader = load("res://shaders/wood.gdshader")
-	wood_s.material = wm
+	wood_rect.material = wm
+	wood_vp.add_child(wood_rect)
+	wood_s = Sprite2D.new()
+	wood_s.texture = wood_vp.get_texture()
+	wood_s.scale = Vector2(0.5, 0.5)
 	add_child(wood_s)
 	# o pano é desenhado uma vez numa textura (2x) e só refeito quando troca a mesa:
 	# fica nítido e não pesa no celular
@@ -337,9 +355,23 @@ func _ready() -> void:
 	edge_node = Node2D.new()
 	add_child(edge_node)
 	edge_node.draw.connect(_draw_edge_fx)
-	rails = Node2D.new()
-	add_child(rails)
+	# tabelas, caçapas, enfeites e marcações: também desenhados uma vez numa textura (2x)
+	rails_vp = SubViewport.new()
+	rails_vp.size = Vector2i(RAILS_TEX.x * 2, RAILS_TEX.y * 2)
+	rails_vp.disable_3d = true
+	rails_vp.transparent_bg = true
+	rails_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	add_child(rails_vp)
+	var rn := Node2D.new()
+	rn.position = Vector2(RAILS_TEX.x, RAILS_TEX.y)
+	rn.scale = Vector2(2, 2)
+	rails_vp.add_child(rn)
+	rails = rn
 	rails.draw.connect(_draw_rails)
+	rails_s = Sprite2D.new()
+	rails_s.texture = rails_vp.get_texture()
+	rails_s.scale = Vector2(0.5, 0.5)
+	add_child(rails_s)
 	ball_layer = Node2D.new()
 	add_child(ball_layer)
 	overlay = Node2D.new()
@@ -1369,15 +1401,17 @@ func apply_felt() -> void:
 	m.set_shader_parameter("accent", f.get("accent", Color.WHITE))
 	m.set_shader_parameter("accent2", f.get("accent2", Color.WHITE))
 	felt_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
-	if wood_s != null:
+	if wood_rect != null:
+		wood_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 		var rd := rail_def()
-		var wm: ShaderMaterial = wood_s.material
+		var wm: ShaderMaterial = wood_rect.material
 		wm.set_shader_parameter("c1", rd.c1)
 		wm.set_shader_parameter("c2", rd.c2)
 		wm.set_shader_parameter("trim", rd.trim)
 		wm.set_shader_parameter("mat", int(rd.mat))
 	if rails != null:
 		rails.queue_redraw()
+		rails_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	if felt_fx != null:
 		felt_fx.queue_redraw()
 
@@ -1387,7 +1421,7 @@ func _make_atlas() -> void:
 	atlas_vp = SubViewport.new()
 	atlas_vp.size = Vector2i(512, 512)
 	atlas_vp.transparent_bg = true
-	atlas_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	atlas_vp.render_target_update_mode = SubViewport.UPDATE_ONCE  # números das bolas não mudam
 	add_child(atlas_vp)
 	atlas_ctrl = Control.new()
 	atlas_ctrl.size = Vector2(512, 512)
@@ -1930,6 +1964,10 @@ func move_balls() -> void:
 				continue
 			var d: Vector2 = b.pos - a.pos
 			var d2 := d.length_squared()
+			# longe demais para se tocarem neste passo (nenhuma bola anda 40px em 1/240s): pula as contas.
+			# o resultado é exatamente o mesmo de antes, só que sem gastar com os pares distantes
+			if d2 > PAIR_FAR2:
+				continue
 			var ccd_rem := 0.0
 			if ccd_on and a.has("pp") and b.has("pp") and (b.pp - a.pp).length_squared() >= 4.0 * R * R:
 				# colisão contínua: volta as bolas ao instante exato do toque (antes só fazia isso quando
@@ -3619,9 +3657,12 @@ func update_visuals(delta: float) -> void:
 		var spr: Sprite2D = b.spr
 		var m: ShaderMaterial = spr.material
 		var bs: Basis = b.basis
-		m.set_shader_parameter("rx", bs.x)
-		m.set_shader_parameter("ry", bs.y)
-		m.set_shader_parameter("rz", bs.z)
+		# só manda a rotação para o shader quando a bola girou (parada não gasta nada)
+		if b.get("lb", Basis()) != bs or not b.has("lb"):
+			b["lb"] = bs
+			m.set_shader_parameter("rx", bs.x)
+			m.set_shader_parameter("ry", bs.y)
+			m.set_shader_parameter("rz", bs.z)
 		if b.on:
 			spr.visible = true
 			var ex: Vector2 = Vector2.ZERO
@@ -3684,9 +3725,10 @@ func _process(delta: float) -> void:
 	update_visuals(delta)
 	update_cue()
 	overlay.queue_redraw()
+	_fx_frame += 1
 	if edge_node != null:
 		edge_node.visible = edge_mode() != ""
-		if edge_node.visible:
+		if edge_node.visible and _fx_frame % 2 == 0:  # luz da borda a 30 quadros/s já fica lisa
 			edge_node.queue_redraw()
 	if felt_fx != null and str(felt_def().get("anim", "")) != "":
 		# durante a partida a animação fica bem fraquinha (para não atrapalhar a mira); forte só no menu
