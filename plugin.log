@@ -1,0 +1,69 @@
+
+Welcome to Gradle 8.10.2!
+
+Here are the highlights of this release:
+ - Support for Java 23
+ - Faster configuration cache
+ - Better configuration cache reports
+
+For more details see https://docs.gradle.org/8.10.2/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+WARNING: We recommend using a newer Android Gradle plugin to use compileSdk = 36
+
+This Android Gradle plugin (8.6.1) was tested up to compileSdk = 35.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compileSdk = 36.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compileSdk = 36 is available.
+
+For more information refer to the compatibility table:
+https://d.android.com/r/tools/api-level-support
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=36
+to this project's gradle.properties.
+> Task :preBuild UP-TO-DATE
+> Task :preReleaseBuild UP-TO-DATE
+> Task :mergeReleaseJniLibFolders
+> Task :mergeReleaseNativeLibs NO-SOURCE
+> Task :stripReleaseDebugSymbols NO-SOURCE
+> Task :copyReleaseJniLibsProjectAndLocalJars
+> Task :generateReleaseResValues
+> Task :extractDeepLinksForAarRelease
+> Task :generateReleaseResources
+> Task :packageReleaseResources
+> Task :mergeReleaseShaders
+> Task :compileReleaseShaders NO-SOURCE
+> Task :generateReleaseAssets UP-TO-DATE
+> Task :javaPreCompileRelease
+> Task :packageReleaseAssets
+> Task :prepareLintJarForPublish
+> Task :prepareReleaseArtProfile
+> Task :parseReleaseLocalResources
+> Task :processReleaseJavaRes NO-SOURCE
+> Task :writeReleaseAarMetadata
+> Task :generateReleaseRFile
+> Task :processReleaseManifest
+> Task :mergeReleaseJavaResource
+> Task :mapReleaseSourceSetPaths
+> Task :extractReleaseAnnotations
+
+> Task :compileReleaseJavaWithJavac
+Note: /home/runner/work/Goscripts/Goscripts/android_plugin/src/main/java/br/com/goscripts/google/SinucouGoogle.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :mergeReleaseGeneratedProguardFiles
+> Task :mergeReleaseConsumerProguardFiles
+> Task :syncReleaseLibJars
+> Task :bundleReleaseAar
+> Task :mergeReleaseResources
+> Task :verifyReleaseResources
+> Task :assembleRelease
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1795838214154.json
+
+BUILD SUCCESSFUL in 32s
+25 actionable tasks: 25 executed
